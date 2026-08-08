@@ -233,7 +233,8 @@ AS $$
       sleep.started_at,
       sleep.ended_at,
       sleep.duration_seconds,
-      sleep.morning_classification
+      sleep.morning_classification,
+      sleep.morning_classification_version
     FROM public.sleep_sessions AS sleep
     JOIN config ON config.id = sleep.baby_id
     WHERE sleep.deleted = false
@@ -398,6 +399,7 @@ AS $$
       sleep.started_at,
       sleep.ended_at,
       sleep.morning_classification,
+      sleep.morning_classification_version,
       pg_catalog.row_number() OVER (
         ORDER BY sleep.started_at, sleep.id
       )::integer AS sequence
@@ -438,6 +440,7 @@ AS $$
       CASE
         WHEN resolution.first_nap_settled
           OR candidate.morning_classification = 'confirmed_first_nap'
+          OR decision.is_ignored_legacy
         THEN resolution.last_relevant_end
         ELSE COALESCE(candidate.ended_at, resolution.last_relevant_end)
       END,
@@ -450,8 +453,15 @@ AS $$
     LEFT JOIN overnight_sleep ON true
     CROSS JOIN LATERAL (
       SELECT
+        candidate.morning_classification_version IS NULL
+          AND pg_catalog.cardinality(resolution.continuation_ids) > 0
+          AS is_ignored_legacy,
         NOT resolution.first_nap_settled
         AND candidate.morning_classification IS DISTINCT FROM 'confirmed_first_nap'
+        AND NOT (
+          candidate.morning_classification_version IS NULL
+          AND pg_catalog.cardinality(resolution.continuation_ids) > 0
+        )
         AND (
           candidate.morning_classification = 'confirmed_night_continuation'
           OR (
@@ -471,7 +481,8 @@ AS $$
           OR (
             candidate.morning_classification IS NULL
             AND (
-              resolution.last_relevant_end IS NULL
+              candidate.morning_classification_version IS NULL
+              OR resolution.last_relevant_end IS NULL
               OR candidate.started_at - resolution.last_relevant_end
                 <= pg_catalog.make_interval(
                   mins => morning_window.nap_continuation_minutes
@@ -799,7 +810,7 @@ GRANT SELECT (id, baby_id, logged_by, type, side, started_at, ended_at, deleted)
 ON TABLE public.feedings TO authenticated;
 GRANT SELECT (
   id, baby_id, logged_by, type, started_at, ended_at, duration_seconds,
-  morning_classification, deleted
+  morning_classification, morning_classification_version, deleted
 )
 ON TABLE public.sleep_sessions TO authenticated;
 GRANT SELECT (id, baby_id, type, changed_at, deleted)

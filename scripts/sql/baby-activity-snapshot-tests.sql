@@ -195,6 +195,14 @@ FROM (
     false
   FROM public.users AS owner
   WHERE owner.id = '81111111-1111-1111-1111-111111111111'
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000005'::uuid,
+    owner.household_id,
+    'Legacy Morning Snapshot Baby'::text,
+    false
+  FROM public.users AS owner
+  WHERE owner.id = '81111111-1111-1111-1111-111111111111'
 ) AS fixture;
 
 SELECT pg_catalog.set_config(
@@ -333,11 +341,13 @@ LIMIT 1;
 UPDATE public.babies
 SET birth_date = CASE id
   WHEN '8a000000-0000-0000-0000-000000000001' THEN CURRENT_DATE - 300
+  WHEN '8a000000-0000-0000-0000-000000000005' THEN CURRENT_DATE - 300
   ELSE CURRENT_DATE - 21
 END
 WHERE id IN (
   '8a000000-0000-0000-0000-000000000001',
-  '8a000000-0000-0000-0000-000000000004'
+  '8a000000-0000-0000-0000-000000000004',
+  '8a000000-0000-0000-0000-000000000005'
 );
 
 INSERT INTO public.activity_goals (baby_id, goal_type, target_value, source)
@@ -377,6 +387,16 @@ VALUES (
   5,
   20,
   10,
+  pg_catalog.current_setting('test.snapshot_timezone')
+), (
+  '8a000000-0000-0000-0000-000000000005',
+  true,
+  3,
+  '[{"slotIndex":0,"label":"Legacy First","durationMinutes":90},{"slotIndex":1,"label":"Legacy Second","durationMinutes":120}]'::jsonb,
+  'custom',
+  6,
+  19,
+  25,
   pg_catalog.current_setting('test.snapshot_timezone')
 );
 
@@ -429,6 +449,10 @@ SELECT * FROM (
   SELECT '81000000-0000-0000-0000-000000000010', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'nap', day_start - INTERVAL '1 day' + INTERVAL '8 hours', day_start - INTERVAL '1 day' + INTERVAL '8 hours 30 minutes', 1800, 'automatic', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000009', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000011', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'night', day_start - INTERVAL '4 hours', day_start + INTERVAL '4 hours', 28800, NULL, NULL, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000012', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 40 minutes', day_start + INTERVAL '5 hours 30 minutes', 3000, NULL, NULL, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -531,6 +555,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
   v_sibling_snapshot jsonb;
+  v_legacy_morning_snapshot jsonb;
 BEGIN
   v_snapshot := public.get_baby_activity_snapshot(
     '8a000000-0000-0000-0000-000000000001',
@@ -583,6 +608,17 @@ BEGIN
     OR v_sibling_snapshot->'activeTimers'->3->>'context' IS DISTINCT FROM 'Snapshot Member'
   THEN
     RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;
+  END IF;
+
+  v_legacy_morning_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000005',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_legacy_morning_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '0'
+    OR v_legacy_morning_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '90'
+    OR v_legacy_morning_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Legacy First'
+  THEN
+    RAISE EXCEPTION 'unversioned early-morning sleep stopped acting as a legacy night continuation: %', v_legacy_morning_snapshot;
   END IF;
 END
 $$;
