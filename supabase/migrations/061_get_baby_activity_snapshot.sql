@@ -459,8 +459,11 @@ AS $$
         THEN resolution.last_relevant_end
         ELSE COALESCE(candidate.ended_at, resolution.last_relevant_end)
       END,
-      resolution.first_nap_settled
-        OR candidate.morning_classification = 'confirmed_first_nap'
+      COALESCE(
+        resolution.first_nap_settled
+          OR candidate.morning_classification = 'confirmed_first_nap',
+        false
+      )
     FROM morning_resolution AS resolution
     JOIN early_morning_candidates AS candidate
       ON candidate.sequence = resolution.sequence + 1

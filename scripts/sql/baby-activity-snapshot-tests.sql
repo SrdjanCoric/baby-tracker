@@ -506,6 +506,8 @@ SELECT * FROM (
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000012', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 40 minutes', day_start + INTERVAL '5 hours 30 minutes', 3000, NULL, NULL, false FROM clock
   UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000016', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '5 hours 50 minutes', day_start + INTERVAL '6 hours 20 minutes', 1800, 'automatic', 1, false FROM clock
+  UNION ALL
   SELECT '81000000-0000-0000-0000-000000000013', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'night', day_start - INTERVAL '4 hours', day_start + INTERVAL '4 hours', 28800, 'automatic', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000014', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 10 minutes', day_start + INTERVAL '4 hours 30 minutes', 1200, 'automatic', 1, false FROM clock
@@ -677,7 +679,7 @@ BEGIN
     OR v_legacy_morning_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '90'
     OR v_legacy_morning_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Legacy First'
   THEN
-    RAISE EXCEPTION 'unversioned early-morning sleep stopped acting as a legacy night continuation: %', v_legacy_morning_snapshot;
+    RAISE EXCEPTION 'mixed legacy and current early-morning sleeps stopped acting as night continuations: %', v_legacy_morning_snapshot;
   END IF;
 
   v_nap_rule_snapshot := public.get_baby_activity_snapshot(
