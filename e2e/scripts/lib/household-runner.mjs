@@ -243,13 +243,15 @@ export function assertRemoteSleepCompletion({
     }
   }
   if (!Number.isFinite(completedSummary.todayMinutes)
-    || completedSummary.todayMinutes < completedSleep.durationMinutes
-    || !Number.isInteger(completedSummary.napCountToday)
-    || completedSummary.napCountToday < 0
-    || !(completedSummary.wakeWindowMinutes === null
-      || Number.isFinite(completedSummary.wakeWindowMinutes))
-    || !(completedSummary.wakeWindowSlotLabel === null
-      || typeof completedSummary.wakeWindowSlotLabel === "string")) {
-    throw new Error("Completed Widget sleep totals or wake-window state are invalid");
+    || completedSummary.todayMinutes < completedSleep.durationMinutes) {
+    throw new Error("Completed Widget sleep total is invalid");
+  }
+  if (runningSleep.napCountToday !== 0
+    || runningSleep.wakeWindowMinutes !== 90
+    || runningSleep.wakeWindowSlotLabel !== "First"
+    || completedSummary.napCountToday !== 1
+    || completedSummary.wakeWindowMinutes !== 120
+    || completedSummary.wakeWindowSlotLabel !== "Second") {
+    throw new Error("Completed Widget nap count or wake-window state did not advance coherently");
   }
 }

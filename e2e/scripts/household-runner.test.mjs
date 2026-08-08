@@ -78,7 +78,14 @@ test("household timer runner authenticates a caregiver and requests only the sel
 test("household timer runner proves one remote sleep completion summary", () => {
   const running = {
     activeTimers: [{ type: "sleep", timerInstanceId: "timer-1" }],
-    activities: { sleep: { isActive: true } },
+    activities: {
+      sleep: {
+        isActive: true,
+        napCountToday: 0,
+        wakeWindowMinutes: 90,
+        wakeWindowSlotLabel: "First",
+      },
+    },
   };
   const completed = {
     activeTimer: null,
@@ -92,8 +99,8 @@ test("household timer runner proves one remote sleep completion summary", () => 
         sleepType: "nap",
         todayMinutes: 30,
         napCountToday: 1,
-        wakeWindowMinutes: 90,
-        wakeWindowSlotLabel: "First",
+        wakeWindowMinutes: 120,
+        wakeWindowSlotLabel: "Second",
       },
     },
   };
@@ -108,6 +115,27 @@ test("household timer runner proves one remote sleep completion summary", () => 
       sleepType: "nap",
     },
   }));
+
+  assert.throws(() => assertRemoteSleepCompletion({
+    runningSnapshot: running,
+    completedSnapshot: {
+      ...completed,
+      activities: {
+        sleep: {
+          ...completed.activities.sleep,
+          napCountToday: 0,
+          wakeWindowMinutes: 90,
+          wakeWindowSlotLabel: "First",
+        },
+      },
+    },
+    completedSleep: {
+      startedAt: "2026-08-08T10:00:00.000Z",
+      endedAt: "2026-08-08T10:30:00.000Z",
+      durationMinutes: 30,
+      sleepType: "nap",
+    },
+  }), /nap count or wake-window state did not advance coherently/);
 
 });
 
