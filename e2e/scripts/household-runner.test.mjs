@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
 import { EventEmitter } from "node:events";
 import { createRequire } from "node:module";
 import test from "node:test";
@@ -14,10 +15,108 @@ import {
   assertMetroProjectRoot,
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
+  assertRemoteSleepCompletion,
+  authenticateLocalCaregiver,
+  fetchWidgetActivitySnapshot,
   parseRunnerOptions,
+  refreshSnapshotBytes,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
+
+test("household timer runner authenticates a caregiver and requests only the selected-baby snapshot", async () => {
+  const requests = [];
+  const fetchImpl = async (url, options) => {
+    requests.push([url, options]);
+    if (url.includes("/auth/v1/token")) {
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ access_token: "owner-token" }),
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({
+        schemaVersion: 1,
+        babyId: "baby-1",
+        activeTimer: null,
+        activeTimers: [],
+        activities: { sleep: { isActive: false } },
+      }),
+    };
+  };
+
+  const token = await authenticateLocalCaregiver({
+    apiUrl: "http://127.0.0.1:54321",
+    anonKey: "local-anon",
+    email: "owner@test.local",
+    password: "password",
+    fetchImpl,
+  });
+  const result = await fetchWidgetActivitySnapshot({
+    apiUrl: "http://127.0.0.1:54321",
+    anonKey: "local-anon",
+    accessToken: token,
+    babyId: "baby-1",
+    timezone: "UTC",
+    fetchImpl,
+  });
+
+  assert.equal(requests.length, 2);
+  assert.equal(
+    requests[1][0],
+    "http://127.0.0.1:54321/rest/v1/rpc/get_baby_activity_snapshot"
+  );
+  assert.deepEqual(JSON.parse(requests[1][1].body), {
+    p_baby_id: "baby-1",
+    p_timezone: "UTC",
+  });
+  assert.equal(result.snapshot.babyId, "baby-1");
+  assert.deepEqual(JSON.parse(result.bytes.toString("utf8")), result.snapshot);
+});
+
+test("household timer runner proves one remote sleep completion summary and preserves bytes on failure", async () => {
+  const running = {
+    activeTimers: [{ type: "sleep", timerInstanceId: "timer-1" }],
+    activities: { sleep: { isActive: true } },
+  };
+  const completed = {
+    activeTimer: null,
+    activeTimers: [],
+    activities: {
+      sleep: {
+        isActive: false,
+        lastTime: "2026-08-08T10:00:00.000Z",
+        lastSleepEndedAt: "2026-08-08T10:30:00.000Z",
+        lastDurationMinutes: 30,
+        sleepType: "nap",
+        todayMinutes: 30,
+        napCountToday: 1,
+        wakeWindowMinutes: 90,
+        wakeWindowSlotLabel: "First",
+      },
+    },
+  };
+
+  assert.doesNotThrow(() => assertRemoteSleepCompletion({
+    runningSnapshot: running,
+    completedSnapshot: completed,
+    completedSleep: {
+      startedAt: "2026-08-08T10:00:00.000Z",
+      endedAt: "2026-08-08T10:30:00.000Z",
+      durationMinutes: 30,
+      sleepType: "nap",
+    },
+  }));
+
+  const retained = Buffer.from(JSON.stringify(running));
+  const afterFailure = await refreshSnapshotBytes(retained, async () => {
+    throw new Error("forced summary failure");
+  });
+  assert.strictEqual(afterFailure, retained);
+});
 
 test("household timer runner accepts loopback endpoints and rejects remote services", () => {
   assert.doesNotThrow(() =>

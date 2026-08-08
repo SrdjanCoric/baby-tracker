@@ -11,9 +11,13 @@ import {
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
+  assertRemoteSleepCompletion,
+  authenticateLocalCaregiver,
+  fetchWidgetActivitySnapshot,
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
+  refreshSnapshotBytes,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
@@ -565,6 +569,19 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(member, "start/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 1);
+  const ownerAccessToken = await authenticateLocalCaregiver({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    email: ownerEmail,
+    password: "testpassword123",
+  });
+  const runningWidget = await fetchWidgetActivitySnapshot({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    accessToken: ownerAccessToken,
+    babyId: primaryBabyId,
+    timezone: "UTC",
+  });
   restartApp(owner, "refresh-owner-after-member-start");
   maestro(owner, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
@@ -573,6 +590,55 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(member, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
+  const completedSleep = JSON.parse(psql(
+    status,
+    `
+      SELECT pg_catalog.json_build_object(
+        'startedAt', pg_catalog.to_char(s.started_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+        'endedAt', pg_catalog.to_char(s.ended_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+        'durationMinutes', pg_catalog.floor(s.duration_seconds / 60.0)::integer,
+        'sleepType', s.type
+      )::text
+      FROM sleep_sessions s
+      JOIN users u ON u.id = s.logged_by
+      WHERE s.baby_id = '${primaryBabyId}'::uuid
+        AND s.deleted = false
+        AND u.email = '${memberEmail}'
+      ORDER BY s.started_at DESC
+      LIMIT 1;
+    `,
+    "member-completed-sleep"
+  ));
+  const completedWidget = await fetchWidgetActivitySnapshot({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    accessToken: ownerAccessToken,
+    babyId: primaryBabyId,
+    timezone: "UTC",
+  });
+  assertRemoteSleepCompletion({
+    runningSnapshot: runningWidget.snapshot,
+    completedSnapshot: completedWidget.snapshot,
+    completedSleep,
+  });
+  const bytesAfterForcedFailure = await refreshSnapshotBytes(
+    runningWidget.bytes,
+    () => fetchWidgetActivitySnapshot({
+      apiUrl: status.API_URL,
+      anonKey: status.ANON_KEY,
+      accessToken: ownerAccessToken,
+      babyId: primaryBabyId,
+      timezone: "UTC",
+      fetchImpl: async () => ({
+        ok: false,
+        status: 503,
+        text: async () => "forced summary failure",
+      }),
+    }).then((result) => result.bytes)
+  );
+  if (!bytesAfterForcedFailure.equals(runningWidget.bytes)) {
+    throw new Error("Failed Widget summary installed a timer-only partial state");
+  }
   verifyCaregiverCompletions(status);
   restartApp(owner, "refresh-owner-after-member-stop");
   maestro(owner, "assert-unlocked.yaml", {

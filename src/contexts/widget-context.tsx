@@ -463,6 +463,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         accessToken: session.access_token,
         userId: user.id,
         selectedBabyId: selectedBaby.id,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       });
     };
 

@@ -52,6 +52,18 @@ BEGIN
     RAISE EXCEPTION 'local timer RPC grants exceed the caller permission contract';
   END IF;
 
+  IF NOT has_function_privilege(
+    'authenticated',
+    'public.get_baby_activity_snapshot(uuid, text)',
+    'EXECUTE'
+  ) OR has_function_privilege(
+    'anon',
+    'public.get_baby_activity_snapshot(uuid, text)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'local Widget snapshot RPC grants violate the authenticated-only contract';
+  END IF;
+
   IF (
     SELECT count(*)
     FROM pg_publication_tables
