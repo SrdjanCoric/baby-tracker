@@ -3,44 +3,6 @@ BEGIN;
 
 DO $$
 DECLARE
-  v_spring_start timestamptz;
-  v_spring_end timestamptz;
-  v_fall_start timestamptz;
-  v_fall_end timestamptz;
-BEGIN
-  v_spring_start := pg_catalog.date_trunc(
-    'day',
-    '2025-03-09T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
-  ) AT TIME ZONE 'America/New_York';
-  v_spring_end := (
-    pg_catalog.date_trunc(
-      'day',
-      '2025-03-09T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
-    ) + INTERVAL '1 day'
-  ) AT TIME ZONE 'America/New_York';
-  v_fall_start := pg_catalog.date_trunc(
-    'day',
-    '2025-11-02T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
-  ) AT TIME ZONE 'America/New_York';
-  v_fall_end := (
-    pg_catalog.date_trunc(
-      'day',
-      '2025-11-02T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
-    ) + INTERVAL '1 day'
-  ) AT TIME ZONE 'America/New_York';
-
-  IF v_spring_end - v_spring_start <> INTERVAL '23 hours'
-    OR v_fall_end - v_fall_start <> INTERVAL '25 hours'
-  THEN
-    RAISE EXCEPTION 'presentation-timezone day bounds are not DST-safe';
-  END IF;
-END
-$$;
-
-\echo 'PASS: presentation-timezone day bounds preserve DST transitions'
-
-DO $$
-DECLARE
   v_function_oid oid;
   v_security_definer boolean;
   v_config text[];
@@ -325,6 +287,76 @@ $$;
 RESET ROLE;
 
 \echo 'PASS: baby activity snapshot scopes one active baby to authenticated household members'
+
+CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
+RETURNS timestamptz
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+SET search_path = ''
+AS $$ SELECT '2025-03-09T16:00:00Z'::timestamptz $$;
+
+SELECT pg_catalog.set_config(
+  'request.jwt.claims',
+  pg_catalog.json_build_object(
+    'sub', '81111111-1111-1111-1111-111111111111',
+    'role', 'authenticated'
+  )::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_snapshot jsonb;
+BEGIN
+  v_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000001',
+    'America/New_York'
+  );
+  IF v_snapshot->'localDay'->>'startedAt' IS DISTINCT FROM '2025-03-09T05:00:00.000Z'
+    OR v_snapshot->'localDay'->>'endsAt' IS DISTINCT FROM '2025-03-10T04:00:00.000Z'
+  THEN
+    RAISE EXCEPTION 'spring-forward RPC local day was not 23 hours: %', v_snapshot->'localDay';
+  END IF;
+END
+$$;
+RESET ROLE;
+
+CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
+RETURNS timestamptz
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+SET search_path = ''
+AS $$ SELECT '2025-11-02T17:00:00Z'::timestamptz $$;
+
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_snapshot jsonb;
+BEGIN
+  v_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000001',
+    'America/New_York'
+  );
+  IF v_snapshot->'localDay'->>'startedAt' IS DISTINCT FROM '2025-11-02T04:00:00.000Z'
+    OR v_snapshot->'localDay'->>'endsAt' IS DISTINCT FROM '2025-11-03T05:00:00.000Z'
+  THEN
+    RAISE EXCEPTION 'fall-back RPC local day was not 25 hours: %', v_snapshot->'localDay';
+  END IF;
+END
+$$;
+RESET ROLE;
+
+CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
+RETURNS timestamptz
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+SET search_path = ''
+AS $$ SELECT pg_catalog.statement_timestamp() $$;
+
+\echo 'PASS: baby activity snapshot local day preserves DST transitions'
 
 SELECT pg_catalog.set_config(
   'test.snapshot_timezone',
