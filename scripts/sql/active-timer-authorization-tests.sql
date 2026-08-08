@@ -50,6 +50,7 @@ $$;
 DO $$
 DECLARE
   v_household_id uuid;
+  v_outsider_household_id uuid;
 BEGIN
   INSERT INTO auth.users (id, email)
   VALUES
@@ -66,8 +67,15 @@ BEGIN
   SET household_id = v_household_id
   WHERE id = '72222222-2222-2222-2222-222222222222';
 
+  SELECT users.household_id
+  INTO v_outsider_household_id
+  FROM public.users
+  WHERE id = '73333333-3333-3333-3333-333333333333';
+
   INSERT INTO public.babies (id, household_id, name)
-  VALUES ('7a000000-0000-0000-0000-000000000001', v_household_id, 'Timer Test Baby');
+  VALUES
+    ('7a000000-0000-0000-0000-000000000001', v_household_id, 'Timer Test Baby'),
+    ('7a000000-0000-0000-0000-000000000002', v_outsider_household_id, 'Foreign Timer Test Baby');
 END
 $$;
 
@@ -207,6 +215,8 @@ DECLARE
   rejected_old_direct BOOLEAN := false;
   rejected_future_rpc BOOLEAN := false;
   rejected_old_rpc BOOLEAN := false;
+  denied_baby_relocation BOOLEAN := false;
+  denied_activity_relocation BOOLEAN := false;
   released BOOLEAN;
   rpc_started_at TIMESTAMPTZ;
   stored_started_at TIMESTAMPTZ;
@@ -225,6 +235,32 @@ BEGIN
 
   IF NOT acquired THEN
     RAISE EXCEPTION 'the timer owner could not acquire a timer';
+  END IF;
+
+  BEGIN
+    UPDATE public.active_timers
+    SET baby_id = '7a000000-0000-0000-0000-000000000002'
+    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+      AND activity_type = 'sleep';
+  EXCEPTION WHEN insufficient_privilege THEN
+    denied_baby_relocation := true;
+  END;
+
+  IF NOT denied_baby_relocation THEN
+    RAISE EXCEPTION 'a timer owner relocated a lock to another household''s baby';
+  END IF;
+
+  BEGIN
+    UPDATE public.active_timers
+    SET activity_type = 'feeding'
+    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+      AND activity_type = 'sleep';
+  EXCEPTION WHEN insufficient_privilege THEN
+    denied_activity_relocation := true;
+  END;
+
+  IF NOT denied_activity_relocation THEN
+    RAISE EXCEPTION 'a timer owner changed the lock activity type directly';
   END IF;
 
   UPDATE public.active_timers
