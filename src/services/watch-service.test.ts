@@ -18,6 +18,7 @@ const authContext = {
   supabaseAnonKey: "anon-key",
   accessToken: "access-token",
   userId: "user-1",
+  householdId: "household-1",
 };
 
 async function loadWatchService() {
@@ -123,6 +124,26 @@ describe("watch language transport", () => {
     expect(published.supabaseAnonKey).toBeUndefined();
     expect(published.userId).toBeUndefined();
     expect(published.widgetData).toBeUndefined();
+  });
+
+  it("publishes a sign-out marker so Watch invalidates the visible account scope", async () => {
+    const { clearWatchContext, syncToWatch } = await loadWatchService();
+    await syncToWatch(widgetData, undefined, authContext);
+    updateApplicationContext.mockClear();
+
+    clearWatchContext();
+
+    expect(updateApplicationContext).toHaveBeenCalledWith({ signedOut: true });
+  });
+
+  it("carries the household generation with Watch credentials", async () => {
+    const { syncToWatch } = await loadWatchService();
+
+    await syncToWatch(widgetData, undefined, authContext);
+
+    expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
+      expect.objectContaining({ householdId: "household-1", userId: "user-1" })
+    );
   });
 
   it("keeps the latest language on subsequent syncs without repeating the language call", async () => {

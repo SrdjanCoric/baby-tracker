@@ -6,6 +6,9 @@ BEGIN;
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+-- Migration 062 keeps timer acquisition RPC-only. The broad local-fixture grant above must not
+-- silently restore direct timer inserts after a clean migration apply.
+REVOKE INSERT ON TABLE public.active_timers FROM authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.cleanup_stale_timer_locks() FROM authenticated, anon;

@@ -17,8 +17,10 @@ import {
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
+  reconcileWatchTimerProbe,
   selectNamedSimulators,
   stopProcessGroup,
+  watchTimerFingerprint,
 } from "./lib/household-runner.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -700,6 +702,25 @@ async function runSleepHandoff(status, owner, member) {
   assertRemoteSleepCompletion({
     runningSnapshot: runningWidget.snapshot,
     completedSnapshot: completedWidget.snapshot,
+    completedSleep,
+  });
+  const completedWatchFingerprint = watchTimerFingerprint(completedWidget.snapshot.activeTimers);
+  const baseAfterFailedWatchFetch = reconcileWatchTimerProbe({
+    base: runningWidget.snapshot,
+    fingerprint: completedWatchFingerprint,
+    fullSummary: null,
+  });
+  if (baseAfterFailedWatchFetch !== runningWidget.snapshot) {
+    throw new Error("Watch installed timer-only probe state after a forced full-summary failure");
+  }
+  const acceptedWatchBase = reconcileWatchTimerProbe({
+    base: runningWidget.snapshot,
+    fingerprint: completedWatchFingerprint,
+    fullSummary: completedWidget.snapshot,
+  });
+  assertRemoteSleepCompletion({
+    runningSnapshot: runningWidget.snapshot,
+    completedSnapshot: acceptedWatchBase,
     completedSleep,
   });
   verifyCaregiverCompletions(status);

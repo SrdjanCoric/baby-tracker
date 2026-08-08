@@ -95,6 +95,7 @@ export interface WatchAuthContext {
   supabaseAnonKey: string;
   accessToken: string;
   userId: string;
+  householdId?: string;
   liveActivityPushToken?: string;
   pushToStartToken?: string;
 }

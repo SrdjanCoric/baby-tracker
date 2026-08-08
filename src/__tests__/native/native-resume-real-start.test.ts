@@ -70,7 +70,8 @@ describe("native counted-pause resume", () => {
       /'startTime', pg_catalog\.to_char\(\s*timer\.started_at AT TIME ZONE 'UTC'/
     );
     expect(snapshotMigration).not.toContain("effectiveStartTime");
-    expect(watchFetch).toContain("startTime: timer.started_at");
-    expect(watchFetch).not.toContain("startTime = effective");
+    expect(watchFetch).toContain("WatchTimerProbeDecoder.decode(");
+    expect(watchFetch).not.toContain("startTime: timer.started_at");
+    expect(watchFetch).not.toContain("effectiveStartTime");
   });
 });

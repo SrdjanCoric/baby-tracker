@@ -15,6 +15,8 @@ import {
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   assertRemoteSleepCompletion,
+  reconcileWatchTimerProbe,
+  watchTimerFingerprint,
   authenticateLocalCaregiver,
   fetchWidgetActivitySnapshot,
   parseRunnerOptions,
@@ -137,6 +139,60 @@ test("household timer runner proves one remote sleep completion summary", () => 
     },
   }), /nap count or wake-window state did not advance coherently/);
 
+});
+
+test("Watch keeps its coherent base when a changed timer probe cannot fetch the full summary", () => {
+  const running = {
+    schemaVersion: 1,
+    serverAsOf: "2026-08-08T10:00:00.000Z",
+    babyId: "baby-1",
+    activeTimer: {
+      type: "sleep",
+      startTime: "2026-08-08T09:00:00.000Z",
+      timerInstanceId: "timer-1",
+      context: "nap",
+      isPaused: false,
+    },
+    activeTimers: [{
+      type: "sleep",
+      startTime: "2026-08-08T09:00:00.000Z",
+      timerInstanceId: "timer-1",
+      context: "nap",
+      isPaused: false,
+    }],
+    activities: { sleep: { isActive: true, lastSleepEndedAt: "2026-08-08T08:30:00.000Z" } },
+  };
+  const completed = {
+    ...running,
+    serverAsOf: "2026-08-08T10:30:00.000Z",
+    activeTimer: null,
+    activeTimers: [],
+    activities: {
+      sleep: {
+        isActive: false,
+        lastSleepEndedAt: "2026-08-08T10:30:00.000Z",
+        todayMinutes: 30,
+        napCountToday: 1,
+        wakeWindowMinutes: 120,
+      },
+    },
+  };
+
+  const completedFingerprint = watchTimerFingerprint(completed.activeTimers);
+  const failed = reconcileWatchTimerProbe({
+    base: running,
+    fingerprint: completedFingerprint,
+    fullSummary: null,
+  });
+  assert.deepEqual(failed, running);
+  assert.notEqual(failed.activeTimers, completed.activeTimers);
+
+  const accepted = reconcileWatchTimerProbe({
+    base: running,
+    fingerprint: completedFingerprint,
+    fullSummary: completed,
+  });
+  assert.deepEqual(accepted, completed);
 });
 
 test("household timer runner accepts loopback endpoints and rejects remote services", () => {
