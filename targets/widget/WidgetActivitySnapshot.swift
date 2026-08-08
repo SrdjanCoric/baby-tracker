@@ -290,12 +290,17 @@ protocol WidgetSnapshotFetching: Sendable {
     func fetchSnapshot(for identity: WidgetSnapshotIdentity) async throws -> Data
 }
 
+private struct WidgetSnapshotRefreshOutcome {
+    let data: WidgetDataModel?
+    let displayChanged: Bool
+}
+
 actor WidgetSnapshotCoordinator {
     private let store: WidgetSnapshotStoring
     private let identityReader: WidgetSnapshotIdentityReading
     private let fetcher: WidgetSnapshotFetching
     private let reload: @Sendable () -> Void
-    private var inFlight: [String: Task<WidgetDataModel?, Never>] = [:]
+    private var inFlight: [String: Task<WidgetSnapshotRefreshOutcome, Never>] = [:]
 
     init(
         store: WidgetSnapshotStoring,
@@ -309,43 +314,50 @@ actor WidgetSnapshotCoordinator {
         self.reload = reload
     }
 
-    func refresh(for babyId: String) async -> WidgetDataModel? {
+    func refresh(
+        for babyId: String,
+        reloadTimelines: Bool = true
+    ) async -> WidgetDataModel? {
         if let existing = inFlight[babyId] {
-            return await existing.value
+            let outcome = await existing.value
+            if reloadTimelines && outcome.displayChanged {
+                reload()
+            }
+            return outcome.data
         }
 
         let store = self.store
         let identityReader = self.identityReader
         let fetcher = self.fetcher
-        let reload = self.reload
-        let task = Task<WidgetDataModel?, Never> {
+        let task = Task<WidgetSnapshotRefreshOutcome, Never> {
             await Self.performRefresh(
                 for: babyId,
                 store: store,
                 identityReader: identityReader,
-                fetcher: fetcher,
-                reload: reload
+                fetcher: fetcher
             )
         }
         inFlight[babyId] = task
-        let result = await task.value
+        let outcome = await task.value
         inFlight[babyId] = nil
-        return result
+        if reloadTimelines && outcome.displayChanged {
+            reload()
+        }
+        return outcome.data
     }
 
     private static func performRefresh(
         for babyId: String,
         store: WidgetSnapshotStoring,
         identityReader: WidgetSnapshotIdentityReading,
-        fetcher: WidgetSnapshotFetching,
-        reload: @Sendable () -> Void
-    ) async -> WidgetDataModel? {
+        fetcher: WidgetSnapshotFetching
+    ) async -> WidgetSnapshotRefreshOutcome {
         let priorBytes = store.readSnapshot(for: babyId)
         let prior = priorBytes.flatMap { try? WidgetSnapshotDecoder.decodeCache($0).data }
 
         guard let capturedIdentity = identityReader.currentIdentity(),
               capturedIdentity.babyId == babyId else {
-            return prior
+            return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
         }
 
         do {
@@ -356,23 +368,23 @@ actor WidgetSnapshotCoordinator {
             )
 
             guard identityReader.currentIdentity() == capturedIdentity else {
-                return prior
+                return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
             }
             guard !isOlder(response, than: prior) else {
-                return prior
+                return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
             }
             if responseBytes == priorBytes {
-                return response
+                return WidgetSnapshotRefreshOutcome(data: response, displayChanged: false)
             }
 
             let shouldReload = !isDisplayEquivalent(response, to: prior)
             try store.writeSnapshot(responseBytes, for: babyId)
-            if shouldReload {
-                reload()
-            }
-            return response
+            return WidgetSnapshotRefreshOutcome(
+                data: response,
+                displayChanged: shouldReload
+            )
         } catch {
-            return prior
+            return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
         }
     }
 

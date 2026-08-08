@@ -148,6 +148,23 @@ enum WidgetSnapshotTests {
         require(store.bytesByBaby["baby-versioned"] == versioned, "coordinator did not store response bytes")
         require(store.events == ["write", "reload"], "cache must be written before WidgetKit reload")
 
+        let providerStore = TestSnapshotStore()
+        providerStore.bytesByBaby["baby-versioned"] = legacy
+        let providerCoordinator = WidgetSnapshotCoordinator(
+            store: providerStore,
+            identityReader: identity,
+            fetcher: TestSnapshotFetcher(bytes: versioned),
+            reload: { providerStore.events.append("reload") }
+        )
+        _ = await providerCoordinator.refresh(
+            for: "baby-versioned",
+            reloadTimelines: false
+        )
+        require(
+            providerStore.events == ["write"],
+            "provider-driven refresh recursively reloaded Widget timelines"
+        )
+
         _ = await coordinator.refresh(for: "baby-versioned")
         require(store.writes == 1, "equivalent refresh rewrote an unchanged snapshot")
 

@@ -35,7 +35,9 @@ describe("Widget coherent snapshot wiring", () => {
       "struct SingleActivityProvider",
       "// MARK: - Small Widget View"
     );
-    expect(providers.match(/await refreshWidgetSnapshot\(\)/g)).toHaveLength(3);
+    expect(
+      providers.match(/await refreshWidgetSnapshot\(reloadTimelines: false\)/g)
+    ).toHaveLength(3);
     expect(providers).not.toContain("fetchActiveTimersFromNetwork");
     expect(providers).not.toContain("mergeNetworkTimers");
   });

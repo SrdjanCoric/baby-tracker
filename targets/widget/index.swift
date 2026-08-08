@@ -513,7 +513,7 @@ struct TogglePauseActivityIntent: AppIntent {
 
         var widgetData = loadWidgetData()
         if widgetData?.getActiveTimer(for: activity) == nil {
-            widgetData = await refreshWidgetSnapshot()
+            widgetData = await refreshWidgetSnapshot(reloadTimelines: false)
         }
         guard let widgetData,
               let timer = widgetData.getActiveTimer(for: activity) else {
@@ -856,12 +856,15 @@ private let widgetSnapshotRuntime: (
     return (store, identity, coordinator)
 }()
 
-func refreshWidgetSnapshot() async -> WidgetDataModel? {
+func refreshWidgetSnapshot(reloadTimelines: Bool = true) async -> WidgetDataModel? {
     guard let runtime = widgetSnapshotRuntime,
           let identity = runtime.identity.currentIdentity() else {
         return loadWidgetData()
     }
-    return await runtime.coordinator.refresh(for: identity.babyId)
+    return await runtime.coordinator.refresh(
+        for: identity.babyId,
+        reloadTimelines: reloadTimelines
+    )
 }
 
 func loadWidgetData() -> WidgetDataModel? {
@@ -1048,7 +1051,7 @@ struct SingleActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectActivityIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         captureRunningActivityPushToken()
-        let data = await refreshWidgetSnapshot()
+        let data = await refreshWidgetSnapshot(reloadTimelines: false)
 
         let authenticated = isUserAuthenticated()
 
@@ -1078,7 +1081,7 @@ struct FourActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectFourActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         captureRunningActivityPushToken()
-        let data = await refreshWidgetSnapshot()
+        let data = await refreshWidgetSnapshot(reloadTimelines: false)
 
         let activities = [configuration.activity1, configuration.activity2, configuration.activity3, configuration.activity4]
         let authenticated = isUserAuthenticated()
@@ -1109,7 +1112,7 @@ struct TwoActivityProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectTwoActivitiesIntent, in context: Context) async -> Timeline<BabyWidgetEntry> {
         captureRunningActivityPushToken()
-        let data = await refreshWidgetSnapshot()
+        let data = await refreshWidgetSnapshot(reloadTimelines: false)
 
         let activities = [configuration.activity1, configuration.activity2]
         let authenticated = isUserAuthenticated()
