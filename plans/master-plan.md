@@ -282,7 +282,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0075 · Log and edit pumping and tummy time by clock time (after 0072, 0074) → tasks/done/0075-log-and-edit-pumping-and-tummy-time-by-clock-time.md
 - [x] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/done/0076-warn-on-overlapping-non-sleep-records.md
 - [x] 0077 · Refresh the iOS Widget from a coherent activity summary → tasks/done/0077-refresh-widget-from-native-activity-summary.md
-- [>] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/0078-refresh-watch-summaries-after-timer-changes.md
+- [x] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/done/0078-refresh-watch-summaries-after-timer-changes.md
 
 ## Workflow status
 
