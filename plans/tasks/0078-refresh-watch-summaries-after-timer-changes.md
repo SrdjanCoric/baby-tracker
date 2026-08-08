@@ -44,6 +44,14 @@ remote-push subsystem and no full-summary request every 30 seconds. It also does
 deferred Watch regression or WatchConnectivity failure audits; it fixes this confirmed, bounded
 convergence defect against Task 0077's contract.
 
+**Owner-directed authorization follow-up (2026-08-08):** migration `062` revokes only direct
+`authenticated` `INSERT` on `public.active_timers`, preserving the RLS-protected `SELECT` required by
+the Watch probe and household visibility plus the existing owner-scoped `UPDATE` and `DELETE` paths.
+Timer acquisition remains available through `acquire_timer_lock`. The existing INSERT RLS policy is
+retained so the emergency rollback is the single `GRANT INSERT ON TABLE public.active_timers TO
+authenticated` statement documented in the migration. Compatibility proof covers the May 2026 phone
+and Watch RPC shapes and the latest clean two-caregiver simulator gate.
+
 ## Implementation work
 
 - [ ] Write failing Watch coordinator tests for an unchanged timer fingerprint, every material timer
@@ -71,6 +79,9 @@ convergence defect against Task 0077's contract.
       state is installed.
 - [ ] Run focused Watch source, decoder, cache, WatchConnectivity, timer-command, local Supabase, and
       two-caregiver checks plus the repository's relevant canonical validation.
+- [ ] Apply migration `062` locally and prove authenticated callers cannot insert timer rows directly
+      while May-era and current RPC acquisition, selected-baby reads, owner updates/deletes, offline
+      reconciliation, and the clean two-caregiver gate remain valid.
 
 ## Human checkpoints
 
@@ -99,3 +110,5 @@ convergence defect against Task 0077's contract.
       overwriting a newer valid versioned base.
 - [ ] No full-summary 30-second polling, guaranteed suspended-Watch delivery, new Watch push system,
       broad deferred audit work, production access, or production mutation is introduced.
+- [ ] `authenticated` cannot directly insert `active_timers`, retains `SELECT`, `UPDATE`, and `DELETE`,
+      and can still execute `acquire_timer_lock`; the migration preserves a one-statement rollback.
