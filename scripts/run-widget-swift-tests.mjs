@@ -3,10 +3,11 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+const root = resolve(scriptDirectory, "..");
 const buildDirectory = mkdtempSync(join(tmpdir(), "widget-snapshot-tests-"));
 const moduleCache = join(buildDirectory, "module-cache");
 const executable = join(buildDirectory, "widget-snapshot-tests");
