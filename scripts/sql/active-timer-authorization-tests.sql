@@ -44,6 +44,10 @@ BEGIN
   IF has_table_privilege('authenticated', 'public.active_timers', 'INSERT') THEN
     RAISE EXCEPTION 'authenticated callers must acquire timer locks through the RPC';
   END IF;
+
+  IF NOT has_table_privilege('authenticated', 'public.active_timers', 'UPDATE') THEN
+    RAISE EXCEPTION 'authenticated callers lost backward-compatible active timer UPDATE';
+  END IF;
 END
 $$;
 
@@ -261,6 +265,21 @@ BEGIN
 
   IF NOT denied_activity_relocation THEN
     RAISE EXCEPTION 'a timer owner changed the lock activity type directly';
+  END IF;
+
+  UPDATE public.active_timers
+  SET
+    baby_id = '7a000000-0000-0000-0000-000000000001',
+    activity_type = 'sleep',
+    started_by = '71111111-1111-1111-1111-111111111111',
+    timer_data = COALESCE(timer_data, '{}'::jsonb),
+    updated_at = pg_catalog.now()
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+
+  IF updated_count <> 1 THEN
+    RAISE EXCEPTION 'a backward-compatible full-row timer update was rejected';
   END IF;
 
   UPDATE public.active_timers
