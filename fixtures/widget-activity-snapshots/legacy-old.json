@@ -1,0 +1,29 @@
+{
+  "babyId": "baby-legacy",
+  "babyName": "Legacy Baby",
+  "activities": {
+    "feeding": { "lastTime": null, "todayCount": 1, "lastType": "breast", "lastSide": "left" },
+    "sleep": {
+      "lastTime": "2026-08-08T08:30:00.000Z",
+      "todayMinutes": 90,
+      "goalMinutes": 840,
+      "lastDurationMinutes": 30,
+      "isActive": true,
+      "sleepType": "nap",
+      "wakeWindowMinutes": 120,
+      "wakeWindowSlotLabel": "Second",
+      "lastSleepEndedAt": "2026-08-08T08:30:00.000Z"
+    },
+    "diaper": { "lastTime": null, "todayCounts": { "wet": 0, "dirty": 0, "mixed": 0, "dry": 0 }, "lastType": null },
+    "pumping": { "lastTime": null, "todayVolumeMl": 0, "sessionCount": 0, "lastSide": null },
+    "growth": { "lastMeasurement": null },
+    "tummyTime": { "lastTime": null, "todayMinutes": 0, "goalMinutes": 30, "lastDurationMinutes": null }
+  },
+  "activeTimer": {
+    "type": "sleep",
+    "startTime": "2026-08-08T09:00:00.000Z",
+    "timerInstanceId": "legacy-timer",
+    "context": "nap"
+  },
+  "updatedAt": "2026-08-08T09:00:00.000Z"
+}

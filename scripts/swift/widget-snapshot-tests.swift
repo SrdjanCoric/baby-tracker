@@ -90,6 +90,7 @@ enum WidgetSnapshotTests {
         }
         let fixtures = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
         let legacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy.json"))
+        let oldLegacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy-old.json"))
         let versioned = try Data(contentsOf: fixtures.appendingPathComponent("versioned.json"))
         let weightOnly = try Data(contentsOf: fixtures.appendingPathComponent("versioned-weight-only.json"))
 
@@ -97,6 +98,14 @@ enum WidgetSnapshotTests {
         require(legacyDecoded.kind == .legacy, "legacy fixture lost its compatibility classification")
         require(legacyDecoded.data.activeTimers?.count == 1, "singular legacy timer was not normalized")
         require(legacyDecoded.data.activeTimer?.timerInstanceId == "legacy-timer", "legacy timer identity changed")
+
+        let oldLegacyDecoded = try WidgetSnapshotDecoder.decodeCache(oldLegacy)
+        require(
+            oldLegacyDecoded.kind == .legacy
+                && oldLegacyDecoded.data.activities.sleep.napCountToday == 0
+                && oldLegacyDecoded.data.activities.sleep.morningConfirmationPending == false,
+            "older legacy sleep defaults diverged between decoders"
+        )
 
         let versionedDecoded = try WidgetSnapshotDecoder.decodeNetwork(versioned, expectedBabyId: "baby-versioned")
         require(versionedDecoded.schemaVersion == 1, "versioned fixture lost its schema version")

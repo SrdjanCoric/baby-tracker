@@ -223,12 +223,15 @@ enum WidgetSnapshotDecoder {
     }()
 
     static func decodeCache(_ bytes: Data) throws -> DecodedWidgetSnapshot {
-        let data = try JSONDecoder().decode(WidgetDataModel.self, from: bytes)
+        var data = try JSONDecoder().decode(WidgetDataModel.self, from: bytes)
         if let version = data.schemaVersion {
             guard version == 1 else { throw WidgetSnapshotError.incompatibleVersion }
             try validateVersioned(data, expectedBabyId: data.babyId)
             return DecodedWidgetSnapshot(kind: .versioned, data: data)
         }
+        data.activities.sleep.napCountToday = data.activities.sleep.napCountToday ?? 0
+        data.activities.sleep.morningConfirmationPending =
+            data.activities.sleep.morningConfirmationPending ?? false
         return DecodedWidgetSnapshot(kind: .legacy, data: data)
     }
 
@@ -257,6 +260,8 @@ enum WidgetSnapshotDecoder {
               let localDayStart = formatter.date(from: localDay.startedAt),
               let localDayEnd = formatter.date(from: localDay.endsAt),
               localDayStart < localDayEnd,
+              data.activities.sleep.napCountToday != nil,
+              data.activities.sleep.morningConfirmationPending != nil,
               data.updatedAt == serverAsOf else {
             throw WidgetSnapshotError.semanticFailure
         }

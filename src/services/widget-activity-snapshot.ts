@@ -111,7 +111,10 @@ function decodeTimer(value: unknown): ActiveTimerData | null | undefined {
   return value as unknown as ActiveTimerData;
 }
 
-function hasValidActivities(value: unknown): value is WidgetActivityData {
+function hasValidActivities(
+  value: unknown,
+  allowLegacySleepDefaults = false
+): value is WidgetActivityData {
   if (!isObject(value)) return false;
   const { feeding, sleep, diaper, pumping, growth, tummyTime } = value;
   if (!isObject(feeding) || !isObject(sleep) || !isObject(diaper)
@@ -133,8 +136,10 @@ function hasValidActivities(value: unknown): value is WidgetActivityData {
     || !isNullableNumber(sleep.wakeWindowMinutes)
     || !isNullableString(sleep.wakeWindowSlotLabel)
     || !isNullableString(sleep.lastSleepEndedAt)
-    || !isFiniteNumber(sleep.napCountToday)
-    || typeof sleep.morningConfirmationPending !== "boolean") {
+    || !(isFiniteNumber(sleep.napCountToday)
+      || (allowLegacySleepDefaults && sleep.napCountToday === undefined))
+    || !(typeof sleep.morningConfirmationPending === "boolean"
+      || (allowLegacySleepDefaults && sleep.morningConfirmationPending === undefined))) {
     return false;
   }
   if (!isNullableString(diaper.lastTime)
@@ -176,11 +181,12 @@ export function decodeWidgetActivitySnapshotJson(
   } catch {
     return null;
   }
-  if (!isObject(value)
-    || typeof value.babyId !== "string"
+  if (!isObject(value)) return null;
+  const isLegacy = value.schemaVersion === undefined;
+  if (typeof value.babyId !== "string"
     || typeof value.babyName !== "string"
     || typeof value.updatedAt !== "string"
-    || !hasValidActivities(value.activities)) {
+    || !hasValidActivities(value.activities, isLegacy)) {
     return null;
   }
 
@@ -204,7 +210,6 @@ export function decodeWidgetActivitySnapshotJson(
   if (activeTimer !== null && !timersEqual(activeTimer, canonicalTimer)) return null;
   if (activeTimer === null && canonicalTimer !== null) return null;
 
-  const isLegacy = value.schemaVersion === undefined;
   if (!isLegacy) {
     if (value.schemaVersion !== 1
       || typeof value.serverAsOf !== "string"
@@ -216,10 +221,26 @@ export function decodeWidgetActivitySnapshotJson(
     }
   }
 
+  const decodedData = value as unknown as WidgetData;
+  const data = isLegacy
+    ? {
+        ...decodedData,
+        activities: {
+          ...decodedData.activities,
+          sleep: {
+            ...decodedData.activities.sleep,
+            napCountToday: decodedData.activities.sleep.napCountToday ?? 0,
+            morningConfirmationPending:
+              decodedData.activities.sleep.morningConfirmationPending ?? false,
+          },
+        },
+      }
+    : decodedData;
+
   return {
     kind: isLegacy ? "legacy" : "versioned",
     data: {
-      ...(value as unknown as WidgetData),
+      ...data,
       activeTimer: canonicalTimer,
       activeTimers,
     },

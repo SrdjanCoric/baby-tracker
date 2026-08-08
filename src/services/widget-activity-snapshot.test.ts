@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { decodeWidgetActivitySnapshotJson } from "./widget-activity-snapshot";
 
-function fixture(name: "legacy" | "versioned" | "versioned-weight-only"): string {
+function fixture(name: "legacy" | "legacy-old" | "versioned" | "versioned-weight-only"): string {
   return readFileSync(
     resolve(process.cwd(), `fixtures/widget-activity-snapshots/${name}.json`),
     "utf8"
@@ -18,6 +18,14 @@ describe("widget activity snapshot decoder", () => {
     expect(decoded?.kind).toBe("legacy");
     expect(decoded?.data.activeTimer?.timerInstanceId).toBe("legacy-timer");
     expect(decoded?.data.activeTimers).toEqual([decoded?.data.activeTimer]);
+  });
+
+  it("accepts an older unversioned cache without newer sleep summary fields", () => {
+    const decoded = decodeWidgetActivitySnapshotJson(fixture("legacy-old"));
+
+    expect(decoded?.kind).toBe("legacy");
+    expect(decoded?.data.activities.sleep.napCountToday).toBe(0);
+    expect(decoded?.data.activities.sleep.morningConfirmationPending).toBe(false);
   });
 
   it("accepts the supported version with additive unknown metadata", () => {
