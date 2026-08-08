@@ -134,6 +134,9 @@ functional but keep the reported defect until upgraded.
   timezone names or inaccessible babies, revokes execution from `PUBLIC` and `anon`, and grants it
   only to `authenticated`. Apply and verify the migration only against local Supabase; existing RPCs,
   REST paths, table shapes, policies, and old native binaries remain unchanged.
+- **Accepted security risk (TR-8, 2026-08-08):** retain the RPC's `SECURITY INVOKER` model and its
+  RLS-protected column grants without adding a restricted executor role. This accepts the additional
+  direct PostgREST surface for those granted columns; household RLS remains the authorization boundary.
 
 ## Implementation proof
 
