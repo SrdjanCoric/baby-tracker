@@ -159,7 +159,11 @@ AS $$
           'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
         ),
         'timerInstanceId', NULLIF(timer.timer_data->>'timerInstanceId', ''),
-        'context', COALESCE(timer.timer_data->>'side', timer.timer_data->>'sleepType'),
+        'context', COALESCE(
+          timer.timer_data->>'side',
+          timer.timer_data->>'sleepType',
+          timer.timer_data->>'type'
+        ),
         'isRemote', timer.started_by <> auth.uid(),
         'isPaused', COALESCE((timer.timer_data->>'isPaused')::boolean, false),
         'accumulatedSeconds', CASE

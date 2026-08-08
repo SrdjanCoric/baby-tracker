@@ -447,7 +447,7 @@ SELECT
   'sleep',
   '82222222-2222-2222-2222-222222222222',
   day_start + INTERVAL '11 hours',
-  '{"timerInstanceId":"modern-sleep-timer","activityId":"81000000-0000-0000-0000-000000000006","sleepType":"nap","isPaused":false}'::jsonb
+  '{"timerInstanceId":"modern-sleep-timer","activityId":"81000000-0000-0000-0000-000000000006","type":"nap","isPaused":false}'::jsonb
 FROM clock;
 
 SELECT pg_catalog.set_config(
@@ -470,6 +470,7 @@ BEGIN
   IF pg_catalog.jsonb_array_length(v_snapshot->'activeTimers') <> 1
     OR v_snapshot->'activeTimer' <> v_snapshot->'activeTimers'->0
     OR v_snapshot->'activeTimer'->>'timerInstanceId' <> 'modern-sleep-timer'
+    OR v_snapshot->'activeTimer'->>'context' IS DISTINCT FROM 'nap'
     OR v_snapshot->'activeTimer'->>'isRemote' <> 'true'
     OR v_snapshot->'activities'->'sleep'->>'isActive' <> 'true'
     OR v_snapshot->'activities'->'sleep'->>'lastDurationMinutes' <> '30'
