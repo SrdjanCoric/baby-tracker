@@ -339,22 +339,15 @@ AS $$
   ),
   sleep_summary AS (
     SELECT COALESCE(
-      pg_catalog.floor(
-        pg_catalog.sum(
-          EXTRACT(
-            EPOCH FROM (
-              LEAST(completed_sleep.ended_at, config.sleep_day_end)
-              - GREATEST(completed_sleep.started_at, config.sleep_day_start)
-            )
-          )
-        ) / 60
+      pg_catalog.sum(
+        pg_catalog.floor(COALESCE(completed_sleep.duration_seconds, 0) / 60.0)
       ),
       0
     )::integer AS today_minutes
     FROM config
     LEFT JOIN completed_sleep
-      ON completed_sleep.ended_at > config.sleep_day_start
-      AND completed_sleep.started_at < config.sleep_day_end
+      ON completed_sleep.started_at >= config.local_day_start
+      AND completed_sleep.started_at < config.local_day_end
   ),
   last_night_sleep AS (
     SELECT pg_catalog.max(completed_sleep.ended_at) AS ended_at

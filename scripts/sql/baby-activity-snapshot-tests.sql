@@ -404,7 +404,7 @@ BEGIN
     OR v_snapshot->'activities'->'feeding'->>'lastType' <> 'bottle'
     OR v_snapshot->'activities'->'feeding'->'lastSide' <> 'null'::jsonb
     OR v_snapshot->'activities'->'feeding'->>'lastTime' IS NULL
-    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '75'
+    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '405'
     OR v_snapshot->'activities'->'sleep'->>'goalMinutes' <> '780'
     OR v_snapshot->'activities'->'sleep'->>'lastDurationMinutes' <> '30'
     OR v_snapshot->'activities'->'sleep'->>'sleepType' <> 'nap'
@@ -514,7 +514,7 @@ BEGIN
   );
   IF pg_catalog.jsonb_array_length(v_snapshot->'activeTimers') <> 1
     OR v_snapshot->'activities'->'sleep'->>'lastDurationMinutes' <> '30'
-    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '75'
+    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '405'
     OR v_snapshot->'activities'->'sleep'->>'napCountToday' <> '2'
   THEN
     RAISE EXCEPTION 'matching completion plus lock leaked a partial post-stop summary: %', v_snapshot;
@@ -540,7 +540,7 @@ BEGIN
     OR v_snapshot->'activeTimer' <> 'null'::jsonb
     OR v_snapshot->'activities'->'sleep'->>'isActive' <> 'false'
     OR v_snapshot->'activities'->'sleep'->>'lastDurationMinutes' <> '20'
-    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '95'
+    OR v_snapshot->'activities'->'sleep'->>'todayMinutes' <> '425'
     OR v_snapshot->'activities'->'sleep'->>'napCountToday' <> '3'
   THEN
     RAISE EXCEPTION 'released modern completion did not appear as one coherent post-stop snapshot: %', v_snapshot;
