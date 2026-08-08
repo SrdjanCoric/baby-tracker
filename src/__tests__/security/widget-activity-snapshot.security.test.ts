@@ -33,7 +33,7 @@ describe("widget activity snapshot RPC security", () => {
   });
 
   it("grants only the summary columns required by invoker execution", () => {
-    expect(migration).toContain("GRANT SELECT (id, household_id)");
+    expect(migration).toContain("GRANT SELECT (id, household_id, display_name)");
     expect(migration).toContain("ON TABLE public.users TO authenticated;");
     expect(migration).toContain("ON TABLE public.diapers TO authenticated;");
     expect(migration).not.toMatch(/GRANT SELECT ON TABLE public\.(?:users|babies|feedings|sleep_sessions|diapers)/i);
@@ -43,6 +43,7 @@ describe("widget activity snapshot RPC security", () => {
   it("qualifies every application relation used by the empty-search-path function", () => {
     const applicationRelations = [
       "babies",
+      "users",
       "wake_window_preferences",
       "activity_goals",
       "active_timers",

@@ -120,6 +120,8 @@ BEGIN
   ) OR NOT pg_catalog.has_column_privilege(
     'authenticated', 'public.users', 'household_id', 'SELECT'
   ) OR NOT pg_catalog.has_column_privilege(
+    'authenticated', 'public.users', 'display_name', 'SELECT'
+  ) OR NOT pg_catalog.has_column_privilege(
     'authenticated', 'public.babies', 'household_id', 'SELECT'
   ) OR pg_catalog.has_column_privilege(
     'authenticated', 'public.diapers', 'notes', 'SELECT'
@@ -142,6 +144,18 @@ SET household_id = owner.household_id
 FROM public.users AS owner
 WHERE member.id = '82222222-2222-2222-2222-222222222222'
   AND owner.id = '81111111-1111-1111-1111-111111111111';
+
+UPDATE public.users
+SET display_name = CASE id
+  WHEN '81111111-1111-1111-1111-111111111111' THEN 'Snapshot Owner'
+  WHEN '82222222-2222-2222-2222-222222222222' THEN 'Snapshot Member'
+  ELSE 'Snapshot Outsider'
+END
+WHERE id IN (
+  '81111111-1111-1111-1111-111111111111',
+  '82222222-2222-2222-2222-222222222222',
+  '83333333-3333-3333-3333-333333333333'
+);
 
 INSERT INTO public.babies (id, household_id, name, deleted)
 SELECT
@@ -474,7 +488,7 @@ SELECT * FROM (
   SELECT
     '8a000000-0000-0000-0000-000000000004'::uuid,
     'feeding'::varchar,
-    '81111111-1111-1111-1111-111111111111'::uuid,
+    '82222222-2222-2222-2222-222222222222'::uuid,
     day_start + INTERVAL '11 hours 45 minutes',
     '{"timerInstanceId":"sibling-timer","side":"right"}'::jsonb
   FROM clock
@@ -482,9 +496,25 @@ SELECT * FROM (
   SELECT
     '8a000000-0000-0000-0000-000000000004',
     'sleep',
-    '81111111-1111-1111-1111-111111111111',
+    '82222222-2222-2222-2222-222222222222',
     day_start + INTERVAL '5 hours',
     '{"timerInstanceId":"sibling-sleep-timer","type":"nap","morningClassification":"unresolved"}'::jsonb
+  FROM clock
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000004',
+    'pumping',
+    '82222222-2222-2222-2222-222222222222',
+    day_start + INTERVAL '11 hours 50 minutes',
+    '{"timerInstanceId":"sibling-pumping-timer","side":"left"}'::jsonb
+  FROM clock
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000004',
+    'tummy_time',
+    '82222222-2222-2222-2222-222222222222',
+    day_start + INTERVAL '11 hours 55 minutes',
+    '{"timerInstanceId":"sibling-tummy-timer"}'::jsonb
   FROM clock
 ) AS rows;
 
@@ -546,6 +576,11 @@ BEGIN
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Sibling First'
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowRequiresNewbornOptIn' IS DISTINCT FROM 'true'
     OR v_sibling_snapshot->'activities'->'sleep'->>'morningConfirmationPending' IS DISTINCT FROM 'true'
+    OR pg_catalog.jsonb_array_length(v_sibling_snapshot->'activeTimers') <> 4
+    OR v_sibling_snapshot->'activeTimers'->0->>'context' IS DISTINCT FROM 'Snapshot Member'
+    OR v_sibling_snapshot->'activeTimers'->1->>'context' IS DISTINCT FROM 'Snapshot Member'
+    OR v_sibling_snapshot->'activeTimers'->2->>'context' IS DISTINCT FROM 'Snapshot Member'
+    OR v_sibling_snapshot->'activeTimers'->3->>'context' IS DISTINCT FROM 'Snapshot Member'
   THEN
     RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;
   END IF;
@@ -592,7 +627,7 @@ BEGIN
   IF pg_catalog.jsonb_array_length(v_snapshot->'activeTimers') <> 1
     OR v_snapshot->'activeTimer' <> v_snapshot->'activeTimers'->0
     OR v_snapshot->'activeTimer'->>'timerInstanceId' <> 'modern-sleep-timer'
-    OR v_snapshot->'activeTimer'->>'context' IS DISTINCT FROM 'nap'
+    OR v_snapshot->'activeTimer'->>'context' IS DISTINCT FROM 'Snapshot Member'
     OR v_snapshot->'activeTimer'->>'isRemote' <> 'true'
     OR v_snapshot->'activities'->'sleep'->>'isActive' <> 'true'
     OR v_snapshot->'activities'->'sleep'->>'lastDurationMinutes' <> '30'
@@ -603,6 +638,41 @@ BEGIN
 END
 $$;
 RESET ROLE;
+
+SELECT pg_catalog.set_config(
+  'request.jwt.claims',
+  pg_catalog.json_build_object(
+    'sub', '82222222-2222-2222-2222-222222222222',
+    'role', 'authenticated'
+  )::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_snapshot jsonb;
+BEGIN
+  v_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000001',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_snapshot->'activeTimer'->>'context' IS DISTINCT FROM 'nap'
+    OR v_snapshot->'activeTimer'->>'isRemote' <> 'false'
+  THEN
+    RAISE EXCEPTION 'own timer context no longer carries sleep type: %', v_snapshot;
+  END IF;
+END
+$$;
+RESET ROLE;
+
+SELECT pg_catalog.set_config(
+  'request.jwt.claims',
+  pg_catalog.json_build_object(
+    'sub', '81111111-1111-1111-1111-111111111111',
+    'role', 'authenticated'
+  )::text,
+  true
+);
 
 WITH clock AS (
   SELECT pg_catalog.date_trunc(

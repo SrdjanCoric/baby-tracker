@@ -145,10 +145,12 @@ AS $$
       timer.baby_id,
       timer.activity_type,
       timer.started_by,
+      starter.display_name AS started_by_name,
       timer.started_at,
       timer.timer_data
     FROM public.active_timers AS timer
     JOIN config ON config.id = timer.baby_id
+    LEFT JOIN public.users AS starter ON starter.id = timer.started_by
   ),
   active_timer_values AS (
     SELECT
@@ -168,11 +170,14 @@ AS $$
           'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
         ),
         'timerInstanceId', NULLIF(timer.timer_data->>'timerInstanceId', ''),
-        'context', COALESCE(
-          timer.timer_data->>'side',
-          timer.timer_data->>'sleepType',
-          timer.timer_data->>'type'
-        ),
+        'context', CASE
+          WHEN timer.started_by <> auth.uid() THEN timer.started_by_name
+          ELSE COALESCE(
+            timer.timer_data->>'side',
+            timer.timer_data->>'sleepType',
+            timer.timer_data->>'type'
+          )
+        END,
         'isRemote', timer.started_by <> auth.uid(),
         'isPaused', COALESCE((timer.timer_data->>'isPaused')::boolean, false),
         'accumulatedSeconds', CASE
@@ -779,7 +784,7 @@ TO authenticated;
 
 -- SECURITY INVOKER requires caller read privileges. Keep these column-scoped so the RPC does not
 -- reopen notes or other raw-history fields; existing household RLS remains authoritative.
-GRANT SELECT (id, household_id)
+GRANT SELECT (id, household_id, display_name)
 ON TABLE public.users TO authenticated;
 GRANT SELECT (id, household_id, name, birth_date, deleted)
 ON TABLE public.babies TO authenticated;
