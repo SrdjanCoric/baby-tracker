@@ -403,6 +403,7 @@ INSERT INTO public.growth_measurements (id, baby_id, logged_by, measured_at, wei
 SELECT * FROM (
   SELECT '8e000000-0000-0000-0000-000000000001'::uuid, '8a000000-0000-0000-0000-000000000001'::uuid, '81111111-1111-1111-1111-111111111111'::uuid, day_start + INTERVAL '7 hours', 7.125::numeric, 68.5::numeric, 42.25::numeric, false FROM clock
   UNION ALL SELECT '8e000000-0000-0000-0000-000000000002', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours', 99, 99, 99, true FROM clock
+  UNION ALL SELECT '8e000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '8 hours', 7.5, NULL, NULL, false FROM clock
   UNION ALL SELECT '8e000000-0000-0000-0000-000000000003', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours 30 minutes', 9.999, 99, 99, false FROM clock
 ) AS rows;
 
@@ -466,9 +467,9 @@ BEGIN
     OR v_snapshot->'activities'->'pumping'->>'todayVolumeMl' <> '120.75'
     OR v_snapshot->'activities'->'pumping'->>'sessionCount' <> '2'
     OR v_snapshot->'activities'->'pumping'->>'lastSide' <> 'both'
-    OR v_snapshot->'activities'->'growth'->'lastMeasurement'->>'weightKg' <> '7.125'
-    OR v_snapshot->'activities'->'growth'->'lastMeasurement'->>'heightCm' <> '68.50'
-    OR v_snapshot->'activities'->'growth'->'lastMeasurement'->>'headCircumferenceCm' <> '42.25'
+    OR (v_snapshot->'activities'->'growth'->'lastMeasurement'->>'weightKg')::numeric <> 7.5
+    OR v_snapshot->'activities'->'growth'->'lastMeasurement' ? 'heightCm'
+    OR v_snapshot->'activities'->'growth'->'lastMeasurement' ? 'headCircumferenceCm'
     OR v_snapshot->'activities'->'tummyTime'->>'todayMinutes' <> '25'
     OR v_snapshot->'activities'->'tummyTime'->>'goalMinutes' <> '60'
     OR v_snapshot->'activities'->'tummyTime'->>'lastDurationMinutes' <> '15'

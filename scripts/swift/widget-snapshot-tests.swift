@@ -91,6 +91,7 @@ enum WidgetSnapshotTests {
         let fixtures = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
         let legacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy.json"))
         let versioned = try Data(contentsOf: fixtures.appendingPathComponent("versioned.json"))
+        let weightOnly = try Data(contentsOf: fixtures.appendingPathComponent("versioned-weight-only.json"))
 
         let legacyDecoded = try WidgetSnapshotDecoder.decodeCache(legacy)
         require(legacyDecoded.kind == .legacy, "legacy fixture lost its compatibility classification")
@@ -100,6 +101,17 @@ enum WidgetSnapshotTests {
         let versionedDecoded = try WidgetSnapshotDecoder.decodeNetwork(versioned, expectedBabyId: "baby-versioned")
         require(versionedDecoded.schemaVersion == 1, "versioned fixture lost its schema version")
         require(versionedDecoded.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z", "sleep anchor changed")
+
+        let weightOnlyDecoded = try WidgetSnapshotDecoder.decodeNetwork(
+            weightOnly,
+            expectedBabyId: "baby-versioned"
+        )
+        require(
+            weightOnlyDecoded.activities.growth.lastMeasurement?.weightKg == 7.125
+                && weightOnlyDecoded.activities.growth.lastMeasurement?.heightCm == nil
+                && weightOnlyDecoded.activities.growth.lastMeasurement?.headCircumferenceCm == nil,
+            "weight-only growth measurement diverged between decoders"
+        )
 
         var incoherent = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
         incoherent["activeTimer"] = [

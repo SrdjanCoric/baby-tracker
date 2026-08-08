@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { decodeWidgetActivitySnapshotJson } from "./widget-activity-snapshot";
 
-function fixture(name: "legacy" | "versioned"): string {
+function fixture(name: "legacy" | "versioned" | "versioned-weight-only"): string {
   return readFileSync(
     resolve(process.cwd(), `fixtures/widget-activity-snapshots/${name}.json`),
     "utf8"
@@ -27,6 +27,15 @@ describe("widget activity snapshot decoder", () => {
     expect(decoded?.data.schemaVersion).toBe(1);
     expect(decoded?.data.babyId).toBe("baby-versioned");
     expect(decoded?.data.activities.sleep.lastSleepEndedAt).toBe("2026-08-08T09:45:00.000Z");
+  });
+
+  it("accepts a versioned weight-only growth measurement", () => {
+    const decoded = decodeWidgetActivitySnapshotJson(fixture("versioned-weight-only"));
+
+    expect(decoded?.data.activities.growth.lastMeasurement).toEqual({
+      date: "2026-08-07T10:00:00.000Z",
+      weightKg: 7.125,
+    });
   });
 
   it("rejects unsupported, incomplete, and timer-incoherent versioned payloads", () => {

@@ -565,7 +565,7 @@ AS $$
       ),
       'growth', pg_catalog.jsonb_build_object(
         'lastMeasurement', CASE WHEN latest_growth.id IS NULL THEN NULL ELSE
-          pg_catalog.jsonb_build_object(
+          pg_catalog.jsonb_strip_nulls(pg_catalog.jsonb_build_object(
             'date', pg_catalog.to_char(
               latest_growth.measured_at AT TIME ZONE 'UTC',
               'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
@@ -573,7 +573,7 @@ AS $$
             'weightKg', latest_growth.weight_kg,
             'heightCm', latest_growth.height_cm,
             'headCircumferenceCm', latest_growth.head_cm
-          )
+          ))
         END
       ),
       'tummyTime', pg_catalog.jsonb_build_object(
