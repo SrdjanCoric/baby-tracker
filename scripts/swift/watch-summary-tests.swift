@@ -184,6 +184,49 @@ enum WatchSummaryTests {
         )
         let cached = try WatchSummaryDecoder.decodeCache(versioned).data
 
+        let resetSuiteName = "watch-summary-reset-tests.\(UUID().uuidString)"
+        let resetDefaults = UserDefaults(suiteName: resetSuiteName)!
+        resetDefaults.set("multi", forKey: "multiBabyWatchData")
+        resetDefaults.set("legacy", forKey: "watchData")
+        resetDefaults.set("widget", forKey: "widgetData")
+        resetDefaults.set("summary", forKey: "watchSummary.account-a.baby-a")
+        resetDefaults.set("overlay", forKey: "watchPendingOverlays.account-a.baby-a")
+        resetDefaults.set("optimism", forKey: "watchOptimisticState.account-a.baby-a")
+        resetDefaults.set("sr", forKey: "watchLanguage")
+
+        WatchAccountCachePurger.purge(from: resetDefaults)
+
+        for key in [
+            "multiBabyWatchData",
+            "watchData",
+            "widgetData",
+            "watchSummary.account-a.baby-a",
+            "watchPendingOverlays.account-a.baby-a",
+            "watchOptimisticState.account-a.baby-a"
+        ] {
+            requireWatch(resetDefaults.object(forKey: key) == nil, "scope reset retained \(key)")
+        }
+        requireWatch(resetDefaults.string(forKey: "watchLanguage") == "sr", "scope reset removed language")
+        resetDefaults.removePersistentDomain(forName: resetSuiteName)
+
+        let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"
+        let legacyDefaults = UserDefaults(suiteName: legacySuiteName)!
+        legacyDefaults.set("legacy", forKey: "watchData")
+        requireWatch(
+            !WatchLegacyCacheOwnership.canRead(accountId: "account-a", from: legacyDefaults),
+            "unowned legacy cache was readable"
+        )
+        WatchLegacyCacheOwnership.mark(accountId: "account-a", in: legacyDefaults)
+        requireWatch(
+            WatchLegacyCacheOwnership.canRead(accountId: "account-a", from: legacyDefaults),
+            "owning account could not read its legacy cache"
+        )
+        requireWatch(
+            !WatchLegacyCacheOwnership.canRead(accountId: "account-b", from: legacyDefaults),
+            "another account could read the legacy cache"
+        )
+        legacyDefaults.removePersistentDomain(forName: legacySuiteName)
+
         let result = await coordinator.acceptTimerProbe(
             WatchTimerFingerprint(timers: cached.activeTimers ?? [])
         )

@@ -166,12 +166,14 @@ final class AppGroupWatchSummaryStore: WatchSummaryStoring, @unchecked Sendable 
            decoded.data.babyId == identity.babyId {
             return bytes
         }
-        for legacyKey in ["watchData", "widgetData"] {
-            if let value = defaults.string(forKey: legacyKey),
-               let bytes = value.data(using: .utf8),
-               let decoded = try? WatchSummaryDecoder.decodeCache(bytes),
-               decoded.data.babyId == identity.babyId {
-                return bytes
+        if WatchLegacyCacheOwnership.canRead(accountId: identity.accountId, from: defaults) {
+            for legacyKey in ["watchData", "widgetData"] {
+                if let value = defaults.string(forKey: legacyKey),
+                   let bytes = value.data(using: .utf8),
+                   let decoded = try? WatchSummaryDecoder.decodeCache(bytes),
+                   decoded.data.babyId == identity.babyId {
+                    return bytes
+                }
             }
         }
         return nil
@@ -183,6 +185,7 @@ final class AppGroupWatchSummaryStore: WatchSummaryStoring, @unchecked Sendable 
         }
         defaults.set(value, forKey: "watchSummary.\(identity.cacheKey)")
         defaults.set(value, forKey: "watchData")
+        WatchLegacyCacheOwnership.mark(accountId: identity.accountId, in: defaults)
     }
 
     func readOverlays(for identity: WatchSummaryIdentity) -> [WatchOptimisticOverlay] {
@@ -509,6 +512,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             ] {
                 defaults?.removeObject(forKey: key)
             }
+            if let defaults {
+                WatchAccountCachePurger.purge(from: defaults)
+            }
             supabaseUrl = nil
             supabaseAnonKey = nil
             supabaseAccessToken = nil
@@ -549,6 +555,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             let scopeChanged = (supabaseUserId != nil && supabaseUserId != userId) ||
                 (storedHouseholdId != nil && storedHouseholdId != incomingHouseholdId)
             if scopeChanged {
+                if let defaults {
+                    WatchAccountCachePurger.purge(from: defaults)
+                }
                 widgetData = nil
                 multiBabyData = nil
                 selectedBabyId = nil
@@ -1230,6 +1239,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func loadCachedData() {
         let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
         var installedScopedSummary = false
+        let canReadLegacy = userDefaults.map { defaults in
+            guard let accountId = supabaseUserId else { return false }
+            return WatchLegacyCacheOwnership.canRead(accountId: accountId, from: defaults)
+        } ?? false
 
         if let store = AppGroupWatchSummaryStore(defaults: userDefaults),
            let identity = AppGroupWatchSummaryIdentityReader(defaults: userDefaults)?.currentIdentity(),
@@ -1239,7 +1252,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             installedScopedSummary = summary.schemaVersion != nil
         }
 
-        if let dataString = userDefaults?.string(forKey: "multiBabyWatchData"),
+        if canReadLegacy,
+           let dataString = userDefaults?.string(forKey: "multiBabyWatchData"),
            let data = dataString.data(using: .utf8),
            let decoded = try? JSONDecoder().decode(MultiBabyWatchData.self, from: data) {
             self.multiBabyData = decoded
@@ -1248,14 +1262,14 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             }
         }
 
-        if !installedScopedSummary,
+        if canReadLegacy && !installedScopedSummary,
            let dataString = userDefaults?.string(forKey: "watchData"),
            let data = dataString.data(using: .utf8),
            let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data),
            decoded.babyId == currentBabyId {
             self.widgetData = decoded
         }
-        if !installedScopedSummary && widgetData == nil,
+        if canReadLegacy && !installedScopedSummary && widgetData == nil,
            let dataString = userDefaults?.string(forKey: "widgetData"),
            let data = dataString.data(using: .utf8),
            let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data),
@@ -1678,6 +1692,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func cacheData(_ dataString: String, forKey key: String = "watchData") {
         let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
         userDefaults?.set(dataString, forKey: key)
+        if let userDefaults, let supabaseUserId {
+            WatchLegacyCacheOwnership.mark(accountId: supabaseUserId, in: userDefaults)
+        }
     }
 }
 

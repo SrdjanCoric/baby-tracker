@@ -351,6 +351,39 @@ enum WatchTimerProbeDecoder {
     }
 }
 
+enum WatchAccountCachePurger {
+    private static let fixedKeys: Set<String> = [
+        "multiBabyWatchData",
+        "watchData",
+        "widgetData",
+        "watchLegacyCacheAccountId"
+    ]
+    private static let scopedPrefixes = [
+        "watchSummary.",
+        "watchPendingOverlays.",
+        "watchOptimisticState."
+    ]
+
+    static func purge(from defaults: UserDefaults) {
+        for key in defaults.dictionaryRepresentation().keys
+        where fixedKeys.contains(key) || scopedPrefixes.contains(where: key.hasPrefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+}
+
+enum WatchLegacyCacheOwnership {
+    private static let key = "watchLegacyCacheAccountId"
+
+    static func canRead(accountId: String, from defaults: UserDefaults) -> Bool {
+        defaults.string(forKey: key) == accountId
+    }
+
+    static func mark(accountId: String, in defaults: UserDefaults) {
+        defaults.set(accountId, forKey: key)
+    }
+}
+
 struct WatchSummaryIdentity: Equatable, Sendable {
     let accountId: String
     let babyId: String
