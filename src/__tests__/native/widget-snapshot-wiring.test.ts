@@ -64,4 +64,21 @@ describe("Widget coherent snapshot wiring", () => {
     expect(countdown).toContain('string(forKey: "widgetNewbornNapOptIn.\\(data.babyId)") == "true"');
     expect(countdown).toContain("canPresentWakeWindow");
   });
+
+  it("suppresses sleep-derived timing until a queued Widget stop is persisted", () => {
+    const countdown = between(
+      widgetSource,
+      "func getWakeWindowCountdown",
+      "func computeWakeWindowText"
+    );
+    const awakeTime = between(
+      widgetSource,
+      "func getAwakeTimeText",
+      "func formatRelative"
+    );
+
+    expect(widgetSource).toContain("func pendingSleepStopAt");
+    expect(countdown).toContain("canPresentSleepDerivedTiming");
+    expect(awakeTime).toContain("canPresentSleepDerivedTiming");
+  });
 });

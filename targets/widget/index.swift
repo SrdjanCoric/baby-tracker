@@ -266,6 +266,15 @@ func readExternalTimerCommandQueue(from userDefaults: UserDefaults) -> ExternalT
     return ExternalTimerCommandQueue()
 }
 
+func pendingSleepStopAt(for babyId: String) -> String? {
+    guard let userDefaults = UserDefaults(suiteName: appGroupId) else { return nil }
+    return readExternalTimerCommandQueue(from: userDefaults).commands.last(where: {
+        $0.action == "stop"
+            && $0.activityType == "sleep"
+            && $0.babyId == babyId
+    })?.eventAt
+}
+
 func writeExternalTimerCommandQueue(_ queue: ExternalTimerCommandQueue, to userDefaults: UserDefaults) {
     if let data = try? JSONEncoder().encode(queue),
        let json = String(data: data, encoding: .utf8) {
@@ -1976,6 +1985,7 @@ func formatDuration(minutes: Int) -> String {
 func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
     let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
     guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
+          data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
           let windowMinutes = data.activities.sleep.wakeWindowMinutes,
           let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
           !data.activities.sleep.isActive else {
@@ -2014,7 +2024,8 @@ func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?) 
 }
 
 func getAwakeTimeText(data: WidgetDataModel, now: Date = Date()) -> String? {
-    guard let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
+    guard data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
+          let lastEndedStr = data.activities.sleep.lastSleepEndedAt,
           !data.activities.sleep.isActive else {
         return nil
     }

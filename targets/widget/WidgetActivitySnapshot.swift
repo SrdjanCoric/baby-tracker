@@ -202,6 +202,27 @@ struct WidgetDataModel: Codable, Equatable {
     func canPresentWakeWindow(newbornNapOptIn: Bool) -> Bool {
         activities.sleep.wakeWindowRequiresNewbornOptIn != true || newbornNapOptIn
     }
+
+    func canPresentSleepDerivedTiming(pendingSleepStopAt: String?) -> Bool {
+        guard let pendingSleepStopAt,
+              let pendingStopDate = parseWidgetSnapshotTimestamp(pendingSleepStopAt) else {
+            return true
+        }
+        guard let lastSleepEndedAt = activities.sleep.lastSleepEndedAt,
+              let lastSleepEndDate = parseWidgetSnapshotTimestamp(lastSleepEndedAt) else {
+            return false
+        }
+        return lastSleepEndDate >= pendingStopDate
+    }
+}
+
+private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
+    let fractionalFormatter = ISO8601DateFormatter()
+    fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let date = fractionalFormatter.date(from: value) {
+        return date
+    }
+    return ISO8601DateFormatter().date(from: value)
 }
 
 enum WidgetSnapshotKind: Equatable {

@@ -277,6 +277,12 @@ enum WidgetSnapshotTests {
             storedDiscard.hasActiveTimer(for: .sleep) == false,
             "the stored post-stop display still contained the sleep timer"
         )
+        require(
+            !storedDiscard.canPresentSleepDerivedTiming(
+                pendingSleepStopAt: "2026-08-08T09:45:00.000Z"
+            ),
+            "a pending Widget stop exposed awake and wake-window timing from the previous sleep"
+        )
 
         let completedAfterDiscard = try changedFixture(versioned, [
             "serverAsOf": "2026-08-08T10:01:00.000Z",
@@ -292,6 +298,12 @@ enum WidgetSnapshotTests {
         require(
             completedAfterStop?.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z",
             "the completed summary did not install after a Widget stop reconciliation"
+        )
+        require(
+            completedAfterStop?.canPresentSleepDerivedTiming(
+                pendingSleepStopAt: "2026-08-08T09:45:00.000Z"
+            ) == true,
+            "persisted stop completion did not restore awake and wake-window timing"
         )
 
         let rejectedPayloads = [older, wrongBaby, unsupported, malformed, semantic]
