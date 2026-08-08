@@ -477,14 +477,20 @@ actor WatchSummaryCoordinator {
                 responseBytes,
                 expectedBabyId: identity.babyId
             )
-            guard identityReader.currentIdentity() == identity,
-                  WatchTimerFingerprint(timers: response.activeTimers ?? []) == fingerprint,
-                  !isOlder(response, than: prior) else {
+            guard identityReader.currentIdentity() == identity else {
                 return prior
             }
-            try store.writeSummary(responseBytes, for: identity)
-            reconcileOverlays(with: response, previous: prior, identity: identity)
-            reload()
+            let currentBytes = store.readSummary(for: identity)
+            let current = currentBytes.flatMap { try? WatchSummaryDecoder.decodeCache($0).data }
+            guard WatchTimerFingerprint(timers: response.activeTimers ?? []) == fingerprint,
+                  !isOlder(response, than: current) else {
+                return current
+            }
+            if responseBytes != currentBytes {
+                try store.writeSummary(responseBytes, for: identity)
+                reload()
+            }
+            reconcileOverlays(with: response, previous: current, identity: identity)
             return response
         } catch WatchSummaryTransportError.unauthorized {
             requestCredentials()

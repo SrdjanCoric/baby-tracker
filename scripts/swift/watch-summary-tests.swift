@@ -501,6 +501,44 @@ enum WatchSummaryTests {
         requireWatch(staleResult == runningSummary, "out-of-order response replaced the newer base")
         requireWatch(staleStore.writes == 0, "out-of-order response wrote the cache")
 
+        let interleavedNewer = try versionedWatchFixture(
+            versioned,
+            timer: nil,
+            serverAsOf: "2026-08-08T10:05:00.000Z"
+        )
+        let interleavedNewerSummary = try WatchSummaryDecoder.decodeNetwork(
+            interleavedNewer,
+            expectedBabyId: identity.babyId
+        )
+        let interleavedStore = TestWatchSummaryStore()
+        interleavedStore.bytesByScope[identity.cacheKey] = runningBase
+        let interleavedReader = TestWatchIdentityReader()
+        interleavedReader.identity = identity
+        let interleavedFetcher = TestSuspendingWatchFetcher(response: completedLater)
+        let interleavedCoordinator = WatchSummaryCoordinator(
+            store: interleavedStore,
+            identityReader: interleavedReader,
+            fetcher: interleavedFetcher,
+            reload: {}
+        )
+        let interleavedTask = Task {
+            await interleavedCoordinator.acceptTimerProbe(completedFingerprint)
+        }
+        for _ in 0..<100 where interleavedFetcher.count() == 0 { await Task.yield() }
+        _ = await interleavedCoordinator.acceptPhonePayload(interleavedNewer)
+        interleavedFetcher.resolve()
+        let interleavedResult = await interleavedTask.value
+
+        requireWatch(
+            interleavedResult == interleavedNewerSummary,
+            "older probe response replaced an interleaved newer phone snapshot"
+        )
+        requireWatch(
+            interleavedStore.bytesByScope[identity.cacheKey] == interleavedNewer,
+            "older probe response overwrote newer cached bytes"
+        )
+        requireWatch(interleavedStore.writes == 1, "stale probe performed an extra cache write")
+
         let lateStore = TestWatchSummaryStore()
         lateStore.bytesByScope[identity.cacheKey] = runningBase
         let lateReader = TestWatchIdentityReader()
