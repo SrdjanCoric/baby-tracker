@@ -288,6 +288,67 @@ struct WatchTimerFingerprint: Equatable, Sendable {
     }
 }
 
+enum WatchTimerProbeDecoder {
+    private struct RemoteTimer: Decodable {
+        let activityType: String
+        let startedBy: String
+        let startedAt: String
+        let timerData: TimerDataPayload?
+
+        enum CodingKeys: String, CodingKey {
+            case activityType = "activity_type"
+            case startedBy = "started_by"
+            case startedAt = "started_at"
+            case timerData = "timer_data"
+        }
+
+        struct TimerDataPayload: Decodable {
+            let side: String?
+            let sleepType: String?
+            let isPaused: Bool?
+            let accumulatedSeconds: Int?
+            let timerInstanceId: String?
+        }
+    }
+
+    private static let parser: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    static func decode(_ bytes: Data, currentUserId: String) throws -> [WatchSummaryTimer] {
+        let rows = try JSONDecoder().decode([RemoteTimer].self, from: bytes)
+        return try rows.compactMap { row in
+            let watchType: String
+            switch row.activityType {
+            case "feeding", "sleep", "pumping": watchType = row.activityType
+            case "tummy_time": watchType = "tummyTime"
+            default: return nil
+            }
+            guard let startedAt = parser.date(from: row.startedAt) else {
+                throw WatchSummaryError.semanticFailure
+            }
+            return WatchSummaryTimer(
+                type: watchType,
+                startTime: formatter.string(from: startedAt),
+                timerInstanceId: row.timerData?.timerInstanceId,
+                context: row.timerData?.side ?? row.timerData?.sleepType,
+                isRemote: row.startedBy != currentUserId,
+                isPaused: row.timerData?.isPaused,
+                accumulatedSeconds: row.timerData?.accumulatedSeconds
+            )
+        }
+    }
+}
+
 struct WatchSummaryIdentity: Equatable, Sendable {
     let accountId: String
     let babyId: String

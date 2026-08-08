@@ -193,6 +193,37 @@ enum WatchSummaryTests {
         requireWatch(store.writes == 0, "unchanged probe wrote the cache")
         requireWatch(reloads.read() == 0, "unchanged probe reloaded complications")
 
+        let restTimerRows = Data(#"""
+        [{
+          "id": "lock-1",
+          "activity_type": "sleep",
+          "started_by": "account-a",
+          "started_at": "2026-08-08T09:30:00.123456+00:00",
+          "timer_data": {
+            "sleepType": "nap",
+            "isPaused": false,
+            "timerInstanceId": "timer-rest"
+          }
+        }]
+        """#.utf8)
+        let restTimers = try WatchTimerProbeDecoder.decode(
+            restTimerRows,
+            currentUserId: identity.accountId
+        )
+        let rpcTimer = WatchSummaryTimer(
+            type: "sleep",
+            startTime: "2026-08-08T09:30:00.123Z",
+            timerInstanceId: "timer-rest",
+            context: "nap",
+            isRemote: false,
+            isPaused: false,
+            accumulatedSeconds: nil
+        )
+        requireWatch(
+            WatchTimerFingerprint(timers: restTimers) == WatchTimerFingerprint(timers: [rpcTimer]),
+            "REST timer timestamp did not match the RPC timer fingerprint"
+        )
+
         let baseTimer: [String: Any] = [
             "type": "sleep",
             "startTime": "2026-08-08T09:30:00.000Z",

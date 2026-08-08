@@ -1369,17 +1369,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 print("[WatchConnector] refreshFromNetwork: fetch failed")
                 return
             }
-            let fingerprint = WatchTimerFingerprint(timers: remoteTimers.map {
-                WatchSummaryTimer(
-                    type: $0.type,
-                    startTime: $0.startTime,
-                    timerInstanceId: $0.timerInstanceId,
-                    context: $0.context,
-                    isRemote: $0.isRemote,
-                    isPaused: $0.isPaused,
-                    accumulatedSeconds: $0.accumulatedSeconds
-                )
-            })
+            let fingerprint = WatchTimerFingerprint(timers: remoteTimers)
             let accepted = await watchSummaryCoordinator?.acceptTimerProbe(fingerprint)
             if let accepted {
                 await MainActor.run {
@@ -1389,7 +1379,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    private func fetchActiveTimersFromNetwork() async -> [WatchActiveTimer]? {
+    private func fetchActiveTimersFromNetwork() async -> [WatchSummaryTimer]? {
         guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
               let babyId = currentBabyId, let supabaseUserId else {
             return nil
@@ -1423,52 +1413,14 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             return nil
         }
 
-        struct RemoteTimer: Decodable {
-            let id: String
-            let activity_type: String
-            let started_by: String
-            let started_at: String
-            let timer_data: TimerDataPayload?
-
-            struct TimerDataPayload: Decodable {
-                let side: String?
-                let sleepType: String?
-                let isPaused: Bool?
-                let accumulatedSeconds: Int?
-                let effectiveStartTime: String?
-                let timerInstanceId: String?
-                let activityId: String?
-            }
-        }
-
-        guard let remoteTimers = try? JSONDecoder().decode([RemoteTimer].self, from: data) else {
+        guard let remoteTimers = try? WatchTimerProbeDecoder.decode(
+            data,
+            currentUserId: supabaseUserId
+        ) else {
             print("[WatchConnector] fetchActiveTimersFromNetwork: decode failed")
             return nil
         }
-
-        let activityTypeMap: [String: String] = [
-            "feeding": "feeding",
-            "sleep": "sleep",
-            "pumping": "pumping",
-            "tummy_time": "tummyTime"
-        ]
-
-        return remoteTimers.compactMap { timer in
-            guard let watchType = activityTypeMap[timer.activity_type] else { return nil }
-            let isRemote = timer.started_by != supabaseUserId
-            let context = timer.timer_data?.side ?? timer.timer_data?.sleepType
-            return WatchActiveTimer(
-                type: watchType,
-                startTime: timer.started_at,
-                timerInstanceId: timer.timer_data?.timerInstanceId,
-                activityId: timer.timer_data?.activityId,
-                context: context,
-                isRemote: isRemote,
-                isPaused: timer.timer_data?.isPaused,
-                accumulatedSeconds: timer.timer_data?.accumulatedSeconds,
-                startedBy: timer.started_by
-            )
-        }
+        return remoteTimers
     }
 
     // MARK: - Supabase Write Fallbacks
