@@ -32,6 +32,11 @@ describe("widget activity snapshot RPC security", () => {
     expect(migration).not.toMatch(/GRANT EXECUTE[\s\S]*TO (?:PUBLIC|anon|service_role)/i);
   });
 
+  it("keeps the deterministic test clock session-scoped without another RPC", () => {
+    expect(migration).toContain("pg_catalog.current_setting('widget.snapshot_now', true)");
+    expect(migration).not.toContain("widget_snapshot_statement_timestamp");
+  });
+
   it("grants only the summary columns required by invoker execution", () => {
     expect(migration).toContain("GRANT SELECT (id, household_id, display_name)");
     expect(migration).toContain("ON TABLE public.users TO authenticated;");

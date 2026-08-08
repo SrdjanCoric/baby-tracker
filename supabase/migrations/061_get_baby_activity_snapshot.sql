@@ -1,17 +1,4 @@
 -- Additive, authenticated read model for native selected-baby activity surfaces.
-CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
-RETURNS timestamptz
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path = ''
-AS $$ SELECT pg_catalog.statement_timestamp() $$;
-
-REVOKE ALL ON FUNCTION public.widget_snapshot_statement_timestamp()
-FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.widget_snapshot_statement_timestamp()
-TO authenticated;
-
 -- The initial body is intentionally a single SQL statement so every relation added to the
 -- snapshot reads from one PostgreSQL statement snapshot.
 CREATE OR REPLACE FUNCTION public.get_baby_activity_snapshot(
@@ -25,7 +12,10 @@ SECURITY INVOKER
 SET search_path = ''
 AS $$
   WITH RECURSIVE request_clock AS (
-    SELECT public.widget_snapshot_statement_timestamp() AS server_as_of
+    SELECT COALESCE(
+      NULLIF(pg_catalog.current_setting('widget.snapshot_now', true), '')::timestamptz,
+      pg_catalog.statement_timestamp()
+    ) AS server_as_of
   ),
   valid_timezone AS (
     SELECT

@@ -17,6 +17,12 @@ BEGIN
     RAISE EXCEPTION 'get_baby_activity_snapshot(uuid,text) is missing';
   END IF;
 
+  IF pg_catalog.to_regprocedure(
+    'public.widget_snapshot_statement_timestamp()'
+  ) IS NOT NULL THEN
+    RAISE EXCEPTION 'test clock helper must not expose a second production RPC';
+  END IF;
+
   SELECT
     p.prosecdef,
     p.proconfig,
@@ -312,13 +318,11 @@ RESET ROLE;
 
 \echo 'PASS: baby activity snapshot scopes one active baby to authenticated household members'
 
-CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
-RETURNS timestamptz
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path = ''
-AS $$ SELECT '2025-03-09T16:00:00Z'::timestamptz $$;
+SELECT pg_catalog.set_config(
+  'widget.snapshot_now',
+  '2025-03-09T16:00:00Z',
+  true
+);
 
 SELECT pg_catalog.set_config(
   'request.jwt.claims',
@@ -346,13 +350,11 @@ END
 $$;
 RESET ROLE;
 
-CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
-RETURNS timestamptz
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path = ''
-AS $$ SELECT '2025-11-02T17:00:00Z'::timestamptz $$;
+SELECT pg_catalog.set_config(
+  'widget.snapshot_now',
+  '2025-11-02T17:00:00Z',
+  true
+);
 
 SET LOCAL ROLE authenticated;
 DO $$
@@ -372,13 +374,7 @@ END
 $$;
 RESET ROLE;
 
-CREATE OR REPLACE FUNCTION public.widget_snapshot_statement_timestamp()
-RETURNS timestamptz
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path = ''
-AS $$ SELECT pg_catalog.statement_timestamp() $$;
+SELECT pg_catalog.set_config('widget.snapshot_now', '', true);
 
 \echo 'PASS: baby activity snapshot local day preserves DST transitions'
 
