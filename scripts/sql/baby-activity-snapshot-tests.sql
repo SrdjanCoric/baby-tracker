@@ -426,13 +426,23 @@ WITH clock AS (
   SELECT pg_catalog.date_trunc('day', pg_catalog.now() AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone')) AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone') AS day_start
 )
 INSERT INTO public.active_timers (baby_id, activity_type, started_by, started_at, timer_data)
-SELECT
-  '8a000000-0000-0000-0000-000000000004',
-  'feeding',
-  '81111111-1111-1111-1111-111111111111',
-  day_start + INTERVAL '11 hours 45 minutes',
-  '{"timerInstanceId":"sibling-timer","side":"right"}'::jsonb
-FROM clock;
+SELECT * FROM (
+  SELECT
+    '8a000000-0000-0000-0000-000000000004'::uuid,
+    'feeding'::varchar,
+    '81111111-1111-1111-1111-111111111111'::uuid,
+    day_start + INTERVAL '11 hours 45 minutes',
+    '{"timerInstanceId":"sibling-timer","side":"right"}'::jsonb
+  FROM clock
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000004',
+    'sleep',
+    '81111111-1111-1111-1111-111111111111',
+    day_start + INTERVAL '5 hours',
+    '{"timerInstanceId":"sibling-sleep-timer","type":"nap","morningClassification":"unresolved"}'::jsonb
+  FROM clock
+) AS rows;
 
 SELECT pg_catalog.set_config(
   'request.jwt.claims',
@@ -465,7 +475,7 @@ BEGIN
     OR v_snapshot->'activities'->'sleep'->>'napCountToday' <> '2'
     OR v_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' <> '150'
     OR v_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' <> 'Third'
-    OR v_snapshot->'activities'->'sleep'->>'morningConfirmationPending' <> 'true'
+    OR v_snapshot->'activities'->'sleep'->>'morningConfirmationPending' <> 'false'
     OR v_snapshot->'activities'->'sleep'->>'lastSleepEndedAt' IS NULL
     OR v_snapshot->'activities'->'diaper'->'todayCounts' <> '{"wet":1,"dirty":1,"mixed":1,"dry":1}'::jsonb
     OR v_snapshot->'activities'->'diaper'->>'lastType' <> 'dry'
@@ -489,6 +499,7 @@ BEGIN
   IF v_sibling_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '0'
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '77'
     OR v_sibling_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Sibling First'
+    OR v_sibling_snapshot->'activities'->'sleep'->>'morningConfirmationPending' IS DISTINCT FROM 'true'
   THEN
     RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;
   END IF;

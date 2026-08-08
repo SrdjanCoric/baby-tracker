@@ -528,12 +528,21 @@ AS $$
     WHERE nap_islands.ended_at - nap_islands.started_at >= INTERVAL '15 minutes'
   ),
   morning_summary AS (
-    SELECT pg_catalog.bool_or(
-      completed_sleep.morning_classification = 'unresolved'
-      AND completed_sleep.ended_at <= config.server_as_of
+    SELECT (
+      EXISTS (
+        SELECT 1
+        FROM early_morning_candidates AS candidate
+        WHERE candidate.morning_classification = 'unresolved'
+          AND NOT (candidate.id = ANY(morning_result.continuation_ids))
+      )
+      OR EXISTS (
+        SELECT 1
+        FROM timer_rows AS timer
+        WHERE timer.activity_type = 'sleep'
+          AND timer.timer_data->>'morningClassification' = 'unresolved'
+      )
     ) AS confirmation_pending
-    FROM config
-    LEFT JOIN completed_sleep ON true
+    FROM morning_result
   ),
   wake_slot AS (
     SELECT CASE
