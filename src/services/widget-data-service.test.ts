@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -64,6 +66,20 @@ describe("sleep extension data", () => {
     mocks.asyncStorage.getItem.mockResolvedValue(JSON.stringify({ babyId: "baby-1" }));
 
     await expect(getWidgetData()).resolves.toBeNull();
+  });
+
+  it("reads a real legacy cache through the public widget data API", async () => {
+    const raw = readFileSync(
+      resolve(process.cwd(), "fixtures/widget-activity-snapshots/legacy.json"),
+      "utf8"
+    );
+    const legacy = JSON.parse(raw);
+    mocks.asyncStorage.getItem.mockResolvedValue(raw);
+
+    await expect(getWidgetData()).resolves.toEqual({
+      ...legacy,
+      activeTimers: [legacy.activeTimer],
+    });
   });
 
   it("publishes the selected timezone with the native widget identity", async () => {
