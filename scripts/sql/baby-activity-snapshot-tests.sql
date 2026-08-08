@@ -3,6 +3,44 @@ BEGIN;
 
 DO $$
 DECLARE
+  v_spring_start timestamptz;
+  v_spring_end timestamptz;
+  v_fall_start timestamptz;
+  v_fall_end timestamptz;
+BEGIN
+  v_spring_start := pg_catalog.date_trunc(
+    'day',
+    '2025-03-09T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
+  ) AT TIME ZONE 'America/New_York';
+  v_spring_end := (
+    pg_catalog.date_trunc(
+      'day',
+      '2025-03-09T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
+    ) + INTERVAL '1 day'
+  ) AT TIME ZONE 'America/New_York';
+  v_fall_start := pg_catalog.date_trunc(
+    'day',
+    '2025-11-02T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
+  ) AT TIME ZONE 'America/New_York';
+  v_fall_end := (
+    pg_catalog.date_trunc(
+      'day',
+      '2025-11-02T12:00:00Z'::timestamptz AT TIME ZONE 'America/New_York'
+    ) + INTERVAL '1 day'
+  ) AT TIME ZONE 'America/New_York';
+
+  IF v_spring_end - v_spring_start <> INTERVAL '23 hours'
+    OR v_fall_end - v_fall_start <> INTERVAL '25 hours'
+  THEN
+    RAISE EXCEPTION 'presentation-timezone day bounds are not DST-safe';
+  END IF;
+END
+$$;
+
+\echo 'PASS: presentation-timezone day bounds preserve DST transitions'
+
+DO $$
+DECLARE
   v_function_oid oid;
   v_security_definer boolean;
   v_config text[];

@@ -37,7 +37,12 @@ AS $$
       valid_timezone.name AS timezone_name,
       valid_timezone.server_as_of,
       valid_timezone.local_day_start,
-      valid_timezone.local_day_start + INTERVAL '1 day' AS local_day_end
+      (
+        pg_catalog.date_trunc(
+          'day',
+          valid_timezone.server_as_of AT TIME ZONE valid_timezone.name
+        ) + INTERVAL '1 day'
+      ) AT TIME ZONE valid_timezone.name AS local_day_end
     FROM public.babies AS baby
     CROSS JOIN valid_timezone
     WHERE baby.id = p_baby_id
@@ -122,7 +127,11 @@ AS $$
   config AS (
     SELECT
       configured_windows.*,
-      configured_windows.sleep_day_start + INTERVAL '1 day' AS sleep_day_end,
+      (
+        configured_windows.sleep_day_start
+          AT TIME ZONE configured_windows.timezone_name
+        + INTERVAL '1 day'
+      ) AT TIME ZONE configured_windows.timezone_name AS sleep_day_end,
       (
         pg_catalog.date_trunc(
           'day',
