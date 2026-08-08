@@ -165,6 +165,14 @@ FROM (
     false
   FROM public.users AS owner
   WHERE owner.id = '81111111-1111-1111-1111-111111111111'
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000006'::uuid,
+    owner.household_id,
+    'Nap Rule Snapshot Baby'::text,
+    false
+  FROM public.users AS owner
+  WHERE owner.id = '81111111-1111-1111-1111-111111111111'
 ) AS fixture;
 
 SELECT pg_catalog.set_config(
@@ -374,12 +382,14 @@ UPDATE public.babies
 SET birth_date = CASE id
   WHEN '8a000000-0000-0000-0000-000000000001' THEN CURRENT_DATE - 300
   WHEN '8a000000-0000-0000-0000-000000000005' THEN CURRENT_DATE - 300
+  WHEN '8a000000-0000-0000-0000-000000000006' THEN CURRENT_DATE - 300
   ELSE CURRENT_DATE - 21
 END
 WHERE id IN (
   '8a000000-0000-0000-0000-000000000001',
   '8a000000-0000-0000-0000-000000000004',
-  '8a000000-0000-0000-0000-000000000005'
+  '8a000000-0000-0000-0000-000000000005',
+  '8a000000-0000-0000-0000-000000000006'
 );
 
 INSERT INTO public.activity_goals (baby_id, goal_type, target_value, source)
@@ -425,6 +435,16 @@ VALUES (
   true,
   3,
   '[{"slotIndex":0,"label":"Legacy First","durationMinutes":90},{"slotIndex":1,"label":"Legacy Second","durationMinutes":120}]'::jsonb,
+  'custom',
+  6,
+  19,
+  25,
+  pg_catalog.current_setting('test.snapshot_timezone')
+), (
+  '8a000000-0000-0000-0000-000000000006',
+  true,
+  2,
+  '[{"slotIndex":0,"label":"Rule First","durationMinutes":90},{"slotIndex":1,"label":"Rule Second","durationMinutes":120}]'::jsonb,
   'custom',
   6,
   19,
@@ -485,6 +505,12 @@ SELECT * FROM (
   SELECT '81000000-0000-0000-0000-000000000011', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'night', day_start - INTERVAL '4 hours', day_start + INTERVAL '4 hours', 28800, NULL, NULL, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000012', '8a000000-0000-0000-0000-000000000005', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 40 minutes', day_start + INTERVAL '5 hours 30 minutes', 3000, NULL, NULL, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000013', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'night', day_start - INTERVAL '4 hours', day_start + INTERVAL '4 hours', 28800, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000014', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 10 minutes', day_start + INTERVAL '4 hours 30 minutes', 1200, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000015', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '9 hours', day_start + INTERVAL '9 hours 10 minutes', 600, 'automatic', 1, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -588,6 +614,7 @@ DECLARE
   v_snapshot jsonb;
   v_sibling_snapshot jsonb;
   v_legacy_morning_snapshot jsonb;
+  v_nap_rule_snapshot jsonb;
 BEGIN
   v_snapshot := public.get_baby_activity_snapshot(
     '8a000000-0000-0000-0000-000000000001',
@@ -651,6 +678,17 @@ BEGIN
     OR v_legacy_morning_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Legacy First'
   THEN
     RAISE EXCEPTION 'unversioned early-morning sleep stopped acting as a legacy night continuation: %', v_legacy_morning_snapshot;
+  END IF;
+
+  v_nap_rule_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000006',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_nap_rule_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '0'
+    OR v_nap_rule_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '90'
+    OR v_nap_rule_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Rule First'
+  THEN
+    RAISE EXCEPTION 'morning continuation or 15-minute nap minimum diverged from shipped rules: %', v_nap_rule_snapshot;
   END IF;
 END
 $$;

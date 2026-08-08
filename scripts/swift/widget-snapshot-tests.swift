@@ -93,6 +93,12 @@ enum WidgetSnapshotTests {
         let oldLegacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy-old.json"))
         let versioned = try Data(contentsOf: fixtures.appendingPathComponent("versioned.json"))
         let weightOnly = try Data(contentsOf: fixtures.appendingPathComponent("versioned-weight-only.json"))
+        let missingNapCount = try Data(
+            contentsOf: fixtures.appendingPathComponent("versioned-missing-nap-count.json")
+        )
+        let missingMorningPending = try Data(
+            contentsOf: fixtures.appendingPathComponent("versioned-missing-morning-pending.json")
+        )
 
         let legacyDecoded = try WidgetSnapshotDecoder.decodeCache(legacy)
         require(legacyDecoded.kind == .legacy, "legacy fixture lost its compatibility classification")
@@ -133,6 +139,18 @@ enum WidgetSnapshotTests {
                 && weightOnlyDecoded.activities.growth.lastMeasurement?.headCircumferenceCm == nil,
             "weight-only growth measurement diverged between decoders"
         )
+
+        for incompleteVersioned in [missingNapCount, missingMorningPending] {
+            do {
+                _ = try WidgetSnapshotDecoder.decodeNetwork(
+                    incompleteVersioned,
+                    expectedBabyId: "baby-versioned"
+                )
+                fatalError("versioned payload without required sleep summary fields was accepted")
+            } catch WidgetSnapshotError.semanticFailure {
+                // Expected.
+            }
+        }
 
         var incoherent = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
         incoherent["activeTimer"] = [

@@ -4,7 +4,15 @@ import { describe, expect, it } from "vitest";
 
 import { decodeWidgetActivitySnapshotJson } from "./widget-activity-snapshot";
 
-function fixture(name: "legacy" | "legacy-old" | "versioned" | "versioned-weight-only"): string {
+type FixtureName =
+  | "legacy"
+  | "legacy-old"
+  | "versioned"
+  | "versioned-weight-only"
+  | "versioned-missing-nap-count"
+  | "versioned-missing-morning-pending";
+
+function fixture(name: FixtureName): string {
   return readFileSync(
     resolve(process.cwd(), `fixtures/widget-activity-snapshots/${name}.json`),
     "utf8"
@@ -63,6 +71,15 @@ describe("widget activity snapshot decoder", () => {
       },
       activeTimers: []
     }))).toBeNull();
+  });
+
+  it("rejects versioned payloads missing required sleep summary fields", () => {
+    for (const name of [
+      "versioned-missing-nap-count",
+      "versioned-missing-morning-pending",
+    ] as const) {
+      expect(decodeWidgetActivitySnapshotJson(fixture(name))).toBeNull();
+    }
   });
 
   it("rejects a non-boolean newborn wake-window requirement", () => {
