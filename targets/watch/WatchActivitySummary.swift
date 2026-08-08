@@ -305,6 +305,7 @@ enum WatchTimerProbeDecoder {
         struct TimerDataPayload: Decodable {
             let side: String?
             let sleepType: String?
+            let type: String?
             let isPaused: Bool?
             let accumulatedSeconds: Int?
             let timerInstanceId: String?
@@ -340,7 +341,8 @@ enum WatchTimerProbeDecoder {
                 type: watchType,
                 startTime: formatter.string(from: startedAt),
                 timerInstanceId: row.timerData?.timerInstanceId,
-                context: row.timerData?.side ?? row.timerData?.sleepType,
+                context: row.timerData?.side ?? row.timerData?.sleepType ??
+                    (row.activityType == "sleep" ? row.timerData?.type : nil),
                 isRemote: row.startedBy != currentUserId,
                 isPaused: row.timerData?.isPaused ?? false,
                 accumulatedSeconds: row.timerData?.accumulatedSeconds

@@ -246,6 +246,29 @@ enum WatchSummaryTests {
             "REST timer without isPaused did not match the RPC false default"
         )
 
+        let phoneSleepTimerRows = Data(#"""
+        [{
+          "id": "lock-3",
+          "activity_type": "sleep",
+          "started_by": "account-a",
+          "started_at": "2026-08-08T09:30:00.123Z",
+          "timer_data": {
+            "type": "nap",
+            "isPaused": false,
+            "timerInstanceId": "timer-rest"
+          }
+        }]
+        """#.utf8)
+        let phoneSleepTimers = try WatchTimerProbeDecoder.decode(
+            phoneSleepTimerRows,
+            currentUserId: identity.accountId
+        )
+        requireWatch(
+            WatchTimerFingerprint(timers: phoneSleepTimers) ==
+                WatchTimerFingerprint(timers: [rpcTimer]),
+            "phone-started sleep type did not match the RPC timer context"
+        )
+
         let baseTimer: [String: Any] = [
             "type": "sleep",
             "startTime": "2026-08-08T09:30:00.000Z",
