@@ -170,6 +170,13 @@ BEGIN
   THEN
     RAISE EXCEPTION 'authorized owner received an invalid base snapshot: %', v_snapshot;
   END IF;
+
+  IF public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000002',
+    'Europe/Belgrade'
+  ) IS NOT NULL THEN
+    RAISE EXCEPTION 'deleted baby leaked to its own household owner';
+  END IF;
 END
 $$;
 RESET ROLE;
