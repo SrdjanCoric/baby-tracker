@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   extensionStorage: {
     set: vi.fn(),
     get: vi.fn(),
+    remove: vi.fn(),
     reloadWidget: vi.fn(),
   },
 }));
@@ -126,9 +127,8 @@ describe("sleep extension data", () => {
       "selectedBabyId",
       "widgetTimezone",
     ]) {
-      expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
         key,
-        "",
         "group.com.sofibaby.app"
       );
     }

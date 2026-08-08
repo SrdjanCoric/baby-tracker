@@ -474,15 +474,15 @@ export async function clearWidgetData(): Promise<void> {
         }
         if (selectedBabyId) snapshotBabyIds.push(selectedBabyId);
 
-        await extensionStorage.set("widgetData", "", APP_GROUP);
+        await extensionStorage.remove("widgetData", APP_GROUP);
         for (const babyId of new Set(snapshotBabyIds)) {
-          await extensionStorage.set(`widgetSnapshot.${babyId}`, "", APP_GROUP);
+          await extensionStorage.remove(`widgetSnapshot.${babyId}`, APP_GROUP);
         }
-        await extensionStorage.set("widgetSnapshotBabyIds", "", APP_GROUP);
-        await extensionStorage.set("supabaseAccessToken", "", APP_GROUP);
-        await extensionStorage.set("userId", "", APP_GROUP);
-        await extensionStorage.set("selectedBabyId", "", APP_GROUP);
-        await extensionStorage.set("widgetTimezone", "", APP_GROUP);
+        await extensionStorage.remove("widgetSnapshotBabyIds", APP_GROUP);
+        await extensionStorage.remove("supabaseAccessToken", APP_GROUP);
+        await extensionStorage.remove("userId", APP_GROUP);
+        await extensionStorage.remove("selectedBabyId", APP_GROUP);
+        await extensionStorage.remove("widgetTimezone", APP_GROUP);
         await extensionStorage.reloadWidget();
       }
     }
