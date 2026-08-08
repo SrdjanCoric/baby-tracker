@@ -436,7 +436,8 @@ AS $$
       ARRAY[]::uuid[] AS continuation_ids,
       overnight_sleep.ended_at AS morning_wake_time,
       overnight_sleep.ended_at AS last_relevant_end,
-      false AS first_nap_settled
+      false AS first_nap_settled,
+      false AS has_pending_confirmation
     FROM (SELECT true) AS seed
     LEFT JOIN overnight_sleep ON true
 
@@ -463,6 +464,12 @@ AS $$
         resolution.first_nap_settled
           OR candidate.morning_classification = 'confirmed_first_nap',
         false
+      ),
+      resolution.has_pending_confirmation OR (
+        NOT resolution.first_nap_settled
+        AND candidate.morning_classification IS DISTINCT FROM 'confirmed_first_nap'
+        AND NOT decision.is_ignored_legacy
+        AND decision.is_continuation IS FALSE
       )
     FROM morning_resolution AS resolution
     JOIN early_morning_candidates AS candidate
@@ -474,46 +481,56 @@ AS $$
         candidate.morning_classification_version IS NULL
           AND pg_catalog.cardinality(resolution.continuation_ids) > 0
           AS is_ignored_legacy,
-        NOT resolution.first_nap_settled
-        AND candidate.morning_classification IS DISTINCT FROM 'confirmed_first_nap'
-        AND NOT (
-          candidate.morning_classification_version IS NULL
-          AND pg_catalog.cardinality(resolution.continuation_ids) > 0
-        )
-        AND (
-          candidate.morning_classification = 'confirmed_night_continuation'
-          OR (
-            overnight_sleep.id IS NULL
-            AND pg_catalog.cardinality(resolution.continuation_ids) = 0
+        COALESCE(
+          NOT resolution.first_nap_settled
+          AND candidate.morning_classification IS DISTINCT FROM 'confirmed_first_nap'
+          AND NOT (
+            candidate.morning_classification_version IS NULL
+            AND pg_catalog.cardinality(resolution.continuation_ids) > 0
           )
-          OR (
-            candidate.morning_classification = 'automatic'
-            AND (
-              resolution.last_relevant_end IS NULL
-              OR candidate.started_at - resolution.last_relevant_end
-                <= pg_catalog.make_interval(
-                  mins => morning_window.nap_continuation_minutes
-                )
+          AND (
+            candidate.morning_classification = 'confirmed_night_continuation'
+            OR (
+              overnight_sleep.id IS NULL
+              AND pg_catalog.cardinality(resolution.continuation_ids) = 0
             )
-          )
-          OR (
-            candidate.morning_classification IS NULL
-            AND (
-              candidate.morning_classification_version IS NULL
-              OR resolution.last_relevant_end IS NULL
-              OR candidate.started_at - resolution.last_relevant_end
-                <= pg_catalog.make_interval(
-                  mins => morning_window.nap_continuation_minutes
-                )
+            OR (
+              candidate.morning_classification = 'automatic'
+              AND overnight_sleep.id IS NOT NULL
+              AND (
+                resolution.last_relevant_end IS NULL
+                OR candidate.started_at - resolution.last_relevant_end
+                  <= pg_catalog.make_interval(
+                    mins => morning_window.nap_continuation_minutes
+                  )
+              )
             )
-          )
+            OR (
+              candidate.morning_classification IS NULL
+              AND (
+                candidate.morning_classification_version IS NULL
+                OR (
+                  overnight_sleep.id IS NOT NULL
+                  AND (
+                    resolution.last_relevant_end IS NULL
+                    OR candidate.started_at - resolution.last_relevant_end
+                      <= pg_catalog.make_interval(
+                        mins => morning_window.nap_continuation_minutes
+                      )
+                    )
+                  )
+                )
+              )
+            ),
+          false
         ) AS is_continuation
     ) AS decision
   ),
   morning_result AS (
     SELECT
       morning_resolution.morning_wake_time,
-      morning_resolution.continuation_ids
+      morning_resolution.continuation_ids,
+      morning_resolution.has_pending_confirmation
     FROM morning_resolution
     ORDER BY morning_resolution.sequence DESC
     LIMIT 1
@@ -572,12 +589,7 @@ AS $$
   ),
   morning_summary AS (
     SELECT (
-      EXISTS (
-        SELECT 1
-        FROM early_morning_candidates AS candidate
-        WHERE candidate.morning_classification = 'unresolved'
-          AND NOT (candidate.id = ANY(morning_result.continuation_ids))
-      )
+      morning_result.has_pending_confirmation
       OR EXISTS (
         SELECT 1
         FROM timer_rows AS timer

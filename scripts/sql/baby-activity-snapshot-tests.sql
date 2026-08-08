@@ -173,6 +173,22 @@ FROM (
     false
   FROM public.users AS owner
   WHERE owner.id = '81111111-1111-1111-1111-111111111111'
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000007'::uuid,
+    owner.household_id,
+    'No Overnight Automatic Snapshot Baby'::text,
+    false
+  FROM public.users AS owner
+  WHERE owner.id = '81111111-1111-1111-1111-111111111111'
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000008'::uuid,
+    owner.household_id,
+    'No Overnight Null Snapshot Baby'::text,
+    false
+  FROM public.users AS owner
+  WHERE owner.id = '81111111-1111-1111-1111-111111111111'
 ) AS fixture;
 
 SELECT pg_catalog.set_config(
@@ -383,13 +399,17 @@ SET birth_date = CASE id
   WHEN '8a000000-0000-0000-0000-000000000001' THEN CURRENT_DATE - 300
   WHEN '8a000000-0000-0000-0000-000000000005' THEN CURRENT_DATE - 300
   WHEN '8a000000-0000-0000-0000-000000000006' THEN CURRENT_DATE - 300
+  WHEN '8a000000-0000-0000-0000-000000000007' THEN CURRENT_DATE - 300
+  WHEN '8a000000-0000-0000-0000-000000000008' THEN CURRENT_DATE - 300
   ELSE CURRENT_DATE - 21
 END
 WHERE id IN (
   '8a000000-0000-0000-0000-000000000001',
   '8a000000-0000-0000-0000-000000000004',
   '8a000000-0000-0000-0000-000000000005',
-  '8a000000-0000-0000-0000-000000000006'
+  '8a000000-0000-0000-0000-000000000006',
+  '8a000000-0000-0000-0000-000000000007',
+  '8a000000-0000-0000-0000-000000000008'
 );
 
 INSERT INTO public.activity_goals (baby_id, goal_type, target_value, source)
@@ -445,6 +465,26 @@ VALUES (
   true,
   2,
   '[{"slotIndex":0,"label":"Rule First","durationMinutes":90},{"slotIndex":1,"label":"Rule Second","durationMinutes":120}]'::jsonb,
+  'custom',
+  6,
+  19,
+  25,
+  pg_catalog.current_setting('test.snapshot_timezone')
+), (
+  '8a000000-0000-0000-0000-000000000007',
+  true,
+  2,
+  '[{"slotIndex":0,"label":"Automatic First","durationMinutes":90},{"slotIndex":1,"label":"Automatic Second","durationMinutes":120}]'::jsonb,
+  'custom',
+  6,
+  19,
+  25,
+  pg_catalog.current_setting('test.snapshot_timezone')
+), (
+  '8a000000-0000-0000-0000-000000000008',
+  true,
+  2,
+  '[{"slotIndex":0,"label":"Null First","durationMinutes":90},{"slotIndex":1,"label":"Null Second","durationMinutes":120}]'::jsonb,
   'custom',
   6,
   19,
@@ -513,6 +553,14 @@ SELECT * FROM (
   SELECT '81000000-0000-0000-0000-000000000014', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '4 hours 10 minutes', day_start + INTERVAL '4 hours 30 minutes', 1200, 'automatic', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000015', '8a000000-0000-0000-0000-000000000006', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '9 hours', day_start + INTERVAL '9 hours 10 minutes', 600, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000017', '8a000000-0000-0000-0000-000000000007', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '3 hours', day_start + INTERVAL '3 hours 30 minutes', 1800, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000018', '8a000000-0000-0000-0000-000000000007', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '3 hours 50 minutes', day_start + INTERVAL '4 hours 20 minutes', 1800, 'automatic', 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000019', '8a000000-0000-0000-0000-000000000008', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '3 hours', day_start + INTERVAL '3 hours 30 minutes', 1800, NULL, 1, false FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000020', '8a000000-0000-0000-0000-000000000008', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '3 hours 50 minutes', day_start + INTERVAL '4 hours 20 minutes', 1800, NULL, 1, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -617,6 +665,8 @@ DECLARE
   v_sibling_snapshot jsonb;
   v_legacy_morning_snapshot jsonb;
   v_nap_rule_snapshot jsonb;
+  v_no_overnight_automatic_snapshot jsonb;
+  v_no_overnight_null_snapshot jsonb;
 BEGIN
   v_snapshot := public.get_baby_activity_snapshot(
     '8a000000-0000-0000-0000-000000000001',
@@ -691,6 +741,30 @@ BEGIN
     OR v_nap_rule_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Rule First'
   THEN
     RAISE EXCEPTION 'morning continuation or 15-minute nap minimum diverged from shipped rules: %', v_nap_rule_snapshot;
+  END IF;
+
+  v_no_overnight_automatic_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000007',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_no_overnight_automatic_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '1'
+    OR v_no_overnight_automatic_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '120'
+    OR v_no_overnight_automatic_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Automatic Second'
+    OR v_no_overnight_automatic_snapshot->'activities'->'sleep'->>'morningConfirmationPending' IS DISTINCT FROM 'true'
+  THEN
+    RAISE EXCEPTION 'no-overnight automatic morning diverged from shipped resolution: %', v_no_overnight_automatic_snapshot;
+  END IF;
+
+  v_no_overnight_null_snapshot := public.get_baby_activity_snapshot(
+    '8a000000-0000-0000-0000-000000000008',
+    pg_catalog.current_setting('test.snapshot_timezone')
+  );
+  IF v_no_overnight_null_snapshot->'activities'->'sleep'->>'napCountToday' IS DISTINCT FROM '1'
+    OR v_no_overnight_null_snapshot->'activities'->'sleep'->>'wakeWindowMinutes' IS DISTINCT FROM '120'
+    OR v_no_overnight_null_snapshot->'activities'->'sleep'->>'wakeWindowSlotLabel' IS DISTINCT FROM 'Null Second'
+    OR v_no_overnight_null_snapshot->'activities'->'sleep'->>'morningConfirmationPending' IS DISTINCT FROM 'true'
+  THEN
+    RAISE EXCEPTION 'no-overnight versioned-null morning diverged from shipped resolution: %', v_no_overnight_null_snapshot;
   END IF;
 END
 $$;
