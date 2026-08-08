@@ -26,7 +26,7 @@ test("the canonical check command runs every maintained non-device suite once", 
   );
   assert.equal(
     packageJson.scripts["check:code"],
-    "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:ci && npm run test:production-gating"
+    "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:ci && npm run test:widget:swift && npm run test:production-gating"
   );
   assert.equal(packageJson.scripts["test:unit"], "vitest run");
   assert.match(vitestConfig, /include:\s*\["src\/\*\*\/\*\.test\.ts"/);
@@ -41,6 +41,10 @@ test("the canonical check command runs every maintained non-device suite once", 
   assert.equal(
     packageJson.scripts["test:production-gating"],
     "node scripts/check-development-tools-production-bundle.mjs"
+  );
+  assert.equal(
+    packageJson.scripts["test:widget:swift"],
+    "node scripts/run-widget-swift-tests.mjs"
   );
   assert.equal(
     packageJson.scripts.check,
