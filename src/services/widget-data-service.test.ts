@@ -18,11 +18,13 @@ vi.mock("@react-native-async-storage/async-storage", () => ({ default: mocks.asy
 vi.mock("@/services/extension-storage", () => ({
   loadExtensionStorage: vi.fn().mockResolvedValue(mocks.extensionStorage),
 }));
+vi.mock("./watch-service", () => ({ syncToWatch: vi.fn() }));
 
 import {
   clearWidgetData,
   createEmptyWidgetData,
   getWidgetData,
+  updateWidgetData,
   updateSleepWidgetData,
   writeAuthToAppGroup,
 } from "./widget-data-service";
@@ -78,6 +80,31 @@ describe("sleep extension data", () => {
       "Europe/Belgrade",
       "group.com.sofibaby.app"
     );
+  });
+
+  it("publishes app snapshots to the preferred per-baby cache", async () => {
+    const data = createEmptyWidgetData("baby-1", "Sofi");
+    const json = JSON.stringify(data);
+    mocks.extensionStorage.get.mockResolvedValue(JSON.stringify(["baby-2"]));
+
+    await updateWidgetData(data);
+
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetData",
+      json,
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetSnapshot.baby-1",
+      json,
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetSnapshotBabyIds",
+      JSON.stringify(["baby-1", "baby-2"]),
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.reloadWidget).toHaveBeenCalledOnce();
   });
 
   it("removes the per-baby snapshot and native auth generation on sign-out", async () => {

@@ -109,6 +109,23 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
       const extensionStorage = await loadExtensionStorage();
       if (extensionStorage) {
         await extensionStorage.set("widgetData", jsonData, APP_GROUP);
+        await extensionStorage.set(`widgetSnapshot.${data.babyId}`, jsonData, APP_GROUP);
+        const snapshotBabyIdsJson = await extensionStorage.get("widgetSnapshotBabyIds", APP_GROUP);
+        let snapshotBabyIds: string[] = [];
+        try {
+          const parsed = snapshotBabyIdsJson ? JSON.parse(snapshotBabyIdsJson) : [];
+          if (Array.isArray(parsed)) {
+            snapshotBabyIds = parsed.filter((value): value is string => typeof value === "string");
+          }
+        } catch {
+          snapshotBabyIds = [];
+        }
+        const registeredBabyIds = [...new Set([...snapshotBabyIds, data.babyId])].sort();
+        await extensionStorage.set(
+          "widgetSnapshotBabyIds",
+          JSON.stringify(registeredBabyIds),
+          APP_GROUP
+        );
         await extensionStorage.reloadWidget();
       }
     } catch (error) {
