@@ -135,6 +135,14 @@ FROM (
     false
   FROM public.users AS outsider
   WHERE outsider.id = '83333333-3333-3333-3333-333333333333'
+  UNION ALL
+  SELECT
+    '8a000000-0000-0000-0000-000000000004'::uuid,
+    owner.household_id,
+    'Sibling Snapshot Baby'::text,
+    false
+  FROM public.users AS owner
+  WHERE owner.id = '81111111-1111-1111-1111-111111111111'
 ) AS fixture;
 
 SELECT pg_catalog.set_config(
@@ -277,7 +285,9 @@ WHERE id = '8a000000-0000-0000-0000-000000000001';
 INSERT INTO public.activity_goals (baby_id, goal_type, target_value, source)
 VALUES
   ('8a000000-0000-0000-0000-000000000001', 'sleep', 780, 'custom'),
-  ('8a000000-0000-0000-0000-000000000001', 'tummy_time', 3600, 'custom');
+  ('8a000000-0000-0000-0000-000000000001', 'tummy_time', 3600, 'custom'),
+  ('8a000000-0000-0000-0000-000000000004', 'sleep', 123, 'custom'),
+  ('8a000000-0000-0000-0000-000000000004', 'tummy_time', 456, 'custom');
 
 INSERT INTO public.wake_window_preferences (
   baby_id,
@@ -300,6 +310,16 @@ VALUES (
   19,
   25,
   pg_catalog.current_setting('test.snapshot_timezone')
+), (
+  '8a000000-0000-0000-0000-000000000004',
+  true,
+  1,
+  '[{"slotIndex":0,"label":"Sibling","durationMinutes":77}]'::jsonb,
+  'custom',
+  5,
+  20,
+  10,
+  pg_catalog.current_setting('test.snapshot_timezone')
 );
 
 WITH clock AS (
@@ -321,6 +341,8 @@ SELECT * FROM (
   SELECT '8f000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', 'solid', NULL, day_start + INTERVAL '11 hours', NULL, NULL, true FROM clock
   UNION ALL
   SELECT '8f000000-0000-0000-0000-000000000005', '8a000000-0000-0000-0000-000000000003', '83333333-3333-3333-3333-333333333333', 'solid', NULL, day_start + INTERVAL '11 hours 30 minutes', NULL, NULL, false FROM clock
+  UNION ALL
+  SELECT '8f000000-0000-0000-0000-000000000006', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'solid', NULL, day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -343,6 +365,8 @@ SELECT * FROM (
   SELECT '81000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', 'nap', day_start + INTERVAL '10 hours', day_start + INTERVAL '10 hours 30 minutes', 1800, 'unresolved', 1, false FROM clock
   UNION ALL
   SELECT '81000000-0000-0000-0000-000000000005', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', 'night', day_start + INTERVAL '10 hours 45 minutes', day_start + INTERVAL '11 hours', 900, 'automatic', 1, true FROM clock
+  UNION ALL
+  SELECT '81000000-0000-0000-0000-000000000009', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'nap', day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, 'automatic', 1, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -358,6 +382,7 @@ SELECT * FROM (
   UNION ALL SELECT '8d000000-0000-0000-0000-000000000003', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', 'mixed', day_start + INTERVAL '9 hours', false FROM clock
   UNION ALL SELECT '8d000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', 'dry', day_start + INTERVAL '10 hours', false FROM clock
   UNION ALL SELECT '8d000000-0000-0000-0000-000000000005', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', 'wet', day_start + INTERVAL '11 hours', true FROM clock
+  UNION ALL SELECT '8d000000-0000-0000-0000-000000000006', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', 'dry', day_start + INTERVAL '11 hours 30 minutes', false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -368,6 +393,7 @@ SELECT * FROM (
   SELECT '82000000-0000-0000-0000-000000000001'::uuid, '8a000000-0000-0000-0000-000000000001'::uuid, '81111111-1111-1111-1111-111111111111'::uuid, day_start + INTERVAL '7 hours', day_start + INTERVAL '7 hours 20 minutes', 1200, 50.50::numeric, 'left'::varchar, false FROM clock
   UNION ALL SELECT '82000000-0000-0000-0000-000000000002', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', day_start + INTERVAL '9 hours', day_start + INTERVAL '9 hours 20 minutes', 1200, 70.25, 'both', false FROM clock
   UNION ALL SELECT '82000000-0000-0000-0000-000000000003', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours', day_start + INTERVAL '11 hours 5 minutes', 300, 999, 'right', true FROM clock
+  UNION ALL SELECT '82000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, 321, 'right', false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -377,6 +403,7 @@ INSERT INTO public.growth_measurements (id, baby_id, logged_by, measured_at, wei
 SELECT * FROM (
   SELECT '8e000000-0000-0000-0000-000000000001'::uuid, '8a000000-0000-0000-0000-000000000001'::uuid, '81111111-1111-1111-1111-111111111111'::uuid, day_start + INTERVAL '7 hours', 7.125::numeric, 68.5::numeric, 42.25::numeric, false FROM clock
   UNION ALL SELECT '8e000000-0000-0000-0000-000000000002', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours', 99, 99, 99, true FROM clock
+  UNION ALL SELECT '8e000000-0000-0000-0000-000000000003', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours 30 minutes', 9.999, 99, 99, false FROM clock
 ) AS rows;
 
 WITH clock AS (
@@ -387,7 +414,20 @@ SELECT * FROM (
   SELECT '8c000000-0000-0000-0000-000000000001'::uuid, '8a000000-0000-0000-0000-000000000001'::uuid, '81111111-1111-1111-1111-111111111111'::uuid, day_start + INTERVAL '7 hours', day_start + INTERVAL '7 hours 10 minutes', 600, false FROM clock
   UNION ALL SELECT '8c000000-0000-0000-0000-000000000002', '8a000000-0000-0000-0000-000000000001', '82222222-2222-2222-2222-222222222222', day_start + INTERVAL '9 hours', day_start + INTERVAL '9 hours 15 minutes', 900, false FROM clock
   UNION ALL SELECT '8c000000-0000-0000-0000-000000000003', '8a000000-0000-0000-0000-000000000001', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours', day_start + INTERVAL '11 hours 30 minutes', 1800, true FROM clock
+  UNION ALL SELECT '8c000000-0000-0000-0000-000000000004', '8a000000-0000-0000-0000-000000000004', '81111111-1111-1111-1111-111111111111', day_start + INTERVAL '11 hours 30 minutes', day_start + INTERVAL '11 hours 40 minutes', 600, false FROM clock
 ) AS rows;
+
+WITH clock AS (
+  SELECT pg_catalog.date_trunc('day', pg_catalog.now() AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone')) AT TIME ZONE pg_catalog.current_setting('test.snapshot_timezone') AS day_start
+)
+INSERT INTO public.active_timers (baby_id, activity_type, started_by, started_at, timer_data)
+SELECT
+  '8a000000-0000-0000-0000-000000000004',
+  'feeding',
+  '81111111-1111-1111-1111-111111111111',
+  day_start + INTERVAL '11 hours 45 minutes',
+  '{"timerInstanceId":"sibling-timer","side":"right"}'::jsonb
+FROM clock;
 
 SELECT pg_catalog.set_config(
   'request.jwt.claims',
@@ -408,6 +448,7 @@ BEGIN
   );
 
   IF v_snapshot->'activities'->'feeding'->>'todayCount' <> '2'
+    OR v_snapshot->'activeTimers' <> '[]'::jsonb
     OR v_snapshot->'activities'->'feeding'->>'lastType' <> 'bottle'
     OR v_snapshot->'activities'->'feeding'->'lastSide' <> 'null'::jsonb
     OR v_snapshot->'activities'->'feeding'->>'lastTime' IS NULL
