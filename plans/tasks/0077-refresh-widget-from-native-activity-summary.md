@@ -97,12 +97,15 @@ functional but keep the reported defect until upgraded.
 - [x] [confirm-security] Approve the final RPC signature, `SECURITY INVOKER` choice, grants, caller-
       identity rule, household/deleted-baby denial behavior, timezone validation, and local-only
       migration plan before implementation.
-- [ ] [verify] On two household accounts and a physical iPhone Widget, start sleep under caregiver A,
+- [x] [verify] On two household accounts and a physical iPhone Widget, start sleep under caregiver A,
       stop it under caregiver B, and do not open A's phone app · Expected: A's Widget stops after its
       WidgetKit refresh and immediately shows the new sleep end/awake duration and totals · Failure:
       the timer remains, the prior sleep end is used, totals remain from another generation, or the
       app must be opened · Reason: WidgetKit push scheduling and extension execution cannot be fully
-      proved by local SQL, TypeScript, or source-contract tests.
+      proved by local SQL, TypeScript, or source-contract tests. · Disposition: explicitly skipped by
+      the owner on 2026-08-08 before PR creation and deferred until the implementation is available
+      through TestFlight. The physical-iPhone boundary remains manually unverified and was accepted
+      for this task.
 
 ## Acceptance criteria
 
@@ -175,3 +178,35 @@ functional but keep the reported defect until upgraded.
 - skipped (minor): TR-39 — Nap-anchor and continuation-exclusion predicates lack mutation-red vectors — user limited remediation to TR-33, TR-34, and TR-37.
 - skipped (minor): TR-40 — Own-timer context branches lack vectors — user limited remediation to TR-33, TR-34, and TR-37.
 - skipped (minor): TR-41 — `sleep_day_start` and `sleep_day_end` are dead code — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-42 — The settled-first-nap pending-confirmation guard is not mutation-red — user explicitly skipped all remaining findings during finish-task.
+- skipped (minor): TR-43 — The ignored-legacy pending-confirmation guard is not mutation-red — user explicitly skipped all remaining findings during finish-task.
+- accepted security risk: TR-44 — A differently named future RPC could evade the regression guard for the retired clock RPC — user explicitly skipped all remaining findings during finish-task; no exploitable second RPC exists in the current migration.
+- accepted security risk: TR-45 — An operationally misconfigured `widget.snapshot_now` session value could fail refreshes or freeze response ordering — user explicitly skipped all remaining findings during finish-task; authenticated callers cannot set the GUC through the current PostgREST configuration.
+- skipped (minor): TR-46 — The task's approved security contract does not record the test-clock session seam — user explicitly skipped all remaining findings during finish-task.
+
+## Completion record
+
+- **Built:** one authenticated selected-baby activity-summary RPC and one Widget refresh/store path
+  that atomically replaces the complete per-baby cache after validation. Timeline, push, and Widget
+  action refreshes share this path; legacy caches and installed clients remain compatible.
+- **Relevant files:** `supabase/migrations/061_get_baby_activity_snapshot.sql`,
+  `targets/widget/WidgetActivitySnapshot.swift`, `targets/widget/index.swift`,
+  `src/services/widget-activity-snapshot.ts`, `src/services/widget-data-service.ts`, shared fixtures
+  under `fixtures/widget-activity-snapshots/`, and the SQL, Swift, TypeScript, component, security,
+  native-wiring, and household-runner tests recorded above.
+- **README:** updated `iOS Native Integrations` to describe complete selected-baby Widget refreshes
+  and prior-cache preservation on failure. The affected prose passed two `write-well` audit passes;
+  the first rewrote the previous push-only description, and the second found no remaining issues.
+- **Review:** the retained review fixed TR-1 through TR-7, TR-9 through TR-20, TR-24 through TR-31,
+  TR-33, TR-34, and TR-37. The user skipped TR-21 through TR-23, TR-32, TR-35, TR-36, TR-38
+  through TR-43, and TR-46. The user accepted TR-8's RLS-protected column-grant surface and the
+  residual TR-44 and TR-45 risks described above.
+- **Final automated proof (2026-08-08):** the `npm run check` code stage passed lint, type checking,
+  unit and component tests, CI contracts, the Swift Widget decoder/coordinator harness, and the
+  production-bundle gate. Its SQL setup first encountered a sandbox-only `EPERM` while Supabase
+  wrote `~/.supabase/telemetry.json`; rerunning only the affected SQL setup and vector stage with
+  filesystem permission applied all 63 local migrations and passed every SQL vector, including the
+  authenticated Widget snapshot contract.
+- **Manual verification:** explicitly skipped by the owner on 2026-08-08 before PR creation and
+  deferred until the implementation is available through TestFlight. The physical-iPhone,
+  two-household-account boundary remains manually unverified and is a release-owner follow-up.

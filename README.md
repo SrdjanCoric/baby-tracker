@@ -120,7 +120,9 @@ When the latest completed sleep is the current evening's stored `night` session,
 
 ### iOS Native Integrations
 
-- **WidgetKit** home screen widgets with push-triggered timeline refresh via APNs
+- **WidgetKit** home screen widgets refresh the selected baby's complete activity summary on scheduled
+  timeline updates and after timer-change pushes or Widget actions. A failed refresh keeps the previous
+  summary intact.
 - **Live Activities + Dynamic Island** for active feeding and sleep timers
 - **Apple Watch** companion app using WCSession with REST API fallback
 - **Deep linking** (`sofibaby://`) for widget and notification actions, with dismissible activity screens on cold launch
