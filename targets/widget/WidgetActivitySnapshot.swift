@@ -361,9 +361,6 @@ actor WidgetSnapshotCoordinator {
             guard !isOlder(response, than: prior) else {
                 return prior
             }
-            guard hasCoherentCompletionTransitions(response, from: prior) else {
-                return prior
-            }
             if responseBytes == priorBytes {
                 return response
             }
@@ -394,40 +391,6 @@ actor WidgetSnapshotCoordinator {
             return true
         }
         return candidateDate < cachedDate
-    }
-
-    private static func hasCoherentCompletionTransitions(
-        _ candidate: WidgetDataModel,
-        from cached: WidgetDataModel?
-    ) -> Bool {
-        guard let cached else { return true }
-        let candidateTypes = Set((candidate.activeTimers ?? []).map(\.type))
-
-        for timer in cached.activeTimers ?? [] where !candidateTypes.contains(timer.type) {
-            guard completionAnchor(for: timer.type, in: candidate)
-                != completionAnchor(for: timer.type, in: cached) else {
-                return false
-            }
-        }
-        return true
-    }
-
-    private static func completionAnchor(
-        for timerType: String,
-        in data: WidgetDataModel
-    ) -> String? {
-        switch timerType {
-        case "feeding":
-            return data.activities.feeding.lastTime
-        case "sleep":
-            return data.activities.sleep.lastSleepEndedAt
-        case "pumping":
-            return data.activities.pumping.lastTime
-        case "tummyTime":
-            return data.activities.tummyTime.lastTime
-        default:
-            return nil
-        }
     }
 
     private static func isDisplayEquivalent(

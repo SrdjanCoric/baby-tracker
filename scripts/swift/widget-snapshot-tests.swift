@@ -192,29 +192,29 @@ enum WidgetSnapshotTests {
         ]
         let semantic = try JSONSerialization.data(withJSONObject: semanticObject)
 
-        var timerOnlyTransitionObject = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
-        var transitionActivities = timerOnlyTransitionObject["activities"] as! [String: Any]
+        var discardedTimerTransitionObject = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
+        var transitionActivities = discardedTimerTransitionObject["activities"] as! [String: Any]
         var transitionSleep = transitionActivities["sleep"] as! [String: Any]
         transitionSleep["lastSleepEndedAt"] = "2026-08-08T08:30:00.000Z"
         transitionActivities["sleep"] = transitionSleep
-        timerOnlyTransitionObject["activities"] = transitionActivities
-        let timerOnlyTransition = try JSONSerialization.data(withJSONObject: timerOnlyTransitionObject)
+        discardedTimerTransitionObject["activities"] = transitionActivities
+        let discardedTimerTransition = try JSONSerialization.data(withJSONObject: discardedTimerTransitionObject)
         let transitionStore = TestSnapshotStore()
         transitionStore.bytesByBaby["baby-versioned"] = legacy
         let transitionCoordinator = WidgetSnapshotCoordinator(
             store: transitionStore,
             identityReader: identity,
-            fetcher: TestSnapshotFetcher(bytes: timerOnlyTransition),
+            fetcher: TestSnapshotFetcher(bytes: discardedTimerTransition),
             reload: { transitionStore.events.append("reload") }
         )
         _ = await transitionCoordinator.refresh(for: "baby-versioned")
         require(
-            transitionStore.bytesByBaby["baby-versioned"] == legacy,
-            "timer disappearance without an advanced completion summary was installed"
+            transitionStore.bytesByBaby["baby-versioned"] == discardedTimerTransition,
+            "an authoritative snapshot could not discard a timer without a completed activity"
         )
         require(
-            transitionStore.writes == 0 && transitionStore.events.isEmpty,
-            "timer-only partial transition reloaded the Widget"
+            transitionStore.events == ["write", "reload"],
+            "discarding a timer did not refresh the Widget"
         )
 
         let rejectedPayloads = [older, wrongBaby, unsupported, malformed, semantic]
