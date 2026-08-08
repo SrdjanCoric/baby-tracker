@@ -162,3 +162,16 @@ functional but keep the reported defect until upgraded.
   2,642 tests), `npm run test:security` (115 tests), the auth/Widget-context/stop component tests,
   `npm run e2e:household-timers:test`, the standalone Swift decoder/coordinator harness, a clean
   `npm run test:sql:setup && npm run test:sql`, and a generic iOS Simulator app/Widget build.
+
+## Review decisions
+
+- skipped (minor): TR-21 — The presentation-timezone producer has no call-site test — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-22 — `isCachedDataFresh` is dead code — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-23 — Planning metadata was added on the implementation branch — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-32 — Coalesced refreshes can reload once per caller — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-35 — Unacknowledged sleep-stop suppression has no bound — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-36 — The no-pending-stop display direction lacks behavioral proof — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-38 — Latest-diaper per-baby scoping is not mutation-red — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-39 — Nap-anchor and continuation-exclusion predicates lack mutation-red vectors — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-40 — Own-timer context branches lack vectors — user limited remediation to TR-33, TR-34, and TR-37.
+- skipped (minor): TR-41 — `sleep_day_start` and `sleep_day_end` are dead code — user limited remediation to TR-33, TR-34, and TR-37.
