@@ -207,7 +207,11 @@ enum WidgetSnapshotTests {
             fetcher: TestSnapshotFetcher(bytes: discardedTimerTransition),
             reload: { transitionStore.events.append("reload") }
         )
-        _ = await transitionCoordinator.refresh(for: "baby-versioned")
+        let discardedTimerSnapshot = await transitionCoordinator.refresh(for: "baby-versioned")
+        require(
+            discardedTimerSnapshot?.hasActiveTimer(for: .sleep) == false,
+            "the locally stopped timer remained visible after reconciliation"
+        )
         require(
             transitionStore.bytesByBaby["baby-versioned"] == discardedTimerTransition,
             "an authoritative snapshot could not discard a timer without a completed activity"
@@ -215,6 +219,29 @@ enum WidgetSnapshotTests {
         require(
             transitionStore.events == ["write", "reload"],
             "discarding a timer did not refresh the Widget"
+        )
+        let storedDiscard = try WidgetSnapshotDecoder.decodeCache(
+            transitionStore.bytesByBaby["baby-versioned"]!
+        ).data
+        require(
+            storedDiscard.hasActiveTimer(for: .sleep) == false,
+            "the stored post-stop display still contained the sleep timer"
+        )
+
+        let completedAfterDiscard = try changedFixture(versioned, [
+            "serverAsOf": "2026-08-08T10:01:00.000Z",
+            "updatedAt": "2026-08-08T10:01:00.000Z"
+        ])
+        let completionCoordinator = WidgetSnapshotCoordinator(
+            store: transitionStore,
+            identityReader: identity,
+            fetcher: TestSnapshotFetcher(bytes: completedAfterDiscard),
+            reload: { transitionStore.events.append("reload") }
+        )
+        let completedAfterStop = await completionCoordinator.refresh(for: "baby-versioned")
+        require(
+            completedAfterStop?.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z",
+            "the completed summary did not install after a Widget stop reconciliation"
         )
 
         let rejectedPayloads = [older, wrongBaby, unsupported, malformed, semantic]
