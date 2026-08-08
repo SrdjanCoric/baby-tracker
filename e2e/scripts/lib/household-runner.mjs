@@ -238,7 +238,7 @@ export function assertRemoteSleepCompletion({
   }
 
   const expected = {
-    lastTime: completedSleep.startedAt,
+    lastTime: completedSleep.endedAt,
     lastSleepEndedAt: completedSleep.endedAt,
     lastDurationMinutes: completedSleep.durationMinutes,
     sleepType: completedSleep.sleepType,

@@ -88,7 +88,7 @@ test("household timer runner proves one remote sleep completion summary and pres
     activities: {
       sleep: {
         isActive: false,
-        lastTime: "2026-08-08T10:00:00.000Z",
+        lastTime: "2026-08-08T10:30:00.000Z",
         lastSleepEndedAt: "2026-08-08T10:30:00.000Z",
         lastDurationMinutes: 30,
         sleepType: "nap",
