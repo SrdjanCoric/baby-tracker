@@ -11,6 +11,7 @@ const root = resolve(scriptDirectory, "..");
 const buildDirectory = mkdtempSync(join(tmpdir(), "widget-snapshot-tests-"));
 const moduleCache = join(buildDirectory, "module-cache");
 const executable = join(buildDirectory, "widget-snapshot-tests");
+const watchExecutable = join(buildDirectory, "watch-summary-tests");
 
 mkdirSync(moduleCache);
 
@@ -35,6 +36,29 @@ try {
     }
   );
   execFileSync(executable, ["fixtures/widget-activity-snapshots"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  execFileSync(
+    "swiftc",
+    [
+      "-parse-as-library",
+      "targets/watch/WatchActivitySummary.swift",
+      "scripts/swift/watch-summary-tests.swift",
+      "-o",
+      watchExecutable,
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        CLANG_MODULE_CACHE_PATH: moduleCache,
+        SWIFT_MODULECACHE_PATH: moduleCache,
+      },
+      stdio: "inherit",
+    }
+  );
+  execFileSync(watchExecutable, ["fixtures/widget-activity-snapshots"], {
     cwd: root,
     stdio: "inherit",
   });

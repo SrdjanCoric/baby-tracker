@@ -255,3 +255,32 @@ export function assertRemoteSleepCompletion({
     throw new Error("Completed Widget nap count or wake-window state did not advance coherently");
   }
 }
+
+export function watchTimerFingerprint(timers) {
+  if (!Array.isArray(timers)) return "[]";
+  return JSON.stringify(timers.map((timer) => ({
+    type: timer?.type ?? null,
+    startTime: timer?.startTime ?? null,
+    timerInstanceId: timer?.timerInstanceId ?? null,
+    context: timer?.isRemote === true ? null : (timer?.context ?? null),
+    isRemote: timer?.isRemote === true,
+    isPaused: timer?.isPaused === true,
+    accumulatedSeconds: timer?.accumulatedSeconds ?? null,
+  })).sort((left, right) => {
+    const leftKey = `${left.timerInstanceId ?? left.type}|${left.type}`;
+    const rightKey = `${right.timerInstanceId ?? right.type}|${right.type}`;
+    return leftKey.localeCompare(rightKey);
+  }));
+}
+
+export function reconcileWatchTimerProbe({ base, fingerprint, fullSummary }) {
+  const baseFingerprint = watchTimerFingerprint(base?.activeTimers);
+  if (fingerprint === baseFingerprint) return base;
+  if (!fullSummary
+    || fullSummary.schemaVersion !== 1
+    || fullSummary.babyId !== base?.babyId
+    || watchTimerFingerprint(fullSummary.activeTimers) !== fingerprint) {
+    return base;
+  }
+  return fullSummary;
+}

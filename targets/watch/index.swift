@@ -150,6 +150,123 @@ enum WatchActivityType: String, CaseIterable {
     }
 }
 
+final class AppGroupWatchSummaryStore: WatchSummaryStoring, @unchecked Sendable {
+    private let defaults: UserDefaults
+
+    init?(defaults: UserDefaults? = UserDefaults(suiteName: "group.com.sofibaby.app")) {
+        guard let defaults else { return nil }
+        self.defaults = defaults
+    }
+
+    func readSummary(for identity: WatchSummaryIdentity) -> Data? {
+        let scopedKey = "watchSummary.\(identity.cacheKey)"
+        if let value = defaults.string(forKey: scopedKey),
+           let bytes = value.data(using: .utf8),
+           let decoded = try? WatchSummaryDecoder.decodeCache(bytes),
+           decoded.data.babyId == identity.babyId {
+            return bytes
+        }
+        for legacyKey in ["watchData", "widgetData"] {
+            if let value = defaults.string(forKey: legacyKey),
+               let bytes = value.data(using: .utf8),
+               let decoded = try? WatchSummaryDecoder.decodeCache(bytes),
+               decoded.data.babyId == identity.babyId {
+                return bytes
+            }
+        }
+        return nil
+    }
+
+    func writeSummary(_ bytes: Data, for identity: WatchSummaryIdentity) throws {
+        guard let value = String(data: bytes, encoding: .utf8) else {
+            throw WatchSummaryError.semanticFailure
+        }
+        defaults.set(value, forKey: "watchSummary.\(identity.cacheKey)")
+        defaults.set(value, forKey: "watchData")
+    }
+
+    func readOverlays(for identity: WatchSummaryIdentity) -> [WatchOptimisticOverlay] {
+        guard let value = defaults.string(forKey: "watchPendingOverlays.\(identity.cacheKey)"),
+              let bytes = value.data(using: .utf8) else {
+            return []
+        }
+        return (try? JSONDecoder().decode([WatchOptimisticOverlay].self, from: bytes)) ?? []
+    }
+
+    func writeOverlays(_ overlays: [WatchOptimisticOverlay], for identity: WatchSummaryIdentity) throws {
+        let bytes = try JSONEncoder().encode(overlays)
+        guard let value = String(data: bytes, encoding: .utf8) else {
+            throw WatchSummaryError.semanticFailure
+        }
+        defaults.set(value, forKey: "watchPendingOverlays.\(identity.cacheKey)")
+    }
+}
+
+final class AppGroupWatchSummaryIdentityReader: WatchSummaryIdentityReading, @unchecked Sendable {
+    private let defaults: UserDefaults
+
+    init?(defaults: UserDefaults? = UserDefaults(suiteName: "group.com.sofibaby.app")) {
+        guard let defaults else { return nil }
+        self.defaults = defaults
+    }
+
+    func currentIdentity() -> WatchSummaryIdentity? {
+        guard let accountId = defaults.string(forKey: "watchSupabaseUserId"),
+              let babyId = defaults.string(forKey: "watchSelectedBabyId"),
+              let accessToken = defaults.string(forKey: "watchSupabaseAccessToken") else {
+            return nil
+        }
+        let householdId = defaults.string(forKey: "watchHouseholdId") ?? "legacy-household"
+        return WatchSummaryIdentity(
+            accountId: accountId,
+            babyId: babyId,
+            generation: "\(householdId)|\(accessToken)",
+            timezone: TimeZone.current.identifier
+        )
+    }
+}
+
+final class SupabaseWatchSummaryFetcher: WatchSummaryFetching, @unchecked Sendable {
+    private let defaults: UserDefaults
+
+    init?(defaults: UserDefaults? = UserDefaults(suiteName: "group.com.sofibaby.app")) {
+        guard let defaults else { return nil }
+        self.defaults = defaults
+    }
+
+    func fetchSummary(for identity: WatchSummaryIdentity) async throws -> Data {
+        guard let supabaseUrl = defaults.string(forKey: "watchSupabaseUrl"),
+              let anonKey = defaults.string(forKey: "watchSupabaseAnonKey"),
+              let accessToken = defaults.string(forKey: "watchSupabaseAccessToken") else {
+            throw WatchSummaryTransportError.missingCredentials
+        }
+        guard let url = URL(string: "\(supabaseUrl)/rest/v1/rpc/get_baby_activity_snapshot") else {
+            throw WatchSummaryTransportError.invalidURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "p_baby_id": identity.babyId,
+            "p_timezone": identity.timezone
+        ])
+        let (bytes, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw WatchSummaryTransportError.unsuccessfulResponse
+        }
+        if http.statusCode == 401 {
+            throw WatchSummaryTransportError.unauthorized
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw WatchSummaryTransportError.unsuccessfulResponse
+        }
+        return bytes
+    }
+}
+
 // MARK: - Phone Connector
 
 class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
@@ -182,6 +299,26 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private var pushToStartToken: String?
 
     private var networkPollTimer: Timer?
+
+    private lazy var watchSummaryCoordinator: WatchSummaryCoordinator? = {
+        guard let store = AppGroupWatchSummaryStore(),
+              let identity = AppGroupWatchSummaryIdentityReader(),
+              let fetcher = SupabaseWatchSummaryFetcher() else {
+            return nil
+        }
+        return WatchSummaryCoordinator(
+            store: store,
+            identityReader: identity,
+            fetcher: fetcher,
+            reload: { WidgetCenter.shared.reloadAllTimelines() },
+            requestCredentials: { [weak self] in
+                DispatchQueue.main.async {
+                    self?.isTokenStale = true
+                    self?.sendAction(["action": "requestSync"])
+                }
+            }
+        )
+    }()
 
     @Published var isTokenStale = false
 
@@ -237,7 +374,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     var currentBaby: BabyWatchData? {
         guard let babyId = currentBabyId else { return nil }
-        return multiBabyData?.babies.first { $0.id == babyId } ?? multiBabyData?.babies.first
+        if let data = widgetData, data.babyId == babyId {
+            return BabyWatchData(
+                id: data.babyId,
+                name: data.babyName,
+                activities: data.activities,
+                activeTimers: data.activeTimers ?? (data.activeTimer.map { [$0] } ?? [])
+            )
+        }
+        return multiBabyData?.babies.first { $0.id == babyId }
     }
 
     var allBabies: [BabyWatchData] {
@@ -296,102 +441,29 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     /// Sync optimistic state to UserDefaults cache so complications can read it
     func syncOptimisticStateToCache() {
-        let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
-
-        // Build combined active timers
-        let combinedTimers = combinedActiveTimers
-
-        // Update multiBabyData cache if available
-        if var multiBaby = multiBabyData {
-            // Update the selected baby's active timers
-            if let babyIndex = multiBaby.babies.firstIndex(where: { $0.id == currentBabyId }) {
-                multiBaby.babies[babyIndex].activeTimers = combinedTimers
-
-                // Update diaper counts for the selected baby
-                let serverCounts = multiBaby.babies[babyIndex].activities.diaper.todayCounts
-                let combinedCounts = combinedDiaperCounts(serverCounts: serverCounts)
-                multiBaby.babies[babyIndex].activities.diaper.todayCounts = combinedCounts
-
-                // Update last diaper time if we have local logs
-                if let localTime = lastLocalDiaperTime {
-                    let formatter = ISO8601DateFormatter()
-                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                    multiBaby.babies[babyIndex].activities.diaper.lastTime = formatter.string(from: localTime)
-                }
-
-                // Update last activity times for stopped timers
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                if let feedingTime = localStoppedActivityTimes["feeding"] {
-                    multiBaby.babies[babyIndex].activities.feeding.lastTime = formatter.string(from: feedingTime)
-                }
-                if let sleepTime = localStoppedActivityTimes["sleep"] {
-                    multiBaby.babies[babyIndex].activities.sleep.lastTime = formatter.string(from: sleepTime)
-                }
-                if let pumpingTime = localStoppedActivityTimes["pumping"] {
-                    multiBaby.babies[babyIndex].activities.pumping.lastTime = formatter.string(from: pumpingTime)
-                }
-                if let tummyTime = localStoppedActivityTimes["tummyTime"] {
-                    multiBaby.babies[babyIndex].activities.tummyTime.lastTime = formatter.string(from: tummyTime)
-                }
-            }
-
-            multiBaby.updatedAt = ISO8601DateFormatter().string(from: Date())
-
-            if let encoded = try? JSONEncoder().encode(multiBaby),
-               let jsonString = String(data: encoded, encoding: .utf8) {
-                userDefaults?.set(jsonString, forKey: "multiBabyWatchData")
-                print("[WatchConnector] syncOptimisticStateToCache: updated multiBabyWatchData with \(combinedTimers.count) timers")
-            }
+        guard let identity = AppGroupWatchSummaryIdentityReader()?.currentIdentity(),
+              let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") else {
+            WidgetCenter.shared.reloadAllTimelines()
+            return
         }
-
-        // Update widgetData cache if available
-        if var widget = widgetData {
-            widget.activeTimers = combinedTimers
-            widget.activeTimer = combinedTimers.first
-
-            // Update diaper counts
-            let serverCounts = widget.activities.diaper.todayCounts
-            let combinedCounts = combinedDiaperCounts(serverCounts: serverCounts)
-            widget.activities.diaper.todayCounts = combinedCounts
-
-            // Update last diaper time if we have local logs
-            if let localTime = lastLocalDiaperTime {
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                widget.activities.diaper.lastTime = formatter.string(from: localTime)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let payload: [String: Any] = [
+            "localActiveTimers": (try? JSONSerialization.jsonObject(with: encoder.encode(localActiveTimers))) ?? [],
+            "locallyStoppedTimerTypes": Array(locallyStoppedTimerTypes).sorted(),
+            "localStoppedActivityTimes": localStoppedActivityTimes.mapValues {
+                ISO8601DateFormatter().string(from: $0)
+            },
+            "pendingDiaperLogs": pendingDiaperLogs.map {
+                ["type": $0.type, "time": ISO8601DateFormatter().string(from: $0.time)]
             }
-
-            // Update last activity times for stopped timers
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let feedingTime = localStoppedActivityTimes["feeding"] {
-                widget.activities.feeding.lastTime = formatter.string(from: feedingTime)
-            }
-            if let sleepTime = localStoppedActivityTimes["sleep"] {
-                widget.activities.sleep.lastTime = formatter.string(from: sleepTime)
-            }
-            if let pumpingTime = localStoppedActivityTimes["pumping"] {
-                widget.activities.pumping.lastTime = formatter.string(from: pumpingTime)
-            }
-            if let tummyTime = localStoppedActivityTimes["tummyTime"] {
-                widget.activities.tummyTime.lastTime = formatter.string(from: tummyTime)
-            }
-
-            widget.updatedAt = ISO8601DateFormatter().string(from: Date())
-
-            if let encoded = try? JSONEncoder().encode(widget),
-               let jsonString = String(data: encoded, encoding: .utf8) {
-                userDefaults?.set(jsonString, forKey: "watchData")
-                // Also update "widgetData" key which iOS widget reads for complications
-                userDefaults?.set(jsonString, forKey: "widgetData")
-                print("[WatchConnector] syncOptimisticStateToCache: updated watchData and widgetData with \(combinedTimers.count) timers")
-            }
+        ]
+        if let bytes = try? JSONSerialization.data(withJSONObject: payload),
+           let value = String(data: bytes, encoding: .utf8) {
+            userDefaults.set(value, forKey: "watchOptimisticState.\(identity.cacheKey)")
         }
-
-        // Trigger complication refresh
         WidgetCenter.shared.reloadAllTimelines()
-        print("[WatchConnector] syncOptimisticStateToCache: triggered WidgetCenter reload")
+        print("[WatchConnector] syncOptimisticStateToCache: stored overlay separately from server base")
     }
 
     private func canPerformAction() -> Bool {
@@ -420,11 +492,39 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 print("[WatchConnector] activationDidComplete: no data, loading cache")
                 self.loadCachedData()
             }
-            self.requestFreshData()
+            self.refreshCompleteSummary(.activation)
+            self.requestFreshDataFromPhone()
         }
     }
 
     private func parseApplicationContext(_ context: [String: Any]) {
+        if context["signedOut"] as? Bool == true {
+            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            for key in [
+                "watchSupabaseUrl",
+                "watchSupabaseAnonKey",
+                "watchSupabaseAccessToken",
+                "watchSupabaseUserId",
+                "watchHouseholdId"
+            ] {
+                defaults?.removeObject(forKey: key)
+            }
+            supabaseUrl = nil
+            supabaseAnonKey = nil
+            supabaseAccessToken = nil
+            supabaseUserId = nil
+            isTokenStale = false
+            widgetData = nil
+            multiBabyData = nil
+            selectedBabyId = nil
+            defaults?.removeObject(forKey: "watchSelectedBabyId")
+            localActiveTimers.removeAll()
+            locallyStoppedTimerTypes.removeAll()
+            localStoppedActivityTimes.removeAll()
+            pendingDiaperLogs.removeAll()
+            stopNetworkPolling()
+            return
+        }
         // The phone sends the language it resolved, never its stored "system"
         // preference, so an unrecognized value means a version mismatch and the
         // existing selection is kept rather than falling back to English.
@@ -443,16 +543,36 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
            let anonKey = context["supabaseAnonKey"] as? String,
            let token = context["accessToken"] as? String,
            let userId = context["userId"] as? String {
+            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            let incomingHouseholdId = context["householdId"] as? String
+            let storedHouseholdId = defaults?.string(forKey: "watchHouseholdId")
+            let scopeChanged = (supabaseUserId != nil && supabaseUserId != userId) ||
+                (storedHouseholdId != nil && storedHouseholdId != incomingHouseholdId)
+            if scopeChanged {
+                widgetData = nil
+                multiBabyData = nil
+                selectedBabyId = nil
+                defaults?.removeObject(forKey: "watchSelectedBabyId")
+                localActiveTimers.removeAll()
+                locallyStoppedTimerTypes.removeAll()
+                localStoppedActivityTimes.removeAll()
+                pendingDiaperLogs.removeAll()
+                stopNetworkPolling()
+            }
             self.supabaseUrl = url
             self.supabaseAnonKey = anonKey
             self.supabaseAccessToken = token
             self.supabaseUserId = userId
             self.isTokenStale = false
-            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
             defaults?.set(url, forKey: "watchSupabaseUrl")
             defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
             defaults?.set(token, forKey: "watchSupabaseAccessToken")
             defaults?.set(userId, forKey: "watchSupabaseUserId")
+            if let householdId = incomingHouseholdId {
+                defaults?.set(householdId, forKey: "watchHouseholdId")
+            } else {
+                defaults?.removeObject(forKey: "watchHouseholdId")
+            }
             print("[WatchConnector] parseApplicationContext: stored auth credentials")
         }
 
@@ -479,35 +599,35 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                     print("[WatchConnector] parseApplicationContext: baby \(baby.name) has \(baby.activeTimers.count) active timers")
                 }
                 self.multiBabyData = decoded
-                self.selectedBabyId = decoded.selectedBabyId
+                if self.selectedBabyId == nil {
+                    self.selectedBabyId = decoded.selectedBabyId
+                }
                 self.cacheData(dataString, forKey: "multiBabyWatchData")
-                // Clear local optimistic data - phone data is source of truth
-                self.localActiveTimers.removeAll()
-                self.locallyStoppedTimerTypes.removeAll()
-                self.localStoppedActivityTimes.removeAll()
-                self.pendingDiaperLogs.removeAll()
-                print("[WatchConnector] parseApplicationContext: cleared local data, using server data")
+                self.acceptPhoneSummaryPayload(data)
             }
         }
 
         if let dataString = context["widgetData"] as? String,
-           let data = dataString.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data) {
+           let data = dataString.data(using: .utf8) {
             DispatchQueue.main.async {
                 print("[WatchConnector] parseApplicationContext: received widgetData")
-                let timerCount = decoded.activeTimers?.count ?? (decoded.activeTimer != nil ? 1 : 0)
-                print("[WatchConnector] parseApplicationContext: \(timerCount) active timers in widgetData")
-                self.widgetData = decoded
-                self.cacheData(dataString, forKey: "watchData")
-                if self.selectedBabyId == nil {
-                    self.selectedBabyId = decoded.babyId
+                if self.selectedBabyId == nil,
+                   let decoded = try? WatchSummaryDecoder.decodeCache(data) {
+                    self.selectedBabyId = decoded.data.babyId
                 }
-                // Clear local optimistic data - phone data is source of truth
-                self.localActiveTimers.removeAll()
-                self.locallyStoppedTimerTypes.removeAll()
-                self.localStoppedActivityTimes.removeAll()
-                self.pendingDiaperLogs.removeAll()
-                print("[WatchConnector] parseApplicationContext: cleared local data, using server data")
+                self.acceptPhoneSummaryPayload(data)
+            }
+        }
+    }
+
+    private func acceptPhoneSummaryPayload(_ bytes: Data) {
+        guard let watchSummaryCoordinator else { return }
+        Task {
+            let accepted = await watchSummaryCoordinator.acceptPhonePayload(bytes)
+            if let accepted {
+                await MainActor.run {
+                    self.installAcceptedSummary(accepted)
+                }
             }
         }
     }
@@ -516,12 +636,13 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.isReachable = session.isReachable
             if session.isReachable {
-                self.requestFreshData()
+                self.refreshCompleteSummary(.reachability)
+                self.requestFreshDataFromPhone()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.requestFreshData()
+                    self.requestFreshDataFromPhone()
                 }
             } else {
-                self.refreshFromNetwork()
+                self.refreshCompleteSummary(.reachability)
             }
             // Always poll when timers are active — phone may be "reachable"
             // but app backgrounded and not processing widget pause/resume
@@ -560,20 +681,22 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     /// Send an action message (single delivery: sendMessage if reachable, else transferUserInfo)
-    func sendAction(_ message: [String: Any]) {
+    @discardableResult
+    func sendAction(_ message: [String: Any]) -> String {
         var messageWithId = message
-        messageWithId["requestId"] = UUID().uuidString
+        let requestId = UUID().uuidString
+        messageWithId["requestId"] = requestId
 
         print("[WatchConnector] sendAction called with: \(messageWithId)")
 
         guard let session = session else {
             print("[WatchConnector] ERROR: session is nil!")
-            return
+            return requestId
         }
 
         guard session.activationState == .activated else {
             print("[WatchConnector] ERROR: session not activated yet (state: \(session.activationState.rawValue))")
-            return
+            return requestId
         }
 
         // Always queue via transferUserInfo for guaranteed delivery
@@ -582,11 +705,49 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         if session.isReachable {
             print("[WatchConnector] Sending immediate message + queued via transferUserInfo")
-            session.sendMessage(messageWithId, replyHandler: nil) { error in
+            session.sendMessage(messageWithId, replyHandler: { [weak self] reply in
+                guard reply["success"] as? Bool == true,
+                      let coordinator = self?.watchSummaryCoordinator else { return }
+                Task {
+                    await coordinator.acknowledge(requestId: requestId)
+                    await MainActor.run {
+                        PhoneConnector.shared.refreshCompleteSummary(.postAction)
+                    }
+                }
+            }) { error in
                 print("[WatchConnector] sendMessage failed (transferUserInfo already queued): \(error)")
             }
         } else {
             print("[WatchConnector] Action queued via transferUserInfo (not reachable)")
+        }
+        return requestId
+    }
+
+    private func recordTimerOverlay(
+        requestId: String,
+        timerInstanceId: String,
+        activityId: String,
+        activityType: String,
+        action: WatchOverlayAction,
+        requestedAt: String
+    ) {
+        guard let accountId = supabaseUserId,
+              let babyId = currentBabyId,
+              let watchSummaryCoordinator else {
+            return
+        }
+        let overlay = WatchOptimisticOverlay(
+            accountId: accountId,
+            babyId: babyId,
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: activityId,
+            activityType: activityType,
+            action: action,
+            requestedAt: requestedAt
+        )
+        Task {
+            await watchSummaryCoordinator.recordOverlay(overlay)
         }
     }
 
@@ -616,7 +777,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             message["context"] = context
         }
         print("[WatchConnector] startTimer: sending action with requestedStartTime: \(startTimeString)")
-        sendAction(message)
+        let requestId = sendAction(message)
+        recordTimerOverlay(
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: activityId,
+            activityType: activityType,
+            action: .start,
+            requestedAt: startTimeString
+        )
 
         if !(session?.isReachable ?? false) {
             supabaseStartTimer(
@@ -686,7 +855,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             "externalTimerCommand": externalTimerCommand
         ]
         print("[WatchConnector] stopTimer: sending action with requestedEndTime: \(endTimeString)")
-        sendAction(message)
+        let requestId = sendAction(message)
+        recordTimerOverlay(
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: timer.activityId ?? "legacy-activity:\(timerInstanceId)",
+            activityType: activityType,
+            action: .stop,
+            requestedAt: endTimeString
+        )
 
         if !(session?.isReachable ?? false) {
             supabaseStopTimer(activityType: activityType)
@@ -735,7 +912,15 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             "babyId": babyId,
             "externalTimerCommand": externalTimerCommand
         ]
-        sendAction(message)
+        let requestId = sendAction(message)
+        recordTimerOverlay(
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: timer.activityId ?? "legacy-activity:\(timerInstanceId)",
+            activityType: "pumping",
+            action: .stop,
+            requestedAt: endTimeString
+        )
 
         if !(session?.isReachable ?? false) {
             supabaseStopTimer(activityType: "pumping")
@@ -812,16 +997,26 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     func pauseTimer(activityType: String) {
-        guard canPerformAction() else { return }
+        guard canPerformAction(),
+              let timer = combinedActiveTimers.first(where: { $0.type == activityType }),
+              let babyId = currentBabyId else { return }
+        let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):\(activityType):\(timer.startTime)"
+        let requestedAt = ISO8601DateFormatter().string(from: Date())
 
         var message: [String: Any] = [
             "action": "pauseTimer",
             "activityType": activityType
         ]
-        if let babyId = currentBabyId {
-            message["babyId"] = babyId
-        }
-        sendAction(message)
+        message["babyId"] = babyId
+        let requestId = sendAction(message)
+        recordTimerOverlay(
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: timer.activityId ?? "legacy-activity:\(timerInstanceId)",
+            activityType: activityType,
+            action: .pause,
+            requestedAt: requestedAt
+        )
 
         DispatchQueue.main.async {
             var accumulated: Int?
@@ -853,16 +1048,26 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     func resumeTimer(activityType: String) {
-        guard canPerformAction() else { return }
+        guard canPerformAction(),
+              let timer = combinedActiveTimers.first(where: { $0.type == activityType }),
+              let babyId = currentBabyId else { return }
+        let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):\(activityType):\(timer.startTime)"
+        let requestedAt = ISO8601DateFormatter().string(from: Date())
 
         var message: [String: Any] = [
             "action": "resumeTimer",
             "activityType": activityType
         ]
-        if let babyId = currentBabyId {
-            message["babyId"] = babyId
-        }
-        sendAction(message)
+        message["babyId"] = babyId
+        let requestId = sendAction(message)
+        recordTimerOverlay(
+            requestId: requestId,
+            timerInstanceId: timerInstanceId,
+            activityId: timer.activityId ?? "legacy-activity:\(timerInstanceId)",
+            activityType: activityType,
+            action: .resume,
+            requestedAt: requestedAt
+        )
 
         DispatchQueue.main.async {
             var accumulated: Int?
@@ -912,6 +1117,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     func selectBaby(babyId: String) {
         selectedBabyId = babyId
+        widgetData = nil
         localActiveTimers.removeAll()
         locallyStoppedTimerTypes.removeAll()
         localStoppedActivityTimes.removeAll()
@@ -920,11 +1126,118 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             "action": "selectBaby",
             "babyId": babyId
         ])
+        loadCachedData()
+        refreshCompleteSummary(.explicit)
         WKInterfaceDevice.current().play(.click)
+    }
+
+    private func installAcceptedSummary(_ summary: WatchSummaryData) {
+        guard summary.babyId == currentBabyId else { return }
+        let timers = (summary.activeTimers ?? []).map {
+            WatchActiveTimer(
+                type: $0.type,
+                startTime: $0.startTime,
+                timerInstanceId: $0.timerInstanceId,
+                activityId: nil,
+                context: $0.context,
+                isRemote: $0.isRemote,
+                isPaused: $0.isPaused,
+                accumulatedSeconds: $0.accumulatedSeconds,
+                startedBy: nil
+            )
+        }
+        let activities = WatchActivityData(
+            feeding: .init(
+                lastTime: summary.activities.feeding.lastTime,
+                todayCount: summary.activities.feeding.todayCount,
+                lastSide: summary.activities.feeding.lastSide,
+                lastType: summary.activities.feeding.lastType
+            ),
+            sleep: .init(
+                lastTime: summary.activities.sleep.lastTime,
+                todayMinutes: summary.activities.sleep.todayMinutes,
+                goalMinutes: summary.activities.sleep.goalMinutes,
+                lastDurationMinutes: summary.activities.sleep.lastDurationMinutes,
+                isActive: summary.activities.sleep.isActive,
+                sleepType: summary.activities.sleep.sleepType,
+                wakeWindowMinutes: summary.activities.sleep.wakeWindowMinutes,
+                lastSleepEndedAt: summary.activities.sleep.lastSleepEndedAt,
+                napCountToday: summary.activities.sleep.napCountToday,
+                morningConfirmationPending: summary.activities.sleep.morningConfirmationPending
+            ),
+            diaper: .init(
+                lastTime: summary.activities.diaper.lastTime,
+                todayCounts: .init(
+                    wet: summary.activities.diaper.todayCounts.wet,
+                    dirty: summary.activities.diaper.todayCounts.dirty,
+                    mixed: summary.activities.diaper.todayCounts.mixed,
+                    dry: summary.activities.diaper.todayCounts.dry
+                )
+            ),
+            pumping: .init(
+                lastTime: summary.activities.pumping.lastTime,
+                todayVolumeMl: Int(summary.activities.pumping.todayVolumeMl.rounded()),
+                lastSide: summary.activities.pumping.lastSide,
+                sessionCount: summary.activities.pumping.sessionCount
+            ),
+            tummyTime: .init(
+                lastTime: summary.activities.tummyTime.lastTime,
+                todayMinutes: summary.activities.tummyTime.todayMinutes,
+                goalMinutes: summary.activities.tummyTime.goalMinutes,
+                lastDurationMinutes: summary.activities.tummyTime.lastDurationMinutes
+            )
+        )
+        widgetData = WatchWidgetData(
+            babyId: summary.babyId,
+            babyName: summary.babyName,
+            activities: activities,
+            activeTimer: timers.first,
+            activeTimers: timers,
+            updatedAt: summary.updatedAt
+        )
+        reconcileLocalOptimism(with: summary)
+        startNetworkPolling()
+    }
+
+    private func reconcileLocalOptimism(with summary: WatchSummaryData) {
+        let serverTimers = summary.activeTimers ?? []
+        localActiveTimers.removeAll { local in
+            guard let timerInstanceId = local.timerInstanceId,
+                  let server = serverTimers.first(where: { $0.timerInstanceId == timerInstanceId }) else {
+                return false
+            }
+            return local.type == server.type &&
+                local.startTime == server.startTime &&
+                local.context == server.context &&
+                local.isPaused == server.isPaused &&
+                local.accumulatedSeconds == server.accumulatedSeconds
+        }
+        let serverTypes = Set(serverTimers.map(\.type))
+        if let acceptedAt = summary.serverAsOf.flatMap(parseDate) {
+            for type in locallyStoppedTimerTypes {
+                guard !serverTypes.contains(type),
+                      let requestedAt = localStoppedActivityTimes[type],
+                      acceptedAt >= requestedAt else {
+                    continue
+                }
+                locallyStoppedTimerTypes.remove(type)
+                localStoppedActivityTimes.removeValue(forKey: type)
+            }
+            pendingDiaperLogs.removeAll { $0.time <= acceptedAt }
+        }
     }
 
     private func loadCachedData() {
         let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        var installedScopedSummary = false
+
+        if let store = AppGroupWatchSummaryStore(defaults: userDefaults),
+           let identity = AppGroupWatchSummaryIdentityReader(defaults: userDefaults)?.currentIdentity(),
+           let bytes = store.readSummary(for: identity),
+           let summary = try? WatchSummaryDecoder.decodeCache(bytes).data {
+            installAcceptedSummary(summary)
+            installedScopedSummary = summary.schemaVersion != nil
+        }
 
         if let dataString = userDefaults?.string(forKey: "multiBabyWatchData"),
            let data = dataString.data(using: .utf8),
@@ -935,21 +1248,63 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             }
         }
 
-        if let dataString = userDefaults?.string(forKey: "watchData"),
+        if !installedScopedSummary,
+           let dataString = userDefaults?.string(forKey: "watchData"),
            let data = dataString.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data) {
+           let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data),
+           decoded.babyId == currentBabyId {
             self.widgetData = decoded
+        }
+        if !installedScopedSummary && widgetData == nil,
+           let dataString = userDefaults?.string(forKey: "widgetData"),
+           let data = dataString.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data),
+           decoded.babyId == currentBabyId {
+            self.widgetData = decoded
+        }
+        loadOptimisticState(defaults: userDefaults)
+    }
+
+    private func loadOptimisticState(defaults: UserDefaults?) {
+        guard let defaults,
+              let identity = AppGroupWatchSummaryIdentityReader(defaults: defaults)?.currentIdentity(),
+              let value = defaults.string(forKey: "watchOptimisticState.\(identity.cacheKey)"),
+              let bytes = value.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any] else {
             return
         }
-        if let dataString = userDefaults?.string(forKey: "widgetData"),
-           let data = dataString.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data) {
-            self.widgetData = decoded
+        if let timers = object["localActiveTimers"],
+           let timerBytes = try? JSONSerialization.data(withJSONObject: timers),
+           let decoded = try? JSONDecoder().decode([WatchActiveTimer].self, from: timerBytes) {
+            localActiveTimers = decoded
+        }
+        locallyStoppedTimerTypes = Set(object["locallyStoppedTimerTypes"] as? [String] ?? [])
+        if let stoppedTimes = object["localStoppedActivityTimes"] as? [String: String] {
+            localStoppedActivityTimes = stoppedTimes.reduce(into: [:]) { result, item in
+                if let date = parseDate(item.value) {
+                    result[item.key] = date
+                }
+            }
+        }
+        if let pendingLogs = object["pendingDiaperLogs"] as? [[String: String]] {
+            pendingDiaperLogs = pendingLogs.compactMap { item in
+                guard let type = item["type"],
+                      let value = item["time"],
+                      let time = parseDate(value) else {
+                    return nil
+                }
+                return (type: type, time: time)
+            }
         }
     }
 
     func requestFreshData() {
         print("[WatchConnector] requestFreshData called")
+        refreshCompleteSummary(.explicit)
+        requestFreshDataFromPhone()
+    }
+
+    private func requestFreshDataFromPhone() {
         guard let session = session, session.isReachable else {
             print("[WatchConnector] requestFreshData: session not available or not reachable")
             return
@@ -957,12 +1312,21 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         sendMessageWithReply(["action": "requestSync"]) { reply in
             print("[WatchConnector] requestFreshData: got reply")
             if let dataString = reply["widgetData"] as? String,
-               let data = dataString.data(using: .utf8),
-               let decoded = try? JSONDecoder().decode(WatchWidgetData.self, from: data) {
+               let data = dataString.data(using: .utf8) {
                 DispatchQueue.main.async {
-                    self.widgetData = decoded
-                    self.cacheData(dataString)
-                    WidgetCenter.shared.reloadAllTimelines()
+                    self.acceptPhoneSummaryPayload(data)
+                }
+            }
+        }
+    }
+
+    private func refreshCompleteSummary(_ trigger: WatchSummaryRefreshTrigger) {
+        guard let watchSummaryCoordinator else { return }
+        Task {
+            let accepted = await watchSummaryCoordinator.refresh(trigger: trigger)
+            if let accepted {
+                await MainActor.run {
+                    self.installAcceptedSummary(accepted)
                 }
             }
         }
@@ -973,8 +1337,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func startNetworkPolling() {
         stopNetworkPolling()
         let hasActiveTimers = !combinedActiveTimers.isEmpty
-        let interval: TimeInterval = hasActiveTimers ? 30 : 120
-        print("[WatchConnector] startNetworkPolling: \(Int(interval))s poll (activeTimers=\(hasActiveTimers))")
+        guard hasActiveTimers else {
+            print("[WatchConnector] startNetworkPolling: disabled without active timers")
+            return
+        }
+        let interval: TimeInterval = 30
+        print("[WatchConnector] startNetworkPolling: \(Int(interval))s timer fingerprint probe")
         networkPollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.refreshFromNetwork()
         }
@@ -1001,63 +1369,23 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 print("[WatchConnector] refreshFromNetwork: fetch failed")
                 return
             }
-            await MainActor.run {
-                reconcileWithNetworkTimers(remoteTimers)
+            let fingerprint = WatchTimerFingerprint(timers: remoteTimers.map {
+                WatchSummaryTimer(
+                    type: $0.type,
+                    startTime: $0.startTime,
+                    timerInstanceId: $0.timerInstanceId,
+                    context: $0.context,
+                    isRemote: $0.isRemote,
+                    isPaused: $0.isPaused,
+                    accumulatedSeconds: $0.accumulatedSeconds
+                )
+            })
+            let accepted = await watchSummaryCoordinator?.acceptTimerProbe(fingerprint)
+            if let accepted {
+                await MainActor.run {
+                    self.installAcceptedSummary(accepted)
+                }
             }
-        }
-    }
-
-    private func reconcileWithNetworkTimers(_ remoteTimers: [WatchActiveTimer]) {
-        print("[WatchConnector] reconcileWithNetworkTimers: remote has \(remoteTimers.count) timers")
-
-        typealias TimerKey = String
-        func makeKey(type: String, startedBy: String?) -> TimerKey {
-            "\(type)|\(startedBy ?? "unknown")"
-        }
-
-        let remoteKeys = Set(remoteTimers.map { makeKey(type: $0.type, startedBy: $0.startedBy) })
-        let remoteTypes = Set(remoteTimers.map { $0.type })
-
-        // Timers stopped externally (widget/other device) — remove from local state
-        for type in locallyStoppedTimerTypes {
-            if !remoteTypes.contains(type) {
-                print("[WatchConnector] reconcileWithNetworkTimers: confirmed stop for \(type)")
-            }
-        }
-
-        // Local timers that no longer exist on server — they were stopped externally
-        for localTimer in localActiveTimers {
-            let key = makeKey(type: localTimer.type, startedBy: localTimer.startedBy)
-            if !remoteKeys.contains(key) {
-                print("[WatchConnector] reconcileWithNetworkTimers: timer \(localTimer.type) stopped externally")
-                localStoppedActivityTimes[localTimer.type] = Date()
-            }
-        }
-
-        // Clear all local optimistic state and use network as source of truth
-        localActiveTimers.removeAll()
-        locallyStoppedTimerTypes.removeAll()
-
-        // Server timers that watch doesn't know about — adopt them
-        if let baby = currentBaby {
-            var updatedBaby = baby
-            updatedBaby.activeTimers = remoteTimers
-            if var multi = multiBabyData,
-               let index = multi.babies.firstIndex(where: { $0.id == baby.id }) {
-                multi.babies[index] = updatedBaby
-                multiBabyData = multi
-            }
-        } else if var widget = widgetData {
-            widget.activeTimers = remoteTimers
-            widget.activeTimer = remoteTimers.first
-            widgetData = widget
-        }
-
-        syncOptimisticStateToCache()
-
-        // Stop polling if no active timers remain
-        if combinedActiveTimers.isEmpty {
-            stopNetworkPolling()
         }
     }
 
@@ -1266,8 +1594,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
 
         // Clear the push token since the Live Activity is ended
-        DispatchQueue.main.async {
-            self.liveActivityPushToken = nil
+        await MainActor.run {
+            PhoneConnector.shared.liveActivityPushToken = nil
             UserDefaults(suiteName: "group.com.sofibaby.app")?.removeObject(forKey: "watchLiveActivityPushToken")
         }
     }

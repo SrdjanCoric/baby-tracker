@@ -2,6 +2,9 @@
 
 **Branch**: `feature/refresh-watch-summaries-after-timer-changes`
 **Depends on**: 0077
+**Change class**: `mixed`
+**Validation tier**: `canonical`
+**TDD applicable**: `yes`
 **Source**: owner bug report and planning conversation, 2026-08-07 through 2026-08-08 · **User stories**: a caregiver sees Apple Watch converge on another household member's timer stop and the newly completed activity summary without opening the phone app; Watch does not recompute the complete summary every 30 seconds
 
 ## What to build
@@ -96,4 +99,3 @@ convergence defect against Task 0077's contract.
       overwriting a newer valid versioned base.
 - [ ] No full-summary 30-second polling, guaranteed suspended-Watch delivery, new Watch push system,
       broad deferred audit work, production access, or production mutation is introduced.
-

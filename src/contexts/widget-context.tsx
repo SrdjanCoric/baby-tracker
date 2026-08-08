@@ -363,6 +363,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activeTimer: widgetData.activeTimer,
       activeTimers: widgetData.activeTimers,
       accessToken: session?.access_token,
+      householdId: user?.householdId,
     });
 
     if (dataHash === lastUpdateRef.current) {
@@ -384,6 +385,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         supabaseAnonKey,
         accessToken: session.access_token,
         userId: user.id,
+        householdId: user.householdId ?? undefined,
         liveActivityPushToken: liveActivityPushToken ?? undefined,
         pushToStartToken: pushToStartToken ?? undefined,
       };
@@ -394,7 +396,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("[WidgetContext] Failed to update widget data:", error);
     }
-  }, [buildWidgetData, session?.access_token, user?.id]);
+  }, [buildWidgetData, session?.access_token, user?.householdId, user?.id]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;

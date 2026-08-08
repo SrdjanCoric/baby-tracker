@@ -99,6 +99,7 @@ async function watchCanReceive(module: WatchConnectivityModule): Promise<boolean
  */
 export function clearWatchContext(): void {
   lastContext = null;
+  watchModule?.updateApplicationContext({ signedOut: true });
 }
 
 async function publishApplicationContext(context: WatchPayload): Promise<void> {
@@ -135,6 +136,9 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
       context.supabaseAnonKey = authContext.supabaseAnonKey;
       context.accessToken = authContext.accessToken;
       context.userId = authContext.userId;
+      if (authContext.householdId) {
+        context.householdId = authContext.householdId;
+      }
       if (authContext.liveActivityPushToken) {
         context.liveActivityPushToken = authContext.liveActivityPushToken;
       }
