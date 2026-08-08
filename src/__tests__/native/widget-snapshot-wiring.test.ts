@@ -45,9 +45,15 @@ describe("Widget coherent snapshot wiring", () => {
   it("reconciles stop and pause actions without committing timer-only base data", () => {
     const stop = between(widgetSource, "struct StopActivityIntent", "// MARK: - Toggle Pause Intent");
     const pause = between(widgetSource, "struct TogglePauseActivityIntent", "// MARK: - Configuration Intents");
+    const missingPauseTimer = between(
+      pause,
+      "guard let widgetData,",
+      "let currentlyPaused"
+    );
 
     expect(stop).toContain("await refreshWidgetSnapshot()");
     expect(pause).toContain("await refreshWidgetSnapshot()");
+    expect(missingPauseTimer).toContain("WidgetCenter.shared.reloadAllTimelines()");
     expect(stop).not.toContain('set(updatedString, forKey: "widgetData")');
     expect(pause).not.toContain('set(updatedString, forKey: "widgetData")');
     expect(widgetSource).not.toContain("func fetchActiveTimersFromNetwork");

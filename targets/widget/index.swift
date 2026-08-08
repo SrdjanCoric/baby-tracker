@@ -527,6 +527,7 @@ struct TogglePauseActivityIntent: AppIntent {
         guard let widgetData,
               let timer = widgetData.getActiveTimer(for: activity) else {
             NSLog("[TogglePause] ERROR: no timer found for type \(widgetType)")
+            WidgetCenter.shared.reloadAllTimelines()
             return .result()
         }
 
