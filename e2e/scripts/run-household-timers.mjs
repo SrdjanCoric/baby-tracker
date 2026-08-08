@@ -11,6 +11,9 @@ import {
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
+  assertRemoteSleepCompletion,
+  authenticateLocalCaregiver,
+  fetchWidgetActivitySnapshot,
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
@@ -412,6 +415,22 @@ function psql(status, sql, label, options = {}) {
   ).trim();
 }
 
+function getMiddaySnapshotTimezone(status) {
+  return psql(
+    status,
+    `
+      SELECT name
+      FROM pg_catalog.pg_timezone_names
+      WHERE EXTRACT(HOUR FROM pg_catalog.now() AT TIME ZONE name) = 12
+        AND name NOT LIKE 'posix/%'
+        AND name NOT LIKE 'right/%'
+      ORDER BY name
+      LIMIT 1;
+    `,
+    "select-widget-snapshot-timezone"
+  );
+}
+
 function resetScenarioData(status) {
   psql(
     status,
@@ -421,6 +440,29 @@ function resetScenarioData(status) {
         AND activity_type = '${SLEEP_ACTIVITY.lockType}';
       DELETE FROM sleep_sessions
       WHERE baby_id = '${primaryBabyId}'::uuid;
+      INSERT INTO wake_window_preferences (
+        baby_id, enabled, nap_count, wake_window_slots, source,
+        day_start_hour, day_end_hour, nap_continuation_minutes, timezone
+      ) VALUES (
+        '${primaryBabyId}'::uuid,
+        true,
+        2,
+        '[{"slotIndex":0,"label":"First","durationMinutes":90},{"slotIndex":1,"label":"Second","durationMinutes":120},{"slotIndex":2,"label":"Third","durationMinutes":150}]'::jsonb,
+        'custom',
+        0,
+        23,
+        0,
+        'UTC'
+      )
+      ON CONFLICT (baby_id) DO UPDATE SET
+        enabled = EXCLUDED.enabled,
+        nap_count = EXCLUDED.nap_count,
+        wake_window_slots = EXCLUDED.wake_window_slots,
+        source = EXCLUDED.source,
+        day_start_hour = EXCLUDED.day_start_hour,
+        day_end_hour = EXCLUDED.day_end_hour,
+        nap_continuation_minutes = EXCLUDED.nap_continuation_minutes,
+        timezone = EXCLUDED.timezone;
     `,
     "reset-household-scenarios"
   );
@@ -537,6 +579,8 @@ function restartApp(simulator, label) {
 
 async function runSleepHandoff(status, owner, member) {
   console.log("\n=== sleep: offline reconnect and two-caregiver household handoff ===");
+  const snapshotTimezone = getMiddaySnapshotTimezone(status);
+  const sqlSnapshotTimezone = snapshotTimezone.replaceAll("'", "''");
 
   disconnectLocalApi();
   try {
@@ -558,6 +602,30 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(owner, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+  psql(
+    status,
+    `
+      WITH bounds AS (
+        SELECT pg_catalog.date_trunc(
+          'day',
+          pg_catalog.now() AT TIME ZONE '${sqlSnapshotTimezone}'
+        ) AT TIME ZONE '${sqlSnapshotTimezone}' AS day_start
+      )
+      UPDATE sleep_sessions AS sleep
+      SET
+        type = 'night',
+        started_at = bounds.day_start - INTERVAL '4 hours',
+        ended_at = bounds.day_start,
+        duration_seconds = 14400,
+        morning_classification = 'automatic',
+        morning_classification_version = 1
+      FROM bounds, users AS caregiver
+      WHERE sleep.baby_id = '${primaryBabyId}'::uuid
+        AND sleep.logged_by = caregiver.id
+        AND caregiver.email = '${ownerEmail}';
+    `,
+    "prepare-widget-morning-anchor"
+  );
   restartApp(member, "refresh-member-after-owner-stop");
   maestro(member, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
@@ -565,6 +633,19 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(member, "start/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 1);
+  const ownerAccessToken = await authenticateLocalCaregiver({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    email: ownerEmail,
+    password: "testpassword123",
+  });
+  const runningWidget = await fetchWidgetActivitySnapshot({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    accessToken: ownerAccessToken,
+    babyId: primaryBabyId,
+    timezone: snapshotTimezone,
+  });
   restartApp(owner, "refresh-owner-after-member-start");
   maestro(owner, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
@@ -573,6 +654,54 @@ async function runSleepHandoff(status, owner, member) {
 
   maestro(member, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
+  psql(
+    status,
+    `
+      UPDATE sleep_sessions AS sleep
+      SET
+        type = 'nap',
+        started_at = sleep.ended_at - INTERVAL '20 minutes',
+        duration_seconds = 1200,
+        morning_classification = 'automatic',
+        morning_classification_version = 1
+      FROM users AS caregiver
+      WHERE sleep.baby_id = '${primaryBabyId}'::uuid
+        AND sleep.logged_by = caregiver.id
+        AND caregiver.email = '${memberEmail}';
+    `,
+    "prepare-widget-completed-nap"
+  );
+  const completedSleep = JSON.parse(psql(
+    status,
+    `
+      SELECT pg_catalog.json_build_object(
+        'startedAt', pg_catalog.to_char(s.started_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+        'endedAt', pg_catalog.to_char(s.ended_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+        'durationMinutes', pg_catalog.floor(s.duration_seconds / 60.0)::integer,
+        'sleepType', s.type
+      )::text
+      FROM sleep_sessions s
+      JOIN users u ON u.id = s.logged_by
+      WHERE s.baby_id = '${primaryBabyId}'::uuid
+        AND s.deleted = false
+        AND u.email = '${memberEmail}'
+      ORDER BY s.started_at DESC
+      LIMIT 1;
+    `,
+    "member-completed-sleep"
+  ));
+  const completedWidget = await fetchWidgetActivitySnapshot({
+    apiUrl: status.API_URL,
+    anonKey: status.ANON_KEY,
+    accessToken: ownerAccessToken,
+    babyId: primaryBabyId,
+    timezone: snapshotTimezone,
+  });
+  assertRemoteSleepCompletion({
+    runningSnapshot: runningWidget.snapshot,
+    completedSnapshot: completedWidget.snapshot,
+    completedSleep,
+  });
   verifyCaregiverCompletions(status);
   restartApp(owner, "refresh-owner-after-member-stop");
   maestro(owner, "assert-unlocked.yaml", {

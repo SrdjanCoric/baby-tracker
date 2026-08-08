@@ -44,7 +44,7 @@ test("Android E2E is manual and does not run in routine CI", () => {
 test("the clean local iOS release gate is canonical and contract-tested", () => {
   assert.equal(
     packageJson.scripts["e2e:household-timers:clean"],
-    "node e2e/scripts/run-household-timers.mjs --clean"
+    "npm run test:widget:swift && node e2e/scripts/run-household-timers.mjs --clean"
   );
   assert.match(packageJson.scripts["test:ci"], /e2e-release-gate\.test\.mjs/);
 });

@@ -56,6 +56,8 @@ jest.mock("./sleep-context", () => ({
     getCurrentNapSlot: () => null,
     getCompletedNapsSinceNightSleep: () => 0,
     pendingMorningConfirmations: [],
+    newbornNapOptIn: false,
+    babyBinding: { babyId: "baby-1", status: "ready" },
   }),
 }));
 

@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { clearTimeout, setTimeout } from "node:timers";
 import { URL } from "node:url";
 
@@ -134,5 +135,123 @@ export function assertLocalEndpoint(value, label) {
     hostname !== "[::1]"
   ) {
     throw new Error(`Refusing to use non-local ${label}: ${value}`);
+  }
+}
+
+async function readSuccessfulJson(response, label) {
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`${label} failed with status ${response.status}`);
+  }
+  try {
+    return { bytes: Buffer.from(body), value: JSON.parse(body) };
+  } catch {
+    throw new Error(`${label} returned invalid JSON`);
+  }
+}
+
+export async function authenticateLocalCaregiver({
+  apiUrl,
+  anonKey,
+  email,
+  password,
+  fetchImpl = fetch,
+}) {
+  assertLocalEndpoint(apiUrl, "Supabase API");
+  const response = await fetchImpl(
+    `${apiUrl}/auth/v1/token?grant_type=password`,
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    }
+  );
+  const { value } = await readSuccessfulJson(response, "caregiver authentication");
+  if (typeof value.access_token !== "string" || value.access_token.length === 0) {
+    throw new Error("caregiver authentication returned no access token");
+  }
+  return value.access_token;
+}
+
+export async function fetchWidgetActivitySnapshot({
+  apiUrl,
+  anonKey,
+  accessToken,
+  babyId,
+  timezone,
+  fetchImpl = fetch,
+}) {
+  assertLocalEndpoint(apiUrl, "Supabase API");
+  const response = await fetchImpl(
+    `${apiUrl}/rest/v1/rpc/get_baby_activity_snapshot`,
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        p_baby_id: babyId,
+        p_timezone: timezone,
+      }),
+    }
+  );
+  const { bytes, value } = await readSuccessfulJson(response, "Widget summary request");
+  if (!value || typeof value !== "object" || value.babyId !== babyId) {
+    throw new Error("Widget summary returned the wrong selected baby");
+  }
+  return { bytes, snapshot: value };
+}
+
+export function assertRemoteSleepCompletion({
+  runningSnapshot,
+  completedSnapshot,
+  completedSleep,
+}) {
+  const runningTimers = runningSnapshot?.activeTimers;
+  const completedTimers = completedSnapshot?.activeTimers;
+  const runningSleep = runningSnapshot?.activities?.sleep;
+  const completedSummary = completedSnapshot?.activities?.sleep;
+
+  if (!Array.isArray(runningTimers)
+    || !runningTimers.some((timer) => timer?.type === "sleep")
+    || runningSleep?.isActive !== true) {
+    throw new Error("Owner snapshot did not cache the running sleep base");
+  }
+  if (!Array.isArray(completedTimers)
+    || completedTimers.some((timer) => timer?.type === "sleep")
+    || completedSnapshot.activeTimer?.type === "sleep"
+    || completedSummary?.isActive !== false) {
+    throw new Error("Completed Widget summary retained the sleep timer");
+  }
+
+  const expected = {
+    lastTime: completedSleep.endedAt,
+    lastSleepEndedAt: completedSleep.endedAt,
+    lastDurationMinutes: completedSleep.durationMinutes,
+    sleepType: completedSleep.sleepType,
+  };
+  for (const [field, value] of Object.entries(expected)) {
+    if (completedSummary[field] !== value) {
+      throw new Error(
+        `Completed Widget sleep ${field} mismatch: expected ${value}, received ${completedSummary[field]}`
+      );
+    }
+  }
+  if (!Number.isFinite(completedSummary.todayMinutes)
+    || completedSummary.todayMinutes < completedSleep.durationMinutes) {
+    throw new Error("Completed Widget sleep total is invalid");
+  }
+  if (runningSleep.napCountToday !== 0
+    || runningSleep.wakeWindowMinutes !== 90
+    || runningSleep.wakeWindowSlotLabel !== "First"
+    || completedSummary.napCountToday !== 1
+    || completedSummary.wakeWindowMinutes !== 120
+    || completedSummary.wakeWindowSlotLabel !== "Second") {
+    throw new Error("Completed Widget nap count or wake-window state did not advance coherently");
   }
 }

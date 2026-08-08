@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 export interface ExtensionStorageAdapter {
   set: (key: string, value: string, groupId: string) => Promise<void>;
   get: (key: string, groupId: string) => Promise<string | null>;
+  remove: (key: string, groupId: string) => Promise<void>;
   reloadWidget: () => Promise<void>;
 }
 
@@ -31,6 +32,10 @@ export async function loadExtensionStorage(): Promise<ExtensionStorageAdapter | 
       get: async (key: string, groupId: string) => {
         const storage = new appleTargets.ExtensionStorage(groupId);
         return storage.get(key);
+      },
+      remove: async (key: string, groupId: string) => {
+        const storage = new appleTargets.ExtensionStorage(groupId);
+        storage.remove(key);
       },
       reloadWidget: async () => {
         await appleTargets.ExtensionStorage.reloadWidget();

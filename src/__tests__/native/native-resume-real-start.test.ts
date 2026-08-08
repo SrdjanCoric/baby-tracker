@@ -9,6 +9,10 @@ const watchSource = readFileSync(
   new URL("../../../targets/watch/index.swift", import.meta.url),
   "utf8"
 );
+const snapshotMigration = readFileSync(
+  new URL("../../../supabase/migrations/061_get_baby_activity_snapshot.sql", import.meta.url),
+  "utf8"
+);
 
 function sourceBetween(source: string, startMarker: string, endMarker: string): string {
   const start = source.indexOf(startMarker);
@@ -27,7 +31,7 @@ describe("native counted-pause resume", () => {
     );
     const resume = sourceBetween(intent, "if currentlyPaused {", "} else {");
 
-    expect(resume).toContain('let effectiveStartISO = timer["startTime"] as? String');
+    expect(resume).toContain("let effectiveStartISO = timer.startTime");
     expect(resume).toContain('"effectiveStartTime": effectiveStartISO');
     expect(resume).not.toContain("newStartTime");
     expect(resume).not.toContain('timer["startTime"] =');
@@ -56,19 +60,16 @@ describe("native counted-pause resume", () => {
   });
 
   it("uses the server's real start when native surfaces refresh", () => {
-    const widgetFetch = sourceBetween(
-      widgetSource,
-      "func fetchActiveTimersFromNetwork()",
-      "func durationMinutes("
-    );
     const watchFetch = sourceBetween(
       watchSource,
       "private func fetchActiveTimersFromNetwork()",
       "// MARK: - Supabase Write Fallbacks"
     );
 
-    expect(widgetFetch).toContain("startTime: timer.started_at");
-    expect(widgetFetch).not.toContain("startTime = effective");
+    expect(snapshotMigration).toMatch(
+      /'startTime', pg_catalog\.to_char\(\s*timer\.started_at AT TIME ZONE 'UTC'/
+    );
+    expect(snapshotMigration).not.toContain("effectiveStartTime");
     expect(watchFetch).toContain("startTime: timer.started_at");
     expect(watchFetch).not.toContain("startTime = effective");
   });

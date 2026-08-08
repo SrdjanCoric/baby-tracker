@@ -61,6 +61,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     getCurrentNapSlot,
     getCompletedNapsSinceNightSleep,
     pendingMorningConfirmations,
+    newbornNapOptIn,
+    babyBinding: sleepBabyBinding,
   } = useSleep();
   const { getTodaysCounts, getLastDiaper } = useDiaper();
   const { pumpings, activeTimer: pumpingTimer } = usePumping();
@@ -463,6 +465,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         accessToken: session.access_token,
         userId: user.id,
         selectedBabyId: selectedBaby.id,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+        newbornNapOptIn:
+          sleepBabyBinding.babyId === selectedBaby.id
+          && sleepBabyBinding.status === "ready"
+            ? newbornNapOptIn
+            : false,
       });
     };
 
@@ -475,7 +483,14 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.remove();
-  }, [session?.access_token, user?.id, selectedBaby?.id]);
+  }, [
+    session?.access_token,
+    user?.id,
+    selectedBaby?.id,
+    newbornNapOptIn,
+    sleepBabyBinding.babyId,
+    sleepBabyBinding.status,
+  ]);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;

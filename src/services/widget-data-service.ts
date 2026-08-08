@@ -2,76 +2,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import type { ActivityType, BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import { loadExtensionStorage } from "@/services/extension-storage";
+import {
+  decodeWidgetActivitySnapshotJson,
+  type ActiveTimerData,
+  type WidgetActivityData,
+  type WidgetData,
+} from "@/services/widget-activity-snapshot";
+
+export type {
+  ActiveTimerData,
+  WidgetActivityData,
+  WidgetData,
+} from "@/services/widget-activity-snapshot";
 
 const APP_GROUP = "group.com.sofibaby.app";
 const WIDGET_DATA_KEY = "@widget_data";
 const WIDGET_CONFIG_KEY = "@widget_config";
-
-export interface WidgetActivityData {
-  feeding: {
-    lastTime: string | null;
-    todayCount: number;
-    lastType: string | null;
-    lastSide: BreastSide | null;
-  };
-  sleep: {
-    lastTime: string | null;
-    todayMinutes: number;
-    goalMinutes: number;
-    lastDurationMinutes: number | null;
-    isActive: boolean;
-    sleepType: SleepType | null;
-    wakeWindowMinutes: number | null;
-    wakeWindowSlotLabel: string | null;
-    lastSleepEndedAt: string | null;
-    napCountToday: number;
-    morningConfirmationPending: boolean;
-  };
-  diaper: {
-    lastTime: string | null;
-    todayCounts: { wet: number; dirty: number; mixed: number; dry: number };
-    lastType: DiaperType | null;
-  };
-  pumping: {
-    lastTime: string | null;
-    todayVolumeMl: number;
-    sessionCount: number;
-    lastSide: BreastSide | null;
-  };
-  growth: {
-    lastMeasurement: {
-      date: string;
-      weightKg?: number;
-      heightCm?: number;
-      headCircumferenceCm?: number;
-    } | null;
-  };
-  tummyTime: {
-    lastTime: string | null;
-    todayMinutes: number;
-    goalMinutes: number;
-    lastDurationMinutes: number | null;
-  };
-}
-
-export interface ActiveTimerData {
-  type: "feeding" | "pumping" | "sleep" | "tummyTime";
-  startTime: string;
-  timerInstanceId?: string;
-  context?: string;
-  isRemote?: boolean;
-  isPaused?: boolean;
-  accumulatedSeconds?: number;
-}
-
-export interface WidgetData {
-  babyId: string;
-  babyName: string;
-  activities: WidgetActivityData;
-  activeTimer: ActiveTimerData | null;
-  activeTimers: ActiveTimerData[];
-  updatedAt: string;
-}
 
 export interface BabyWatchData {
   id: string;
@@ -163,6 +109,23 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
       const extensionStorage = await loadExtensionStorage();
       if (extensionStorage) {
         await extensionStorage.set("widgetData", jsonData, APP_GROUP);
+        await extensionStorage.set(`widgetSnapshot.${data.babyId}`, jsonData, APP_GROUP);
+        const snapshotBabyIdsJson = await extensionStorage.get("widgetSnapshotBabyIds", APP_GROUP);
+        let snapshotBabyIds: string[] = [];
+        try {
+          const parsed = snapshotBabyIdsJson ? JSON.parse(snapshotBabyIdsJson) : [];
+          if (Array.isArray(parsed)) {
+            snapshotBabyIds = parsed.filter((value): value is string => typeof value === "string");
+          }
+        } catch {
+          snapshotBabyIds = [];
+        }
+        const registeredBabyIds = [...new Set([...snapshotBabyIds, data.babyId])].sort();
+        await extensionStorage.set(
+          "widgetSnapshotBabyIds",
+          JSON.stringify(registeredBabyIds),
+          APP_GROUP
+        );
         await extensionStorage.reloadWidget();
       }
     } catch (error) {
@@ -194,7 +157,7 @@ export async function getWidgetData(): Promise<WidgetData | null> {
   try {
     const jsonData = await AsyncStorage.getItem(WIDGET_DATA_KEY);
     if (jsonData) {
-      return JSON.parse(jsonData);
+      return decodeWidgetActivitySnapshotJson(jsonData)?.data ?? null;
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to get widget data:", error);
@@ -396,6 +359,8 @@ export async function writeAuthToAppGroup(params: {
   accessToken: string;
   userId: string;
   selectedBabyId: string;
+  timezone: string;
+  newbornNapOptIn: boolean;
 }): Promise<void> {
   if (Platform.OS !== "ios") return;
 
@@ -407,6 +372,12 @@ export async function writeAuthToAppGroup(params: {
       await extensionStorage.set("supabaseAccessToken", params.accessToken, APP_GROUP);
       await extensionStorage.set("userId", params.userId, APP_GROUP);
       await extensionStorage.set("selectedBabyId", params.selectedBabyId, APP_GROUP);
+      await extensionStorage.set("widgetTimezone", params.timezone, APP_GROUP);
+      await extensionStorage.set(
+        `widgetNewbornNapOptIn.${params.selectedBabyId}`,
+        String(params.newbornNapOptIn),
+        APP_GROUP
+      );
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to write auth to App Group:", error);
@@ -494,7 +465,31 @@ export async function clearWidgetData(): Promise<void> {
     if (Platform.OS === "ios") {
       const extensionStorage = await loadExtensionStorage();
       if (extensionStorage) {
-        await extensionStorage.set("widgetData", "", APP_GROUP);
+        const [selectedBabyId, snapshotBabyIdsJson] = await Promise.all([
+          extensionStorage.get("selectedBabyId", APP_GROUP),
+          extensionStorage.get("widgetSnapshotBabyIds", APP_GROUP),
+        ]);
+        let snapshotBabyIds: string[] = [];
+        try {
+          const parsed = snapshotBabyIdsJson ? JSON.parse(snapshotBabyIdsJson) : [];
+          if (Array.isArray(parsed)) {
+            snapshotBabyIds = parsed.filter((value): value is string => typeof value === "string");
+          }
+        } catch {
+          snapshotBabyIds = [];
+        }
+        if (selectedBabyId) snapshotBabyIds.push(selectedBabyId);
+
+        await extensionStorage.remove("widgetData", APP_GROUP);
+        for (const babyId of new Set(snapshotBabyIds)) {
+          await extensionStorage.remove(`widgetSnapshot.${babyId}`, APP_GROUP);
+          await extensionStorage.remove(`widgetNewbornNapOptIn.${babyId}`, APP_GROUP);
+        }
+        await extensionStorage.remove("widgetSnapshotBabyIds", APP_GROUP);
+        await extensionStorage.remove("supabaseAccessToken", APP_GROUP);
+        await extensionStorage.remove("userId", APP_GROUP);
+        await extensionStorage.remove("selectedBabyId", APP_GROUP);
+        await extensionStorage.remove("widgetTimezone", APP_GROUP);
         await extensionStorage.reloadWidget();
       }
     }
