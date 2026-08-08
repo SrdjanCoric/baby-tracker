@@ -112,3 +112,19 @@ and Watch RPC shapes and the latest clean two-caregiver simulator gate.
       broad deferred audit work, production access, or production mutation is introduced.
 - [ ] `authenticated` cannot directly insert `active_timers`, retains `SELECT`, `UPDATE`, and `DELETE`,
       and can still execute `acquire_timer_lock`; the migration preserves a one-statement rollback.
+
+## Review decisions
+
+- accepted (security risk): TR-11 — sign-out invalidation can be dropped before WatchConnectivity loads — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-12 — optimistic overlay storage is not connected to rendered Watch state — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-13 — a completed coalesced fetch can briefly serve stale bytes — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-14 — a late acknowledgement can miss an overlay after a baby switch — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-15 — pause/resume overlays can clear on an uncorrelated pre-existing state — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-16 — migration 062 lacks a repository-gated revoke/regrant vector — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-17 — the household-runner test is outside canonical validation — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-18 — README omits the new Watch refresh model — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-19 — Swift runner source-text assertions add no behavioral proof — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-20 — the failed-path array inequality assertion is tautological — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-21 — plan scope was expanded on the implementation branch — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-22 — unacknowledged stop overlays can accumulate — user requested this remediation pass focus only on TR-1–TR-7.
+- skipped (minor): TR-23 — README migration count stops at 060 — user requested this remediation pass focus only on TR-1–TR-7.
