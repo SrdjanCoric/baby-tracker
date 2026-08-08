@@ -190,6 +190,18 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   `end - start` only when a caregiver actually moved a time, so a note-only save never silently changes
   a legacy record's length. Saved records keep the master plan's warn-and-allow overlap policy while the
   running-timer clamp above does not follow the record, so the app holds two overlap rules on purpose.
+- **Widget and Watch refresh one coherent selected-baby activity summary**: an authenticated,
+  read-only, versioned server snapshot returns only the current fields those native surfaces display —
+  baby identity, active timers, latest relevant facts, current-day aggregates, applicable goals and
+  wake-window state — never histories or multiple babies. A successful refresh replaces the complete
+  per-baby base; no client may merge a fresh timer list into stale summaries. Widget fetches on its
+  existing timer-change push, action, and scheduled timeline opportunities without short polling.
+  Watch keeps its 30-second selected-baby timer probe only while a timer appears active and fetches the
+  complete summary only when that fingerprint changes or another explicit full-refresh trigger occurs.
+  Failures preserve the prior coherent base, Watch optimism stays a separate correlated overlay, and
+  the additive rollout keeps old binaries and unversioned caches readable. Immediate delivery to a
+  suspended Watch, raw activity history, all-baby snapshots, and new push triggers for every manual
+  activity edit remain out of scope.
 
 ---
 
@@ -269,6 +281,8 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0074 · Edit a running timer's start time without an account → tasks/done/0074-edit-running-timer-start-without-account.md
 - [x] 0075 · Log and edit pumping and tummy time by clock time (after 0072, 0074) → tasks/done/0075-log-and-edit-pumping-and-tummy-time-by-clock-time.md
 - [x] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/done/0076-warn-on-overlapping-non-sleep-records.md
+- [ ] 0077 · Refresh the iOS Widget from a coherent activity summary → tasks/0077-refresh-widget-from-native-activity-summary.md
+- [ ] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/0078-refresh-watch-summaries-after-timer-changes.md
 
 ## Workflow status
 
@@ -363,3 +377,11 @@ resolved to "Someone" — the app attributing a timer to a stranger on a single-
 are unaffected.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054, 0055, 0057, and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Task 0055 depends on its predecessor only because both add migrations and would otherwise collide on the next migration ordinal. Task 0056, the remaining finding, was removed on 2026-08-05 and is superseded by Task 0070.
+
+Tasks 0077 and 0078 were added on 2026-08-08 after a physical production observation proved that an
+iOS Widget push can remove a remotely stopped sleep timer while retaining the previous completed
+sleep's awake anchor; Apple Watch exhibits the same timer-only reconciliation defect. Task 0077 adds
+the additive selected-baby summary contract and migrates Widget as the first complete consumer. Task
+0078 depends on it and migrates Watch while preserving the lightweight timer probe. These focused
+tasks do not depend on or reopen deferred Tasks 0049, 0052, or 0059, and no task authorizes production
+access or mutation.
