@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { Buffer } from "node:buffer";
 import { EventEmitter } from "node:events";
 import { createRequire } from "node:module";
 import test from "node:test";
@@ -19,7 +18,6 @@ import {
   authenticateLocalCaregiver,
   fetchWidgetActivitySnapshot,
   parseRunnerOptions,
-  refreshSnapshotBytes,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
@@ -77,7 +75,7 @@ test("household timer runner authenticates a caregiver and requests only the sel
   assert.deepEqual(JSON.parse(result.bytes.toString("utf8")), result.snapshot);
 });
 
-test("household timer runner proves one remote sleep completion summary and preserves bytes on failure", async () => {
+test("household timer runner proves one remote sleep completion summary", () => {
   const running = {
     activeTimers: [{ type: "sleep", timerInstanceId: "timer-1" }],
     activities: { sleep: { isActive: true } },
@@ -111,11 +109,6 @@ test("household timer runner proves one remote sleep completion summary and pres
     },
   }));
 
-  const retained = Buffer.from(JSON.stringify(running));
-  const afterFailure = await refreshSnapshotBytes(retained, async () => {
-    throw new Error("forced summary failure");
-  });
-  assert.strictEqual(afterFailure, retained);
 });
 
 test("household timer runner accepts loopback endpoints and rejects remote services", () => {

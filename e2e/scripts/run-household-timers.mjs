@@ -17,7 +17,6 @@ import {
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
-  refreshSnapshotBytes,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
@@ -621,24 +620,6 @@ async function runSleepHandoff(status, owner, member) {
     completedSnapshot: completedWidget.snapshot,
     completedSleep,
   });
-  const bytesAfterForcedFailure = await refreshSnapshotBytes(
-    runningWidget.bytes,
-    () => fetchWidgetActivitySnapshot({
-      apiUrl: status.API_URL,
-      anonKey: status.ANON_KEY,
-      accessToken: ownerAccessToken,
-      babyId: primaryBabyId,
-      timezone: "UTC",
-      fetchImpl: async () => ({
-        ok: false,
-        status: 503,
-        text: async () => "forced summary failure",
-      }),
-    }).then((result) => result.bytes)
-  );
-  if (!bytesAfterForcedFailure.equals(runningWidget.bytes)) {
-    throw new Error("Failed Widget summary installed a timer-only partial state");
-  }
   verifyCaregiverCompletions(status);
   restartApp(owner, "refresh-owner-after-member-stop");
   maestro(owner, "assert-unlocked.yaml", {

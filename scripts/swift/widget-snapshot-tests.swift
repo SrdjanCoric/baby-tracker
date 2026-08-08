@@ -249,6 +249,24 @@ enum WidgetSnapshotTests {
             require(preservingStore.writes == 0 && preservingStore.events.isEmpty, "fetch failure reloaded the Widget")
         }
 
+        let runningFailureStore = TestSnapshotStore()
+        runningFailureStore.bytesByBaby["baby-versioned"] = legacy
+        let runningFailureCoordinator = WidgetSnapshotCoordinator(
+            store: runningFailureStore,
+            identityReader: identity,
+            fetcher: TestSnapshotFetcher(bytes: versioned, failure: TestFetchFailure.http),
+            reload: { runningFailureStore.events.append("reload") }
+        )
+        _ = await runningFailureCoordinator.refresh(for: "baby-versioned")
+        require(
+            runningFailureStore.bytesByBaby["baby-versioned"] == legacy,
+            "failed summary refresh changed the cached running timer bytes"
+        )
+        require(
+            runningFailureStore.writes == 0 && runningFailureStore.events.isEmpty,
+            "failed summary refresh installed or reloaded a partial state"
+        )
+
         let staleStore = TestSnapshotStore()
         staleStore.bytesByBaby["baby-versioned"] = legacy
         let staleIdentity = TestIdentityReader(WidgetSnapshotIdentity(

@@ -207,14 +207,6 @@ export async function fetchWidgetActivitySnapshot({
   return { bytes, snapshot: value };
 }
 
-export async function refreshSnapshotBytes(previousBytes, request) {
-  try {
-    return await request();
-  } catch {
-    return previousBytes;
-  }
-}
-
 export function assertRemoteSleepCompletion({
   runningSnapshot,
   completedSnapshot,
