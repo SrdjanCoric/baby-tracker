@@ -142,6 +142,33 @@ describe("store review cadence", () => {
     expect(storage.has(LEGACY_PROMPT_COUNT_KEY)).toBe(false);
   });
 
+  it("cleans an orphaned legacy count when its timestamp was never written", async () => {
+    storage.set(LEGACY_PROMPT_COUNT_KEY, "3");
+
+    await expect(shouldRequestReview(100)).resolves.toBe(true);
+    expect(storage.has(LEGACY_LAST_PROMPT_KEY)).toBe(false);
+    expect(storage.has(LEGACY_PROMPT_COUNT_KEY)).toBe(false);
+  });
+
+  it("cleans stale legacy keys when prompt history already exists", async () => {
+    const existingPrompt = new Date(
+      NOW.getTime() - 90 * DAY_MS
+    ).toISOString();
+    storage.set(PROMPT_HISTORY_KEY, JSON.stringify([existingPrompt]));
+    storage.set(
+      LEGACY_LAST_PROMPT_KEY,
+      new Date(NOW.getTime() - 30 * DAY_MS).toISOString()
+    );
+    storage.set(LEGACY_PROMPT_COUNT_KEY, "3");
+
+    await expect(shouldRequestReview(100)).resolves.toBe(true);
+    expect(JSON.parse(storage.get(PROMPT_HISTORY_KEY) ?? "[]")).toEqual([
+      existingPrompt,
+    ]);
+    expect(storage.has(LEGACY_LAST_PROMPT_KEY)).toBe(false);
+    expect(storage.has(LEGACY_PROMPT_COUNT_KEY)).toBe(false);
+  });
+
   it("refuses review before 100 recorded activities", async () => {
     await expect(shouldRequestReview(99)).resolves.toBe(false);
   });

@@ -17,6 +17,11 @@ const YEAR_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
 async function readPromptHistory(): Promise<string[]> {
   const promptHistoryStr = await AsyncStorage.getItem(PROMPT_HISTORY_KEY);
   if (promptHistoryStr !== null) {
+    await Promise.all([
+      AsyncStorage.removeItem(LAST_PROMPT_KEY),
+      AsyncStorage.removeItem(PROMPT_COUNT_KEY),
+    ]);
+
     let parsedHistory: unknown;
     try {
       parsedHistory = JSON.parse(promptHistoryStr);
@@ -36,7 +41,13 @@ async function readPromptHistory(): Promise<string[]> {
   }
 
   const legacyLastPrompt = await AsyncStorage.getItem(LAST_PROMPT_KEY);
-  if (!legacyLastPrompt) return [];
+  if (!legacyLastPrompt) {
+    await Promise.all([
+      AsyncStorage.removeItem(LAST_PROMPT_KEY),
+      AsyncStorage.removeItem(PROMPT_COUNT_KEY),
+    ]);
+    return [];
+  }
 
   const migratedHistory = [legacyLastPrompt];
   await AsyncStorage.setItem(
