@@ -6,8 +6,10 @@ let mockHealthEntries: StoredHealthEntry[] = [];
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, options?: { count?: number }) =>
-      options?.count === undefined ? key : `${key}:${options.count}`,
+    t: (key: string, options?: { count?: number; number?: number }) => {
+      if (key === "health.doseLabel") return `Dose ${options?.number}`;
+      return options?.count === undefined ? key : `${key}:${options.count}`;
+    },
   }),
 }));
 
@@ -95,6 +97,9 @@ describe("HealthStatsView", () => {
     expect(screen.getAllByText("Newest medicine")).toHaveLength(2);
     expect(screen.queryByText("Other baby's medicine")).toBeNull();
     expect(screen.getAllByText("Rotavirus")).toHaveLength(3);
+    expect(screen.getByText("Dose 1")).toBeTruthy();
+    expect(screen.getByText("Dose 2")).toBeTruthy();
+    expect(screen.getByText("Dose 3")).toBeTruthy();
     expect(
       screen.getAllByTestId(/^health-recent-entry-/).map((row) => row.props.testID)
     ).toEqual([
@@ -104,6 +109,21 @@ describe("HealthStatsView", () => {
       "health-recent-entry-rota-2",
       "health-recent-entry-rota-1",
     ]);
+  });
+
+  it("omits the vaccination detail line when a dose number is unavailable", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-07T12:00:00.000Z"));
+    mockHealthEntries = [
+      healthEntry("unknown-dose", "vaccination", "2026-08-07T08:00:00.000Z", {
+        vaccineName: "Rotavirus",
+      }),
+    ];
+
+    render(<HealthStatsView />);
+
+    expect(screen.getByText("Rotavirus")).toBeTruthy();
+    expect(screen.queryByText(/^Dose /)).toBeNull();
   });
 
   it("switches health entry ages from days to months and years at shared boundaries", () => {

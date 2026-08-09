@@ -397,6 +397,9 @@ export function HealthStatsView() {
               emoji = "💉";
               bgColor = warningMuted;
               displayName = entry.vaccineName ? getHealthDisplayName(entry.vaccineName, "vaccine", t) : "";
+              if (entry.doseNumber !== undefined && entry.doseNumber !== null) {
+                detail = t("health.doseLabel", { number: entry.doseNumber });
+              }
             } else if (entry.type === "symptom") {
               emoji = "🤒";
               bgColor = errorMuted;
