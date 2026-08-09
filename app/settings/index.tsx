@@ -1,8 +1,9 @@
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View, Alert, Linking } from "react-native";
+import { Pressable, ScrollView, Text, View, Alert, Linking, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import Constants from "expo-constants";
 import { useTheme, useUnits, useTimeFormat, useAuth, useLanguage } from "@/contexts";
 import { ModalCloseButton } from "@/components/ModalCloseButton";
 let DevelopmentOnboardingTools: ComponentType | null = null;
@@ -98,6 +99,13 @@ const LANGUAGE_LABELS = {
   it: "settings.italian",
 } as const;
 
+const IOS_REVIEW_URL =
+  "itms-apps://apps.apple.com/app/id6758142736?action=write-review";
+const ANDROID_REVIEW_URL = "market://details?id=com.sofibaby.app";
+const ANDROID_REVIEW_FALLBACK_URL =
+  "https://play.google.com/store/apps/details?id=com.sofibaby.app";
+const APP_VERSION = Constants.expoConfig?.version ?? "0.1.0";
+
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { preference } = useTheme();
@@ -125,6 +133,32 @@ export default function SettingsScreen() {
   const handleSignIn = () => {
     router.dismissAll();
     router.push("/auth/sign-in");
+  };
+
+  const handleRateApp = async () => {
+    const reviewUrl = Platform.select({
+      ios: IOS_REVIEW_URL,
+      android: ANDROID_REVIEW_URL,
+    });
+    if (reviewUrl) {
+      try {
+        await Linking.openURL(reviewUrl);
+      } catch (error) {
+        if (reviewUrl !== ANDROID_REVIEW_URL) {
+          console.error("[StoreReview] Manual review URL failed", error);
+          return;
+        }
+
+        try {
+          await Linking.openURL(ANDROID_REVIEW_FALLBACK_URL);
+        } catch (fallbackError) {
+          console.error(
+            "[StoreReview] Manual review URL failed",
+            fallbackError
+          );
+        }
+      }
+    }
   };
 
   return (
@@ -226,7 +260,7 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="ℹ️"
             label={t("settings.version")}
-            value="4.0.0"
+            value={APP_VERSION}
             showChevron={false}
           />
           <SettingsDivider />
@@ -234,6 +268,13 @@ export default function SettingsScreen() {
             icon="🔒"
             label={t("settings.privacyPolicy")}
             onPress={() => Linking.openURL("https://srdjancoric.github.io/sofibaby-privacy/")}
+          />
+          <SettingsDivider />
+          <SettingsRow
+            icon="⭐"
+            label={t("settings.rateApp")}
+            onPress={handleRateApp}
+            testID="rate-app-setting"
           />
         </SettingsSection>
 

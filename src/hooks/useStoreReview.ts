@@ -54,6 +54,8 @@ export function useStoreReview(): void {
         if (should) {
           await requestReview();
         }
+      } catch (error) {
+        console.error("[StoreReview] Automatic review request failed", error);
       } finally {
         isCheckingRef.current = false;
       }
