@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Breastfeeding",
       "breastfeedingChartSub": "total per day - past 7 days",
       "bottleChart": "Bottle Feeding",
-      "bottleChartSub": "total ml per day - past 7 days",
+      "bottleChartSub": "total {{unit}} per day - past 7 days",
       "avgBetween": "Avg between feeds",
       "bottleVolumeTotal": "Bottle volume total",
       "7days": "FEEDING \u2014 7 DAYS"
@@ -1696,7 +1696,7 @@
       "totalSessions": "Total sessions",
       "avgDailyOutput": "Avg daily output",
       "dailyVolume": "Daily Volume",
-      "dailyVolumeSub": "ml per day - past 7 days",
+      "dailyVolumeSub": "{{unit}} per day - past 7 days",
       "totalVolume": "total volume",
       "7days": "PUMPING \u2014 7 DAYS"
     },

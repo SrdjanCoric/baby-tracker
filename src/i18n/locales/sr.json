@@ -1742,7 +1742,7 @@
       "breastfeedingChart": "Dojenje",
       "breastfeedingChartSub": "ukupno dnevno - poslednjih 7 dana",
       "bottleChart": "Flašica",
-      "bottleChartSub": "ukupno ml dnevno - poslednjih 7 dana",
+      "bottleChartSub": "ukupno {{unit}} dnevno - poslednjih 7 dana",
       "avgBetween": "Prosek između hranjenja",
       "bottleVolumeTotal": "Ukupno flašica",
       "7days": "HRANJENJE — 7 DANA"
@@ -1775,7 +1775,7 @@
       "totalSessions": "Ukupno sesija",
       "avgDailyOutput": "Prosek dnevno",
       "dailyVolume": "Dnevna količina",
-      "dailyVolumeSub": "ml dnevno - poslednjih 7 dana",
+      "dailyVolumeSub": "{{unit}} dnevno - poslednjih 7 dana",
       "totalVolume": "ukupna količina",
       "7days": "IZDAJANJE — 7 DANA"
     },

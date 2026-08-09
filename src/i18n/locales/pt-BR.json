@@ -1666,7 +1666,7 @@
       "breastfeedingChart": "Amamentação",
       "breastfeedingChartSub": "total por dia - últimos 7 dias",
       "bottleChart": "Alimentação com Mamadeira",
-      "bottleChartSub": "total ml por dia - últimos 7 dias",
+      "bottleChartSub": "total {{unit}} por dia - últimos 7 dias",
       "avgBetween": "Média entre alimentações",
       "bottleVolumeTotal": "Total de volume da mamadeira",
       "7days": "ALIMENTAÇÃO — 7 DIAS"
@@ -1699,7 +1699,7 @@
       "totalSessions": "Total de sessões",
       "avgDailyOutput": "Produção diária média",
       "dailyVolume": "Volume Diário",
-      "dailyVolumeSub": "ml por dia - últimos 7 dias",
+      "dailyVolumeSub": "{{unit}} por dia - últimos 7 dias",
       "totalVolume": "volume total",
       "7days": "ORDENHA — 7 DIAS"
     },

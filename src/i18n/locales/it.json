@@ -1667,7 +1667,7 @@
       "breastfeedingChart": "Allattamento",
       "breastfeedingChartSub": "totale al giorno - ultimi 7 giorni",
       "bottleChart": "Biberon",
-      "bottleChartSub": "ml totali al giorno - ultimi 7 giorni",
+      "bottleChartSub": "{{unit}} totali al giorno - ultimi 7 giorni",
       "avgBetween": "Media tra poppate",
       "bottleVolumeTotal": "Volume biberon totale",
       "7days": "POPPATE — 7 GIORNI"
@@ -1700,7 +1700,7 @@
       "totalSessions": "Sessioni totali",
       "avgDailyOutput": "Media giornaliera",
       "dailyVolume": "Volume giornaliero",
-      "dailyVolumeSub": "ml al giorno - ultimi 7 giorni",
+      "dailyVolumeSub": "{{unit}} al giorno - ultimi 7 giorni",
       "totalVolume": "volume totale",
       "7days": "TIRALATTE — 7 GIORNI"
     },

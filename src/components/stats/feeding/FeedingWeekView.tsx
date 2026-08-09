@@ -148,7 +148,7 @@ export function FeedingWeekView() {
             {t("stats.feeding.bottleChart")}
           </Text>
           <Text style={{ fontSize: 11, color: isDark ? TEXT_COLORS.dark.tertiary : TEXT_COLORS.light.tertiary, marginTop: 2, marginBottom: 12 }}>
-            {t("stats.feeding.bottleChartSub")}
+            {t("stats.feeding.bottleChartSub", { unit: volumeUnit })}
           </Text>
           <StackedBarChartWithAxis
             data={volumeUnit === "oz"

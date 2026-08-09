@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Allaitement",
       "breastfeedingChartSub": "total par jour - 7 derniers jours",
       "bottleChart": "Biberon",
-      "bottleChartSub": "total ml par jour - 7 derniers jours",
+      "bottleChartSub": "total {{unit}} par jour - 7 derniers jours",
       "avgBetween": "Moy. entre les repas",
       "bottleVolumeTotal": "Volume total biberon",
       "7days": "ALIMENTATION — 7 JOURS"
@@ -1696,7 +1696,7 @@
       "totalSessions": "Total des séances",
       "avgDailyOutput": "Production quotidienne moy.",
       "dailyVolume": "Volume quotidien",
-      "dailyVolumeSub": "ml par jour - 7 derniers jours",
+      "dailyVolumeSub": "{{unit}} par jour - 7 derniers jours",
       "totalVolume": "volume total",
       "7days": "TIRE-LAIT — 7 JOURS"
     },

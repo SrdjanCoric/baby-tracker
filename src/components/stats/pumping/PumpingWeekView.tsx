@@ -79,7 +79,7 @@ export function PumpingWeekView() {
             {t("stats.pumping.dailyVolume")}
           </Text>
           <Text style={{ fontSize: 11, color: isDark ? TEXT_COLORS.dark.tertiary : TEXT_COLORS.light.tertiary, marginTop: 2, marginBottom: 12 }}>
-            {t("stats.pumping.dailyVolumeSub")}
+            {t("stats.pumping.dailyVolumeSub", { unit: volumeUnit })}
           </Text>
           <BarChartWithAxis
             data={volumeUnit === "oz" ? dailyMl.map(d => ({ ...d, value: mlToOz(d.value) })) : dailyMl}

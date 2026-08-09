@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Stillen",
       "breastfeedingChartSub": "gesamt pro Tag – letzte 7 Tage",
       "bottleChart": "Flaschenfütterung",
-      "bottleChartSub": "ml gesamt pro Tag – letzte 7 Tage",
+      "bottleChartSub": "{{unit}} gesamt pro Tag – letzte 7 Tage",
       "avgBetween": "Ø zwischen Fütterungen",
       "bottleVolumeTotal": "Flaschenmenge gesamt",
       "7days": "FÜTTERUNG — 7 TAGE"
@@ -1696,7 +1696,7 @@
       "totalSessions": "Sitzungen gesamt",
       "avgDailyOutput": "Ø Tagesmenge",
       "dailyVolume": "Tägliche Menge",
-      "dailyVolumeSub": "ml pro Tag – letzte 7 Tage",
+      "dailyVolumeSub": "{{unit}} pro Tag – letzte 7 Tage",
       "totalVolume": "Gesamtmenge",
       "7days": "ABPUMPEN — 7 TAGE"
     },
