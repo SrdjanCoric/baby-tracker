@@ -69,8 +69,11 @@ export async function shouldRequestReview(
   if (!isAvailable) return false;
 
   const promptHistory = await readPromptHistory();
-  const yearlyPromptCount = promptHistory.filter(
-    (timestamp) => new Date(timestamp).getTime() >= Date.now() - YEAR_WINDOW_MS
+  const validPromptTimes = promptHistory
+    .map((timestamp) => new Date(timestamp).getTime())
+    .filter(Number.isFinite);
+  const yearlyPromptCount = validPromptTimes.filter(
+    (timestamp) => timestamp >= Date.now() - YEAR_WINDOW_MS
   ).length;
   if (yearlyPromptCount >= MAX_PROMPTS_PER_YEAR) return false;
 
@@ -80,9 +83,7 @@ export async function shouldRequestReview(
     (Date.now() - new Date(firstUseStr).getTime()) / (1000 * 60 * 60 * 24);
   if (daysSinceFirstUse < MIN_DAYS_SINCE_FIRST_USE) return false;
 
-  const latestPromptTime = Math.max(
-    ...promptHistory.map((timestamp) => new Date(timestamp).getTime())
-  );
+  const latestPromptTime = Math.max(...validPromptTimes);
   if (Number.isFinite(latestPromptTime)) {
     const daysSinceLastPrompt =
       (Date.now() - latestPromptTime) / (1000 * 60 * 60 * 24);

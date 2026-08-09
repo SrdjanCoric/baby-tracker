@@ -86,6 +86,18 @@ describe("store review cadence", () => {
     await expect(shouldRequestReview(100)).resolves.toBe(false);
   });
 
+  it("honors a recent prompt when another history timestamp is invalid", async () => {
+    storage.set(
+      PROMPT_HISTORY_KEY,
+      JSON.stringify([
+        "not-a-date",
+        new Date(NOW.getTime() - DAY_MS).toISOString(),
+      ])
+    );
+
+    await expect(shouldRequestReview(100)).resolves.toBe(false);
+  });
+
   it.each([
     ["truncated JSON", '["2026-01-04T10:0'],
     ["non-array JSON", "3"],
