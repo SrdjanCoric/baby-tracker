@@ -14,13 +14,28 @@ const DAY_START_HOUR = 10;
 const DAY_END_HOUR = 18;
 const YEAR_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
 
+async function removeLegacyPromptState(
+  legacyLastPrompt: string | null,
+  legacyPromptCount: string | null
+): Promise<void> {
+  const keysToRemove = [
+    legacyLastPrompt !== null ? LAST_PROMPT_KEY : null,
+    legacyPromptCount !== null ? PROMPT_COUNT_KEY : null,
+  ].filter((key): key is string => key !== null);
+
+  await Promise.all(
+    keysToRemove.map((key) => AsyncStorage.removeItem(key))
+  );
+}
+
 async function readPromptHistory(): Promise<string[]> {
   const promptHistoryStr = await AsyncStorage.getItem(PROMPT_HISTORY_KEY);
   if (promptHistoryStr !== null) {
-    await Promise.all([
-      AsyncStorage.removeItem(LAST_PROMPT_KEY),
-      AsyncStorage.removeItem(PROMPT_COUNT_KEY),
+    const [legacyLastPrompt, legacyPromptCount] = await Promise.all([
+      AsyncStorage.getItem(LAST_PROMPT_KEY),
+      AsyncStorage.getItem(PROMPT_COUNT_KEY),
     ]);
+    await removeLegacyPromptState(legacyLastPrompt, legacyPromptCount);
 
     let parsedHistory: unknown;
     try {
@@ -40,12 +55,12 @@ async function readPromptHistory(): Promise<string[]> {
     return [];
   }
 
-  const legacyLastPrompt = await AsyncStorage.getItem(LAST_PROMPT_KEY);
-  if (!legacyLastPrompt) {
-    await Promise.all([
-      AsyncStorage.removeItem(LAST_PROMPT_KEY),
-      AsyncStorage.removeItem(PROMPT_COUNT_KEY),
-    ]);
+  const [legacyLastPrompt, legacyPromptCount] = await Promise.all([
+    AsyncStorage.getItem(LAST_PROMPT_KEY),
+    AsyncStorage.getItem(PROMPT_COUNT_KEY),
+  ]);
+  if (legacyLastPrompt === null) {
+    await removeLegacyPromptState(legacyLastPrompt, legacyPromptCount);
     return [];
   }
 
@@ -54,10 +69,7 @@ async function readPromptHistory(): Promise<string[]> {
     PROMPT_HISTORY_KEY,
     JSON.stringify(migratedHistory)
   );
-  await Promise.all([
-    AsyncStorage.removeItem(LAST_PROMPT_KEY),
-    AsyncStorage.removeItem(PROMPT_COUNT_KEY),
-  ]);
+  await removeLegacyPromptState(legacyLastPrompt, legacyPromptCount);
   return migratedHistory;
 }
 

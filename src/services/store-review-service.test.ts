@@ -20,6 +20,7 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 
 vi.mock("expo-store-review", () => storeReviewMocks);
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { requestReview, shouldRequestReview } from "./store-review-service";
 
 const FIRST_USE_KEY = "@store_review:first_use";
@@ -125,6 +126,26 @@ describe("store review cadence", () => {
       recentPrompt,
       NOW.toISOString(),
     ]);
+  });
+
+  it("does not issue legacy cleanup writes for current prompt history", async () => {
+    storage.set(
+      PROMPT_HISTORY_KEY,
+      JSON.stringify([
+        new Date(NOW.getTime() - 90 * DAY_MS).toISOString(),
+      ])
+    );
+
+    await expect(shouldRequestReview(100)).resolves.toBe(true);
+    await requestReview();
+
+    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("does not issue legacy cleanup writes without legacy state", async () => {
+    await expect(shouldRequestReview(100)).resolves.toBe(true);
+
+    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
   });
 
   it("migrates a legacy last prompt and preserves its cooldown", async () => {
