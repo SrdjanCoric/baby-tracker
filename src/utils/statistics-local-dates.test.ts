@@ -11,8 +11,11 @@ function localTimestamp(year: number, month: number, day: number, hour: number):
 }
 
 describe("local calendar statistics buckets", () => {
-  it("formats dates with the caregiver's local calendar day", () => {
+  it("keeps an event just after local midnight on the caregiver's day", () => {
     expect(toLocalDateKey(new Date(2026, 7, 8, 0, 30))).toBe("2026-08-08");
+  });
+
+  it("keeps an event just before local midnight on the caregiver's day", () => {
     expect(toLocalDateKey(new Date(2026, 7, 8, 23, 30))).toBe("2026-08-08");
   });
 
