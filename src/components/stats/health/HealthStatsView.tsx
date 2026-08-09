@@ -84,11 +84,14 @@ export function HealthStatsView() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sortedEntries = healthEntries
+      .filter((entry) => entry.babyId === selectedBaby.id)
+      .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
 
-    const temperatureEntries = healthEntries.filter((e) => e.type === "temperature");
-    const medicationEntries = healthEntries.filter((e) => e.type === "medication");
-    const vaccinationEntries = healthEntries.filter((e) => e.type === "vaccination");
-    const symptomEntries = healthEntries.filter((e) => e.type === "symptom");
+    const temperatureEntries = sortedEntries.filter((e) => e.type === "temperature");
+    const medicationEntries = sortedEntries.filter((e) => e.type === "medication");
+    const vaccinationEntries = sortedEntries.filter((e) => e.type === "vaccination");
+    const symptomEntries = sortedEntries.filter((e) => e.type === "symptom");
 
     const latestTemp = temperatureEntries.length > 0 ? temperatureEntries[0] : null;
 
@@ -115,9 +118,10 @@ export function HealthStatsView() {
       }
     });
 
-    const recentEntries = healthEntries.slice(0, 5);
+    const recentEntries = sortedEntries.slice(0, 5);
 
     return {
+      entryCount: sortedEntries.length,
       latestTemp,
       todaysMedCount: todaysMeds.length,
       lastMed,
@@ -141,7 +145,7 @@ export function HealthStatsView() {
     );
   }
 
-  if (healthEntries.length === 0) {
+  if (stats.entryCount === 0) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <View style={{ backgroundColor: cardBg, borderRadius: 12, padding: 24, alignItems: "center" }}>
@@ -171,8 +175,8 @@ export function HealthStatsView() {
 
     stats.completedVaccinations.forEach(v => loggedVaccineKeys.add(v.vaccineName));
 
-    healthEntries
-      .filter(h => h.type === 'vaccination' && h.vaccineName)
+    (stats.vaccineEntries ?? [])
+      .filter(h => h.vaccineName)
       .forEach(h => {
         const schedule = CDC_VACCINE_SCHEDULE.find(s => s.key === h.vaccineName);
         if (schedule) {
@@ -416,6 +420,7 @@ export function HealthStatsView() {
             return (
               <View
                 key={entry.id}
+                testID={`health-recent-entry-${entry.id}`}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
