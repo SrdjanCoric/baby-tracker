@@ -130,3 +130,7 @@ Decided against by the owner during planning, and not to be reintroduced:
 - [x] The Settings About section shows the version from the Expo app config rather than a hardcoded
       string.
 - [ ] The physical-device verification above has been confirmed by the owner.
+
+## Review decisions
+
+- skipped (minor): TR-6 — The version fallback hardcodes the stale package version — we don't care about the fallback value.
