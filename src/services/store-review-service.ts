@@ -17,7 +17,22 @@ const YEAR_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
 async function readPromptHistory(): Promise<string[]> {
   const promptHistoryStr = await AsyncStorage.getItem(PROMPT_HISTORY_KEY);
   if (promptHistoryStr !== null) {
-    return JSON.parse(promptHistoryStr);
+    let parsedHistory: unknown;
+    try {
+      parsedHistory = JSON.parse(promptHistoryStr);
+    } catch {
+      parsedHistory = null;
+    }
+
+    if (
+      Array.isArray(parsedHistory) &&
+      parsedHistory.every((timestamp) => typeof timestamp === "string")
+    ) {
+      return parsedHistory;
+    }
+
+    await AsyncStorage.setItem(PROMPT_HISTORY_KEY, "[]");
+    return [];
   }
 
   const legacyLastPrompt = await AsyncStorage.getItem(LAST_PROMPT_KEY);

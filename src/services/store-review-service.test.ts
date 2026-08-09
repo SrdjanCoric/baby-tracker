@@ -86,6 +86,16 @@ describe("store review cadence", () => {
     await expect(shouldRequestReview(100)).resolves.toBe(false);
   });
 
+  it.each([
+    ["truncated JSON", '["2026-01-04T10:0'],
+    ["non-array JSON", "3"],
+  ])("self-heals %s prompt history", async (_description, persistedValue) => {
+    storage.set(PROMPT_HISTORY_KEY, persistedValue);
+
+    await expect(shouldRequestReview(100)).resolves.toBe(true);
+    expect(storage.get(PROMPT_HISTORY_KEY)).toBe("[]");
+  });
+
   it("records a prompt while pruning history older than one year", async () => {
     const recentPrompt = new Date(NOW.getTime() - 100 * DAY_MS).toISOString();
     storage.set(
