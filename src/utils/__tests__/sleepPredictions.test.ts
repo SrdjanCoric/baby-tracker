@@ -1621,8 +1621,8 @@ describe("detectMorningDrift", () => {
 });
 
 describe("getAgeFallbackModel", () => {
-  it("returns model for a 3-month-old (0-3 months group)", () => {
-    const model = getAgeFallbackModel(new Date("2026-01-27"), new Date("2026-04-27"));
+  it("returns the newborn model until the 3-month birthday", () => {
+    const model = getAgeFallbackModel(new Date("2026-01-27"), new Date("2026-04-26"));
     expect(model).not.toBeNull();
     expect(model!.primaryNapCount).toBe(5);
     expect(model!.secondaryNapCount).toBeNull();

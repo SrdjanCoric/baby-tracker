@@ -3,8 +3,7 @@ import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 export interface SleepAgeGroup {
   label: string;
   labelKey: string;
-  minAgeDays: number;
-  maxAgeDays: number;
+  minAgeMonths: number;
   totalSleepHoursMin: number;
   totalSleepHoursMax: number;
   targetMinutes: number;
@@ -51,8 +50,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "0-3 months",
     labelKey: "ageGroups.sleep.0-3months",
-    minAgeDays: 0,
-    maxAgeDays: 90,
+    minAgeMonths: 0,
     totalSleepHoursMin: 14,
     totalSleepHoursMax: 17,
     targetMinutes: 15 * 60,
@@ -64,8 +62,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "3-5 months",
     labelKey: "ageGroups.sleep.3-5months",
-    minAgeDays: 91,
-    maxAgeDays: 150,
+    minAgeMonths: 3,
     totalSleepHoursMin: 12,
     totalSleepHoursMax: 16,
     targetMinutes: 14 * 60,
@@ -77,8 +74,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "6-8 months",
     labelKey: "ageGroups.sleep.6-8months",
-    minAgeDays: 151,
-    maxAgeDays: 240,
+    minAgeMonths: 6,
     totalSleepHoursMin: 12,
     totalSleepHoursMax: 16,
     targetMinutes: 13.5 * 60,
@@ -90,8 +86,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "9-12 months",
     labelKey: "ageGroups.sleep.9-12months",
-    minAgeDays: 241,
-    maxAgeDays: 365,
+    minAgeMonths: 9,
     totalSleepHoursMin: 12,
     totalSleepHoursMax: 16,
     targetMinutes: 13 * 60,
@@ -103,8 +98,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "13-18 months",
     labelKey: "ageGroups.sleep.13-18months",
-    minAgeDays: 366,
-    maxAgeDays: 540,
+    minAgeMonths: 13,
     totalSleepHoursMin: 11,
     totalSleepHoursMax: 14,
     targetMinutes: 12.5 * 60,
@@ -116,8 +110,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "19+ months",
     labelKey: "ageGroups.sleep.19+months",
-    minAgeDays: 541,
-    maxAgeDays: Infinity,
+    minAgeMonths: 19,
     totalSleepHoursMin: 11,
     totalSleepHoursMax: 14,
     targetMinutes: 11.5 * 60,
@@ -148,12 +141,27 @@ export function getSleepAgeGroupForBaby(
   birthDate: Date,
   now: Date = new Date()
 ): SleepAgeGroup | null {
-  const ageDays = Math.floor((now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+  const birthDay = new Date(birthDate);
+  const referenceDay = new Date(now);
+  birthDay.setHours(0, 0, 0, 0);
+  referenceDay.setHours(0, 0, 0, 0);
 
-  if (ageDays < 0) return null;
+  if (referenceDay < birthDay) return null;
 
-  for (const group of SLEEP_AGE_GROUPS) {
-    if (ageDays >= group.minAgeDays && ageDays <= group.maxAgeDays) {
+  for (let index = SLEEP_AGE_GROUPS.length - 1; index >= 0; index--) {
+    const group = SLEEP_AGE_GROUPS[index];
+    const boundary = new Date(birthDay);
+    const birthDayOfMonth = boundary.getDate();
+    boundary.setDate(1);
+    boundary.setMonth(boundary.getMonth() + group.minAgeMonths);
+    const lastDayOfBoundaryMonth = new Date(
+      boundary.getFullYear(),
+      boundary.getMonth() + 1,
+      0
+    ).getDate();
+    boundary.setDate(Math.min(birthDayOfMonth, lastDayOfBoundaryMonth));
+
+    if (referenceDay >= boundary) {
       return group;
     }
   }

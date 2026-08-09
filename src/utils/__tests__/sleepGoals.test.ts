@@ -193,8 +193,8 @@ describe("getPresetPillsForAge", () => {
 
 describe("existing sleepGoals functions", () => {
   it("getSleepAgeGroupForBaby returns correct group for 6 month old", () => {
-    const birthDate = daysAgo(180);
-    const group = getSleepAgeGroupForBaby(birthDate);
+    const birthDate = new Date(2026, 0, 15);
+    const group = getSleepAgeGroupForBaby(birthDate, new Date(2026, 6, 15));
     expect(group).not.toBeNull();
     expect(group!.label).toBe("6-8 months");
   });
@@ -267,7 +267,7 @@ describe("sleep recommendation ranges and targets", () => {
   });
 
   it("returns each explicit target instead of the displayed range midpoint", () => {
-    const now = new Date("2026-06-01T12:00:00.000Z");
+    const now = new Date("2026-07-01T12:00:00.000Z");
     const birthDate = new Date("2026-01-01T12:00:00.000Z");
 
     expect(getDefaultSleepGoalForAge(birthDate, now)).toEqual({
@@ -295,8 +295,8 @@ describe("sleep recommendation ranges and targets", () => {
   it("suggests a milestone update when equal ranges have different targets", () => {
     const crossing = checkSleepMilestoneCrossing(
       new Date("2026-01-01T12:00:00.000Z"),
-      new Date("2026-05-31T12:00:00.000Z"),
-      new Date("2026-06-01T12:00:00.000Z")
+      new Date("2026-06-30T12:00:00.000Z"),
+      new Date("2026-07-01T12:00:00.000Z")
     );
 
     expect(crossing?.previousGroup.label).toBe("3-5 months");
@@ -307,5 +307,86 @@ describe("sleep recommendation ranges and targets", () => {
   it("collapses equal range endpoints to one displayed value", () => {
     expect(formatSleepHoursRange(14, 14)).toBe("14");
     expect(formatSleepHoursRange(12, 16)).toBe("12–16");
+  });
+});
+
+describe("calendar-month sleep age boundaries", () => {
+  const birthDate = new Date(2024, 5, 15);
+
+  it.each([
+    { months: 3, previous: "0-3 months", current: "3-5 months" },
+    { months: 6, previous: "3-5 months", current: "6-8 months" },
+    { months: 9, previous: "6-8 months", current: "9-12 months" },
+    { months: 13, previous: "9-12 months", current: "13-18 months" },
+    { months: 19, previous: "13-18 months", current: "19+ months" },
+  ])(
+    "changes from $previous to $current on the $months-month birthday",
+    ({ months, previous, current }) => {
+      const boundary = new Date(2024, 5 + months, 15);
+      const dayBefore = new Date(boundary);
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      const dayAfter = new Date(boundary);
+      dayAfter.setDate(dayAfter.getDate() + 1);
+
+      expect(getSleepAgeGroupForBaby(birthDate, dayBefore)?.label).toBe(previous);
+      expect(getSleepAgeGroupForBaby(birthDate, boundary)?.label).toBe(current);
+      expect(getSleepAgeGroupForBaby(birthDate, dayAfter)?.label).toBe(current);
+    }
+  );
+
+  it("clamps a 31st-of-month birth to the last day of a shorter boundary month", () => {
+    const bornOnThirtyFirst = new Date(2024, 0, 31);
+
+    expect(
+      getSleepAgeGroupForBaby(bornOnThirtyFirst, new Date(2024, 3, 29))?.label
+    ).toBe("0-3 months");
+    expect(
+      getSleepAgeGroupForBaby(bornOnThirtyFirst, new Date(2024, 3, 30))?.label
+    ).toBe("3-5 months");
+    expect(
+      getSleepAgeGroupForBaby(bornOnThirtyFirst, new Date(2024, 4, 1))?.label
+    ).toBe("3-5 months");
+  });
+
+  it("keeps a leap-day birth on calendar-month boundaries after February", () => {
+    const leapDayBirth = new Date(2024, 1, 29);
+
+    expect(getSleepAgeGroupForBaby(leapDayBirth, new Date(2025, 2, 28))?.label).toBe(
+      "9-12 months"
+    );
+    expect(getSleepAgeGroupForBaby(leapDayBirth, new Date(2025, 2, 29))?.label).toBe(
+      "13-18 months"
+    );
+    expect(getSleepAgeGroupForBaby(leapDayBirth, new Date(2025, 2, 30))?.label).toBe(
+      "13-18 months"
+    );
+  });
+
+  it("updates wake windows, naps, presets, slots, and milestone prompts at one boundary", () => {
+    const beforeSixMonths = new Date(2024, 11, 14);
+    const atSixMonths = new Date(2024, 11, 15);
+
+    expect(getWakeWindowForAge(birthDate, beforeSixMonths)).toMatchObject({
+      minMinutes: 60,
+      maxMinutes: 120,
+    });
+    expect(getWakeWindowForAge(birthDate, atSixMonths)).toMatchObject({
+      minMinutes: 120,
+      maxMinutes: 180,
+    });
+    expect(getNapsForAge(birthDate, beforeSixMonths)).toEqual({ minNaps: 3, maxNaps: 4 });
+    expect(getNapsForAge(birthDate, atSixMonths)).toEqual({ minNaps: 2, maxNaps: 3 });
+    expect(getDefaultWakeWindowConfig(birthDate, beforeSixMonths).napCount).toBe(4);
+    expect(getDefaultWakeWindowConfig(birthDate, atSixMonths).napCount).toBe(3);
+    expect(getPresetPillsForAge(birthDate, beforeSixMonths)).toEqual([60, 75, 90, 105, 120]);
+    expect(getPresetPillsForAge(birthDate, atSixMonths)).toEqual([120, 135, 150, 165, 180]);
+    expect(generateSlotsForNapCount(2, birthDate, atSixMonths).map((slot) => slot.durationMinutes))
+      .toEqual([120, 150, 180]);
+
+    expect(checkSleepMilestoneCrossing(birthDate, beforeSixMonths, atSixMonths)).toMatchObject({
+      shouldSuggestGoalUpdate: true,
+      previousGroup: { label: "3-5 months" },
+      newGroup: { label: "6-8 months" },
+    });
   });
 });
