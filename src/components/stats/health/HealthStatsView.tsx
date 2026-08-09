@@ -10,6 +10,7 @@ import type { StoredHealthEntry } from "@/services/health-storage";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER, SEMANTIC } from "@/constants/colors";
 import { CDC_VACCINE_SCHEDULE } from "@/constants/vaccine-schedule";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
+import { timeSince } from "@/utils/time";
 import { StatsMetricCard } from "../StatsMetricCard";
 import { getHealthDisplayName } from "@/utils/health-display";
 
@@ -157,18 +158,6 @@ export function HealthStatsView() {
       </ScrollView>
     );
   }
-
-  const getRelativeTime = (dateStr: string): string => {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return t("stats.health.justNow");
-    if (diffHours < 24) return t("stats.health.hoursAgo", { count: diffHours });
-    return t("stats.health.daysAgo", { count: diffDays });
-  };
 
   const getVaccinesToDisplay = () => {
     const loggedVaccineKeys = new Set<string>();
@@ -456,7 +445,7 @@ export function HealthStatsView() {
                 </View>
 
                 <Text style={{ fontSize: 12, color: textTertiary }}>
-                  {getRelativeTime(entry.loggedAt)}
+                  {timeSince(new Date(entry.loggedAt), undefined, t)}
                 </Text>
               </View>
             );

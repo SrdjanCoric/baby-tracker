@@ -5,7 +5,10 @@ import type { StoredHealthEntry } from "@/services/health-storage";
 let mockHealthEntries: StoredHealthEntry[] = [];
 
 jest.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: { count?: number }) =>
+      options?.count === undefined ? key : `${key}:${options.count}`,
+  }),
 }));
 
 jest.mock("nativewind", () => ({
@@ -101,5 +104,25 @@ describe("HealthStatsView", () => {
       "health-recent-entry-rota-2",
       "health-recent-entry-rota-1",
     ]);
+  });
+
+  it("switches health entry ages from days to months and years at shared boundaries", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-07T12:00:00.000Z"));
+    const now = Date.now();
+    const daysBefore = (days: number) => new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
+    mockHealthEntries = [
+      healthEntry("59-days", "vaccination", daysBefore(59), { vaccineName: "59 days" }),
+      healthEntry("60-days", "vaccination", daysBefore(60), { vaccineName: "60 days" }),
+      healthEntry("364-days", "vaccination", daysBefore(364), { vaccineName: "364 days" }),
+      healthEntry("365-days", "vaccination", daysBefore(365), { vaccineName: "365 days" }),
+    ];
+
+    render(<HealthStatsView />);
+
+    expect(screen.getByText("time.dayCount:59")).toBeTruthy();
+    expect(screen.getByText("time.monthCount:2")).toBeTruthy();
+    expect(screen.getByText("time.monthCount:11")).toBeTruthy();
+    expect(screen.getByText("time.yearCount:1")).toBeTruthy();
   });
 });
