@@ -99,7 +99,7 @@ Decided against by the owner during planning, and not to be reintroduced:
 
 ## Human checkpoints
 
-- [ ] [verify] On a **physical iOS device** running the built app, open Settings and tap Rate App.
+- [x] [verify] On a **physical iOS device** running the built app, open Settings and tap Rate App.
       · Expected: the App Store write-review sheet for SofiBaby opens.
       · Failure: nothing happens, an "cannot open URL" error appears, or the plain App Store listing
       opens without the review composer.
@@ -129,8 +129,35 @@ Decided against by the owner during planning, and not to be reintroduced:
 - [x] `settings.rateApp` is present in all nine locale files and the parity test proves it.
 - [x] The Settings About section shows the version from the Expo app config rather than a hardcoded
       string.
-- [ ] The physical-device verification above has been confirmed by the owner.
+- [x] The physical-device verification above has been confirmed by the owner.
 
 ## Review decisions
 
 - skipped (minor): TR-6 — The version fallback hardcodes the stale package version — we don't care about the fallback value.
+
+## Completion record
+
+- **Built:** Automatic rating prompts now use one self-healing ISO-timestamp history with a rolling
+  365-day, three-prompt quota and the existing 60-day cooldown. Legacy prompt keys migrate and are
+  removed without recurring steady-state writes. Rejected automatic requests are contained and
+  logged. Settings now exposes a quota-neutral Rate App row with platform write-review URLs, an
+  Android HTTPS fallback, all nine phone locales, and the Expo-configured app version.
+- **Decisions preserved:** Manual Rate App taps neither write prompt history nor suppress later
+  automatic prompts. The yearly limit remains three; the existing activity, install-age, cooldown,
+  and local-time gates remain unchanged. The iOS app ID is `6758142736`, and the Android package is
+  `com.sofibaby.app`.
+- **Relevant files:** `src/services/store-review-service.ts`, `src/hooks/useStoreReview.ts`,
+  `app/settings/index.tsx`, their focused tests, `src/i18n/store-review-locales.test.ts`, and the nine
+  locale files under `src/i18n/locales/`.
+- **README:** No change required after one impact audit. The README documents architecture, setup,
+  release operations, and selected complex workflows rather than every Settings entry; its existing
+  App Store and Play Store links already identify the correct application. Because no README prose
+  changed, `write-well` was not invoked.
+- **Review outcome:** TR-1 through TR-5 were fixed and verified. TR-6 was skipped as a minor finding
+  by the owner because the unavailable-config fallback value is not important. The security lens ran
+  with zero findings; no security risks were accepted.
+- **Automated proof:** Focused validation passed on 2026-08-09: 25 Vitest tests across the rating
+  service and locale parity suites; 8 Jest tests across the Settings row and automatic-review hook;
+  `npm run typecheck`; and scoped ESLint with zero warnings.
+- **Manual verification:** On 2026-08-09, the owner confirmed on a physical iOS device that Settings
+  → Rate App opened the SofiBaby App Store review composer. No failure signal was observed.
