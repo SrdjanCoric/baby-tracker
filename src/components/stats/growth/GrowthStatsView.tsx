@@ -175,7 +175,10 @@ export function GrowthStatsView() {
       return {
         ...data,
         value: kgToLbs(data.value, 3),
-        change: data.change !== null ? Math.round(data.change * 2.20462) : null,
+        change:
+          data.change !== null
+            ? Math.round(data.change * 0.035274 * 10) / 10
+            : null,
       };
     }
     if (type === "height" && isImperialHeight) {

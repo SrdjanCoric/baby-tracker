@@ -55,6 +55,15 @@ function measurement(
   };
 }
 
+function weightHistory(changeGrams: number): StoredGrowthEntry[] {
+  const latest = measurement("latest-weight", { weightKg: 7 });
+  const previous = {
+    ...measurement("previous-weight", { weightKg: 7 - changeGrams / 1000 }),
+    measuredAt: "2026-08-01T08:00:00.000Z",
+  };
+  return [latest, previous];
+}
+
 describe("GrowthStatsView", () => {
   beforeEach(() => {
     mockWeightUnit = "kg";
@@ -100,5 +109,19 @@ describe("GrowthStatsView", () => {
 
     expect(screen.getByText("24.21")).toBeTruthy();
     expect(screen.getByText("16.67")).toBeTruthy();
+  });
+
+  it.each([
+    { unit: "kg" as const, change: 100, expected: "↗ +100g stats.growth.change" },
+    { unit: "kg" as const, change: -100, expected: "↘ -100g stats.growth.change" },
+    { unit: "lbs" as const, change: 100, expected: "↗ +3.5oz stats.growth.change" },
+    { unit: "lbs" as const, change: -100, expected: "↘ -3.5oz stats.growth.change" },
+  ])("formats a $change g weekly weight change in $unit", ({ unit, change, expected }) => {
+    mockWeightUnit = unit;
+    mockHistory = weightHistory(change);
+
+    render(<GrowthStatsView />);
+
+    expect(screen.getByText(expected)).toBeTruthy();
   });
 });
