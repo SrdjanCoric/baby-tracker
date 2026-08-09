@@ -144,8 +144,19 @@ export default function SettingsScreen() {
       try {
         await Linking.openURL(reviewUrl);
       } catch (error) {
-        if (reviewUrl !== ANDROID_REVIEW_URL) throw error;
-        await Linking.openURL(ANDROID_REVIEW_FALLBACK_URL);
+        if (reviewUrl !== ANDROID_REVIEW_URL) {
+          console.error("[StoreReview] Manual review URL failed", error);
+          return;
+        }
+
+        try {
+          await Linking.openURL(ANDROID_REVIEW_FALLBACK_URL);
+        } catch (fallbackError) {
+          console.error(
+            "[StoreReview] Manual review URL failed",
+            fallbackError
+          );
+        }
       }
     }
   };

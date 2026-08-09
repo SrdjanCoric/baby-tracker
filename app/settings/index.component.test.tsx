@@ -133,6 +133,37 @@ describe("SettingsScreen close control", () => {
     }
   });
 
+  it("contains an App Store URL failure without surfacing a rejection", async () => {
+    const originalPlatformOS = Platform.OS;
+    const failure = new Error("App Store unavailable");
+    const openURL = jest.spyOn(Linking, "openURL").mockRejectedValue(failure);
+    const logError = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      Object.defineProperty(Platform, "OS", {
+        value: "ios",
+        configurable: true,
+      });
+      render(<SettingsScreen />);
+
+      fireEvent.press(screen.getByTestId("rate-app-setting"));
+
+      await waitFor(() => {
+        expect(logError).toHaveBeenCalledWith(
+          "[StoreReview] Manual review URL failed",
+          failure
+        );
+      });
+    } finally {
+      Object.defineProperty(Platform, "OS", {
+        value: originalPlatformOS,
+        configurable: true,
+      });
+      logError.mockRestore();
+      openURL.mockRestore();
+    }
+  });
+
   it("opens the Play Store app directly when it is available", () => {
     const selectPlatform = jest
       .spyOn(Platform, "select")
