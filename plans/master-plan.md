@@ -283,6 +283,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/done/0076-warn-on-overlapping-non-sleep-records.md
 - [x] 0077 · Refresh the iOS Widget from a coherent activity summary → tasks/done/0077-refresh-widget-from-native-activity-summary.md
 - [x] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/done/0078-refresh-watch-summaries-after-timer-changes.md
+- [ ] 0079 · Cap automatic rating prompts to three per rolling year and add a Rate App entry point → tasks/0079-improve-rating-prompts-and-rate-app-entry.md
 
 ## Workflow status
 
@@ -385,3 +386,21 @@ the additive selected-baby summary contract and migrates Widget as the first com
 0078 depends on it and migrates Watch while preserving the lightweight timer probe. These focused
 tasks do not depend on or reopen deferred Tasks 0049, 0052, or 0059, and no task authorizes production
 access or mutation.
+
+Task 0079 was added on 2026-08-09 after the owner reviewed how the app asks for App Store and Play
+Store ratings. It replaces a lifetime cap of three prompts with a rolling 365-day window, because
+neither platform reports whether a review request actually produced a dialog: when the operating
+system has already spent the user's quota the call is a silent no-op, yet the app still records a
+prompt, so under a lifetime cap those wasted slots were permanent. The owner settled three durable
+decisions the same day. The prompt count is **not** reset per app version — only by the rolling
+window. The manual Rate App entry point added to Settings is **quota-neutral and applies no
+suppression**, deliberately, because app volume is low and rating count needs to rise, so a manual
+tap must never reduce future automatic opportunities; it also opens the store write-review deep link
+directly rather than calling the in-app review API, which does nothing once the quota is spent. And
+server-side logging of prompt attempts was considered and rejected, because it could only record
+attempts rather than confirmed impressions, would miss account-less users under row-level security,
+and could not be backfilled — there is consequently no way to query how often prompts have been
+shown, by design. The owner chose a single task over a split despite the physical-device
+verification it carries. The task also corrects the hardcoded version string in the Settings About
+section, which read `4.0.0` against an app config declaring `4.8.1`; the release rolling it out is
+`4.8.2`.
