@@ -1,11 +1,32 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
+import { Linking, Platform } from "react-native";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockDismissAll = jest.fn();
+const mockStoreReviewRequest = jest.fn();
+const mockStorageSetItem = jest.fn();
 let mockCanGoBack = false;
+
+jest.mock("expo-store-review", () => ({
+  requestReview: () => mockStoreReviewRequest(),
+}));
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  __esModule: true,
+  default: {
+    getItem: jest.fn(),
+    setItem: (...args: unknown[]) => mockStorageSetItem(...args),
+    removeItem: jest.fn(),
+  },
+}));
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -30,8 +51,14 @@ jest.mock("react-i18next", () => ({
         "common.close": "Close",
         "navigation.settings": "Settings",
         "settings.preferences": "Preferences",
+        "settings.rateApp": "Rate App",
       }[key] ?? key),
   }),
+}));
+
+jest.mock("expo-constants", () => ({
+  __esModule: true,
+  default: { expoConfig: { version: "9.9.9" } },
 }));
 
 jest.mock("@/contexts", () => ({
@@ -71,5 +98,89 @@ describe("SettingsScreen close control", () => {
 
     expect(mockBack).toHaveBeenCalledTimes(1);
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("shows the app version from Expo configuration", () => {
+    render(<SettingsScreen />);
+
+    expect(screen.getByText("9.9.9")).toBeTruthy();
+  });
+
+  it("opens the App Store write-review page from Rate App on iOS", () => {
+    const originalPlatformOS = Platform.OS;
+    const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+
+    try {
+      Object.defineProperty(Platform, "OS", {
+        value: "ios",
+        configurable: true,
+      });
+      render(<SettingsScreen />);
+
+      fireEvent.press(screen.getByTestId("rate-app-setting"));
+
+      expect(openURL).toHaveBeenCalledWith(
+        "itms-apps://apps.apple.com/app/id6758142736?action=write-review"
+      );
+      expect(mockStoreReviewRequest).not.toHaveBeenCalled();
+      expect(mockStorageSetItem).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, "OS", {
+        value: originalPlatformOS,
+        configurable: true,
+      });
+      openURL.mockRestore();
+    }
+  });
+
+  it("opens the Play Store app directly when it is available", () => {
+    const selectPlatform = jest
+      .spyOn(Platform, "select")
+      .mockImplementation((options) => options.android);
+    const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+
+    try {
+      render(<SettingsScreen />);
+
+      fireEvent.press(screen.getByTestId("rate-app-setting"));
+
+      expect(openURL).toHaveBeenCalledTimes(1);
+      expect(openURL).toHaveBeenCalledWith(
+        "market://details?id=com.sofibaby.app"
+      );
+    } finally {
+      selectPlatform.mockRestore();
+      openURL.mockRestore();
+    }
+  });
+
+  it("falls back to the Play Store website when the Android app cannot open", async () => {
+    const selectPlatform = jest
+      .spyOn(Platform, "select")
+      .mockImplementation((options) => options.android);
+    const openURL = jest
+      .spyOn(Linking, "openURL")
+      .mockRejectedValueOnce(new Error("Play Store unavailable"))
+      .mockResolvedValueOnce(true);
+
+    try {
+      render(<SettingsScreen />);
+
+      fireEvent.press(screen.getByTestId("rate-app-setting"));
+
+      await waitFor(() => {
+        expect(openURL).toHaveBeenNthCalledWith(
+          1,
+          "market://details?id=com.sofibaby.app"
+        );
+        expect(openURL).toHaveBeenNthCalledWith(
+          2,
+          "https://play.google.com/store/apps/details?id=com.sofibaby.app"
+        );
+      });
+    } finally {
+      selectPlatform.mockRestore();
+      openURL.mockRestore();
+    }
   });
 });

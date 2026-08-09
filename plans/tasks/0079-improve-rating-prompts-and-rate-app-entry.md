@@ -60,41 +60,41 @@ Decided against by the owner during planning, and not to be reintroduced:
 
 ## Implementation work
 
-- [ ] Replace the lifetime cap in `src/services/store-review-service.ts` with a rolling 365-day
+- [x] Replace the lifetime cap in `src/services/store-review-service.ts` with a rolling 365-day
       window backed by `@store_review:prompt_history`, a JSON array of ISO timestamps. The review
       gate passes only when the entries falling inside the trailing 365 days number fewer than
       `MAX_PROMPTS_PER_YEAR` (3).
-- [ ] Derive the 60-day cooldown from the newest entry in that history rather than from a separate
+- [x] Derive the 60-day cooldown from the newest entry in that history rather than from a separate
       key.
-- [ ] Prune entries older than 365 days on every write, so the stored array cannot grow unbounded.
-- [ ] Migrate existing installs on first read: when no history exists but the legacy
+- [x] Prune entries older than 365 days on every write, so the stored array cannot grow unbounded.
+- [x] Migrate existing installs on first read: when no history exists but the legacy
       `@store_review:last_prompt` key does, seed the history with that single timestamp and remove
       both legacy keys. The legacy counter cannot be reconstructed because only one timestamp was
       ever stored, so a user previously prompted three times is treated as having been prompted
       once. This is deliberately generous and preserves the cooldown.
-- [ ] Add a `catch` to the asynchronous timeout callback in `src/hooks/useStoreReview.ts`. It
+- [x] Add a `catch` to the asynchronous timeout callback in `src/hooks/useStoreReview.ts`. It
       currently uses `try`/`finally` with no `catch`, so a rejection from the review request escapes
       an async `setTimeout` callback as an unhandled promise rejection. Swallow and log; a failed
       review request must never surface to the caregiver.
-- [ ] Delete the unused exported `requestReviewForDev` from the store review service. It has no
+- [x] Delete the unused exported `requestReviewForDev` from the store review service. It has no
       callers.
-- [ ] Add a Rate App row to the About section of the Settings index screen, alongside the existing
+- [x] Add a Rate App row to the About section of the Settings index screen, alongside the existing
       privacy-policy row, following the established `SettingsRow` pattern.
-- [ ] Open the platform write-review page from that row using `Platform.select`:
+- [x] Open the platform write-review page from that row using `Platform.select`:
       iOS `itms-apps://apps.apple.com/app/id6758142736?action=write-review`,
       Android `market://details?id=com.sofibaby.app`. On Android, fall back to
       `https://play.google.com/store/apps/details?id=com.sofibaby.app` when the Play Store app is
       not installed and the `market://` scheme cannot be opened.
-- [ ] Add a `settings.rateApp` key to all nine locale files under `src/i18n/locales/`
+- [x] Add a `settings.rateApp` key to all nine locale files under `src/i18n/locales/`
       (`de`, `en`, `es`, `es-ES`, `fr`, `it`, `pt-BR`, `pt-PT`, `sr`).
-- [ ] Replace the hardcoded version string in the Settings About section with
+- [x] Replace the hardcoded version string in the Settings About section with
       `Constants.expoConfig?.version`, mirroring the pattern already used by the standalone About
       screen. The Settings index currently shows `4.0.0` while the Expo app config declares `4.8.1`,
       and the release rolling this task out will be `4.8.2`. Read the version from the Expo app
       config, never from `package.json`, whose version field is unmaintained at `0.1.0`.
-- [ ] Add `src/services/store-review-service.test.ts` covering the rolling window and its gates.
-- [ ] Extend the Settings index component test to cover the Rate App row.
-- [ ] Add a locale parity test for the new key, following the existing `*-locales.test.ts` pattern
+- [x] Add `src/services/store-review-service.test.ts` covering the rolling window and its gates.
+- [x] Extend the Settings index component test to cover the Rate App row.
+- [x] Add a locale parity test for the new key, following the existing `*-locales.test.ts` pattern
       under `src/i18n/`.
 
 ## Human checkpoints
@@ -109,24 +109,24 @@ Decided against by the owner during planning, and not to be reintroduced:
 
 ## Acceptance criteria
 
-- [ ] A user with three prompt timestamps inside the trailing 365 days is not prompted again.
-- [ ] A user whose third-oldest prompt has aged past 365 days becomes eligible again, once every
+- [x] A user with three prompt timestamps inside the trailing 365 days is not prompted again.
+- [x] A user whose third-oldest prompt has aged past 365 days becomes eligible again, once every
       other gate passes.
-- [ ] Timestamps older than 365 days are removed from stored history rather than accumulating.
-- [ ] A prompt is refused when fewer than 60 days have passed since the newest stored timestamp,
+- [x] Timestamps older than 365 days are removed from stored history rather than accumulating.
+- [x] A prompt is refused when fewer than 60 days have passed since the newest stored timestamp,
       even when the yearly count allows one.
-- [ ] An install holding only the legacy `@store_review:last_prompt` key is migrated to a
+- [x] An install holding only the legacy `@store_review:last_prompt` key is migrated to a
       single-entry history, its cooldown still honoured, and both legacy keys removed.
-- [ ] The unchanged gates still refuse a prompt below 100 total activities, before 7 days since first
+- [x] The unchanged gates still refuse a prompt below 100 total activities, before 7 days since first
       use, and outside the 10:00–18:00 local window.
-- [ ] A rejected review request is caught and logged, and does not produce an unhandled rejection.
-- [ ] `requestReviewForDev` no longer exists in the codebase.
-- [ ] Tapping Rate App in Settings opens the iOS write-review URL for app ID 6758142736 on iOS and
+- [x] A rejected review request is caught and logged, and does not produce an unhandled rejection.
+- [x] `requestReviewForDev` no longer exists in the codebase.
+- [x] Tapping Rate App in Settings opens the iOS write-review URL for app ID 6758142736 on iOS and
       the Play Store entry for `com.sofibaby.app` on Android, and falls back to the HTTPS Play URL
       when `market://` cannot be opened.
-- [ ] Tapping Rate App writes nothing to prompt history and does not change automatic-prompt
+- [x] Tapping Rate App writes nothing to prompt history and does not change automatic-prompt
       eligibility.
-- [ ] `settings.rateApp` is present in all nine locale files and the parity test proves it.
-- [ ] The Settings About section shows the version from the Expo app config rather than a hardcoded
+- [x] `settings.rateApp` is present in all nine locale files and the parity test proves it.
+- [x] The Settings About section shows the version from the Expo app config rather than a hardcoded
       string.
 - [ ] The physical-device verification above has been confirmed by the owner.
