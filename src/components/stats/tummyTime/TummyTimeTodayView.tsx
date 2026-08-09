@@ -23,7 +23,7 @@ export function TummyTimeTodayView() {
   const accentColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
   const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
 
-  const { stats, comparisonText } = useMemo(() => {
+  const { stats, comparisonText, comparisonPositive } = useMemo(() => {
     const range = getDateRangeForPeriod("today");
     const todayTT = filterEntriesByDateRange(tummyTimes, range, (e) => e.startedAt);
     const s = calculateTummyTimeStats(todayTT);
@@ -42,7 +42,7 @@ export function TummyTimeTodayView() {
       }
     }
 
-    return { stats: s, comparisonText: comparison };
+    return { stats: s, comparisonText: comparison, comparisonPositive: diffSeconds > 0 };
   }, [tummyTimes, t]);
 
   const totalStr = formatDuration(stats.totalDurationSeconds, "short");
@@ -70,7 +70,7 @@ export function TummyTimeTodayView() {
         value={totalStr}
         subtitle={`${stats.sessionCount} ${t("stats.feeding.sessions")}`}
         comparisonText={comparisonText}
-        comparisonPositive={comparisonText?.includes("↑")}
+        comparisonPositive={comparisonPositive}
       />
 
       <View style={{ flexDirection: "row", gap: 10 }}>

@@ -7,7 +7,7 @@ let mockLanguage = "en";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, options?: Record<string, number>) => {
+    t: (key: string, options?: Record<string, number | string>) => {
       if (key === "common.durationHM") {
         return mockLanguage === "de"
           ? `${options?.h}Std ${options?.m}Min`
@@ -27,6 +27,9 @@ jest.mock("react-i18next", () => ({
       }
       if (key === "sleepPatterns.napOccurrenceCount") {
         return `${options?.count} of ${options?.nappingDays} days`;
+      }
+      if (key === "sleepPatterns.recommended") {
+        return `${options?.range}h recommended`;
       }
       return key;
     },
@@ -217,6 +220,29 @@ describe("SummaryView", () => {
     expect(screen.getByText("1h 30m")).toBeTruthy();
     expect(screen.getByText("2h")).toBeTruthy();
     expect(screen.getByText("per napping day · 2 of 7")).toBeTruthy();
+  });
+
+  it("shows the evidence-based range for the baby's age", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-06-01T12:00:00.000Z"));
+
+    render(
+      <SummaryView
+        sleeps={[]}
+        now={new Date("2026-06-01T12:00:00.000Z")}
+        timeFormat="24h"
+        dayStartHour={6}
+        dayEndHour={19}
+        colors={colors}
+        isNewborn={false}
+        locale="en"
+        birthDate="2026-01-01T12:00:00.000Z"
+        period={7}
+        onPeriodChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText("12–16h recommended")).toBeTruthy();
   });
 
   it("shows a zero napping-day divisor when the range has no naps", () => {

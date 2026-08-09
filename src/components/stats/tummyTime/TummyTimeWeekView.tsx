@@ -11,15 +11,11 @@ import {
   filterEntriesByDateRange,
   calculateTummyTimeStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, formatDurationShort, type TranslateFn } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
+import { computeNiceYAxis } from "@/utils/chart-axis";
 
 export function TummyTimeWeekView() {
   const { t, i18n } = useTranslation();
@@ -27,12 +23,14 @@ export function TummyTimeWeekView() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const locale = i18n.language;
+  const formatMinutes = (value: number) =>
+    formatDurationShort(0, value, t as TranslateFn);
 
   const accentColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
   const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
-  const { stats, dailyMin } = useMemo(() => {
+  const { stats, dailyMin, yAxis } = useMemo(() => {
     const range = getDateRangeForPeriod("7days");
     const weekTT = filterEntriesByDateRange(tummyTimes, range, (e) => e.startedAt);
     const s = calculateTummyTimeStats(weekTT);
@@ -40,12 +38,12 @@ export function TummyTimeWeekView() {
     const breakdown = calculateDailyBreakdown<StoredTummyTimeEntry>(weekTT, (e) => e.startedAt, 7);
     const bars: { value: number; label: string }[] = [];
     for (const [dateKey, entries] of breakdown) {
-      const label = getWeekdayLabel(dateKey, locale);
+      const label = getWeekdayLabelFromDateKey(dateKey, locale);
       const totalSec = entries.reduce((sum, tt) => sum + (tt.durationSeconds || 0), 0);
       bars.push({ value: Math.round(totalSec / 60), label });
     }
 
-    return { stats: s, dailyMin: bars };
+    return { stats: s, dailyMin: bars, yAxis: computeNiceYAxis(bars, 20) };
   }, [tummyTimes, locale]);
 
   const totalStr = formatDuration(stats.totalDurationSeconds, "short");
@@ -63,8 +61,11 @@ export function TummyTimeWeekView() {
         value={totalStr}
         subtitle={t("stats.tummyTime.totalAcrossSessions", { count: stats.sessionCount })}
         details={[
-          { label: t("stats.tummyTime.avgDailyTotal"), value: `${avgDaily} min` },
-          { label: t("stats.tummyTime.avgSessionLength"), value: `${avgSession} min` },
+          { label: t("stats.tummyTime.avgDailyTotal"), value: formatMinutes(avgDaily) },
+          {
+            label: t("stats.tummyTime.avgSessionLength"),
+            value: formatMinutes(Number(avgSession)),
+          },
         ]}
       />
 
@@ -78,10 +79,10 @@ export function TummyTimeWeekView() {
           </Text>
           <BarChartWithAxis
             data={dailyMin}
-            yAxisLabels={[0, 5, 10, 15, 20]}
+            yAxisLabels={yAxis.labels}
             barColor={accentColor}
-            maxY={20}
-            formatValue={(v) => `${v}m`}
+            maxY={yAxis.maxY}
+            formatValue={formatMinutes}
           />
         </View>
       )}

@@ -173,7 +173,7 @@
     "newbornNote": "Les habitudes de coucher et de réveil apparaissent généralement vers 3-4 mois, lorsque le rythme circadien de votre bébé se développe.",
     "totalSleep": "Total",
     "periodDays": "{{count}}j",
-    "recommended": "{{min}}-{{max}}h recommandées",
+    "recommended": "{{range}}h recommandées",
     "dailySleep": "Sommeil quotidien",
     "sleepSplit": "Répartition du sommeil",
     "consistency": "± {{minutes}}m"
@@ -294,7 +294,7 @@
     "basedOnGuidelines": "Basé sur les recommandations AAP/Sleep Foundation pour les {{ageGroup}}",
     "customGoalNote": "Vous avez défini un objectif personnalisé",
     "ageBasedGoal": "Objectif basé sur l'âge",
-    "recommendedRange": "Recommandé : {{min}}-{{max}} heures/jour",
+    "recommendedRange": "Recommandé : {{range}} heures/jour",
     "napsPerDay": "{{min}}-{{max}} siestes par jour",
     "quickGoals": "Sélection rapide",
     "customHours": "Personnalisé (heures)",
@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Allaitement",
       "breastfeedingChartSub": "total par jour - 7 derniers jours",
       "bottleChart": "Biberon",
-      "bottleChartSub": "total ml par jour - 7 derniers jours",
+      "bottleChartSub": "total {{unit}} par jour - 7 derniers jours",
       "avgBetween": "Moy. entre les repas",
       "bottleVolumeTotal": "Volume total biberon",
       "7days": "ALIMENTATION — 7 JOURS"
@@ -1686,7 +1686,6 @@
       "weight": "Poids",
       "length": "Longueur",
       "headCircumference": "Périmètre crânien",
-      "percentile": "{{value}}e",
       "change": "+{{value}} cette semaine"
     },
     "pumping": {
@@ -1697,7 +1696,7 @@
       "totalSessions": "Total des séances",
       "avgDailyOutput": "Production quotidienne moy.",
       "dailyVolume": "Volume quotidien",
-      "dailyVolumeSub": "ml par jour - 7 derniers jours",
+      "dailyVolumeSub": "{{unit}} par jour - 7 derniers jours",
       "totalVolume": "volume total",
       "7days": "TIRE-LAIT — 7 JOURS"
     },
@@ -1719,12 +1718,11 @@
       "medsToday": "Médicaments aujourd'hui",
       "vaccineProgress": "Progression vaccinale",
       "recentSymptoms": "Symptômes récents",
+      "range30DaysShort": "30 j",
+      "symptomCountShort": "{{count}} fois",
       "recentEntries": "Entrées récentes",
       "noReadings": "Aucune mesure",
-      "noEntries": "Aucune donnée de santé",
-      "justNow": "À l'instant",
-      "hoursAgo": "il y a {{count}}h",
-      "daysAgo": "il y a {{count}}j"
+      "noEntries": "Aucune donnée de santé"
     },
     "common": {
       "past7Days": "7 derniers jours",

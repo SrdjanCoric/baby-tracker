@@ -26,6 +26,7 @@ import {
   calculatePercentileFromMeasurement,
   calculateAgeInMonths,
 } from "@/utils/percentile-calculator";
+import { toLocalDateKey } from "@/utils/statistics";
 
 export interface RawReportData {
   feedings: StoredFeedingEntry[];
@@ -58,9 +59,7 @@ function getDaysBetween(startDate: Date, endDate: Date): number {
 }
 
 function _getUniqueDays(entries: { date: Date }[]): Set<string> {
-  return new Set(
-    entries.map((e) => e.date.toISOString().split("T")[0])
-  );
+  return new Set(entries.map((e) => toLocalDateKey(e.date)));
 }
 
 export function aggregateMetadata(options: ReportOptions): ReportMetadata {
@@ -525,7 +524,7 @@ export function aggregateTummyTime(
 
   const entriesByDay = new Map<string, number>();
   filtered.forEach((t) => {
-    const day = new Date(t.startedAt).toISOString().split("T")[0];
+    const day = toLocalDateKey(new Date(t.startedAt));
     const minutes = (t.durationSeconds || 0) / 60;
     entriesByDay.set(day, (entriesByDay.get(day) || 0) + minutes);
   });

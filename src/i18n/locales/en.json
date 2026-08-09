@@ -173,7 +173,7 @@
     "newbornNote": "Bedtime and wake time patterns typically emerge around 3\u20134 months as your baby's circadian rhythm develops.",
     "totalSleep": "Total",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h recommended",
+    "recommended": "{{range}}h recommended",
     "dailySleep": "Daily Sleep",
     "sleepSplit": "Sleep Composition",
     "consistency": "\u00b1 {{minutes}}m"
@@ -294,7 +294,7 @@
     "basedOnGuidelines": "Based on AAP/Sleep Foundation guidelines for {{ageGroup}}",
     "customGoalNote": "You've set a custom goal",
     "ageBasedGoal": "Age-based goal",
-    "recommendedRange": "Recommended: {{min}}-{{max}} hours/day",
+    "recommendedRange": "Recommended: {{range}} hours/day",
     "napsPerDay": "{{min}}-{{max}} naps per day",
     "quickGoals": "Quick Select",
     "customHours": "Custom (hours)",
@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Breastfeeding",
       "breastfeedingChartSub": "total per day - past 7 days",
       "bottleChart": "Bottle Feeding",
-      "bottleChartSub": "total ml per day - past 7 days",
+      "bottleChartSub": "total {{unit}} per day - past 7 days",
       "avgBetween": "Avg between feeds",
       "bottleVolumeTotal": "Bottle volume total",
       "7days": "FEEDING \u2014 7 DAYS"
@@ -1686,7 +1686,6 @@
       "weight": "Weight",
       "length": "Length",
       "headCircumference": "Head Circumference",
-      "percentile": "{{value}}th",
       "change": "+{{value}} this week"
     },
     "pumping": {
@@ -1697,7 +1696,7 @@
       "totalSessions": "Total sessions",
       "avgDailyOutput": "Avg daily output",
       "dailyVolume": "Daily Volume",
-      "dailyVolumeSub": "ml per day - past 7 days",
+      "dailyVolumeSub": "{{unit}} per day - past 7 days",
       "totalVolume": "total volume",
       "7days": "PUMPING \u2014 7 DAYS"
     },
@@ -1719,12 +1718,11 @@
       "medsToday": "Medications Today",
       "vaccineProgress": "Vaccine Progress",
       "recentSymptoms": "Recent Symptoms",
+      "range30DaysShort": "30d",
+      "symptomCountShort": "{{count}}×",
       "recentEntries": "Recent Entries",
       "noReadings": "No readings",
-      "noEntries": "No health data yet",
-      "justNow": "Just now",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago"
+      "noEntries": "No health data yet"
     },
     "common": {
       "past7Days": "Past 7 Days",

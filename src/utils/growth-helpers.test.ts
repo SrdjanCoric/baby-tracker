@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { isUnderTwoYears, getGrowthTrendArrow, formatWeightChange } from "./growth-helpers";
+import {
+  isUnderTwoYears,
+  getGrowthTrendArrow,
+  formatWeightChange,
+  formatPercentile,
+} from "./growth-helpers";
 
 describe("growth-helpers", () => {
   describe("isUnderTwoYears", () => {
@@ -66,5 +71,14 @@ describe("growth-helpers", () => {
     it("should return negative value with minus sign", () => {
       expect(formatWeightChange(-50)).toBe("-50g");
     });
+  });
+
+  describe("formatPercentile", () => {
+    it.each([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 50, 97])(
+      "uses language-neutral P notation for percentile %i",
+      (percentile) => {
+        expect(formatPercentile(percentile)).toBe(`P${percentile}`);
+      }
+    );
   });
 });

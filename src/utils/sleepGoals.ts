@@ -3,10 +3,10 @@ import type { WakeWindowConfig, NapSlotWindow } from "@/types/wake-windows";
 export interface SleepAgeGroup {
   label: string;
   labelKey: string;
-  minAgeDays: number;
-  maxAgeDays: number;
+  minAgeMonths: number;
   totalSleepHoursMin: number;
   totalSleepHoursMax: number;
+  targetMinutes: number;
   napsMin: number;
   napsMax: number;
   wakeWindowMinMinutes: number;
@@ -50,10 +50,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "0-3 months",
     labelKey: "ageGroups.sleep.0-3months",
-    minAgeDays: 0,
-    maxAgeDays: 90,
+    minAgeMonths: 0,
     totalSleepHoursMin: 14,
     totalSleepHoursMax: 17,
+    targetMinutes: 15 * 60,
     napsMin: 4,
     napsMax: 5,
     wakeWindowMinMinutes: 30,
@@ -62,10 +62,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "3-5 months",
     labelKey: "ageGroups.sleep.3-5months",
-    minAgeDays: 91,
-    maxAgeDays: 150,
-    totalSleepHoursMin: 14,
-    totalSleepHoursMax: 15,
+    minAgeMonths: 3,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 14 * 60,
     napsMin: 3,
     napsMax: 4,
     wakeWindowMinMinutes: 60,
@@ -74,10 +74,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "6-8 months",
     labelKey: "ageGroups.sleep.6-8months",
-    minAgeDays: 151,
-    maxAgeDays: 240,
-    totalSleepHoursMin: 14,
-    totalSleepHoursMax: 14,
+    minAgeMonths: 6,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 13.5 * 60,
     napsMin: 2,
     napsMax: 3,
     wakeWindowMinMinutes: 120,
@@ -86,10 +86,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "9-12 months",
     labelKey: "ageGroups.sleep.9-12months",
-    minAgeDays: 241,
-    maxAgeDays: 365,
-    totalSleepHoursMin: 13,
-    totalSleepHoursMax: 14,
+    minAgeMonths: 9,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 13 * 60,
     napsMin: 2,
     napsMax: 2,
     wakeWindowMinMinutes: 150,
@@ -98,10 +98,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "13-18 months",
     labelKey: "ageGroups.sleep.13-18months",
-    minAgeDays: 366,
-    maxAgeDays: 540,
-    totalSleepHoursMin: 13,
+    minAgeMonths: 13,
+    totalSleepHoursMin: 11,
     totalSleepHoursMax: 14,
+    targetMinutes: 12.5 * 60,
     napsMin: 1,
     napsMax: 2,
     wakeWindowMinMinutes: 180,
@@ -110,10 +110,10 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
   {
     label: "19+ months",
     labelKey: "ageGroups.sleep.19+months",
-    minAgeDays: 541,
-    maxAgeDays: Infinity,
+    minAgeMonths: 19,
     totalSleepHoursMin: 11,
-    totalSleepHoursMax: 12,
+    totalSleepHoursMax: 14,
+    targetMinutes: 11.5 * 60,
     napsMin: 0,
     napsMax: 1,
     wakeWindowMinMinutes: 240,
@@ -141,12 +141,27 @@ export function getSleepAgeGroupForBaby(
   birthDate: Date,
   now: Date = new Date()
 ): SleepAgeGroup | null {
-  const ageDays = Math.floor((now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+  const birthDay = new Date(birthDate);
+  const referenceDay = new Date(now);
+  birthDay.setHours(0, 0, 0, 0);
+  referenceDay.setHours(0, 0, 0, 0);
 
-  if (ageDays < 0) return null;
+  if (referenceDay < birthDay) return null;
 
-  for (const group of SLEEP_AGE_GROUPS) {
-    if (ageDays >= group.minAgeDays && ageDays <= group.maxAgeDays) {
+  for (let index = SLEEP_AGE_GROUPS.length - 1; index >= 0; index--) {
+    const group = SLEEP_AGE_GROUPS[index];
+    const boundary = new Date(birthDay);
+    const birthDayOfMonth = boundary.getDate();
+    boundary.setDate(1);
+    boundary.setMonth(boundary.getMonth() + group.minAgeMonths);
+    const lastDayOfBoundaryMonth = new Date(
+      boundary.getFullYear(),
+      boundary.getMonth() + 1,
+      0
+    ).getDate();
+    boundary.setDate(Math.min(birthDayOfMonth, lastDayOfBoundaryMonth));
+
+    if (referenceDay >= boundary) {
       return group;
     }
   }
@@ -162,18 +177,16 @@ export function getDefaultSleepGoalForAge(
 
   if (!ageGroup) {
     return {
-      minHours: 14,
-      maxHours: 14,
+      minHours: 12,
+      maxHours: 16,
       targetMinutes: 14 * 60,
     };
   }
 
-  const midpointHours = (ageGroup.totalSleepHoursMin + ageGroup.totalSleepHoursMax) / 2;
-
   return {
     minHours: ageGroup.totalSleepHoursMin,
     maxHours: ageGroup.totalSleepHoursMax,
-    targetMinutes: midpointHours * 60,
+    targetMinutes: ageGroup.targetMinutes,
   };
 }
 
@@ -224,14 +237,10 @@ export function checkSleepMilestoneCrossing(
   if (!previousGroup || !currentGroup) return null;
 
   if (previousGroup.label !== currentGroup.label) {
-    const prevTarget =
-      (previousGroup.totalSleepHoursMin + previousGroup.totalSleepHoursMax) / 2;
-    const newTarget = (currentGroup.totalSleepHoursMin + currentGroup.totalSleepHoursMax) / 2;
-
     return {
       previousGroup,
       newGroup: currentGroup,
-      shouldSuggestGoalUpdate: prevTarget !== newTarget,
+      shouldSuggestGoalUpdate: previousGroup.targetMinutes !== currentGroup.targetMinutes,
     };
   }
 
@@ -247,8 +256,8 @@ export function getSleepGoalInfo(
     const ageGroup = birthDate ? getSleepAgeGroupForBaby(birthDate, now) : null;
     return {
       targetMinutes: customGoalMinutes,
-      minHours: ageGroup?.totalSleepHoursMin ?? 14,
-      maxHours: ageGroup?.totalSleepHoursMax ?? 14,
+      minHours: ageGroup?.totalSleepHoursMin ?? 12,
+      maxHours: ageGroup?.totalSleepHoursMax ?? 16,
       source: "custom",
       ageGroup,
     };
@@ -257,8 +266,8 @@ export function getSleepGoalInfo(
   if (!birthDate) {
     return {
       targetMinutes: 14 * 60,
-      minHours: 14,
-      maxHours: 14,
+      minHours: 12,
+      maxHours: 16,
       source: "age_based",
       ageGroup: null,
     };
@@ -274,6 +283,10 @@ export function getSleepGoalInfo(
     source: "age_based",
     ageGroup,
   };
+}
+
+export function formatSleepHoursRange(minHours: number, maxHours: number): string {
+  return minHours === maxHours ? `${minHours}` : `${minHours}–${maxHours}`;
 }
 
 export interface WakeWindowProgression {

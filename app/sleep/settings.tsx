@@ -22,7 +22,7 @@ import { useNotifications } from "@/contexts/notification-context";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { NapReminderWarningModal } from "@/components/NapReminderWarningModal";
 import { formatHourValue, formatDurationShort, type TranslateFn } from "@/utils/time";
-import { getPresetPillsForAge, generateSlotsForNapCount, getDefaultWakeWindowConfig, isUnderTwoMonths } from "@/utils/sleepGoals";
+import { formatSleepHoursRange, getPresetPillsForAge, generateSlotsForNapCount, getDefaultWakeWindowConfig, isUnderTwoMonths } from "@/utils/sleepGoals";
 
 const SLEEP_PURPLE = "#6B5B95";
 const SLEEP_PURPLE_LIGHT = "#B5A7BD";
@@ -541,8 +541,10 @@ export default function SleepSettingsScreen() {
               </Text>
               <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
                 {t("sleep.recommendedRange", {
-                  min: currentAgeGroup.totalSleepHoursMin,
-                  max: currentAgeGroup.totalSleepHoursMax,
+                  range: formatSleepHoursRange(
+                    currentAgeGroup.totalSleepHoursMin,
+                    currentAgeGroup.totalSleepHoursMax
+                  ),
                 })}
               </Text>
               <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-1">
@@ -634,8 +636,10 @@ export default function SleepSettingsScreen() {
             </Text>
             <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
               {t("sleep.recommendedRange", {
-                min: currentAgeGroup.totalSleepHoursMin,
-                max: currentAgeGroup.totalSleepHoursMax,
+                range: formatSleepHoursRange(
+                  currentAgeGroup.totalSleepHoursMin,
+                  currentAgeGroup.totalSleepHoursMax
+                ),
               })}
             </Text>
           </Pressable>

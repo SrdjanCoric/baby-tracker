@@ -177,7 +177,7 @@
     "newbornNote": "Los patrones de hora de dormir y despertar suelen aparecer alrededor de los 3–4 meses a medida que se desarrolla el ritmo circadiano del bebé.",
     "totalSleep": "Total",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h recomendado",
+    "recommended": "{{range}}h recomendado",
     "dailySleep": "Sueño diario",
     "sleepSplit": "Composición del sueño",
     "consistency": "± {{minutes}}m"
@@ -298,7 +298,7 @@
     "basedOnGuidelines": "Basado en las guías de AAP/Sleep Foundation para {{ageGroup}}",
     "customGoalNote": "Has establecido una meta personalizada",
     "ageBasedGoal": "Meta según la edad",
-    "recommendedRange": "Recomendado: {{min}}-{{max}} horas/día",
+    "recommendedRange": "Recomendado: {{range}} horas/día",
     "napsPerDay": "{{min}}-{{max}} siestas por día",
     "quickGoals": "Selección rápida",
     "customHours": "Personalizado (horas)",
@@ -1667,7 +1667,7 @@
       "breastfeedingChart": "Lactancia",
       "breastfeedingChartSub": "total por día - últimos 7 días",
       "bottleChart": "Biberón",
-      "bottleChartSub": "ml totales por día - últimos 7 días",
+      "bottleChartSub": "{{unit}} totales por día - últimos 7 días",
       "avgBetween": "Prom. entre tomas",
       "bottleVolumeTotal": "Volumen total biberón",
       "7days": "ALIMENTACIÓN — 7 DÍAS"
@@ -1690,7 +1690,6 @@
       "weight": "Peso",
       "length": "Longitud",
       "headCircumference": "Circunferencia craneal",
-      "percentile": "p{{value}}",
       "change": "+{{value}} esta semana"
     },
     "pumping": {
@@ -1701,7 +1700,7 @@
       "totalSessions": "Sesiones totales",
       "avgDailyOutput": "Prom. diario",
       "dailyVolume": "Volumen diario",
-      "dailyVolumeSub": "ml por día - últimos 7 días",
+      "dailyVolumeSub": "{{unit}} por día - últimos 7 días",
       "totalVolume": "volumen total",
       "7days": "EXTRACCIÓN — 7 DÍAS"
     },
@@ -1723,12 +1722,11 @@
       "medsToday": "Medicamentos hoy",
       "vaccineProgress": "Progreso de vacunación",
       "recentSymptoms": "Síntomas recientes",
+      "range30DaysShort": "30 d",
+      "symptomCountShort": "{{count}} veces",
       "recentEntries": "Entradas recientes",
       "noReadings": "Sin lecturas",
-      "noEntries": "Sin datos de salud",
-      "justNow": "Ahora",
-      "hoursAgo": "hace {{count}}h",
-      "daysAgo": "hace {{count}}d"
+      "noEntries": "Sin datos de salud"
     },
     "common": {
       "past7Days": "Últimos 7 días",

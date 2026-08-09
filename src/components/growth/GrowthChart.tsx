@@ -15,6 +15,7 @@ import {
   generatePercentileLine,
   calculatePercentileFromMeasurement,
 } from "@/utils/percentile-calculator";
+import { formatPercentile } from "@/utils/growth-helpers";
 import type {
   Gender,
   GrowthMeasurementType,
@@ -427,7 +428,7 @@ export function GrowthChart({
               style={{ backgroundColor: PERCENTILE_COLORS[p] }}
             />
             <Text className="text-xs text-content-tertiary dark:text-content-dark-tertiary">
-              {p === 50 ? "50th (median)" : `${p}th`}
+              {`${formatPercentile(p)}${p === 50 ? " (median)" : ""}`}
             </Text>
           </View>
         ))}

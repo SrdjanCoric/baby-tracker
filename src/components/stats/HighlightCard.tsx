@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { useColorScheme } from "nativewind";
-import { SURFACE, TEXT, ACTION } from "@/constants/colors";
+import { SURFACE, TEXT, SEMANTIC } from "@/constants/colors";
 
 interface HighlightCardProps {
   accentColor: string;
@@ -21,6 +21,7 @@ export function HighlightCard({
   unit,
   subtitle,
   comparisonText,
+  comparisonPositive,
 }: HighlightCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -28,7 +29,11 @@ export function HighlightCard({
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
   const textPrimary = isDark ? TEXT.dark.primary : TEXT.light.primary;
   const textSecondary = isDark ? TEXT.dark.secondary : TEXT.light.secondary;
-  const accentMuted = isDark ? ACTION.dark.primary : ACTION.light.primary;
+  const comparisonColor = comparisonPositive
+    ? accentColor
+    : isDark
+      ? SEMANTIC.neutral.dark
+      : SEMANTIC.neutral.light;
 
   return (
     <View
@@ -70,17 +75,18 @@ export function HighlightCard({
       )}
       {comparisonText && (
         <View
+          testID="highlight-comparison"
           style={{
             marginTop: 8,
             paddingVertical: 4,
             paddingHorizontal: 10,
             borderRadius: 8,
             backgroundColor: isDark
-              ? `${accentMuted}20`
-              : `${accentMuted}15`,
+              ? `${comparisonColor}20`
+              : `${comparisonColor}15`,
           }}
         >
-          <Text style={{ fontSize: 12, fontWeight: "500", color: accentMuted }}>
+          <Text style={{ fontSize: 12, fontWeight: "500", color: comparisonColor }}>
             {comparisonText}
           </Text>
         </View>

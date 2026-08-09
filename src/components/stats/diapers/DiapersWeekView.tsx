@@ -13,14 +13,10 @@ import {
   filterEntriesByDateRange,
   calculateDiaperStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
+import { computeNiceCountYAxis } from "@/utils/chart-axis";
 
 export function DiapersWeekView() {
   const { t, i18n } = useTranslation();
@@ -34,7 +30,7 @@ export function DiapersWeekView() {
   const diaperColors = getDiaperTypeColors(isDark);
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
-  const { stats, chartData } = useMemo(() => {
+  const { stats, chartData, yAxis } = useMemo(() => {
     const range = getDateRangeForPeriod("7days");
     const weekDiapers = filterEntriesByDateRange(diapers, range, (e) => e.changedAt);
     const s = calculateDiaperStats(weekDiapers);
@@ -49,7 +45,7 @@ export function DiapersWeekView() {
         else if (d.type === "mixed") mixed++;
       }
       bars.push({
-        label: getWeekdayLabel(dateKey, locale),
+        label: getWeekdayLabelFromDateKey(dateKey, locale),
         segments: [
           { value: wet, color: diaperColors.wet },
           { value: dirty, color: diaperColors.dirty },
@@ -58,7 +54,10 @@ export function DiapersWeekView() {
       });
     }
 
-    return { stats: s, chartData: bars };
+    const totals = bars.map((bar) => ({
+      value: bar.segments.reduce((sum, segment) => sum + segment.value, 0),
+    }));
+    return { stats: s, chartData: bars, yAxis: computeNiceCountYAxis(totals, 12) };
   }, [diapers, locale, diaperColors.wet, diaperColors.dirty, diaperColors.mixed]);
 
   const avgPerDay = (stats.totalCount / 7).toFixed(1);
@@ -91,13 +90,13 @@ export function DiapersWeekView() {
           </Text>
           <StackedBarChartWithAxis
             data={chartData}
-            yAxisLabels={[0, 3, 6, 9, 12]}
+            yAxisLabels={yAxis.labels}
             legend={[
               { color: diaperColors.wet, label: t("stats.diapers.wet") },
               { color: diaperColors.dirty, label: t("stats.diapers.dirty") },
               { color: diaperColors.mixed, label: t("stats.diapers.mixed") },
             ]}
-            maxY={12}
+            maxY={yAxis.maxY}
           />
         </View>
       )}

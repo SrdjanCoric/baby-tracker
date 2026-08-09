@@ -10,6 +10,7 @@ import type { StoredHealthEntry } from "@/services/health-storage";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER, SEMANTIC } from "@/constants/colors";
 import { CDC_VACCINE_SCHEDULE } from "@/constants/vaccine-schedule";
 import { formatTemperature, getFeverStatus } from "@/utils/temperature";
+import { timeSince } from "@/utils/time";
 import { StatsMetricCard } from "../StatsMetricCard";
 import { getHealthDisplayName } from "@/utils/health-display";
 
@@ -84,11 +85,14 @@ export function HealthStatsView() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sortedEntries = healthEntries
+      .filter((entry) => entry.babyId === selectedBaby.id)
+      .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
 
-    const temperatureEntries = healthEntries.filter((e) => e.type === "temperature");
-    const medicationEntries = healthEntries.filter((e) => e.type === "medication");
-    const vaccinationEntries = healthEntries.filter((e) => e.type === "vaccination");
-    const symptomEntries = healthEntries.filter((e) => e.type === "symptom");
+    const temperatureEntries = sortedEntries.filter((e) => e.type === "temperature");
+    const medicationEntries = sortedEntries.filter((e) => e.type === "medication");
+    const vaccinationEntries = sortedEntries.filter((e) => e.type === "vaccination");
+    const symptomEntries = sortedEntries.filter((e) => e.type === "symptom");
 
     const latestTemp = temperatureEntries.length > 0 ? temperatureEntries[0] : null;
 
@@ -115,9 +119,10 @@ export function HealthStatsView() {
       }
     });
 
-    const recentEntries = healthEntries.slice(0, 5);
+    const recentEntries = sortedEntries.slice(0, 5);
 
     return {
+      entryCount: sortedEntries.length,
       latestTemp,
       todaysMedCount: todaysMeds.length,
       lastMed,
@@ -141,7 +146,7 @@ export function HealthStatsView() {
     );
   }
 
-  if (healthEntries.length === 0) {
+  if (stats.entryCount === 0) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <View style={{ backgroundColor: cardBg, borderRadius: 12, padding: 24, alignItems: "center" }}>
@@ -154,25 +159,13 @@ export function HealthStatsView() {
     );
   }
 
-  const getRelativeTime = (dateStr: string): string => {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return t("stats.health.justNow");
-    if (diffHours < 24) return t("stats.health.hoursAgo", { count: diffHours });
-    return t("stats.health.daysAgo", { count: diffDays });
-  };
-
   const getVaccinesToDisplay = () => {
     const loggedVaccineKeys = new Set<string>();
 
     stats.completedVaccinations.forEach(v => loggedVaccineKeys.add(v.vaccineName));
 
-    healthEntries
-      .filter(h => h.type === 'vaccination' && h.vaccineName)
+    (stats.vaccineEntries ?? [])
+      .filter(h => h.vaccineName)
       .forEach(h => {
         const schedule = CDC_VACCINE_SCHEDULE.find(s => s.key === h.vaccineName);
         if (schedule) {
@@ -320,7 +313,9 @@ export function HealthStatsView() {
             >
               {t("stats.health.recentSymptoms")}
             </Text>
-            <Text style={{ fontSize: 11, color: textTertiary }}>30d</Text>
+            <Text style={{ fontSize: 11, color: textTertiary }}>
+              {t("stats.health.range30DaysShort")}
+            </Text>
           </View>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -350,7 +345,8 @@ export function HealthStatsView() {
                     }}
                   >
                     <Text style={{ fontSize: 12, color: textSecondary }}>
-                      {getSymptomName(symptom, t)} {count > 1 ? `${count}x` : ""}
+                      {getSymptomName(symptom, t)}{" "}
+                      {count > 1 ? t("stats.health.symptomCountShort", { count }) : ""}
                     </Text>
                   </View>
                 );
@@ -404,6 +400,9 @@ export function HealthStatsView() {
               emoji = "💉";
               bgColor = warningMuted;
               displayName = entry.vaccineName ? getHealthDisplayName(entry.vaccineName, "vaccine", t) : "";
+              if (entry.doseNumber !== undefined && entry.doseNumber !== null) {
+                detail = t("health.doseLabel", { number: entry.doseNumber });
+              }
             } else if (entry.type === "symptom") {
               emoji = "🤒";
               bgColor = errorMuted;
@@ -416,6 +415,7 @@ export function HealthStatsView() {
             return (
               <View
                 key={entry.id}
+                testID={`health-recent-entry-${entry.id}`}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -451,7 +451,7 @@ export function HealthStatsView() {
                 </View>
 
                 <Text style={{ fontSize: 12, color: textTertiary }}>
-                  {getRelativeTime(entry.loggedAt)}
+                  {timeSince(new Date(entry.loggedAt), undefined, t)}
                 </Text>
               </View>
             );

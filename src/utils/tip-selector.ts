@@ -1,5 +1,6 @@
 import { getCurrentAgeGroupKey } from "@/constants/milestones";
 import { getShownTipIds, addShownTipIds, resetShownTipIds } from "@/services/tip-storage";
+import { toLocalDateKey } from "@/utils/statistics";
 
 export type TipCategory = "development" | "sleep" | "feeding" | "health" | "play" | "safety";
 
@@ -168,7 +169,7 @@ export async function selectDailyTips(
   const tips = loadTipsForAgeGroup(ageGroup, locale);
   if (tips.length === 0) return [];
 
-  const dateStr = currentDate.toISOString().split("T")[0];
+  const dateStr = toLocalDateKey(currentDate);
   const seed = hashCode(`${dateStr}:${babyId}`);
 
   const selectedCategories = new Set<TipCategory>();

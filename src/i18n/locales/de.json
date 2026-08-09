@@ -173,7 +173,7 @@
     "newbornNote": "Schlafens- und Aufwachzeitmuster entwickeln sich typischerweise ab 3–4 Monaten, wenn sich der zirkadiane Rhythmus deines Babys entwickelt.",
     "totalSleep": "Gesamt",
     "periodDays": "{{count}}T",
-    "recommended": "{{min}}-{{max}}h empfohlen",
+    "recommended": "{{range}}h empfohlen",
     "dailySleep": "Täglicher Schlaf",
     "sleepSplit": "Schlafzusammensetzung",
     "consistency": "± {{minutes}}m"
@@ -294,7 +294,7 @@
     "basedOnGuidelines": "Basierend auf Richtlinien der AAP/Sleep Foundation für {{ageGroup}}",
     "customGoalNote": "Du hast ein eigenes Ziel festgelegt",
     "ageBasedGoal": "Altersbasiertes Ziel",
-    "recommendedRange": "Empfohlen: {{min}}-{{max}} Stunden/Tag",
+    "recommendedRange": "Empfohlen: {{range}} Stunden/Tag",
     "napsPerDay": "{{min}}-{{max}} Nickerchen pro Tag",
     "quickGoals": "Schnellauswahl",
     "customHours": "Benutzerdefiniert (Stunden)",
@@ -1663,7 +1663,7 @@
       "breastfeedingChart": "Stillen",
       "breastfeedingChartSub": "gesamt pro Tag – letzte 7 Tage",
       "bottleChart": "Flaschenfütterung",
-      "bottleChartSub": "ml gesamt pro Tag – letzte 7 Tage",
+      "bottleChartSub": "{{unit}} gesamt pro Tag – letzte 7 Tage",
       "avgBetween": "Ø zwischen Fütterungen",
       "bottleVolumeTotal": "Flaschenmenge gesamt",
       "7days": "FÜTTERUNG — 7 TAGE"
@@ -1686,7 +1686,6 @@
       "weight": "Gewicht",
       "length": "Länge",
       "headCircumference": "Kopfumfang",
-      "percentile": "{{value}}.",
       "change": "+{{value}} diese Woche"
     },
     "pumping": {
@@ -1697,7 +1696,7 @@
       "totalSessions": "Sitzungen gesamt",
       "avgDailyOutput": "Ø Tagesmenge",
       "dailyVolume": "Tägliche Menge",
-      "dailyVolumeSub": "ml pro Tag – letzte 7 Tage",
+      "dailyVolumeSub": "{{unit}} pro Tag – letzte 7 Tage",
       "totalVolume": "Gesamtmenge",
       "7days": "ABPUMPEN — 7 TAGE"
     },
@@ -1719,12 +1718,11 @@
       "medsToday": "Medikamente heute",
       "vaccineProgress": "Impffortschritt",
       "recentSymptoms": "Aktuelle Symptome",
+      "range30DaysShort": "30 T",
+      "symptomCountShort": "{{count}}-mal",
       "recentEntries": "Letzte Einträge",
       "noReadings": "Keine Messungen",
-      "noEntries": "Noch keine Gesundheitsdaten",
-      "justNow": "Gerade eben",
-      "hoursAgo": "vor {{count}}h",
-      "daysAgo": "vor {{count}}T"
+      "noEntries": "Noch keine Gesundheitsdaten"
     },
     "common": {
       "past7Days": "Letzte 7 Tage",

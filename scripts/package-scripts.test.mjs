@@ -26,9 +26,13 @@ test("the canonical check command runs every maintained non-device suite once", 
   );
   assert.equal(
     packageJson.scripts["check:code"],
-    "npm run lint && npm run typecheck && npm run test:unit && npm run test:component -- --runInBand && npm run test:ci && npm run test:widget:swift && npm run test:production-gating"
+    "npm run lint && npm run typecheck && npm run test:unit && npm run test:local-dates && npm run test:component -- --runInBand && npm run test:ci && npm run test:widget:swift && npm run test:production-gating"
   );
   assert.equal(packageJson.scripts["test:unit"], "vitest run");
+  assert.equal(
+    packageJson.scripts["test:local-dates"],
+    "TZ=Pacific/Kiritimati vitest run src/utils/statistics-local-dates.test.ts src/utils/report-aggregator.test.ts && TZ=Pacific/Kiritimati jest --runInBand --runTestsByPath src/utils/tip-selector.component.test.tsx && TZ=America/New_York vitest run src/utils/statistics-local-dates.test.ts src/utils/report-aggregator.test.ts && TZ=America/New_York jest --runInBand --runTestsByPath src/utils/tip-selector.component.test.tsx"
+  );
   assert.match(vitestConfig, /include:\s*\["src\/\*\*\/\*\.test\.ts"/);
   assert.equal(
     packageJson.scripts["test:security"],

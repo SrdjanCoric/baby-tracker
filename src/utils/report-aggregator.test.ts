@@ -700,6 +700,28 @@ describe("aggregateTummyTime", () => {
     expect(stats.totalDays).toBe(2);
   });
 
+  it("combines sessions from the same caregiver calendar day when tracking goals", () => {
+    const afterMidnight = new Date(2026, 7, 8, 0, 15).toISOString();
+    const beforeMidnight = new Date(2026, 7, 8, 23, 15).toISOString();
+    const tummyTimes = [
+      createMockTummyTime({
+        startedAt: afterMidnight,
+        durationSeconds: 20 * 60,
+      }),
+      createMockTummyTime({
+        id: "t2",
+        startedAt: beforeMidnight,
+        durationSeconds: 20 * 60,
+      }),
+    ];
+    const startDate = new Date(2026, 7, 8, 0, 0, 0, 0);
+    const endDate = new Date(2026, 7, 8, 23, 59, 59, 999);
+
+    const stats = aggregateTummyTime(tummyTimes, startDate, endDate, 30);
+
+    expect(stats.daysGoalMet).toBe(1);
+  });
+
   it("handles empty tummy time data", () => {
     const stats = aggregateTummyTime(
       [],

@@ -181,7 +181,7 @@
     "newbornNote": "Obrasci vremena spavanja i buđenja obično se pojavljuju oko 3–4 meseca kako se cirkadijalni ritam bebe razvija.",
     "totalSleep": "Ukupno",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h preporučeno",
+    "recommended": "{{range}}h preporučeno",
     "dailySleep": "Dnevni san",
     "sleepSplit": "Sastav sna",
     "consistency": "± {{minutes}}m"
@@ -302,7 +302,7 @@
     "basedOnGuidelines": "Bazirano na AAP/Sleep Foundation smernicama za {{ageGroup}}",
     "customGoalNote": "Postavili ste prilagođeni cilj",
     "ageBasedGoal": "Cilj prema uzrastu",
-    "recommendedRange": "Preporučeno: {{min}}-{{max}} sati/dnevno",
+    "recommendedRange": "Preporučeno: {{range}} sati/dnevno",
     "napsPerDay": "{{min}}-{{max}} dremki dnevno",
     "quickGoals": "Brzi izbor",
     "customHours": "Prilagođeno (sati)",
@@ -1742,7 +1742,7 @@
       "breastfeedingChart": "Dojenje",
       "breastfeedingChartSub": "ukupno dnevno - poslednjih 7 dana",
       "bottleChart": "Flašica",
-      "bottleChartSub": "ukupno ml dnevno - poslednjih 7 dana",
+      "bottleChartSub": "ukupno {{unit}} dnevno - poslednjih 7 dana",
       "avgBetween": "Prosek između hranjenja",
       "bottleVolumeTotal": "Ukupno flašica",
       "7days": "HRANJENJE — 7 DANA"
@@ -1765,7 +1765,6 @@
       "weight": "Težina",
       "length": "Dužina",
       "headCircumference": "Obim glave",
-      "percentile": "{{value}}.",
       "change": "+{{value}} ove nedelje"
     },
     "pumping": {
@@ -1776,7 +1775,7 @@
       "totalSessions": "Ukupno sesija",
       "avgDailyOutput": "Prosek dnevno",
       "dailyVolume": "Dnevna količina",
-      "dailyVolumeSub": "ml dnevno - poslednjih 7 dana",
+      "dailyVolumeSub": "{{unit}} dnevno - poslednjih 7 dana",
       "totalVolume": "ukupna količina",
       "7days": "IZDAJANJE — 7 DANA"
     },
@@ -1798,12 +1797,11 @@
       "medsToday": "Lekovi danas",
       "vaccineProgress": "Napredak vakcinacije",
       "recentSymptoms": "Nedavni simptomi",
+      "range30DaysShort": "30 d",
+      "symptomCountShort": "{{count}} puta",
       "recentEntries": "Nedavni unosi",
       "noReadings": "Nema merenja",
-      "noEntries": "Nema zdravstvenih podataka",
-      "justNow": "Upravo",
-      "hoursAgo": "pre {{count}}h",
-      "daysAgo": "pre {{count}}d"
+      "noEntries": "Nema zdravstvenih podataka"
     },
     "common": {
       "past7Days": "Poslednjih 7 dana",

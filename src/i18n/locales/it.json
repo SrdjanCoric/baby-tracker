@@ -177,7 +177,7 @@
     "newbornNote": "I ritmi di nanna e sveglia emergono di solito intorno ai 3–4 mesi con lo sviluppo del ritmo circadiano del bambino.",
     "totalSleep": "Totale",
     "periodDays": "{{count}}g",
-    "recommended": "{{min}}-{{max}}h raccomandate",
+    "recommended": "{{range}}h raccomandate",
     "dailySleep": "Sonno giornaliero",
     "sleepSplit": "Composizione del sonno",
     "consistency": "± {{minutes}}m"
@@ -298,7 +298,7 @@
     "basedOnGuidelines": "Basato sulle linee guida AAP/Sleep Foundation per {{ageGroup}}",
     "customGoalNote": "Hai impostato un obiettivo personalizzato",
     "ageBasedGoal": "Obiettivo basato sull'età",
-    "recommendedRange": "Raccomandato: {{min}}-{{max}} ore/giorno",
+    "recommendedRange": "Raccomandato: {{range}} ore/giorno",
     "napsPerDay": "{{min}}-{{max}} pisolini al giorno",
     "quickGoals": "Selezione rapida",
     "customHours": "Personalizzato (ore)",
@@ -1667,7 +1667,7 @@
       "breastfeedingChart": "Allattamento",
       "breastfeedingChartSub": "totale al giorno - ultimi 7 giorni",
       "bottleChart": "Biberon",
-      "bottleChartSub": "ml totali al giorno - ultimi 7 giorni",
+      "bottleChartSub": "{{unit}} totali al giorno - ultimi 7 giorni",
       "avgBetween": "Media tra poppate",
       "bottleVolumeTotal": "Volume biberon totale",
       "7days": "POPPATE — 7 GIORNI"
@@ -1690,7 +1690,6 @@
       "weight": "Peso",
       "length": "Lunghezza",
       "headCircumference": "Circonferenza cranica",
-      "percentile": "p{{value}}",
       "change": "+{{value}} questa settimana"
     },
     "pumping": {
@@ -1701,7 +1700,7 @@
       "totalSessions": "Sessioni totali",
       "avgDailyOutput": "Media giornaliera",
       "dailyVolume": "Volume giornaliero",
-      "dailyVolumeSub": "ml al giorno - ultimi 7 giorni",
+      "dailyVolumeSub": "{{unit}} al giorno - ultimi 7 giorni",
       "totalVolume": "volume totale",
       "7days": "TIRALATTE — 7 GIORNI"
     },
@@ -1723,12 +1722,11 @@
       "medsToday": "Farmaci oggi",
       "vaccineProgress": "Progresso vaccinazioni",
       "recentSymptoms": "Sintomi recenti",
+      "range30DaysShort": "30 g",
+      "symptomCountShort": "{{count}} volte",
       "recentEntries": "Voci recenti",
       "noReadings": "Nessuna lettura",
-      "noEntries": "Nessun dato sulla salute",
-      "justNow": "Adesso",
-      "hoursAgo": "{{count}}h fa",
-      "daysAgo": "{{count}}g fa"
+      "noEntries": "Nessun dato sulla salute"
     },
     "common": {
       "past7Days": "Ultimi 7 giorni",
