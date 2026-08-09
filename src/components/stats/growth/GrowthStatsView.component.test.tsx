@@ -114,6 +114,21 @@ describe("GrowthStatsView", () => {
     expect(screen.getByText("16.67")).toBeTruthy();
   });
 
+  it("updates rendered measurements when the unit preference changes", () => {
+    mockHistory = [measurement("preference", { weightKg: 7, heightCm: 61.5 })];
+    const view = render(<GrowthStatsView />);
+
+    expect(screen.getByText("7.000")).toBeTruthy();
+    expect(screen.getByText("61.5")).toBeTruthy();
+
+    mockWeightUnit = "lbs";
+    mockHeightUnit = "in";
+    view.rerender(<GrowthStatsView />);
+
+    expect(screen.getByText("15.432")).toBeTruthy();
+    expect(screen.getByText("24.21")).toBeTruthy();
+  });
+
   it.each([
     { unit: "kg" as const, change: 100, expected: "↗ +100g stats.growth.change" },
     { unit: "kg" as const, change: -100, expected: "↘ -100g stats.growth.change" },

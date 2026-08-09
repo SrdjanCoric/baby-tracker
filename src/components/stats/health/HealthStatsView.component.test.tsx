@@ -113,6 +113,32 @@ describe("HealthStatsView", () => {
     ]);
   });
 
+  it("promotes a newly appended entry after the screen has already rendered", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-07T12:00:00.000Z"));
+    mockHealthEntries = [
+      healthEntry("initial", "medication", "2026-08-06T08:00:00.000Z", {
+        medicationName: "Initial medicine",
+      }),
+    ];
+    const view = render(<HealthStatsView />);
+
+    expect(screen.getByText("Initial medicine")).toBeTruthy();
+
+    mockHealthEntries = [
+      ...mockHealthEntries,
+      healthEntry("appended", "medication", "2026-08-07T08:00:00.000Z", {
+        medicationName: "Appended medicine",
+      }),
+    ];
+    view.rerender(<HealthStatsView />);
+
+    expect(screen.getAllByText("Appended medicine")).toHaveLength(2);
+    expect(
+      screen.getAllByTestId(/^health-recent-entry-/).map((row) => row.props.testID)
+    ).toEqual(["health-recent-entry-appended", "health-recent-entry-initial"]);
+  });
+
   it("omits the vaccination detail line when a dose number is unavailable", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-07T12:00:00.000Z"));
