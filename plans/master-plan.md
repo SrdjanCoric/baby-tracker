@@ -283,7 +283,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0076 · Warn on an overlapping feeding, pumping session, or tummy time (after 0073, 0075) → tasks/done/0076-warn-on-overlapping-non-sleep-records.md
 - [x] 0077 · Refresh the iOS Widget from a coherent activity summary → tasks/done/0077-refresh-widget-from-native-activity-summary.md
 - [x] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/done/0078-refresh-watch-summaries-after-timer-changes.md
-- [>] 0079 · Cap automatic rating prompts to three per rolling year and add a Rate App entry point → tasks/0079-improve-rating-prompts-and-rate-app-entry.md
+- [x] 0079 · Cap automatic rating prompts to three per rolling year and add a Rate App entry point → tasks/done/0079-improve-rating-prompts-and-rate-app-entry.md
 
 ## Workflow status
 
