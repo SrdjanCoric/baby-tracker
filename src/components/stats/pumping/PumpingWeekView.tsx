@@ -15,6 +15,7 @@ import {
   getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
+import { computeNiceBottleYAxis } from "@/utils/chart-axis";
 
 export function PumpingWeekView() {
   const { t, i18n } = useTranslation();
@@ -28,7 +29,7 @@ export function PumpingWeekView() {
   const textAccent = isDark ? ACTIVITY.pumping.textAccentDark : ACTIVITY.pumping.textAccent;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
-  const { stats, dailyMl } = useMemo(() => {
+  const { stats, dailyMl, yAxis } = useMemo(() => {
     const range = getDateRangeForPeriod("7days");
     const weekPumpings = filterEntriesByDateRange(pumpings, range, (e) => e.startedAt);
     const s = calculatePumpingStats(weekPumpings);
@@ -41,8 +42,16 @@ export function PumpingWeekView() {
       bars.push({ value: total, label });
     }
 
-    return { stats: s, dailyMl: bars };
-  }, [pumpings, locale]);
+    return {
+      stats: s,
+      dailyMl: bars,
+      yAxis: computeNiceBottleYAxis(
+        bars,
+        volumeUnit,
+        volumeUnit === "oz" ? 20 : 600
+      ),
+    };
+  }, [pumpings, locale, volumeUnit]);
 
   const avgDaily = Math.round(stats.totalVolumeMl / 7);
   const avgPerSession = stats.totalCount > 0
@@ -74,9 +83,9 @@ export function PumpingWeekView() {
           </Text>
           <BarChartWithAxis
             data={volumeUnit === "oz" ? dailyMl.map(d => ({ ...d, value: mlToOz(d.value) })) : dailyMl}
-            yAxisLabels={volumeUnit === "oz" ? [0, 5, 10, 15, 20] : [0, 150, 300, 450, 600]}
+            yAxisLabels={yAxis.labels}
             barColor={accentColor}
-            maxY={volumeUnit === "oz" ? 20 : 600}
+            maxY={yAxis.maxY}
             formatBarLabel={volumeUnit === "oz" ? (v) => `${v} oz` : undefined}
           />
         </View>

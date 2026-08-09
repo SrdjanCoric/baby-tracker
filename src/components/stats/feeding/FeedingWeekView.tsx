@@ -19,6 +19,7 @@ import {
 } from "@/utils/statistics";
 import { formatDuration } from "@/utils/time";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import { computeNiceBottleYAxis, computeNiceYAxis } from "@/utils/chart-axis";
 
 function makeMinuteFormatter(t: (key: string, opts?: Record<string, unknown>) => string) {
   return (v: number): string => {
@@ -26,38 +27,6 @@ function makeMinuteFormatter(t: (key: string, opts?: Record<string, unknown>) =>
     const m = v % 60;
     return formatDurationShort(h, m, t);
   };
-}
-
-function computeNiceBottleYAxis(data: { value: number }[], unit: "ml" | "oz") {
-  const dataMax = Math.max(...data.map((d) => d.value), 0);
-  if (unit === "oz") {
-    const maxOz = dataMax * 0.033814;
-    const ceiling = Math.ceil(Math.max(maxOz * 1.2, 4));
-    const niceSteps = [1, 2, 4, 5, 8, 10];
-    const step = niceSteps.find((s) => Math.ceil(ceiling / s) <= 5)
-      ?? Math.ceil(ceiling / 5);
-    const count = Math.ceil(ceiling / step);
-    const labels = Array.from({ length: count + 1 }, (_, i) => i * step);
-    return { maxY: count * step, labels };
-  }
-  const ceiling = Math.ceil(Math.max(dataMax * 1.2, 100));
-  const niceSteps = [25, 50, 100, 150, 200, 250];
-  const step = niceSteps.find((s) => Math.ceil(ceiling / s) <= 5)
-    ?? Math.ceil(ceiling / 5 / 50) * 50;
-  const count = Math.ceil(ceiling / step);
-  const labels = Array.from({ length: count + 1 }, (_, i) => i * step);
-  return { maxY: count * step, labels };
-}
-
-function computeNiceYAxis(data: { value: number }[], minMax = 60) {
-  const dataMax = Math.max(...data.map((d) => d.value), 0);
-  const ceiling = Math.ceil(Math.max(dataMax * 1.2, minMax));
-  const niceSteps = [15, 30, 45, 60, 90, 120];
-  const step = niceSteps.find((s) => Math.ceil(ceiling / s) <= 5)
-    ?? Math.ceil(ceiling / 5 / 60) * 60;
-  const count = Math.ceil(ceiling / step);
-  const labels = Array.from({ length: count + 1 }, (_, i) => i * step);
-  return { maxY: count * step, labels };
 }
 
 export function FeedingWeekView() {

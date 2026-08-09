@@ -15,6 +15,7 @@ import {
 } from "@/utils/statistics";
 import { formatDuration } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
+import { computeNiceYAxis } from "@/utils/chart-axis";
 
 export function TummyTimeWeekView() {
   const { t, i18n } = useTranslation();
@@ -27,7 +28,7 @@ export function TummyTimeWeekView() {
   const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
   const cardBg = isDark ? SURFACE.dark.card : SURFACE.light.card;
 
-  const { stats, dailyMin } = useMemo(() => {
+  const { stats, dailyMin, yAxis } = useMemo(() => {
     const range = getDateRangeForPeriod("7days");
     const weekTT = filterEntriesByDateRange(tummyTimes, range, (e) => e.startedAt);
     const s = calculateTummyTimeStats(weekTT);
@@ -40,7 +41,7 @@ export function TummyTimeWeekView() {
       bars.push({ value: Math.round(totalSec / 60), label });
     }
 
-    return { stats: s, dailyMin: bars };
+    return { stats: s, dailyMin: bars, yAxis: computeNiceYAxis(bars, 20) };
   }, [tummyTimes, locale]);
 
   const totalStr = formatDuration(stats.totalDurationSeconds, "short");
@@ -73,9 +74,9 @@ export function TummyTimeWeekView() {
           </Text>
           <BarChartWithAxis
             data={dailyMin}
-            yAxisLabels={[0, 5, 10, 15, 20]}
+            yAxisLabels={yAxis.labels}
             barColor={accentColor}
-            maxY={20}
+            maxY={yAxis.maxY}
             formatValue={(v) => `${v}m`}
           />
         </View>
