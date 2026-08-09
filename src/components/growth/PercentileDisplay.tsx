@@ -5,6 +5,7 @@ import {
   getPercentileClassificationLabel,
   type PercentileClassification,
 } from "@/types/growth-chart";
+import { formatPercentile } from "@/utils/growth-helpers";
 
 interface PercentileDisplayProps {
   percentile: number;
@@ -83,7 +84,7 @@ export function PercentileDisplay({
         <Text
           className={`text-sm font-semibold ${colors.text} dark:${colors.textDark}`}
         >
-          {Math.round(percentile)}th percentile
+          {formatPercentile(percentile)}
         </Text>
       </View>
     );
@@ -111,7 +112,7 @@ export function PercentileDisplay({
           <Text
             className={`text-sm font-semibold ${colors.text} dark:${colors.textDark}`}
           >
-            {Math.round(percentile)}th percentile
+            {formatPercentile(percentile)}
           </Text>
         </View>
 
