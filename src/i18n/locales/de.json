@@ -1722,10 +1722,7 @@
       "symptomCountShort": "{{count}}-mal",
       "recentEntries": "Letzte Einträge",
       "noReadings": "Keine Messungen",
-      "noEntries": "Noch keine Gesundheitsdaten",
-      "justNow": "Gerade eben",
-      "hoursAgo": "vor {{count}}h",
-      "daysAgo": "vor {{count}}T"
+      "noEntries": "Noch keine Gesundheitsdaten"
     },
     "common": {
       "past7Days": "Letzte 7 Tage",

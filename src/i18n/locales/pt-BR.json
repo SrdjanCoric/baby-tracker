@@ -1725,10 +1725,7 @@
       "symptomCountShort": "{{count}} vezes",
       "recentEntries": "Entradas Recentes",
       "noReadings": "Sem leituras",
-      "noEntries": "Sem dados de saúde ainda",
-      "justNow": "Agora mesmo",
-      "hoursAgo": "Há {{count}}h",
-      "daysAgo": "Há {{count}}d"
+      "noEntries": "Sem dados de saúde ainda"
     },
     "common": {
       "past7Days": "Últimos 7 Dias",

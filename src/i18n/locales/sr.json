@@ -1801,10 +1801,7 @@
       "symptomCountShort": "{{count}} puta",
       "recentEntries": "Nedavni unosi",
       "noReadings": "Nema merenja",
-      "noEntries": "Nema zdravstvenih podataka",
-      "justNow": "Upravo",
-      "hoursAgo": "pre {{count}}h",
-      "daysAgo": "pre {{count}}d"
+      "noEntries": "Nema zdravstvenih podataka"
     },
     "common": {
       "past7Days": "Poslednjih 7 dana",

@@ -1722,10 +1722,7 @@
       "symptomCountShort": "{{count}}×",
       "recentEntries": "Recent Entries",
       "noReadings": "No readings",
-      "noEntries": "No health data yet",
-      "justNow": "Just now",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago"
+      "noEntries": "No health data yet"
     },
     "common": {
       "past7Days": "Past 7 Days",
