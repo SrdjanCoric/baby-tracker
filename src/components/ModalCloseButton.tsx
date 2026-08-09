@@ -1,4 +1,4 @@
-import { Pressable, Text } from "react-native";
+import { Platform, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { exitModal } from "@/navigation";
 
@@ -18,7 +18,12 @@ export function ModalCloseButton({ accessibilityLabel, testID }: ModalCloseButto
       accessibilityLabel={accessibilityLabel}
       testID={testID}
     >
-      <Text className="text-xl text-content-secondary dark:text-content-dark-secondary">×</Text>
+      <Text
+        className="text-xl text-content-secondary dark:text-content-dark-secondary"
+        style={Platform.OS === "ios" ? { opacity: 0.45 } : undefined}
+      >
+        ×
+      </Text>
     </Pressable>
   );
 }
