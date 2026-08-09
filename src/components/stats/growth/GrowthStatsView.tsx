@@ -116,6 +116,7 @@ export function GrowthStatsView() {
     data: MeasurementData,
     unit: string,
     changeUnit: string,
+    valueKind: "weight" | "length",
     isLast: boolean
   ) => (
     <View
@@ -141,7 +142,9 @@ export function GrowthStatsView() {
         <View style={{ alignItems: "flex-end" }}>
           <View style={{ flexDirection: "row", alignItems: "baseline" }}>
             <Text style={{ fontSize: 20, fontWeight: "700", color: textPrimary }}>
-              {data.value.toFixed(3)}
+              {valueKind === "weight"
+                ? data.value.toFixed(3)
+                : (Math.round((data.value + Number.EPSILON) * 100) / 100).toString()}
             </Text>
             <Text style={{ fontSize: 13, color: textSecondary, marginLeft: 2 }}>{unit}</Text>
           </View>
@@ -191,20 +194,29 @@ export function GrowthStatsView() {
       data: convertValue(measurements.weight, "weight"),
       unit: weightUnit,
       changeUnit: isImperialWeight ? "oz" : "g",
+      valueKind: "weight" as const,
     },
     measurements.height && {
       label: heightLabel,
       data: convertValue(measurements.height, "height"),
       unit: heightUnit,
       changeUnit: heightUnit,
+      valueKind: "length" as const,
     },
     measurements.head && {
       label: t("stats.growth.headCircumference"),
       data: convertValue(measurements.head, "height"),
       unit: heightUnit,
       changeUnit: heightUnit,
+      valueKind: "length" as const,
     },
-  ].filter(Boolean) as { label: string; data: MeasurementData; unit: string; changeUnit: string }[];
+  ].filter(Boolean) as {
+    label: string;
+    data: MeasurementData;
+    unit: string;
+    changeUnit: string;
+    valueKind: "weight" | "length";
+  }[];
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
@@ -229,7 +241,16 @@ export function GrowthStatsView() {
             )}
           </View>
 
-          {rows.map((row, i) => renderRow(row.label, row.data, row.unit, row.changeUnit, i === rows.length - 1))}
+          {rows.map((row, i) =>
+            renderRow(
+              row.label,
+              row.data,
+              row.unit,
+              row.changeUnit,
+              row.valueKind,
+              i === rows.length - 1
+            )
+          )}
         </View>
 
         <Pressable
