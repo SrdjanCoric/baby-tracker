@@ -16,7 +16,7 @@ import {
   getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
-import { computeNiceYAxis } from "@/utils/chart-axis";
+import { computeNiceCountYAxis } from "@/utils/chart-axis";
 
 export function DiapersWeekView() {
   const { t, i18n } = useTranslation();
@@ -57,7 +57,7 @@ export function DiapersWeekView() {
     const totals = bars.map((bar) => ({
       value: bar.segments.reduce((sum, segment) => sum + segment.value, 0),
     }));
-    return { stats: s, chartData: bars, yAxis: computeNiceYAxis(totals, 12) };
+    return { stats: s, chartData: bars, yAxis: computeNiceCountYAxis(totals, 12) };
   }, [diapers, locale, diaperColors.wet, diaperColors.dirty, diaperColors.mixed]);
 
   const avgPerDay = (stats.totalCount / 7).toFixed(1);

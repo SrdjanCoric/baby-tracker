@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { computeNiceBottleYAxis, computeNiceYAxis } from "./chart-axis";
+import {
+  computeNiceBottleYAxis,
+  computeNiceCountYAxis,
+  computeNiceYAxis,
+} from "./chart-axis";
 
 describe("statistics chart axes", () => {
   it.each([
-    { chart: "diapers below", value: 6, minimum: 12, expectedMax: 15 },
-    { chart: "diapers equal", value: 12, minimum: 12, expectedMax: 15 },
-    { chart: "diapers above", value: 30, minimum: 12, expectedMax: 45 },
+    { peak: 4, labels: [0, 3, 6, 9, 12] },
+    { peak: 8, labels: [0, 3, 6, 9, 12] },
+    { peak: 12, labels: [0, 3, 6, 9, 12, 15] },
+    { peak: 30, labels: [0, 10, 20, 30, 40] },
+  ])("uses count-sized labels for a peak of $peak diaper changes", ({ peak, labels }) => {
+    expect(computeNiceCountYAxis([{ value: peak }], 12).labels).toEqual(labels);
+  });
+
+  it.each([
     { chart: "tummy time below", value: 10, minimum: 20, expectedMax: 30 },
     { chart: "tummy time equal", value: 20, minimum: 20, expectedMax: 30 },
     { chart: "tummy time above", value: 45, minimum: 20, expectedMax: 60 },

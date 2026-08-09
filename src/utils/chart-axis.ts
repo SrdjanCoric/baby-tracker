@@ -36,3 +36,15 @@ export function computeNiceYAxis(data: { value: number }[], minimum = 60) {
   const labels = Array.from({ length: count + 1 }, (_, index) => index * step);
   return { maxY: count * step, labels };
 }
+
+export function computeNiceCountYAxis(data: { value: number }[], minimum = 12) {
+  const dataMax = Math.max(...data.map((d) => d.value), 0);
+  const ceiling = Math.ceil(Math.max(dataMax * 1.2, minimum));
+  const niceSteps = [2, 3, 5, 10, 15];
+  const step =
+    niceSteps.find((candidate) => Math.ceil(ceiling / candidate) <= 5) ??
+    Math.ceil(ceiling / 5 / 5) * 5;
+  const count = Math.ceil(ceiling / step);
+  const labels = Array.from({ length: count + 1 }, (_, index) => index * step);
+  return { maxY: count * step, labels };
+}

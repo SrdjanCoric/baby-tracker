@@ -66,10 +66,12 @@ jest.mock("./StackedBarChartWithAxis", () => {
   return {
     StackedBarChartWithAxis: ({
       maxY,
+      yAxisLabels,
       data,
       formatBarLabel,
     }: {
       maxY: number;
+      yAxisLabels: number[];
       data: Array<{ segments: Array<{ value: number }> }>;
       formatBarLabel?: (value: number) => string;
     }) => {
@@ -81,6 +83,7 @@ jest.mock("./StackedBarChartWithAxis", () => {
       return (
         <>
           <Text testID="stacked-chart-max">{maxY}</Text>
+          <Text testID="stacked-chart-axis-labels">{yAxisLabels.join(",")}</Text>
           <Text testID="stacked-chart-value">{value}</Text>
           <Text testID="stacked-chart-label">
             {formatBarLabel?.(value) ?? String(value)}
@@ -111,9 +114,14 @@ describe("weekly chart axes", () => {
     jest.useRealTimers();
   });
 
-  it("rescales diapers above the former 12-change ceiling", () => {
+  it.each([
+    { peak: 4, maxY: 12, labels: "0,3,6,9,12" },
+    { peak: 8, maxY: 12, labels: "0,3,6,9,12" },
+    { peak: 12, maxY: 15, labels: "0,3,6,9,12,15" },
+    { peak: 30, maxY: 40, labels: "0,10,20,30,40" },
+  ])("uses count-sized diaper labels for a peak of $peak changes", ({ peak, maxY, labels }) => {
     const changedAt = new Date(2026, 7, 7, 8).toISOString();
-    mockDiapers = Array.from({ length: 30 }, (_, index) => ({
+    mockDiapers = Array.from({ length: peak }, (_, index) => ({
       id: `diaper-${index}`,
       babyId: "baby-1",
       type: "wet",
@@ -124,7 +132,8 @@ describe("weekly chart axes", () => {
 
     render(<DiapersWeekView />);
 
-    expect(screen.getByTestId("stacked-chart-max").props.children).toBe(45);
+    expect(screen.getByTestId("stacked-chart-max").props.children).toBe(maxY);
+    expect(screen.getByTestId("stacked-chart-axis-labels").props.children).toBe(labels);
   });
 
   it("rescales pumping above the former 600 ml and 20 oz ceilings", () => {
