@@ -12,14 +12,9 @@ import {
   filterEntriesByDateRange,
   calculatePumpingStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
 
 export function PumpingWeekView() {
   const { t, i18n } = useTranslation();
@@ -41,7 +36,7 @@ export function PumpingWeekView() {
     const breakdown = calculateDailyBreakdown<StoredPumpingEntry>(weekPumpings, (e) => e.startedAt, 7);
     const bars: { value: number; label: string }[] = [];
     for (const [dateKey, entries] of breakdown) {
-      const label = getWeekdayLabel(dateKey, locale);
+      const label = getWeekdayLabelFromDateKey(dateKey, locale);
       const total = entries.reduce((sum, p) => sum + (p.volumeMl || 0), 0);
       bars.push({ value: total, label });
     }

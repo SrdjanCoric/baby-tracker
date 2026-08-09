@@ -15,15 +15,10 @@ import {
   filterEntriesByDateRange,
   calculateExtendedFeedingStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import { formatDuration } from "@/utils/time";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
 
 function makeMinuteFormatter(t: (key: string, opts?: Record<string, unknown>) => string) {
   return (v: number): string => {
@@ -92,7 +87,7 @@ export function FeedingWeekView() {
     const formulaColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
 
     for (const [dateKey, entries] of breakdown) {
-      const label = getWeekdayLabel(dateKey, locale);
+      const label = getWeekdayLabelFromDateKey(dateKey, locale);
       let breastSec = 0;
       let bmVol = 0;
       let formulaVol = 0;

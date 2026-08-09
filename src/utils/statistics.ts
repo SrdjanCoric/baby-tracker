@@ -235,6 +235,20 @@ export interface DailyBreakdown {
   diaperCount: number;
 }
 
+export function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function getWeekdayLabelFromDateKey(dateKey: string, locale: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 12).toLocaleDateString(locale, {
+    weekday: "short",
+  });
+}
+
 export function calculateWeeklyBreakdown<T>(
   entries: T[],
   getDateField: (entry: T) => string,
@@ -245,13 +259,13 @@ export function calculateWeeklyBreakdown<T>(
   for (let i = 6; i >= 0; i--) {
     const date = new Date(referenceDate);
     date.setDate(date.getDate() - i);
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = toLocalDateKey(date);
     breakdown.set(dateKey, []);
   }
 
   for (const entry of entries) {
     const entryDate = new Date(getDateField(entry));
-    const dateKey = entryDate.toISOString().split("T")[0];
+    const dateKey = toLocalDateKey(entryDate);
     if (breakdown.has(dateKey)) {
       breakdown.get(dateKey)!.push(entry);
     }
@@ -304,13 +318,13 @@ export function calculateDailyBreakdown<T>(
   for (let i = daysBack - 1; i >= 0; i--) {
     const date = new Date(referenceDate);
     date.setDate(date.getDate() - i);
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = toLocalDateKey(date);
     breakdown.set(dateKey, []);
   }
 
   for (const entry of entries) {
     const entryDate = new Date(getDateField(entry));
-    const dateKey = entryDate.toISOString().split("T")[0];
+    const dateKey = toLocalDateKey(entryDate);
     if (breakdown.has(dateKey)) {
       breakdown.get(dateKey)!.push(entry);
     }

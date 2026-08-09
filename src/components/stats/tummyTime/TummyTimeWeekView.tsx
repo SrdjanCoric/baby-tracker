@@ -11,15 +11,10 @@ import {
   filterEntriesByDateRange,
   calculateTummyTimeStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import { formatDuration } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
 
 export function TummyTimeWeekView() {
   const { t, i18n } = useTranslation();
@@ -40,7 +35,7 @@ export function TummyTimeWeekView() {
     const breakdown = calculateDailyBreakdown<StoredTummyTimeEntry>(weekTT, (e) => e.startedAt, 7);
     const bars: { value: number; label: string }[] = [];
     for (const [dateKey, entries] of breakdown) {
-      const label = getWeekdayLabel(dateKey, locale);
+      const label = getWeekdayLabelFromDateKey(dateKey, locale);
       const totalSec = entries.reduce((sum, tt) => sum + (tt.durationSeconds || 0), 0);
       bars.push({ value: Math.round(totalSec / 60), label });
     }

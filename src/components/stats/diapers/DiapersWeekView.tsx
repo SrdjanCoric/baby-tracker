@@ -13,14 +13,9 @@ import {
   filterEntriesByDateRange,
   calculateDiaperStats,
   calculateDailyBreakdown,
+  getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
 import type { StoredDiaperEntry } from "@/services/diaper-storage";
-
-function getWeekdayLabel(dateKey: string, locale: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return date.toLocaleDateString(locale, { weekday: "short" });
-}
 
 export function DiapersWeekView() {
   const { t, i18n } = useTranslation();
@@ -49,7 +44,7 @@ export function DiapersWeekView() {
         else if (d.type === "mixed") mixed++;
       }
       bars.push({
-        label: getWeekdayLabel(dateKey, locale),
+        label: getWeekdayLabelFromDateKey(dateKey, locale),
         segments: [
           { value: wet, color: diaperColors.wet },
           { value: dirty, color: diaperColors.dirty },
