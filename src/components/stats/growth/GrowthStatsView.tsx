@@ -7,7 +7,7 @@ import { useGrowth } from "@/contexts/growth-context";
 import { useBaby } from "@/contexts/baby-context";
 import { ACTIVITY, SURFACE, TEXT as TEXT_COLORS, BORDER } from "@/constants/colors";
 import { calculatePercentileFromMeasurement, calculateAgeInMonths } from "@/utils/percentile-calculator";
-import { isUnderTwoYears, getGrowthTrendArrow } from "@/utils/growth-helpers";
+import { formatPercentile, isUnderTwoYears, getGrowthTrendArrow } from "@/utils/growth-helpers";
 import { useUnits } from "@/contexts";
 import { kgToLbs, cmToInches } from "@/utils/growth";
 
@@ -159,7 +159,7 @@ export function GrowthStatsView() {
             }}
           >
             <Text style={{ fontSize: 12, fontWeight: "600", color: textAccent }}>
-              {Math.round(data.percentile)}th
+              {formatPercentile(data.percentile)}
             </Text>
           </View>
         )}

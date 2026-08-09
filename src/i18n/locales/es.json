@@ -1690,7 +1690,6 @@
       "weight": "Peso",
       "length": "Longitud",
       "headCircumference": "Circunferencia craneal",
-      "percentile": "p{{value}}",
       "change": "+{{value}} esta semana"
     },
     "pumping": {

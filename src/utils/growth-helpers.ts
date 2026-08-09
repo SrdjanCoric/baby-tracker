@@ -18,3 +18,7 @@ export function formatWeightChange(changeGrams: number, t?: (key: string) => str
   const sign = changeGrams > 0 ? "+" : "";
   return `${sign}${changeGrams}g`;
 }
+
+export function formatPercentile(percentile: number): string {
+  return `P${Math.round(percentile)}`;
+}

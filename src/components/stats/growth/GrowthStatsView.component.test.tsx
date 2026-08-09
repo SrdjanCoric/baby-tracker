@@ -5,6 +5,7 @@ import type { StoredGrowthEntry } from "@/services/growth-storage";
 let mockHistory: StoredGrowthEntry[] = [];
 let mockWeightUnit: "kg" | "lbs" = "kg";
 let mockHeightUnit: "cm" | "in" = "cm";
+let mockPercentile: number | null = null;
 const mockGetMeasurementHistory = jest.fn(() => mockHistory);
 
 jest.mock("react-i18next", () => ({
@@ -24,7 +25,7 @@ jest.mock("@/contexts/growth-context", () => ({
 }));
 
 jest.mock("@/contexts/baby-context", () => ({
-  useBaby: () => ({ selectedBaby: { id: "baby-1" } }),
+  useBaby: () => ({ selectedBaby: { id: "baby-1", birthDate: "2026-01-01" } }),
 }));
 
 jest.mock("@/contexts", () => ({
@@ -32,7 +33,8 @@ jest.mock("@/contexts", () => ({
 }));
 
 jest.mock("@/utils/percentile-calculator", () => ({
-  calculatePercentileFromMeasurement: () => null,
+  calculatePercentileFromMeasurement: () =>
+    mockPercentile === null ? null : { percentile: mockPercentile },
   calculateAgeInMonths: () => 0,
 }));
 
@@ -68,6 +70,7 @@ describe("GrowthStatsView", () => {
   beforeEach(() => {
     mockWeightUnit = "kg";
     mockHeightUnit = "cm";
+    mockPercentile = null;
   });
 
   it("shows metric length and head measurements with at most two decimals", () => {
@@ -123,5 +126,14 @@ describe("GrowthStatsView", () => {
     render(<GrowthStatsView />);
 
     expect(screen.getByText(expected)).toBeTruthy();
+  });
+
+  it("renders percentiles with language-neutral P notation", () => {
+    mockPercentile = 1;
+    mockHistory = [measurement("percentile", { weightKg: 7 })];
+
+    render(<GrowthStatsView />);
+
+    expect(screen.getByText("P1")).toBeTruthy();
   });
 });

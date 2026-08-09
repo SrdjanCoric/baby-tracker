@@ -1686,7 +1686,6 @@
       "weight": "Gewicht",
       "length": "Länge",
       "headCircumference": "Kopfumfang",
-      "percentile": "{{value}}.",
       "change": "+{{value}} diese Woche"
     },
     "pumping": {

@@ -1765,7 +1765,6 @@
       "weight": "Težina",
       "length": "Dužina",
       "headCircumference": "Obim glave",
-      "percentile": "{{value}}.",
       "change": "+{{value}} ove nedelje"
     },
     "pumping": {

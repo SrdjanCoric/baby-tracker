@@ -1689,7 +1689,6 @@
       "weight": "Peso",
       "length": "Comprimento",
       "headCircumference": "Perímetro Cefálico",
-      "percentile": "{{value}}º",
       "change": "+{{value}} esta semana"
     },
     "pumping": {
