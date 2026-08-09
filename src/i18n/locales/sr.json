@@ -181,7 +181,7 @@
     "newbornNote": "Obrasci vremena spavanja i buđenja obično se pojavljuju oko 3–4 meseca kako se cirkadijalni ritam bebe razvija.",
     "totalSleep": "Ukupno",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h preporučeno",
+    "recommended": "{{range}}h preporučeno",
     "dailySleep": "Dnevni san",
     "sleepSplit": "Sastav sna",
     "consistency": "± {{minutes}}m"
@@ -302,7 +302,7 @@
     "basedOnGuidelines": "Bazirano na AAP/Sleep Foundation smernicama za {{ageGroup}}",
     "customGoalNote": "Postavili ste prilagođeni cilj",
     "ageBasedGoal": "Cilj prema uzrastu",
-    "recommendedRange": "Preporučeno: {{min}}-{{max}} sati/dnevno",
+    "recommendedRange": "Preporučeno: {{range}} sati/dnevno",
     "napsPerDay": "{{min}}-{{max}} dremki dnevno",
     "quickGoals": "Brzi izbor",
     "customHours": "Prilagođeno (sati)",

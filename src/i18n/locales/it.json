@@ -177,7 +177,7 @@
     "newbornNote": "I ritmi di nanna e sveglia emergono di solito intorno ai 3–4 mesi con lo sviluppo del ritmo circadiano del bambino.",
     "totalSleep": "Totale",
     "periodDays": "{{count}}g",
-    "recommended": "{{min}}-{{max}}h raccomandate",
+    "recommended": "{{range}}h raccomandate",
     "dailySleep": "Sonno giornaliero",
     "sleepSplit": "Composizione del sonno",
     "consistency": "± {{minutes}}m"
@@ -298,7 +298,7 @@
     "basedOnGuidelines": "Basato sulle linee guida AAP/Sleep Foundation per {{ageGroup}}",
     "customGoalNote": "Hai impostato un obiettivo personalizzato",
     "ageBasedGoal": "Obiettivo basato sull'età",
-    "recommendedRange": "Raccomandato: {{min}}-{{max}} ore/giorno",
+    "recommendedRange": "Raccomandato: {{range}} ore/giorno",
     "napsPerDay": "{{min}}-{{max}} pisolini al giorno",
     "quickGoals": "Selezione rapida",
     "customHours": "Personalizzato (ore)",

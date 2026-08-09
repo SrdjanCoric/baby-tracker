@@ -6,7 +6,7 @@ import { formatDuration, formatTime, formatDurationShort, type TranslateFn } fro
 import type { TimeFormat } from "@/utils/time";
 import { calculateSleepSummary, buildDailySleepBars } from "@/utils/sleep-patterns";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
-import { getDefaultSleepGoalForAge } from "@/utils/sleepGoals";
+import { formatSleepHoursRange, getDefaultSleepGoalForAge } from "@/utils/sleepGoals";
 import { SleepDailyChart } from "./SleepDailyChart";
 import { TrendChart } from "./TrendChart";
 import { MetricCard, AverageRow, NapScheduleRow } from "./MetricCard";
@@ -203,7 +203,9 @@ export function SummaryView({
   const avgNapDurStr = formatDuration(data.avgNapDurationSeconds, "short");
 
   const goalSubtitle = goalRange
-    ? t("sleepPatterns.recommended", { min: goalRange.minHours, max: goalRange.maxHours })
+    ? t("sleepPatterns.recommended", {
+        range: formatSleepHoursRange(goalRange.minHours, goalRange.maxHours),
+      })
     : undefined;
 
   const bedtimeSubtitle =

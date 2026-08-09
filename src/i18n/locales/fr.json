@@ -173,7 +173,7 @@
     "newbornNote": "Les habitudes de coucher et de réveil apparaissent généralement vers 3-4 mois, lorsque le rythme circadien de votre bébé se développe.",
     "totalSleep": "Total",
     "periodDays": "{{count}}j",
-    "recommended": "{{min}}-{{max}}h recommandées",
+    "recommended": "{{range}}h recommandées",
     "dailySleep": "Sommeil quotidien",
     "sleepSplit": "Répartition du sommeil",
     "consistency": "± {{minutes}}m"
@@ -294,7 +294,7 @@
     "basedOnGuidelines": "Basé sur les recommandations AAP/Sleep Foundation pour les {{ageGroup}}",
     "customGoalNote": "Vous avez défini un objectif personnalisé",
     "ageBasedGoal": "Objectif basé sur l'âge",
-    "recommendedRange": "Recommandé : {{min}}-{{max}} heures/jour",
+    "recommendedRange": "Recommandé : {{range}} heures/jour",
     "napsPerDay": "{{min}}-{{max}} siestes par jour",
     "quickGoals": "Sélection rapide",
     "customHours": "Personnalisé (heures)",

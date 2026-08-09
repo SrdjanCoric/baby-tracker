@@ -176,7 +176,7 @@
     "newbornNote": "Padrões de hora de dormir e acordar geralmente surgem por volta de 3-4 meses conforme o ritmo circadiano do seu bebê se desenvolve.",
     "totalSleep": "Total",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h recomendado",
+    "recommended": "{{range}}h recomendado",
     "dailySleep": "Sono Diário",
     "sleepSplit": "Composição do Sono",
     "consistency": "± {{minutes}}m"
@@ -297,7 +297,7 @@
     "basedOnGuidelines": "Com base nas diretrizes AAP/Sleep Foundation para {{ageGroup}}",
     "customGoalNote": "Você definiu uma meta personalizada",
     "ageBasedGoal": "Meta baseada em idade",
-    "recommendedRange": "Recomendado: {{min}}-{{max}} horas/dia",
+    "recommendedRange": "Recomendado: {{range}} horas/dia",
     "napsPerDay": "{{min}}-{{max}} sonecas por dia",
     "quickGoals": "Seleção Rápida",
     "customHours": "Personalizado (horas)",

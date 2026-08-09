@@ -173,7 +173,7 @@
     "newbornNote": "Schlafens- und Aufwachzeitmuster entwickeln sich typischerweise ab 3–4 Monaten, wenn sich der zirkadiane Rhythmus deines Babys entwickelt.",
     "totalSleep": "Gesamt",
     "periodDays": "{{count}}T",
-    "recommended": "{{min}}-{{max}}h empfohlen",
+    "recommended": "{{range}}h empfohlen",
     "dailySleep": "Täglicher Schlaf",
     "sleepSplit": "Schlafzusammensetzung",
     "consistency": "± {{minutes}}m"
@@ -294,7 +294,7 @@
     "basedOnGuidelines": "Basierend auf Richtlinien der AAP/Sleep Foundation für {{ageGroup}}",
     "customGoalNote": "Du hast ein eigenes Ziel festgelegt",
     "ageBasedGoal": "Altersbasiertes Ziel",
-    "recommendedRange": "Empfohlen: {{min}}-{{max}} Stunden/Tag",
+    "recommendedRange": "Empfohlen: {{range}} Stunden/Tag",
     "napsPerDay": "{{min}}-{{max}} Nickerchen pro Tag",
     "quickGoals": "Schnellauswahl",
     "customHours": "Benutzerdefiniert (Stunden)",

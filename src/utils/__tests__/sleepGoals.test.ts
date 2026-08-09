@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  SLEEP_AGE_GROUPS,
   getDefaultWakeWindowConfig,
   getPresetPillsForAge,
   generateSlotsForNapCount,
@@ -9,6 +10,7 @@ import {
   getNapsForAge,
   getSleepGoalInfo,
   checkSleepMilestoneCrossing,
+  formatSleepHoursRange,
 } from "../sleepGoals";
 
 function daysAgo(days: number): Date {
@@ -243,5 +245,67 @@ describe("existing sleepGoals functions", () => {
     if (crossing) {
       expect(crossing.previousGroup.label).not.toBe(crossing.newGroup.label);
     }
+  });
+});
+
+describe("sleep recommendation ranges and targets", () => {
+  it("keeps clinical ranges separate from product-defined targets", () => {
+    expect(
+      SLEEP_AGE_GROUPS.map((group) => ({
+        label: group.label,
+        range: [group.totalSleepHoursMin, group.totalSleepHoursMax],
+        targetMinutes: group.targetMinutes,
+      }))
+    ).toEqual([
+      { label: "0-3 months", range: [14, 17], targetMinutes: 15 * 60 },
+      { label: "3-5 months", range: [12, 16], targetMinutes: 14 * 60 },
+      { label: "6-8 months", range: [12, 16], targetMinutes: 13.5 * 60 },
+      { label: "9-12 months", range: [12, 16], targetMinutes: 13 * 60 },
+      { label: "13-18 months", range: [11, 14], targetMinutes: 12.5 * 60 },
+      { label: "19+ months", range: [11, 14], targetMinutes: 11.5 * 60 },
+    ]);
+  });
+
+  it("returns each explicit target instead of the displayed range midpoint", () => {
+    const now = new Date("2026-06-01T12:00:00.000Z");
+    const birthDate = new Date("2026-01-01T12:00:00.000Z");
+
+    expect(getDefaultSleepGoalForAge(birthDate, now)).toEqual({
+      minHours: 12,
+      maxHours: 16,
+      targetMinutes: 13.5 * 60,
+    });
+  });
+
+  it("uses a non-equal recommendation range for missing or invalid birth dates", () => {
+    expect(getSleepGoalInfo(undefined, null)).toMatchObject({
+      minHours: 12,
+      maxHours: 16,
+      targetMinutes: 14 * 60,
+    });
+
+    expect(
+      getDefaultSleepGoalForAge(
+        new Date("2027-01-01T00:00:00.000Z"),
+        new Date("2026-01-01T00:00:00.000Z")
+      )
+    ).toEqual({ minHours: 12, maxHours: 16, targetMinutes: 14 * 60 });
+  });
+
+  it("suggests a milestone update when equal ranges have different targets", () => {
+    const crossing = checkSleepMilestoneCrossing(
+      new Date("2026-01-01T12:00:00.000Z"),
+      new Date("2026-05-31T12:00:00.000Z"),
+      new Date("2026-06-01T12:00:00.000Z")
+    );
+
+    expect(crossing?.previousGroup.label).toBe("3-5 months");
+    expect(crossing?.newGroup.label).toBe("6-8 months");
+    expect(crossing?.shouldSuggestGoalUpdate).toBe(true);
+  });
+
+  it("collapses equal range endpoints to one displayed value", () => {
+    expect(formatSleepHoursRange(14, 14)).toBe("14");
+    expect(formatSleepHoursRange(12, 16)).toBe("12–16");
   });
 });

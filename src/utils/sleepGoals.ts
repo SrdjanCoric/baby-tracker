@@ -7,6 +7,7 @@ export interface SleepAgeGroup {
   maxAgeDays: number;
   totalSleepHoursMin: number;
   totalSleepHoursMax: number;
+  targetMinutes: number;
   napsMin: number;
   napsMax: number;
   wakeWindowMinMinutes: number;
@@ -54,6 +55,7 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     maxAgeDays: 90,
     totalSleepHoursMin: 14,
     totalSleepHoursMax: 17,
+    targetMinutes: 15 * 60,
     napsMin: 4,
     napsMax: 5,
     wakeWindowMinMinutes: 30,
@@ -64,8 +66,9 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     labelKey: "ageGroups.sleep.3-5months",
     minAgeDays: 91,
     maxAgeDays: 150,
-    totalSleepHoursMin: 14,
-    totalSleepHoursMax: 15,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 14 * 60,
     napsMin: 3,
     napsMax: 4,
     wakeWindowMinMinutes: 60,
@@ -76,8 +79,9 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     labelKey: "ageGroups.sleep.6-8months",
     minAgeDays: 151,
     maxAgeDays: 240,
-    totalSleepHoursMin: 14,
-    totalSleepHoursMax: 14,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 13.5 * 60,
     napsMin: 2,
     napsMax: 3,
     wakeWindowMinMinutes: 120,
@@ -88,8 +92,9 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     labelKey: "ageGroups.sleep.9-12months",
     minAgeDays: 241,
     maxAgeDays: 365,
-    totalSleepHoursMin: 13,
-    totalSleepHoursMax: 14,
+    totalSleepHoursMin: 12,
+    totalSleepHoursMax: 16,
+    targetMinutes: 13 * 60,
     napsMin: 2,
     napsMax: 2,
     wakeWindowMinMinutes: 150,
@@ -100,8 +105,9 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     labelKey: "ageGroups.sleep.13-18months",
     minAgeDays: 366,
     maxAgeDays: 540,
-    totalSleepHoursMin: 13,
+    totalSleepHoursMin: 11,
     totalSleepHoursMax: 14,
+    targetMinutes: 12.5 * 60,
     napsMin: 1,
     napsMax: 2,
     wakeWindowMinMinutes: 180,
@@ -113,7 +119,8 @@ export const SLEEP_AGE_GROUPS: SleepAgeGroup[] = [
     minAgeDays: 541,
     maxAgeDays: Infinity,
     totalSleepHoursMin: 11,
-    totalSleepHoursMax: 12,
+    totalSleepHoursMax: 14,
+    targetMinutes: 11.5 * 60,
     napsMin: 0,
     napsMax: 1,
     wakeWindowMinMinutes: 240,
@@ -162,18 +169,16 @@ export function getDefaultSleepGoalForAge(
 
   if (!ageGroup) {
     return {
-      minHours: 14,
-      maxHours: 14,
+      minHours: 12,
+      maxHours: 16,
       targetMinutes: 14 * 60,
     };
   }
 
-  const midpointHours = (ageGroup.totalSleepHoursMin + ageGroup.totalSleepHoursMax) / 2;
-
   return {
     minHours: ageGroup.totalSleepHoursMin,
     maxHours: ageGroup.totalSleepHoursMax,
-    targetMinutes: midpointHours * 60,
+    targetMinutes: ageGroup.targetMinutes,
   };
 }
 
@@ -224,14 +229,10 @@ export function checkSleepMilestoneCrossing(
   if (!previousGroup || !currentGroup) return null;
 
   if (previousGroup.label !== currentGroup.label) {
-    const prevTarget =
-      (previousGroup.totalSleepHoursMin + previousGroup.totalSleepHoursMax) / 2;
-    const newTarget = (currentGroup.totalSleepHoursMin + currentGroup.totalSleepHoursMax) / 2;
-
     return {
       previousGroup,
       newGroup: currentGroup,
-      shouldSuggestGoalUpdate: prevTarget !== newTarget,
+      shouldSuggestGoalUpdate: previousGroup.targetMinutes !== currentGroup.targetMinutes,
     };
   }
 
@@ -247,8 +248,8 @@ export function getSleepGoalInfo(
     const ageGroup = birthDate ? getSleepAgeGroupForBaby(birthDate, now) : null;
     return {
       targetMinutes: customGoalMinutes,
-      minHours: ageGroup?.totalSleepHoursMin ?? 14,
-      maxHours: ageGroup?.totalSleepHoursMax ?? 14,
+      minHours: ageGroup?.totalSleepHoursMin ?? 12,
+      maxHours: ageGroup?.totalSleepHoursMax ?? 16,
       source: "custom",
       ageGroup,
     };
@@ -257,8 +258,8 @@ export function getSleepGoalInfo(
   if (!birthDate) {
     return {
       targetMinutes: 14 * 60,
-      minHours: 14,
-      maxHours: 14,
+      minHours: 12,
+      maxHours: 16,
       source: "age_based",
       ageGroup: null,
     };
@@ -274,6 +275,10 @@ export function getSleepGoalInfo(
     source: "age_based",
     ageGroup,
   };
+}
+
+export function formatSleepHoursRange(minHours: number, maxHours: number): string {
+  return minHours === maxHours ? `${minHours}` : `${minHours}–${maxHours}`;
 }
 
 export interface WakeWindowProgression {

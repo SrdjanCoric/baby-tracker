@@ -177,7 +177,7 @@
     "newbornNote": "Los patrones de hora de dormir y despertar suelen aparecer alrededor de los 3–4 meses a medida que se desarrolla el ritmo circadiano del bebé.",
     "totalSleep": "Total",
     "periodDays": "{{count}}d",
-    "recommended": "{{min}}-{{max}}h recomendado",
+    "recommended": "{{range}}h recomendado",
     "dailySleep": "Sueño diario",
     "sleepSplit": "Composición del sueño",
     "consistency": "± {{minutes}}m"
@@ -298,7 +298,7 @@
     "basedOnGuidelines": "Basado en las guías de AAP/Sleep Foundation para {{ageGroup}}",
     "customGoalNote": "Has establecido una meta personalizada",
     "ageBasedGoal": "Meta según la edad",
-    "recommendedRange": "Recomendado: {{min}}-{{max}} horas/día",
+    "recommendedRange": "Recomendado: {{range}} horas/día",
     "napsPerDay": "{{min}}-{{max}} siestas por día",
     "quickGoals": "Selección rápida",
     "customHours": "Personalizado (horas)",

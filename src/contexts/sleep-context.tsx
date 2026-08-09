@@ -893,11 +893,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             milestoneCrossing?.shouldSuggestGoalUpdate &&
             !dismissedMilestones.includes(milestoneCrossing.newGroup.label)
           ) {
-            const newGoalMinutes =
-              ((milestoneCrossing.newGroup.totalSleepHoursMin +
-                milestoneCrossing.newGroup.totalSleepHoursMax) /
-                2) *
-              60;
+            const newGoalMinutes = milestoneCrossing.newGroup.targetMinutes;
             dispatch({ type: "SET_SUGGESTED_GOAL", payload: newGoalMinutes });
             dispatch({ type: "SET_SHOW_MILESTONE_SUGGESTION", payload: true });
           }
