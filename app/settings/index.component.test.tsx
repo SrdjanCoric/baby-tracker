@@ -11,22 +11,7 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockDismissAll = jest.fn();
-const mockStoreReviewRequest = jest.fn();
-const mockStorageSetItem = jest.fn();
 let mockCanGoBack = false;
-
-jest.mock("expo-store-review", () => ({
-  requestReview: () => mockStoreReviewRequest(),
-}));
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  __esModule: true,
-  default: {
-    getItem: jest.fn(),
-    setItem: (...args: unknown[]) => mockStorageSetItem(...args),
-    removeItem: jest.fn(),
-  },
-}));
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -119,11 +104,10 @@ describe("SettingsScreen close control", () => {
 
       fireEvent.press(screen.getByTestId("rate-app-setting"));
 
+      expect(openURL).toHaveBeenCalledTimes(1);
       expect(openURL).toHaveBeenCalledWith(
         "itms-apps://apps.apple.com/app/id6758142736?action=write-review"
       );
-      expect(mockStoreReviewRequest).not.toHaveBeenCalled();
-      expect(mockStorageSetItem).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(Platform, "OS", {
         value: originalPlatformOS,
