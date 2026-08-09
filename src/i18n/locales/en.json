@@ -1718,6 +1718,8 @@
       "medsToday": "Medications Today",
       "vaccineProgress": "Vaccine Progress",
       "recentSymptoms": "Recent Symptoms",
+      "range30DaysShort": "30d",
+      "symptomCountShort": "{{count}}×",
       "recentEntries": "Recent Entries",
       "noReadings": "No readings",
       "noEntries": "No health data yet",

@@ -13,7 +13,7 @@ import {
   calculateDailyBreakdown,
   getWeekdayLabelFromDateKey,
 } from "@/utils/statistics";
-import { formatDuration } from "@/utils/time";
+import { formatDuration, formatDurationShort, type TranslateFn } from "@/utils/time";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import { computeNiceYAxis } from "@/utils/chart-axis";
 
@@ -23,6 +23,8 @@ export function TummyTimeWeekView() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const locale = i18n.language;
+  const formatMinutes = (value: number) =>
+    formatDurationShort(0, value, t as TranslateFn);
 
   const accentColor = isDark ? ACTIVITY.tummyTime.accentDark : ACTIVITY.tummyTime.accent;
   const textAccent = isDark ? ACTIVITY.tummyTime.textAccentDark : ACTIVITY.tummyTime.textAccent;
@@ -59,8 +61,11 @@ export function TummyTimeWeekView() {
         value={totalStr}
         subtitle={t("stats.tummyTime.totalAcrossSessions", { count: stats.sessionCount })}
         details={[
-          { label: t("stats.tummyTime.avgDailyTotal"), value: `${avgDaily} min` },
-          { label: t("stats.tummyTime.avgSessionLength"), value: `${avgSession} min` },
+          { label: t("stats.tummyTime.avgDailyTotal"), value: formatMinutes(avgDaily) },
+          {
+            label: t("stats.tummyTime.avgSessionLength"),
+            value: formatMinutes(Number(avgSession)),
+          },
         ]}
       />
 
@@ -77,7 +82,7 @@ export function TummyTimeWeekView() {
             yAxisLabels={yAxis.labels}
             barColor={accentColor}
             maxY={yAxis.maxY}
-            formatValue={(v) => `${v}m`}
+            formatValue={formatMinutes}
           />
         </View>
       )}

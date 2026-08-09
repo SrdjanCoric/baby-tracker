@@ -1722,6 +1722,8 @@
       "medsToday": "Farmaci oggi",
       "vaccineProgress": "Progresso vaccinazioni",
       "recentSymptoms": "Sintomi recenti",
+      "range30DaysShort": "30 g",
+      "symptomCountShort": "{{count}} volte",
       "recentEntries": "Voci recenti",
       "noReadings": "Nessuna lettura",
       "noEntries": "Nessun dato sulla salute",

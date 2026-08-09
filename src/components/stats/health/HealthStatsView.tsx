@@ -313,7 +313,9 @@ export function HealthStatsView() {
             >
               {t("stats.health.recentSymptoms")}
             </Text>
-            <Text style={{ fontSize: 11, color: textTertiary }}>30d</Text>
+            <Text style={{ fontSize: 11, color: textTertiary }}>
+              {t("stats.health.range30DaysShort")}
+            </Text>
           </View>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -343,7 +345,8 @@ export function HealthStatsView() {
                     }}
                   >
                     <Text style={{ fontSize: 12, color: textSecondary }}>
-                      {getSymptomName(symptom, t)} {count > 1 ? `${count}x` : ""}
+                      {getSymptomName(symptom, t)}{" "}
+                      {count > 1 ? t("stats.health.symptomCountShort", { count }) : ""}
                     </Text>
                   </View>
                 );

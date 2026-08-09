@@ -12,7 +12,9 @@ jest.mock("react-i18next", () => ({
     t: (key: string, options?: { unit?: string }) =>
       key === "stats.feeding.bottleChartSub" || key === "stats.pumping.dailyVolumeSub"
         ? `${key}:${options?.unit}`
-        : key,
+        : key === "common.durationM"
+          ? `${(options as { m?: number })?.m} localized-min`
+          : key,
     i18n: { language: "en" },
   }),
 }));
@@ -38,10 +40,12 @@ jest.mock("./BarChartWithAxis", () => {
       maxY,
       data,
       formatBarLabel,
+      formatValue,
     }: {
       maxY: number;
       data: Array<{ value: number }>;
       formatBarLabel?: (value: number) => string;
+      formatValue?: (value: number) => string;
     }) => {
       const value = Math.max(...data.map((item) => item.value));
       return (
@@ -49,6 +53,9 @@ jest.mock("./BarChartWithAxis", () => {
           <Text testID="bar-chart-max">{maxY}</Text>
           <Text testID="bar-chart-value">{value}</Text>
           <Text testID="bar-chart-label">{formatBarLabel?.(value) ?? String(value)}</Text>
+          <Text testID="bar-chart-value-label">
+            {formatValue?.(value) ?? String(value)}
+          </Text>
         </>
       );
     },
@@ -158,6 +165,9 @@ describe("weekly chart axes", () => {
     render(<TummyTimeWeekView />);
 
     expect(screen.getByTestId("bar-chart-max").props.children).toBe(60);
+    expect(screen.getByTestId("bar-chart-value-label").props.children).toBe(
+      "45 localized-min"
+    );
   });
 
   it.each(["ml", "oz"] as const)(

@@ -1797,6 +1797,8 @@
       "medsToday": "Lekovi danas",
       "vaccineProgress": "Napredak vakcinacije",
       "recentSymptoms": "Nedavni simptomi",
+      "range30DaysShort": "30 d",
+      "symptomCountShort": "{{count}} puta",
       "recentEntries": "Nedavni unosi",
       "noReadings": "Nema merenja",
       "noEntries": "Nema zdravstvenih podataka",

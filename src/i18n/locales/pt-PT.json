@@ -1720,6 +1720,8 @@
       "medsToday": "Medicações Hoje",
       "vaccineProgress": "Progresso de Vacinação",
       "recentSymptoms": "Sintomas Recentes",
+      "range30DaysShort": "30 d",
+      "symptomCountShort": "{{count}} vezes",
       "recentEntries": "Entradas Recentes",
       "noReadings": "Sem leituras",
       "noEntries": "Sem dados de saúde ainda",

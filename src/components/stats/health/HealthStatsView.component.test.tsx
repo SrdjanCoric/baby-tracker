@@ -8,6 +8,8 @@ jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, options?: { count?: number; number?: number }) => {
       if (key === "health.doseLabel") return `Dose ${options?.number}`;
+      if (key === "stats.health.range30DaysShort") return "localized-30-days";
+      if (key === "stats.health.symptomCountShort") return `${options?.count} localized-count`;
       return options?.count === undefined ? key : `${key}:${options.count}`;
     },
   }),
@@ -144,5 +146,23 @@ describe("HealthStatsView", () => {
     expect(screen.getByText("time.monthCount:2")).toBeTruthy();
     expect(screen.getByText("time.monthCount:11")).toBeTruthy();
     expect(screen.getByText("time.yearCount:1")).toBeTruthy();
+  });
+
+  it("uses localized short labels for the symptom range and repeated counts", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-07T12:00:00.000Z"));
+    mockHealthEntries = [
+      healthEntry("cough-1", "symptom", "2026-08-06T08:00:00.000Z", {
+        symptoms: ["cough"],
+      }),
+      healthEntry("cough-2", "symptom", "2026-08-05T08:00:00.000Z", {
+        symptoms: ["cough"],
+      }),
+    ];
+
+    render(<HealthStatsView />);
+
+    expect(screen.getByText("localized-30-days")).toBeTruthy();
+    expect(screen.getByText("health.symptom.cough 2 localized-count")).toBeTruthy();
   });
 });
