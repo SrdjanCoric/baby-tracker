@@ -754,13 +754,7 @@ final class AppGroupWidgetSnapshotStore: WidgetSnapshotStoring, @unchecked Senda
            let bytes = value.data(using: .utf8) {
             return bytes
         }
-        guard let legacy = userDefaults.string(forKey: "widgetData"),
-              let bytes = legacy.data(using: .utf8),
-              let decoded = try? WidgetSnapshotDecoder.decodeCache(bytes),
-              decoded.data.babyId == babyId else {
-            return nil
-        }
-        return bytes
+        return nil
     }
 
     func readLegacySnapshot() -> Data? {
