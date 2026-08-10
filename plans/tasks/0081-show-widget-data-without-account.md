@@ -43,16 +43,16 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 
 ## Human checkpoints
 
-- [ ] [verify] On a simulator or device with no account: start a timer in the app, add the widget,
+- [x] [verify] On a simulator or device with no account: start a timer in the app, add the widget,
       background the app. · Expected: widget shows the running timer ticking and the day's totals
-      from the local cache. · Failure: blank or placeholder widget. · Reason: no Swift test target
+      from the local cache. · Confirmed by owner 2026-08-10: working. · Reason: no Swift test target
       exists for the widget extension; WidgetKit rendering can only be observed on
       simulator/device.
 
 ## Acceptance criteria
 
-- [ ] An accountless user's widget shows timers and totals from the app-written cache.
-- [ ] A signed-out user's widget shows the last app-written cache instead of going blank.
+- [x] An accountless user's widget shows timers and totals from the app-written cache.
+- [x] A signed-out user's widget shows the last app-written cache instead of going blank.
 - [x] A signed-in user's widget behavior is unchanged.
 
 ## Implementation proof
@@ -93,4 +93,4 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 - README: Updated `### iOS Native Integrations` to document locally cached widget data for accountless and signed-out users, including live accountless timers and non-ticking timers left by sign-out.
 - README audit: `write-well` audit pass 1 completed over the affected bullet; no findings. No em dashes, filler, staging, redundancy, or vague claims.
 - Final focused automated proof (2026-08-10 23:50 CEST): Swift decoder/coordinator harness passed; `src/services/widget-data-service.test.ts` passed 7/7; affected ESLint passed; `git diff --check` passed. Logs: `/tmp/agent-workflows/e2f8af45fd34/dbee47e8abc5/final-swift.log`, `final-widget-data-vitest.log`, `final-eslint.log`, `final-diff-check.log`.
-- Manual `[verify]`: pending simulator/device confirmation. The Foundation-only Swift harness cannot render WidgetKit or exercise App Group timeline updates. Keep accountless and signed-out acceptance items unchecked until that proof is confirmed.
+- Manual `[verify]` (2026-08-10): Owner confirmed WidgetKit behavior works on simulator/device. Accountless widget shows local-cache totals and its live timer ticks; signed-out widget retains cache without a departed timer ticking. This confirms the two rendering-dependent acceptance criteria.
