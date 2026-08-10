@@ -882,14 +882,19 @@ func refreshWidgetSnapshot(reloadTimelines: Bool = true) async -> WidgetDataMode
 }
 
 func loadWidgetData() -> WidgetDataModel? {
-    guard let runtime = widgetSnapshotRuntime,
-          let bytes = WidgetSnapshotSelector.snapshotBytes(
-            identity: runtime.identity.currentIdentity(),
-            store: runtime.store
-          ) else {
+    guard let runtime = widgetSnapshotRuntime else { return nil }
+    let identity = runtime.identity.currentIdentity()
+    guard let bytes = WidgetSnapshotSelector.snapshotBytes(
+        identity: identity,
+        store: runtime.store
+    ),
+        let decoded = try? WidgetSnapshotDecoder.decodeCache(bytes) else {
         return nil
     }
-    return try? WidgetSnapshotDecoder.decodeCache(bytes).data
+    guard identity == nil else { return decoded.data }
+    // Credentials are absent: a timer left running at sign-out would tick forever on the
+    // Home Screen with no in-app action able to clear it, so strip live timers here.
+    return WidgetSnapshotSelector.sanitizeCredentialless(decoded.data)
 }
 
 func isUserAuthenticated() -> Bool {

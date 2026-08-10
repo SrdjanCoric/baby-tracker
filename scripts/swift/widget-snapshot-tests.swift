@@ -181,6 +181,28 @@ enum WidgetSnapshotTests {
             "credentialless loading did not select the app-written legacy cache"
         )
 
+        let staleTimerSnapshot = try WidgetSnapshotDecoder.decodeCache(legacy).data
+        require(
+            staleTimerSnapshot.activeTimer?.type == "sleep",
+            "legacy fixture did not carry a running sleep timer to strip"
+        )
+        let credentiallessSnapshot = WidgetSnapshotSelector.sanitizeCredentialless(
+            staleTimerSnapshot
+        )
+        require(
+            credentiallessSnapshot.activeTimer == nil && credentiallessSnapshot.activeTimers == [],
+            "credentialless branch kept an active timer that can tick forever after sign-out"
+        )
+        require(
+            credentiallessSnapshot.activities.sleep.isActive == false,
+            "credentialless branch left sleep marked active after sign-out"
+        )
+        require(
+            credentiallessSnapshot.babyId == staleTimerSnapshot.babyId
+                && credentiallessSnapshot.babyName == staleTimerSnapshot.babyName,
+            "sanitizer dropped identity fields while stripping timers"
+        )
+
         var incoherent = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
         incoherent["activeTimer"] = [
             "type": "sleep",

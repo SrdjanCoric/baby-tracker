@@ -324,6 +324,17 @@ enum WidgetSnapshotSelector {
         }
         return store.readSnapshot(for: identity.babyId)
     }
+
+    /// Strip live timers and the running-sleep flag from a cached snapshot before rendering it
+    /// without credentials. A timer that was running at sign-out otherwise ticks forever on the
+    /// Home Screen with no in-app action able to clear it.
+    static func sanitizeCredentialless(_ data: WidgetDataModel) -> WidgetDataModel {
+        var credentialless = data
+        credentialless.activeTimers = []
+        credentialless.activeTimer = nil
+        credentialless.activities.sleep.isActive = false
+        return credentialless
+    }
 }
 
 protocol WidgetSnapshotIdentityReading: Sendable {
