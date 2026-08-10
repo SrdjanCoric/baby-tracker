@@ -69,3 +69,8 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 - Focused pre-review validation covers the Foundation-only Widget snapshot harness, the Widget data
   service unit suite, affected-file ESLint, and `git diff --check`. The WidgetKit device/simulator
   checkpoint remains open for `finish-task`.
+
+## Review findings accepted as security risk
+
+- accepted (security): TR-3 — Sign-out preserves the unbound App Group widgetData cache, so on a shared device the next account sees the previous account's widget data. — Single-owner device assumption; shared-device cross-account leak treated as out of scope for this task.
+- accepted (security): TR-5 — Returning data while signed out un-blocks TogglePauseActivityIntent, which issues an unauthenticated toggle-timer request naming the previous account's babyId. — Residual risk accepted; shared-device/intent-triggerable unauthenticated call out of scope for this task.
