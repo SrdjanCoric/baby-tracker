@@ -1,4 +1,5 @@
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
+import type { TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
 
 export interface WidgetActivityData {
   feeding: {
@@ -56,6 +57,9 @@ export interface ActiveTimerData {
   isRemote?: boolean;
   isPaused?: boolean;
   accumulatedSeconds?: number;
+  /** Sync provenance for the widget timer-list merge: only "accountless" or
+   * "offline" timers have no server row and must survive a server snapshot. */
+  lockState?: TimerLockReconciliationState;
 }
 
 export interface WidgetData {
@@ -66,6 +70,10 @@ export interface WidgetData {
     startedAt: string;
     endsAt: string;
   };
+  /** Freshness stamp for an app-written local snapshot, in the same clock
+   * domain as `updatedAt`. Present (with `schemaVersion` absent) marks a
+   * `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh. */
+  localAsOf?: string;
   babyId: string;
   babyName: string;
   activities: WidgetActivityData;
@@ -75,7 +83,7 @@ export interface WidgetData {
 }
 
 export interface DecodedWidgetActivitySnapshot {
-  kind: "legacy" | "versioned";
+  kind: "legacy" | "local" | "versioned";
   data: WidgetData;
 }
 
@@ -108,6 +116,13 @@ function decodeTimer(value: unknown): ActiveTimerData | null | undefined {
   if (value.isPaused !== undefined && typeof value.isPaused !== "boolean") return undefined;
   if (value.accumulatedSeconds !== undefined && !isFiniteNumber(value.accumulatedSeconds)) {
     return undefined;
+  }
+  if (value.lockState !== undefined) {
+    const lockState = value.lockState;
+    if (typeof lockState !== "string"
+      || !["accountless", "offline", "reconciling", "owned", "conflicted"].includes(lockState)) {
+      return undefined;
+    }
   }
   return value as unknown as ActiveTimerData;
 }
@@ -185,11 +200,14 @@ export function decodeWidgetActivitySnapshotJson(
     return null;
   }
   if (!isObject(value)) return null;
-  const isLegacy = value.schemaVersion === undefined;
+  const hasSchemaVersion = value.schemaVersion !== undefined;
+  const localAsOf = value.localAsOf;
+  const isLocal = !hasSchemaVersion && typeof localAsOf === "string";
+  const isLegacy = !hasSchemaVersion && !isLocal;
   if (typeof value.babyId !== "string"
     || typeof value.babyName !== "string"
     || typeof value.updatedAt !== "string"
-    || !hasValidActivities(value.activities, isLegacy)) {
+    || !hasValidActivities(value.activities, isLegacy || isLocal)) {
     return null;
   }
 
@@ -213,7 +231,9 @@ export function decodeWidgetActivitySnapshotJson(
   if (activeTimer !== null && !timersEqual(activeTimer, canonicalTimer)) return null;
   if (activeTimer === null && canonicalTimer !== null) return null;
 
-  if (!isLegacy) {
+  if (!hasSchemaVersion) {
+    if (isLocal && typeof localAsOf !== "string") return null;
+  } else {
     if (value.schemaVersion !== 1
       || typeof value.serverAsOf !== "string"
       || typeof value.timezone !== "string"
@@ -225,7 +245,8 @@ export function decodeWidgetActivitySnapshotJson(
   }
 
   const decodedData = value as unknown as WidgetData;
-  const data = isLegacy
+  const fillLegacySleep = isLegacy || isLocal;
+  const data = fillLegacySleep
     ? {
         ...decodedData,
         activities: {
@@ -241,7 +262,7 @@ export function decodeWidgetActivitySnapshotJson(
     : decodedData;
 
   return {
-    kind: isLegacy ? "legacy" : "versioned",
+    kind: hasSchemaVersion ? "versioned" : isLocal ? "local" : "legacy",
     data: {
       ...data,
       activeTimer: canonicalTimer,

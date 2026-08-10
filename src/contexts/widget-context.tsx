@@ -183,6 +183,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         timerInstanceId: feedingTimer.timerInstanceId,
         context: feedingTimer.side,
         isPaused: feedingTimer.isPaused || undefined,
+        lockState: feedingTimer.lockState,
       };
       if (feedingTimer.isPaused) {
         const elapsed = feedingTimer.pausedAt
@@ -199,6 +200,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         timerInstanceId: sleepTimer.timerInstanceId,
         context: sleepTimer.sleepType,
         isPaused: sleepTimer.isPaused || undefined,
+        lockState: sleepTimer.lockState,
       };
       if (sleepTimer.isPaused) {
         const elapsed = sleepTimer.pausedAt
@@ -215,6 +217,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         timerInstanceId: pumpingTimer.timerInstanceId,
         context: pumpingTimer.side,
         isPaused: pumpingTimer.isPaused || undefined,
+        lockState: pumpingTimer.lockState,
       };
       if (pumpingTimer.isPaused) {
         const elapsed = pumpingTimer.pausedAt
@@ -230,6 +233,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         startTime: tummyTimeTimer.startTime.toISOString(),
         timerInstanceId: tummyTimeTimer.timerInstanceId,
         isPaused: tummyTimeTimer.isPaused || undefined,
+        lockState: tummyTimeTimer.lockState,
       };
       if (tummyTimeTimer.isPaused) {
         const elapsed = tummyTimeTimer.pausedAt
@@ -272,13 +276,16 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
 
     const activeTimer = activeTimers.length > 0 ? activeTimers[0] : null;
 
+    const localAsOf = new Date().toISOString();
+
     return {
       babyId: selectedBaby.id,
       babyName: selectedBaby.name,
       activities,
       activeTimer,
       activeTimers,
-      updatedAt: new Date().toISOString(),
+      localAsOf,
+      updatedAt: localAsOf,
     };
   }, [
     selectedBaby,

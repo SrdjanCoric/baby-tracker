@@ -3,6 +3,7 @@
 **Branch**: `feature/preserve-local-timers-across-widget-refreshes`
 **Depends on**: 0081
 **Source**: `handoffs/main/widget-refresh-and-credential-renewal.md` (2026-08-10 investigation), Part 3
+**Execution classification**: `code` · **Validation tier**: `focused` · **TDD applicable**: yes
 
 ## What to build
 
@@ -48,12 +49,60 @@ Scope is the widget only. The Watch equivalent is task 0085.
 
 ## Implementation work
 
-- [ ] Test-first on the TypeScript side: the local widget write carries a freshness stamp
+- [x] Test-first on the TypeScript side: the local widget write carries a freshness stamp
       comparable to `serverAsOf` (extend `src/services/widget-data-service.ts` and its tests).
-- [ ] In `WidgetActivitySnapshot.swift`, make the decoder recognize the stamped local write
+- [x] In `WidgetActivitySnapshot.swift`, make the decoder recognize the stamped local write
       (instead of `.legacy`) and implement the timer-list merge in `performRefresh` per the fix
       shape above.
-- [ ] Keep wholesale replacement for server-owned fields (totals, last times, wake windows).
+- [x] Keep wholesale replacement for server-owned fields (totals, last times, wake windows).
+
+## Implementation evidence
+
+Freshness semantics (resolved per the investigation's open contract):
+
+- A new **`.local`** snapshot kind is recognized when `schemaVersion` is absent and a string
+  `localAsOf` is present. `WidgetData.localAsOf` is stamped by `buildWidgetData` in the same
+  clock domain as `updatedAt` (one `new Date().toISOString()` feeds both). A cache lacking
+  both `schemaVersion` and `localAsOf` stays `.legacy`, so running binaries and old caches
+  keep their behavior.
+- `ActiveTimerData.lockState` (the `TimerLockReconciliationState` union) is propagated from
+  each running timer's `lockState`; remote-locked timers (added with `isRemote: true`) carry
+  no `lockState` and remain server-owned.
+- Swift `performRefresh` merges the timer list: response timers are kept as-is; a prior timer
+  survives when its `lockState` is `accountless`/`offline` (no server row) **or** when
+  `prior.localAsOf` is newer than `response.serverAsOf` (the write-then-refresh race).  Remote timers and timers of a type already present in the response are never merged in.
+  `activities.sleep.isActive` is reset from the merged timer list so `validateVersioned`
+  accepts the stored merged bytes.
+- Server-owned fields (totals, last times, wake windows) still come wholesale from the
+  response; only the timer list is merged.
+
+RED/GREEN cycles observed:
+
+1. TS decoder `classifies an app-written stamped cache as a local snapshot` — RED `legacy` vs
+   `local`, GREEN after the `kind: "local"` branch + `localAsOf`/`lockState` fields in
+   `src/services/widget-activity-snapshot.ts`.
+2. Component `stamps the local write and propagates each timer's lockState` — RED
+   `localAsOf` undefined, GREEN after `buildWidgetData` stamps `localAsOf` and forwards each
+   timer's `lockState`.
+3. Swift `decodeCache` of `local-stamped.json` — RED compile error (no `.local`/`localAsOf`/
+   `lockState`), GREEN after the Swift model + decoder additions.
+4. Swift merge — offline timer survives a newer server snapshot, the write-then-refresh race
+   keeps a newer local-owned timer, and a server-stopped remote timer is still dropped; RED
+   under wholesale replace, GREEN after `mergeTimers` plus the `sleep.isActive` reset.
+
+Validation (focused tier, logs in `/tmp/agent-workflows/e2f8af45fd34/9567f0a1f7e5/`):
+
+- `npm run typecheck` → 0 (`typecheck.log`).
+- `npm run lint` → 0 (`lint.log`).
+- vitest: `widget-activity-snapshot`, `widget-data-service`, `native/widget-stop-intent-order`,
+  `native/watch-summary-wiring`, `security/watch-service-privacy` → 24 passed (`unit-affected.log`).
+- jest: `widget-context.component`, `useWidgetStopHandler`, `useWatchMessageHandler`,
+  `watch-realtime-baby-selection` → 45 passed (`jest-affected.log`).
+- `npm run test:widget:swift` → widget snapshot harness `PASS`, watch summary harness passed
+  (`swift-green.log`).
+
+The `[verify]` simulator/device checkpoint stays unchecked by design; the merge/refresh cycle
+is only observable under WidgetKit on a simulator/device and has no Swift XCUITest target.
 
 ## Human checkpoints
 

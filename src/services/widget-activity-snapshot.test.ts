@@ -10,7 +10,8 @@ type FixtureName =
   | "versioned"
   | "versioned-weight-only"
   | "versioned-missing-nap-count"
-  | "versioned-missing-morning-pending";
+  | "versioned-missing-morning-pending"
+  | "local-stamped";
 
 function fixture(name: FixtureName): string {
   return readFileSync(
@@ -80,6 +81,15 @@ describe("widget activity snapshot decoder", () => {
     ] as const) {
       expect(decodeWidgetActivitySnapshotJson(fixture(name))).toBeNull();
     }
+  });
+
+  it("classifies an app-written stamped cache as a local snapshot, not legacy", () => {
+    const decoded = decodeWidgetActivitySnapshotJson(fixture("local-stamped"));
+
+    expect(decoded?.kind).toBe("local");
+    expect(decoded?.data.localAsOf).toBe("2026-08-08T10:01:00.000Z");
+    expect(decoded?.data.activeTimers).toHaveLength(1);
+    expect(decoded?.data.activeTimers[0].lockState).toBe("offline");
   });
 
   it("rejects a non-boolean newborn wake-window requirement", () => {

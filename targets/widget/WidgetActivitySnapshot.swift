@@ -77,6 +77,9 @@ struct ActiveTimerData: Codable, Equatable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    /// Sync provenance for the widget timer-list merge. Only "accountless" or
+    /// "offline" have no server row and must survive a server snapshot refresh.
+    var lockState: String?
 }
 
 struct WidgetLocalDay: Codable, Equatable {
@@ -89,6 +92,10 @@ struct WidgetDataModel: Codable, Equatable {
     var serverAsOf: String?
     var timezone: String?
     var localDay: WidgetLocalDay?
+    /// Freshness stamp for an app-written local snapshot, in the same clock
+    /// domain as `updatedAt`. Present (with `schemaVersion` absent) marks a
+    /// `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh.
+    var localAsOf: String?
     var babyId: String
     var babyName: String
     var activities: WidgetActivityData
@@ -101,6 +108,7 @@ struct WidgetDataModel: Codable, Equatable {
         case serverAsOf
         case timezone
         case localDay
+        case localAsOf
         case babyId
         case babyName
         case activities
@@ -114,6 +122,7 @@ struct WidgetDataModel: Codable, Equatable {
         serverAsOf: String? = nil,
         timezone: String? = nil,
         localDay: WidgetLocalDay? = nil,
+        localAsOf: String? = nil,
         babyId: String,
         babyName: String,
         activities: WidgetActivityData,
@@ -125,6 +134,7 @@ struct WidgetDataModel: Codable, Equatable {
         self.serverAsOf = serverAsOf
         self.timezone = timezone
         self.localDay = localDay
+        self.localAsOf = localAsOf
         self.babyId = babyId
         self.babyName = babyName
         self.activities = activities
@@ -140,6 +150,7 @@ struct WidgetDataModel: Codable, Equatable {
         serverAsOf = try container.decodeIfPresent(String.self, forKey: .serverAsOf)
         timezone = try container.decodeIfPresent(String.self, forKey: .timezone)
         localDay = try container.decodeIfPresent(WidgetLocalDay.self, forKey: .localDay)
+        localAsOf = try container.decodeIfPresent(String.self, forKey: .localAsOf)
         babyId = try container.decode(String.self, forKey: .babyId)
         babyName = try container.decode(String.self, forKey: .babyName)
         activities = try container.decode(WidgetActivityData.self, forKey: .activities)
@@ -169,6 +180,7 @@ struct WidgetDataModel: Codable, Equatable {
         try container.encodeIfPresent(serverAsOf, forKey: .serverAsOf)
         try container.encodeIfPresent(timezone, forKey: .timezone)
         try container.encodeIfPresent(localDay, forKey: .localDay)
+        try container.encodeIfPresent(localAsOf, forKey: .localAsOf)
         try container.encode(babyId, forKey: .babyId)
         try container.encode(babyName, forKey: .babyName)
         try container.encode(activities, forKey: .activities)
@@ -227,6 +239,7 @@ private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
 
 enum WidgetSnapshotKind: Equatable {
     case legacy
+    case local
     case versioned
 }
 
@@ -258,6 +271,9 @@ enum WidgetSnapshotDecoder {
         data.activities.sleep.napCountToday = data.activities.sleep.napCountToday ?? 0
         data.activities.sleep.morningConfirmationPending =
             data.activities.sleep.morningConfirmationPending ?? false
+        if data.localAsOf != nil {
+            return DecodedWidgetSnapshot(kind: .local, data: data)
+        }
         return DecodedWidgetSnapshot(kind: .legacy, data: data)
     }
 
@@ -439,14 +455,28 @@ actor WidgetSnapshotCoordinator {
             guard !isOlder(response, than: prior) else {
                 return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
             }
-            if responseBytes == priorBytes {
-                return WidgetSnapshotRefreshOutcome(data: response, displayChanged: false)
+
+            var merged = response
+            let mergedTimerList = mergeTimers(prior: prior, into: response)
+            merged.activeTimers = mergedTimerList
+            merged.activeTimer = mergedTimerList.first
+            merged.activities.sleep.isActive = mergedTimerList.contains { $0.type == "sleep" }
+
+            let mergedBytes: Data
+            if mergedTimerList == (response.activeTimers ?? []) {
+                mergedBytes = responseBytes
+            } else {
+                mergedBytes = try JSONEncoder().encode(merged)
             }
 
-            let shouldReload = !isDisplayEquivalent(response, to: prior)
-            try store.writeSnapshot(responseBytes, for: babyId)
+            if mergedBytes == priorBytes {
+                return WidgetSnapshotRefreshOutcome(data: merged, displayChanged: false)
+            }
+
+            let shouldReload = !isDisplayEquivalent(merged, to: prior)
+            try store.writeSnapshot(mergedBytes, for: babyId)
             return WidgetSnapshotRefreshOutcome(
-                data: response,
+                data: merged,
                 displayChanged: shouldReload
             )
         } catch {
@@ -469,6 +499,36 @@ actor WidgetSnapshotCoordinator {
             return true
         }
         return candidateDate < cachedDate
+    }
+
+    /// Merge the timer list instead of replacing it: server-owned removals apply
+    /// (a remote/server timer missing from the response is dropped), but a
+    /// locally-known timer survives when it can have no server row
+    /// (lockState accountless/offline) or when the app wrote it after the server
+    /// snapshot (prior.localAsOf newer than response.serverAsOf).
+    private static func mergeTimers(
+        prior: WidgetDataModel?,
+        into response: WidgetDataModel
+    ) -> [ActiveTimerData] {
+        var result = response.activeTimers ?? []
+        var presentTypes = Set(result.map { $0.type })
+        let responseAsOf = response.serverAsOf.flatMap { parseWidgetSnapshotTimestamp($0) }
+        let priorAsOf = prior?.localAsOf.flatMap { parseWidgetSnapshotTimestamp($0) }
+        for priorTimer in prior?.activeTimers ?? [] {
+            if presentTypes.contains(priorTimer.type) { continue }
+            if priorTimer.isRemote == true { continue }
+            let lockState = priorTimer.lockState
+            if lockState == "accountless" || lockState == "offline" {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+                continue
+            }
+            if let local = priorAsOf, let server = responseAsOf, local > server {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+            }
+        }
+        return result
     }
 
     private static func isDisplayEquivalent(
