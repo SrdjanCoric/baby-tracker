@@ -9,6 +9,12 @@ export const SLEEP_ACTIVITY = {
   lockType: "sleep",
 };
 
+export const HOUSEHOLD_TIMER_TIMEOUTS = {
+  xcodeBuildMs: 3_600_000,
+  maestroDriverStartupMs: 1_200_000,
+  maestroCommandMs: 1_500_000,
+};
+
 export function getLocalApiRecoveryAction(status, isPaused) {
   if (isPaused) return "unpause";
   if (status !== "running") return "start";

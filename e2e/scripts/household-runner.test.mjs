@@ -9,6 +9,7 @@ const require = createRequire(import.meta.url);
 const inlineE2EEnv = require("./babel-inline-e2e-env.cjs");
 
 import {
+  HOUSEHOLD_TIMER_TIMEOUTS,
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
@@ -23,6 +24,14 @@ import {
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
+
+test("household timer release gate allows slow native tool startup", () => {
+  assert.deepEqual(HOUSEHOLD_TIMER_TIMEOUTS, {
+    xcodeBuildMs: 3_600_000,
+    maestroDriverStartupMs: 1_200_000,
+    maestroCommandMs: 1_500_000,
+  });
+});
 
 test("household timer runner authenticates a caregiver and requests only the selected-baby snapshot", async () => {
   const requests = [];

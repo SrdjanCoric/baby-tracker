@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import {
+  HOUSEHOLD_TIMER_TIMEOUTS,
   SLEEP_ACTIVITY,
   assertLocalEndpoint,
   assertMetroProjectRoot,
@@ -402,8 +403,12 @@ function maestro(simulator, relativeFlow, variables = {}) {
     ],
     `maestro-${simulator.name.toLowerCase().replaceAll(" ", "-")}-${path.basename(relativeFlow, ".yaml")}-${Date.now()}`,
     {
-      env: { MAESTRO_DRIVER_STARTUP_TIMEOUT: "120000" },
-      timeout: 240_000,
+      env: {
+        MAESTRO_DRIVER_STARTUP_TIMEOUT: String(
+          HOUSEHOLD_TIMER_TIMEOUTS.maestroDriverStartupMs
+        ),
+      },
+      timeout: HOUSEHOLD_TIMER_TIMEOUTS.maestroCommandMs,
     }
   );
 }
@@ -905,7 +910,7 @@ async function main() {
         "xcodebuild",
         getXcodebuildArgs(derivedDataPath, simulators[0].udid),
         "xcodebuild",
-        { env: localEnv, timeout: 1_800_000 }
+        { env: localEnv, timeout: HOUSEHOLD_TIMER_TIMEOUTS.xcodeBuildMs }
       );
       const appPath = findBuiltApp(derivedDataPath);
       for (const simulator of simulators) {
