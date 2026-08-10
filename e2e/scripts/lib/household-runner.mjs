@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { clearTimeout, setTimeout } from "node:timers";
-import { URL } from "node:url";
+import { URL, URLSearchParams } from "node:url";
 
 export const SLEEP_ACTIVITY = {
   key: "sleep",
@@ -11,9 +11,37 @@ export const SLEEP_ACTIVITY = {
 
 export const HOUSEHOLD_TIMER_TIMEOUTS = {
   xcodeBuildMs: 3_600_000,
+  metroBundleMs: 600_000,
   maestroDriverStartupMs: 1_200_000,
   maestroCommandMs: 1_500_000,
 };
+
+export function getMetroBundleUrl(appId) {
+  const url = new URL(
+    "http://127.0.0.1:8081/.expo/.virtual-metro-entry.bundle"
+  );
+  url.search = new URLSearchParams({
+    platform: "ios",
+    dev: "true",
+    lazy: "true",
+    minify: "false",
+    inlineSourceMap: "false",
+    modulesOnly: "false",
+    runModule: "true",
+    excludeSource: "true",
+    sourcePaths: "url-server",
+    app: appId,
+  });
+  return url.toString();
+}
+
+export async function primeMetroBundle({ appId, fetchImpl = fetch, signal }) {
+  const response = await fetchImpl(getMetroBundleUrl(appId), { signal });
+  if (!response.ok) {
+    throw new Error(`Metro bundle request failed with status ${response.status}`);
+  }
+  await response.arrayBuffer();
+}
 
 export function getLocalApiRecoveryAction(status, isPaused) {
   if (isPaused) return "unpause";

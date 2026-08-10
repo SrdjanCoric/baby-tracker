@@ -15,6 +15,7 @@ import {
   assertRemoteSleepCompletion,
   authenticateLocalCaregiver,
   fetchWidgetActivitySnapshot,
+  primeMetroBundle,
   getLocalApiRecoveryAction,
   getXcodebuildArgs,
   parseRunnerOptions,
@@ -369,6 +370,14 @@ async function startMetro(env) {
     }
   );
   await waitForMetro();
+  console.log("Priming the cold Metro bundle before launching the app...");
+  await primeMetroBundle({
+    appId,
+    signal: globalThis.AbortSignal.timeout(
+      HOUSEHOLD_TIMER_TIMEOUTS.metroBundleMs
+    ),
+  });
+  console.log("Metro bundle is ready.");
 }
 
 function maestro(simulator, relativeFlow, variables = {}) {
