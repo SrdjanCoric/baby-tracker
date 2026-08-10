@@ -22,7 +22,9 @@ import {
   watchTimerFingerprint,
   authenticateLocalCaregiver,
   fetchWidgetActivitySnapshot,
+  getMetroBundleUrl,
   parseRunnerOptions,
+  primeMetroBundle,
   selectNamedSimulators,
   stopProcessGroup,
 } from "./lib/household-runner.mjs";
@@ -30,9 +32,37 @@ import {
 test("household timer release gate allows slow native tool startup", () => {
   assert.deepEqual(HOUSEHOLD_TIMER_TIMEOUTS, {
     xcodeBuildMs: 3_600_000,
+    metroBundleMs: 600_000,
     maestroDriverStartupMs: 1_200_000,
     maestroCommandMs: 1_500_000,
   });
+});
+
+test("household timer release gate primes the iOS Metro bundle before launch", async () => {
+  const requests = [];
+  let consumed = false;
+  await primeMetroBundle({
+    appId: "com.sofibaby.app",
+    signal: "bundle-timeout",
+    fetchImpl: async (url, options) => {
+      requests.push([url, options]);
+      return {
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => {
+          consumed = true;
+          return new ArrayBuffer(0);
+        },
+      };
+    },
+  });
+
+  const url = new URL(getMetroBundleUrl("com.sofibaby.app"));
+  assert.equal(url.pathname, "/.expo/.virtual-metro-entry.bundle");
+  assert.equal(url.searchParams.get("platform"), "ios");
+  assert.equal(url.searchParams.get("app"), "com.sofibaby.app");
+  assert.deepEqual(requests, [[url.toString(), { signal: "bundle-timeout" }]]);
+  assert.equal(consumed, true);
 });
 
 test("household timer login and recovery allow slow provisioning to finish", () => {
