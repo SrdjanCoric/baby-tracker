@@ -35,13 +35,18 @@ test("household timer release gate allows slow native tool startup", () => {
   });
 });
 
-test("household timer login allows a cold Metro bundle to finish", () => {
+test("household timer login and recovery allow slow provisioning to finish", () => {
   const loginFlow = fs.readFileSync(
     new URL("../flows/household-timers/login.yaml", import.meta.url),
     "utf8"
   );
+  const recoveryFlow = fs.readFileSync(
+    new URL("../flows/household-timers/stop/sleep.yaml", import.meta.url),
+    "utf8"
+  );
 
   assert.match(loginFlow, /id: "home-screen"[\s\S]*timeout: 600000/);
+  assert.match(recoveryFlow, /id: "home-screen"[\s\S]*timeout: 600000/);
 });
 
 test("household timer runner authenticates a caregiver and requests only the selected-baby snapshot", async () => {

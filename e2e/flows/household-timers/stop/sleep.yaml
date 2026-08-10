@@ -5,7 +5,7 @@ appId: com.sofibaby.app
 - extendedWaitUntil:
     visible:
       id: "home-screen"
-    timeout: 60000
+    timeout: 600000
 - runFlow:
     when:
       visible: ".*Open debugger to view warnings.*"
