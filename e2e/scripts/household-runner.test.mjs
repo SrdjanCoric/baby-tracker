@@ -3,6 +3,7 @@ import { EventEmitter } from "node:events";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { URL } from "node:url";
 
 import babel from "@babel/core";
 
