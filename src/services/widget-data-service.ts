@@ -459,7 +459,9 @@ export async function clearPendingWidgetPauseToggle(): Promise<void> {
   } catch { /* best-effort cleanup */ }
 }
 
-export async function clearWidgetData(): Promise<void> {
+export async function clearWidgetData(
+  options: { preserveLocalCache?: boolean } = {}
+): Promise<void> {
   try {
     await AsyncStorage.removeItem(WIDGET_DATA_KEY);
 
@@ -490,6 +492,9 @@ export async function clearWidgetData(): Promise<void> {
         await extensionStorage.remove("userId", APP_GROUP);
         await extensionStorage.remove("selectedBabyId", APP_GROUP);
         await extensionStorage.remove("widgetTimezone", APP_GROUP);
+        if (options.preserveLocalCache === false) {
+          await extensionStorage.remove("widgetData", APP_GROUP);
+        }
         await extensionStorage.reloadWidget();
       }
     }

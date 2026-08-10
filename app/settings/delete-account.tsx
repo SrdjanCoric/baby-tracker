@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth, useBaby } from "@/contexts";
 import { AccountDeletionService } from "@/services/account-deletion-service";
+import { clearWidgetData } from "@/services/widget-data-service";
 import { DeletionWarning, DeletionConfirmation } from "@/components/account";
 import { validateDeletionConfirmation } from "@/utils/account-deletion";
 import type { DeletionPreview } from "@/types/account-deletion";
@@ -115,6 +116,7 @@ export default function DeleteAccountScreen() {
               );
 
               if (result.success) {
+                await clearWidgetData({ preserveLocalCache: false });
                 await signOut();
               } else {
                 setError(result.error || t("accountDeletion.errors.unknown"));

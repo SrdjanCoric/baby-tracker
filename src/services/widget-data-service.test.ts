@@ -160,4 +160,26 @@ describe("sleep extension data", () => {
       );
     }
   });
+
+  it("purges the app-written widgetData cache on account deletion request", async () => {
+    mocks.extensionStorage.get.mockResolvedValue(null);
+
+    await clearWidgetData({ preserveLocalCache: false });
+
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetData",
+      "group.com.sofibaby.app"
+    );
+    for (const key of [
+      "supabaseAccessToken",
+      "userId",
+      "selectedBabyId",
+      "widgetTimezone",
+    ]) {
+      expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+        key,
+        "group.com.sofibaby.app"
+      );
+    }
+  });
 });
