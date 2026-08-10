@@ -74,3 +74,12 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 
 - accepted (security): TR-3 — Sign-out preserves the unbound App Group widgetData cache, so on a shared device the next account sees the previous account's widget data. — Single-owner device assumption; shared-device cross-account leak treated as out of scope for this task.
 - accepted (security): TR-5 — Returning data while signed out un-blocks TogglePauseActivityIntent, which issues an unauthenticated toggle-timer request naming the previous account's babyId. — Residual risk accepted; shared-device/intent-triggerable unauthenticated call out of scope for this task.
+
+## Review findings skipped/deferred
+
+- deferred (standards): TR-6 — Swift test exercises only the pure selector, not production readSnapshot/loadWidgetData. Raising index.swift store reachability into the Foundation-only harness is a larger refactor deferred to a follow-up.
+- skipped (minor): TR-7 — sign-out test proves non-removal of widgetData only; overwrite-to-clear is not exercised by the current service and is deferred as a minor coverage gap.
+- skipped (minor): TR-8 — credentialless legacy render applies no local-day freshness gate; day totals going stale past local midnight is a cosmetic refinement deferred.
+- skipped (minor): TR-9 — newborn wake-window opt-in key retention on the credentialless path is an enhancement deferred.
+- skipped (minor): TR-10 — rendering-dependent acceptance criteria remain subject to the device/simulator `[verify]` gate at finish-task; checkbox state deferred to that gate.
+- skipped (minor): TR-11 — server-snapshot mirror into widgetData vs the "app-written cache" wording is a plan/decision restatement deferred to the next doc revisit.
