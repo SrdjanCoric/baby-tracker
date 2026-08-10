@@ -310,7 +310,42 @@ struct WidgetSnapshotIdentity: Equatable, Sendable {
 
 protocol WidgetSnapshotStoring: Sendable {
     func readSnapshot(for babyId: String) -> Data?
+    func readLegacySnapshot() -> Data?
     func writeSnapshot(_ bytes: Data, for babyId: String) throws
+    func isCacheOrphaned() -> Bool
+}
+
+enum WidgetSnapshotSelector {
+    static func snapshotBytes(
+        identity: WidgetSnapshotIdentity?,
+        store: WidgetSnapshotStoring
+    ) -> Data? {
+        guard let identity else {
+            return store.readLegacySnapshot()
+        }
+        return store.readSnapshot(for: identity.babyId)
+    }
+
+    /// Strip live timers and the running-sleep flag from a cached snapshot before rendering it
+    /// without credentials. A timer that was running at sign-out otherwise ticks forever on the
+    /// Home Screen with no in-app action able to clear it.
+    static func sanitizeCredentialless(_ data: WidgetDataModel) -> WidgetDataModel {
+        var credentialless = data
+        credentialless.activeTimers = []
+        credentialless.activeTimer = nil
+        credentialless.activities.sleep.isActive = false
+        return credentialless
+    }
+
+    /// Render a credentialless snapshot. A live accountless cache (not orphaned) keeps its
+    /// running timer; a cache left behind by a departed signed-in session (orphaned) is stripped
+    /// so its timers do not tick forever.
+    static func credentiallessModel(
+        _ data: WidgetDataModel,
+        cacheOrphaned: Bool
+    ) -> WidgetDataModel {
+        cacheOrphaned ? sanitizeCredentialless(data) : data
+    }
 }
 
 protocol WidgetSnapshotIdentityReading: Sendable {

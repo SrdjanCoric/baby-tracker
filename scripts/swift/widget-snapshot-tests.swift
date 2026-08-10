@@ -12,11 +12,21 @@ func require(_ condition: @autoclosure () -> Bool, _ message: String) {
 
 final class TestSnapshotStore: WidgetSnapshotStoring, @unchecked Sendable {
     var bytesByBaby: [String: Data] = [:]
+    var legacyBytes: Data?
+    var orphaned = false
     var writes = 0
     var events: [String] = []
 
     func readSnapshot(for babyId: String) -> Data? {
         bytesByBaby[babyId]
+    }
+
+    func readLegacySnapshot() -> Data? {
+        legacyBytes
+    }
+
+    func isCacheOrphaned() -> Bool {
+        orphaned
     }
 
     func writeSnapshot(_ bytes: Data, for babyId: String) throws {
@@ -151,6 +161,65 @@ enum WidgetSnapshotTests {
                 // Expected.
             }
         }
+
+        let selectionIdentity = WidgetSnapshotIdentity(
+            accountId: "account-a",
+            babyId: "baby-versioned",
+            generation: "generation-1",
+            timezone: "Europe/Belgrade"
+        )
+        let selectionStore = TestSnapshotStore()
+        selectionStore.bytesByBaby["baby-versioned"] = versioned
+        selectionStore.legacyBytes = legacy
+        require(
+            WidgetSnapshotSelector.snapshotBytes(
+                identity: selectionIdentity,
+                store: selectionStore
+            ) == versioned,
+            "credentialed loading did not select the per-baby snapshot"
+        )
+        require(
+            WidgetSnapshotSelector.snapshotBytes(
+                identity: nil,
+                store: selectionStore
+            ) == legacy,
+            "credentialless loading did not select the app-written legacy cache"
+        )
+
+        let staleTimerSnapshot = try WidgetSnapshotDecoder.decodeCache(legacy).data
+        require(
+            staleTimerSnapshot.activeTimer?.type == "sleep",
+            "legacy fixture did not carry a running sleep timer to strip"
+        )
+        let orphanedSnapshot = WidgetSnapshotSelector.credentiallessModel(
+            staleTimerSnapshot,
+            cacheOrphaned: true
+        )
+        require(
+            orphanedSnapshot.activeTimer == nil && orphanedSnapshot.activeTimers == [],
+            "orphaned credentialless cache kept an active timer that can tick forever after sign-out"
+        )
+        require(
+            orphanedSnapshot.activities.sleep.isActive == false,
+            "orphaned credentialless cache left sleep marked active after sign-out"
+        )
+        let liveAccountlessSnapshot = WidgetSnapshotSelector.credentiallessModel(
+            staleTimerSnapshot,
+            cacheOrphaned: false
+        )
+        require(
+            liveAccountlessSnapshot.activeTimer?.type == "sleep",
+            "live accountless cache stripped its running timer, breaking the accountless widget"
+        )
+        require(
+            liveAccountlessSnapshot.activities.sleep.isActive == true,
+            "live accountless cache dropped the running-sleep flag"
+        )
+        require(
+            orphanedSnapshot.babyId == staleTimerSnapshot.babyId
+                && orphanedSnapshot.babyName == staleTimerSnapshot.babyName,
+            "sanitizer dropped identity fields while stripping timers"
+        )
 
         var incoherent = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
         incoherent["activeTimer"] = [

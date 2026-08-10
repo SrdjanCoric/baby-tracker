@@ -127,10 +127,14 @@ describe("sleep extension data", () => {
       JSON.stringify(["baby-1", "baby-2"]),
       "group.com.sofibaby.app"
     );
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
+      "group.com.sofibaby.app"
+    );
     expect(mocks.extensionStorage.reloadWidget).toHaveBeenCalledOnce();
   });
 
-  it("removes the per-baby snapshot and native auth generation on sign-out", async () => {
+  it("preserves the app-written cache while removing authenticated widget state on sign-out", async () => {
     mocks.extensionStorage.get.mockImplementation(async (key: string) => {
       if (key === "selectedBabyId") return "baby-1";
       if (key === "widgetSnapshotBabyIds") return JSON.stringify(["baby-1", "baby-2"]);
@@ -139,13 +143,47 @@ describe("sleep extension data", () => {
 
     await clearWidgetData();
 
-    for (const key of [
+    expect(mocks.extensionStorage.remove).not.toHaveBeenCalledWith(
       "widgetData",
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
+      "true",
+      "group.com.sofibaby.app"
+    );
+    for (const key of [
       "widgetSnapshot.baby-1",
       "widgetNewbornNapOptIn.baby-1",
       "widgetSnapshot.baby-2",
       "widgetNewbornNapOptIn.baby-2",
       "widgetSnapshotBabyIds",
+      "supabaseAccessToken",
+      "userId",
+      "selectedBabyId",
+      "widgetTimezone",
+    ]) {
+      expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+        key,
+        "group.com.sofibaby.app"
+      );
+    }
+  });
+
+  it("purges the app-written widgetData cache on account deletion request", async () => {
+    mocks.extensionStorage.get.mockResolvedValue(null);
+
+    await clearWidgetData({ preserveLocalCache: false });
+
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetData",
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
+      "group.com.sofibaby.app"
+    );
+    for (const key of [
       "supabaseAccessToken",
       "userId",
       "selectedBabyId",
