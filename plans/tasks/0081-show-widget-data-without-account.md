@@ -51,8 +51,8 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 
 ## Acceptance criteria
 
-- [x] An accountless user's widget shows timers and totals from the app-written cache.
-- [x] A signed-out user's widget shows the last app-written cache instead of going blank.
+- [ ] An accountless user's widget shows timers and totals from the app-written cache.
+- [ ] A signed-out user's widget shows the last app-written cache instead of going blank.
 - [x] A signed-in user's widget behavior is unchanged.
 
 ## Implementation proof
@@ -87,3 +87,10 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 - skipped (minor): TR-9 — newborn wake-window opt-in key retention on the credentialless path is an enhancement deferred.
 - skipped (minor): TR-10 — rendering-dependent acceptance criteria remain subject to the device/simulator `[verify]` gate at finish-task; checkbox state deferred to that gate.
 - skipped (minor): TR-11 — server-snapshot mirror into widgetData vs the "app-written cache" wording is a plan/decision restatement deferred to the next doc revisit.
+
+## Finish-task record
+
+- README: Updated `### iOS Native Integrations` to document locally cached widget data for accountless and signed-out users, including live accountless timers and non-ticking timers left by sign-out.
+- README audit: `write-well` audit pass 1 completed over the affected bullet; no findings. No em dashes, filler, staging, redundancy, or vague claims.
+- Final focused automated proof (2026-08-10 23:50 CEST): Swift decoder/coordinator harness passed; `src/services/widget-data-service.test.ts` passed 7/7; affected ESLint passed; `git diff --check` passed. Logs: `/tmp/agent-workflows/e2f8af45fd34/dbee47e8abc5/final-swift.log`, `final-widget-data-vitest.log`, `final-eslint.log`, `final-diff-check.log`.
+- Manual `[verify]`: pending simulator/device confirmation. The Foundation-only Swift harness cannot render WidgetKit or exercise App Group timeline updates. Keep accountless and signed-out acceptance items unchecked until that proof is confirmed.
