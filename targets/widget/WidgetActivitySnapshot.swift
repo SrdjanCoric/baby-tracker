@@ -310,7 +310,20 @@ struct WidgetSnapshotIdentity: Equatable, Sendable {
 
 protocol WidgetSnapshotStoring: Sendable {
     func readSnapshot(for babyId: String) -> Data?
+    func readLegacySnapshot() -> Data?
     func writeSnapshot(_ bytes: Data, for babyId: String) throws
+}
+
+enum WidgetSnapshotSelector {
+    static func snapshotBytes(
+        identity: WidgetSnapshotIdentity?,
+        store: WidgetSnapshotStoring
+    ) -> Data? {
+        guard let identity else {
+            return store.readLegacySnapshot()
+        }
+        return store.readSnapshot(for: identity.babyId)
+    }
 }
 
 protocol WidgetSnapshotIdentityReading: Sendable {

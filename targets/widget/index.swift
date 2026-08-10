@@ -763,6 +763,10 @@ final class AppGroupWidgetSnapshotStore: WidgetSnapshotStoring, @unchecked Senda
         return bytes
     }
 
+    func readLegacySnapshot() -> Data? {
+        userDefaults.string(forKey: "widgetData")?.data(using: .utf8)
+    }
+
     func writeSnapshot(_ bytes: Data, for babyId: String) throws {
         guard let value = String(data: bytes, encoding: .utf8) else {
             throw WidgetSnapshotError.semanticFailure
@@ -879,8 +883,10 @@ func refreshWidgetSnapshot(reloadTimelines: Bool = true) async -> WidgetDataMode
 
 func loadWidgetData() -> WidgetDataModel? {
     guard let runtime = widgetSnapshotRuntime,
-          let babyId = runtime.identity.currentIdentity()?.babyId,
-          let bytes = runtime.store.readSnapshot(for: babyId) else {
+          let bytes = WidgetSnapshotSelector.snapshotBytes(
+            identity: runtime.identity.currentIdentity(),
+            store: runtime.store
+          ) else {
         return nil
     }
     return try? WidgetSnapshotDecoder.decodeCache(bytes).data

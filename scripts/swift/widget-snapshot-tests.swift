@@ -12,11 +12,16 @@ func require(_ condition: @autoclosure () -> Bool, _ message: String) {
 
 final class TestSnapshotStore: WidgetSnapshotStoring, @unchecked Sendable {
     var bytesByBaby: [String: Data] = [:]
+    var legacyBytes: Data?
     var writes = 0
     var events: [String] = []
 
     func readSnapshot(for babyId: String) -> Data? {
         bytesByBaby[babyId]
+    }
+
+    func readLegacySnapshot() -> Data? {
+        legacyBytes
     }
 
     func writeSnapshot(_ bytes: Data, for babyId: String) throws {
@@ -151,6 +156,30 @@ enum WidgetSnapshotTests {
                 // Expected.
             }
         }
+
+        let selectionIdentity = WidgetSnapshotIdentity(
+            accountId: "account-a",
+            babyId: "baby-versioned",
+            generation: "generation-1",
+            timezone: "Europe/Belgrade"
+        )
+        let selectionStore = TestSnapshotStore()
+        selectionStore.bytesByBaby["baby-versioned"] = versioned
+        selectionStore.legacyBytes = legacy
+        require(
+            WidgetSnapshotSelector.snapshotBytes(
+                identity: selectionIdentity,
+                store: selectionStore
+            ) == versioned,
+            "credentialed loading did not select the per-baby snapshot"
+        )
+        require(
+            WidgetSnapshotSelector.snapshotBytes(
+                identity: nil,
+                store: selectionStore
+            ) == legacy,
+            "credentialless loading did not select the app-written legacy cache"
+        )
 
         var incoherent = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
         incoherent["activeTimer"] = [

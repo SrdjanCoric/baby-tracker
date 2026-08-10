@@ -130,7 +130,7 @@ describe("sleep extension data", () => {
     expect(mocks.extensionStorage.reloadWidget).toHaveBeenCalledOnce();
   });
 
-  it("removes the per-baby snapshot and native auth generation on sign-out", async () => {
+  it("preserves the app-written cache while removing authenticated widget state on sign-out", async () => {
     mocks.extensionStorage.get.mockImplementation(async (key: string) => {
       if (key === "selectedBabyId") return "baby-1";
       if (key === "widgetSnapshotBabyIds") return JSON.stringify(["baby-1", "baby-2"]);
@@ -139,8 +139,11 @@ describe("sleep extension data", () => {
 
     await clearWidgetData();
 
-    for (const key of [
+    expect(mocks.extensionStorage.remove).not.toHaveBeenCalledWith(
       "widgetData",
+      "group.com.sofibaby.app"
+    );
+    for (const key of [
       "widgetSnapshot.baby-1",
       "widgetNewbornNapOptIn.baby-1",
       "widgetSnapshot.baby-2",

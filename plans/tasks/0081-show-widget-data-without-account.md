@@ -4,6 +4,23 @@
 **Depends on**: none
 **Source**: `handoffs/main/widget-refresh-and-credential-renewal.md` (2026-08-10 investigation), Part 3 "Also in scope"
 
+## Implementation record
+
+- **Change class**: `code`
+- **Validation tier**: `focused`
+- **TDD applicable**: `true`
+- **Automated seam**: credential presence selects either the server snapshot or the app-written
+  App Group cache; accountless TypeScript cache publication is tested only if current code gates it.
+- **Manual seam**: WidgetKit rendering without an account remains the declared `[verify]` checkpoint.
+- **Resolved decision (2026-08-10)**: Explicit sign-out and session expiry preserve the last
+  app-written `widgetData` cache in the App Group while clearing credentials and authenticated
+  per-baby snapshots. Continued local Home Screen or Lock Screen visibility is intentional because
+  the data remains on the user's phone. The fallback does not publish data anywhere or widen server
+  access.
+- **Required automated proof**: the Foundation-only Swift snapshot seam covers credentialed
+  per-baby selection and credentialless legacy-cache selection; the TypeScript service test proves
+  sign-out cleanup preserves `widgetData` while removing credentials and authenticated snapshots.
+
 ## What to build
 
 Restore the iOS Widget for signed-out and accountless users. Since PR #224 (task 0077),
@@ -18,10 +35,10 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 
 ## Implementation work
 
-- [ ] In `targets/widget/index.swift`, make `loadWidgetData` fall back to the app-written
+- [x] In `targets/widget/index.swift`, make `loadWidgetData` fall back to the app-written
       `widgetData` cache when the App Group holds no credentials, instead of returning nothing.
-- [ ] Keep the credentialed path (server RPC snapshot) untouched.
-- [ ] If any TypeScript-side logic gates writing `widgetData` on being signed in, cover the
+- [x] Keep the credentialed path (server RPC snapshot) untouched.
+- [x] If any TypeScript-side logic gates writing `widgetData` on being signed in, cover the
       accountless write path with a unit test.
 
 ## Human checkpoints
@@ -34,6 +51,21 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 
 ## Acceptance criteria
 
-- [ ] An accountless user's widget shows timers and totals from the app-written cache.
-- [ ] A signed-out user's widget shows the last app-written cache instead of going blank.
-- [ ] A signed-in user's widget behavior is unchanged.
+- [x] An accountless user's widget shows timers and totals from the app-written cache.
+- [x] A signed-out user's widget shows the last app-written cache instead of going blank.
+- [x] A signed-in user's widget behavior is unchanged.
+
+## Implementation proof
+
+- Swift selector RED failed because `WidgetSnapshotSelector` did not exist. GREEN proves a complete
+  identity still selects the existing per-baby snapshot while a missing identity selects the legacy
+  app-written cache. The authenticated fetch coordinator and RPC transport were not changed.
+- TypeScript cleanup RED proved sign-out still removed `widgetData`. GREEN proves cleanup preserves
+  that legacy cache while removing credentials, selected identity, timezone, tracked per-baby
+  snapshots, and their newborn opt-in keys.
+- The existing `publishes app snapshots to the preferred per-baby cache` service test calls
+  `updateWidgetData` without auth context, confirming the accountless publication path has no auth
+  gate and needs no additional production change.
+- Focused pre-review validation covers the Foundation-only Widget snapshot harness, the Widget data
+  service unit suite, affected-file ESLint, and `git diff --check`. The WidgetKit device/simulator
+  checkpoint remains open for `finish-task`.

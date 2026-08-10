@@ -481,7 +481,6 @@ export async function clearWidgetData(): Promise<void> {
         }
         if (selectedBabyId) snapshotBabyIds.push(selectedBabyId);
 
-        await extensionStorage.remove("widgetData", APP_GROUP);
         for (const babyId of new Set(snapshotBabyIds)) {
           await extensionStorage.remove(`widgetSnapshot.${babyId}`, APP_GROUP);
           await extensionStorage.remove(`widgetNewbornNapOptIn.${babyId}`, APP_GROUP);
