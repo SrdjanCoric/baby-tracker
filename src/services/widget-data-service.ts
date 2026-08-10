@@ -18,6 +18,7 @@ export type {
 const APP_GROUP = "group.com.sofibaby.app";
 const WIDGET_DATA_KEY = "@widget_data";
 const WIDGET_CONFIG_KEY = "@widget_config";
+const WIDGET_DATA_ORPHANED_KEY = "widgetDataOrphaned";
 
 export interface BabyWatchData {
   id: string;
@@ -127,6 +128,9 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
           JSON.stringify(registeredBabyIds),
           APP_GROUP
         );
+        // Fresh app-written data is live, so clear any sign-out lineage marker so
+        // accountless running timers render on the widget instead of being stripped.
+        await extensionStorage.remove(WIDGET_DATA_ORPHANED_KEY, APP_GROUP);
         await extensionStorage.reloadWidget();
       }
     } catch (error) {
@@ -492,7 +496,13 @@ export async function clearWidgetData(
         await extensionStorage.remove("userId", APP_GROUP);
         await extensionStorage.remove("selectedBabyId", APP_GROUP);
         await extensionStorage.remove("widgetTimezone", APP_GROUP);
-        if (options.preserveLocalCache === false) {
+        const preserveLocalCache = options.preserveLocalCache !== false;
+        if (preserveLocalCache) {
+          // Mark the retained cache as left behind by a departed session so the
+          // widget strips its forever-ticking timers instead of rendering them.
+          await extensionStorage.set(WIDGET_DATA_ORPHANED_KEY, "true", APP_GROUP);
+        } else {
+          await extensionStorage.remove(WIDGET_DATA_ORPHANED_KEY, APP_GROUP);
           await extensionStorage.remove("widgetData", APP_GROUP);
         }
         await extensionStorage.reloadWidget();

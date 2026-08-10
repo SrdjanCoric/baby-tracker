@@ -13,6 +13,7 @@ func require(_ condition: @autoclosure () -> Bool, _ message: String) {
 final class TestSnapshotStore: WidgetSnapshotStoring, @unchecked Sendable {
     var bytesByBaby: [String: Data] = [:]
     var legacyBytes: Data?
+    var orphaned = false
     var writes = 0
     var events: [String] = []
 
@@ -22,6 +23,10 @@ final class TestSnapshotStore: WidgetSnapshotStoring, @unchecked Sendable {
 
     func readLegacySnapshot() -> Data? {
         legacyBytes
+    }
+
+    func isCacheOrphaned() -> Bool {
+        orphaned
     }
 
     func writeSnapshot(_ bytes: Data, for babyId: String) throws {
@@ -186,20 +191,33 @@ enum WidgetSnapshotTests {
             staleTimerSnapshot.activeTimer?.type == "sleep",
             "legacy fixture did not carry a running sleep timer to strip"
         )
-        let credentiallessSnapshot = WidgetSnapshotSelector.sanitizeCredentialless(
-            staleTimerSnapshot
+        let orphanedSnapshot = WidgetSnapshotSelector.credentiallessModel(
+            staleTimerSnapshot,
+            cacheOrphaned: true
         )
         require(
-            credentiallessSnapshot.activeTimer == nil && credentiallessSnapshot.activeTimers == [],
-            "credentialless branch kept an active timer that can tick forever after sign-out"
+            orphanedSnapshot.activeTimer == nil && orphanedSnapshot.activeTimers == [],
+            "orphaned credentialless cache kept an active timer that can tick forever after sign-out"
         )
         require(
-            credentiallessSnapshot.activities.sleep.isActive == false,
-            "credentialless branch left sleep marked active after sign-out"
+            orphanedSnapshot.activities.sleep.isActive == false,
+            "orphaned credentialless cache left sleep marked active after sign-out"
+        )
+        let liveAccountlessSnapshot = WidgetSnapshotSelector.credentiallessModel(
+            staleTimerSnapshot,
+            cacheOrphaned: false
         )
         require(
-            credentiallessSnapshot.babyId == staleTimerSnapshot.babyId
-                && credentiallessSnapshot.babyName == staleTimerSnapshot.babyName,
+            liveAccountlessSnapshot.activeTimer?.type == "sleep",
+            "live accountless cache stripped its running timer, breaking the accountless widget"
+        )
+        require(
+            liveAccountlessSnapshot.activities.sleep.isActive == true,
+            "live accountless cache dropped the running-sleep flag"
+        )
+        require(
+            orphanedSnapshot.babyId == staleTimerSnapshot.babyId
+                && orphanedSnapshot.babyName == staleTimerSnapshot.babyName,
             "sanitizer dropped identity fields while stripping timers"
         )
 

@@ -390,6 +390,11 @@ struct StopActivityIntent: AppIntent {
             return .result()
         }
 
+        guard widgetSnapshotRuntime?.identity.currentIdentity() != nil else {
+            NSLog("[StopActivity] ERROR: no signed-in identity; ignoring unauthenticated stop")
+            return .result()
+        }
+
         let dbType = activity == .tummyTime ? "tummy_time" : activity.rawValue
 
         let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
@@ -506,6 +511,11 @@ struct TogglePauseActivityIntent: AppIntent {
 
         guard let userDefaults = UserDefaults(suiteName: appGroupId) else {
             NSLog("[TogglePause] ERROR: UserDefaults nil")
+            return .result()
+        }
+
+        guard widgetSnapshotRuntime?.identity.currentIdentity() != nil else {
+            NSLog("[TogglePause] ERROR: no signed-in identity; ignoring unauthenticated toggle")
             return .result()
         }
 
@@ -761,6 +771,10 @@ final class AppGroupWidgetSnapshotStore: WidgetSnapshotStoring, @unchecked Senda
         userDefaults.string(forKey: "widgetData")?.data(using: .utf8)
     }
 
+    func isCacheOrphaned() -> Bool {
+        userDefaults.bool(forKey: "widgetDataOrphaned")
+    }
+
     func writeSnapshot(_ bytes: Data, for babyId: String) throws {
         guard let value = String(data: bytes, encoding: .utf8) else {
             throw WidgetSnapshotError.semanticFailure
@@ -876,19 +890,22 @@ func refreshWidgetSnapshot(reloadTimelines: Bool = true) async -> WidgetDataMode
 }
 
 func loadWidgetData() -> WidgetDataModel? {
-    guard let runtime = widgetSnapshotRuntime else { return nil }
-    let identity = runtime.identity.currentIdentity()
-    guard let bytes = WidgetSnapshotSelector.snapshotBytes(
-        identity: identity,
-        store: runtime.store
-    ),
-        let decoded = try? WidgetSnapshotDecoder.decodeCache(bytes) else {
+    guard let runtime = widgetSnapshotRuntime,
+          let bytes = WidgetSnapshotSelector.snapshotBytes(
+            identity: runtime.identity.currentIdentity(),
+            store: runtime.store
+          ),
+          let decoded = try? WidgetSnapshotDecoder.decodeCache(bytes) else {
         return nil
     }
-    guard identity == nil else { return decoded.data }
-    // Credentials are absent: a timer left running at sign-out would tick forever on the
-    // Home Screen with no in-app action able to clear it, so strip live timers here.
-    return WidgetSnapshotSelector.sanitizeCredentialless(decoded.data)
+    guard runtime.identity.currentIdentity() == nil else { return decoded.data }
+    // Credentials are absent. An accountless user's live cache must render its
+    // running timer; a cache left behind by a departed signed-in session must
+    // not. The orphan marker distinguishes these two nil-identity cases.
+    return WidgetSnapshotSelector.credentiallessModel(
+        decoded.data,
+        cacheOrphaned: runtime.store.isCacheOrphaned()
+    )
 }
 
 func isUserAuthenticated() -> Bool {

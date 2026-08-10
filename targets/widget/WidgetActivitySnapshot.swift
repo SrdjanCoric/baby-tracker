@@ -312,6 +312,7 @@ protocol WidgetSnapshotStoring: Sendable {
     func readSnapshot(for babyId: String) -> Data?
     func readLegacySnapshot() -> Data?
     func writeSnapshot(_ bytes: Data, for babyId: String) throws
+    func isCacheOrphaned() -> Bool
 }
 
 enum WidgetSnapshotSelector {
@@ -334,6 +335,16 @@ enum WidgetSnapshotSelector {
         credentialless.activeTimer = nil
         credentialless.activities.sleep.isActive = false
         return credentialless
+    }
+
+    /// Render a credentialless snapshot. A live accountless cache (not orphaned) keeps its
+    /// running timer; a cache left behind by a departed signed-in session (orphaned) is stripped
+    /// so its timers do not tick forever.
+    static func credentiallessModel(
+        _ data: WidgetDataModel,
+        cacheOrphaned: Bool
+    ) -> WidgetDataModel {
+        cacheOrphaned ? sanitizeCredentialless(data) : data
     }
 }
 

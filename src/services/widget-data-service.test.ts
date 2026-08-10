@@ -127,6 +127,10 @@ describe("sleep extension data", () => {
       JSON.stringify(["baby-1", "baby-2"]),
       "group.com.sofibaby.app"
     );
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
+      "group.com.sofibaby.app"
+    );
     expect(mocks.extensionStorage.reloadWidget).toHaveBeenCalledOnce();
   });
 
@@ -141,6 +145,11 @@ describe("sleep extension data", () => {
 
     expect(mocks.extensionStorage.remove).not.toHaveBeenCalledWith(
       "widgetData",
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.set).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
+      "true",
       "group.com.sofibaby.app"
     );
     for (const key of [
@@ -168,6 +177,10 @@ describe("sleep extension data", () => {
 
     expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
       "widgetData",
+      "group.com.sofibaby.app"
+    );
+    expect(mocks.extensionStorage.remove).toHaveBeenCalledWith(
+      "widgetDataOrphaned",
       "group.com.sofibaby.app"
     );
     for (const key of [
