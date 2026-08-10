@@ -73,7 +73,11 @@ nothing changes — the server-snapshot path stays as PR #224 built it.
 ## Review findings accepted as security risk
 
 - accepted (security): TR-3 — Sign-out preserves the unbound App Group widgetData cache, so on a shared device the next account sees the previous account's widget data. — Single-owner device assumption; shared-device cross-account leak treated as out of scope for this task.
-- accepted (security): TR-5 — Returning data while signed out un-blocks TogglePauseActivityIntent, which issues an unauthenticated toggle-timer request naming the previous account's babyId. — Residual risk accepted; shared-device/intent-triggerable unauthenticated call out of scope for this task.
+
+## Review findings fixed after re-review
+
+- fixed (security): TR-5 — TogglePauseActivityIntent/StopActivityIntent now gate on `widgetSnapshotRuntime.identity.currentIdentity()` non-nil, so the unauthenticated toggle-timer-pause POST can no longer be issued from a signed-out/accountless surface. (Was accepted; gated while narrowing TR-1, per re-review.)
+- fixed (bug): TR-1 — Sign-out now marks the retained cache as orphaned (widgetDataOrphaned); the credentialless render strips live timers only for orphaned caches, so a live accountless user's running timer keeps ticking. (Re-review caught the over-broad first fix that stripped accountless timers.)
 
 ## Review findings skipped/deferred
 
