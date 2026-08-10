@@ -9,7 +9,7 @@ appId: com.sofibaby.app
 - extendedWaitUntil:
     visible:
       id: "home-screen"
-    timeout: 120000
+    timeout: 600000
 - tapOn:
     id: "selected-baby-name"
 - tapOn:

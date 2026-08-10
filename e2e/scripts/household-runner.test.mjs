@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
 
@@ -31,6 +32,15 @@ test("household timer release gate allows slow native tool startup", () => {
     maestroDriverStartupMs: 1_200_000,
     maestroCommandMs: 1_500_000,
   });
+});
+
+test("household timer login allows a cold Metro bundle to finish", () => {
+  const loginFlow = fs.readFileSync(
+    new URL("../flows/household-timers/login.yaml", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(loginFlow, /id: "home-screen"[\s\S]*timeout: 600000/);
 });
 
 test("household timer runner authenticates a caregiver and requests only the selected-baby snapshot", async () => {
