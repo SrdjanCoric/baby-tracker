@@ -83,19 +83,25 @@ store in task 0084.
       file lock; after acquiring it, re-read the session, redeem only the still-current refresh
       token, validate the same account, replace the whole session, then retry the original request
       once. A waiting caller adopts a newer pair instead of redeeming again. The app migrates its
-      existing iOS AsyncStorage session by copy, verification, then deletion; Android and web keep
-      AsyncStorage. The Widget routes every authenticated request through this transport. Widget
-      refresh failures retain prior cache or queued actions and emit redacted logs. Watch access
-      remains deferred to Task 0084. Approved by the user on 2026-08-11.
+      existing iOS AsyncStorage session by copy, verification, then deletion on the first launch
+      after updating; Android and web keep AsyncStorage. Existing installs must launch the updated
+      app once to make the refresh token available to the Widget; this migration does not normally
+      require signing in again. Before that launch, the legacy App Group access token is only a
+      best-effort bridge for its remaining lifetime and cannot be renewed by the Widget. The Widget
+      routes every authenticated request through this transport. Widget refresh failures retain
+      prior cache or queued actions and emit redacted logs. Watch access remains deferred to Task
+      0084. Initial design approved by the user on 2026-08-11; first-launch migration requirement
+      confirmed by the user on 2026-08-11.
 - [x] [confirm-security] The user approved this Keychain layout, app/Widget access boundary,
       cross-process redemption lock, migration, and one-retry 401 flow on 2026-08-11. Accepted
       consequence: the Widget holds an account-wide refresh credential, constrained to the shared
       Keychain access group; rollback to an older binary may require sign-in after migration.
-- [ ] [verify] Physical iPhone, app force-closed for over an hour, then the other caregiver logs
-      sleep from Android. · Expected: the widget updates without the app being opened. · Failure:
-      widget stays stale until the app opens — the original symptom. · Reason: JWT expiry plus
-      WidgetKit push and background behavior cannot be reproduced in an automated harness; this is
-      the exact >1h boundary that was never physically verified after PR #224.
+- [ ] [verify] Physical iPhone, launch the updated app once so it migrates the existing session,
+      then force-close it for over an hour and have the other caregiver log sleep from Android.
+      · Expected: the widget updates without reopening the app. · Failure: widget stays stale until
+      the app opens — the original symptom. · Reason: JWT expiry plus WidgetKit push and background
+      behavior cannot be reproduced in an automated harness; this is the exact >1h boundary that
+      was never physically verified after PR #224.
 
 ## Acceptance criteria
 
@@ -107,8 +113,9 @@ store in task 0084.
       `UserDefaults`.
 - [x] A Widget refresh more than one hour after the last app session succeeds: 401 → redeem →
       retry → fresh snapshot.
-      — proven by the Swift renewal-core slices; the physical boundary is the `[verify]`
-      checkpoint below.
+      — requires one launch of the updated app to migrate the existing session into shared
+      Keychain; after that migration it is proven by the Swift renewal-core slices, with the
+      physical boundary covered by the `[verify]` checkpoint above.
 - [x] The app continues working with a session pair the Widget renewed (no sign-out).
       — supabase-js `__loadSession` re-reads the Keychain on every `getSession()`/request, so the
       app adopts the Widget-rotated access/refresh token automatically; its next refresh redeems

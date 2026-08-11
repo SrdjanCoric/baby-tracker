@@ -859,13 +859,12 @@ final class AppGroupWidgetSnapshotIdentityReader: WidgetSnapshotIdentityReading,
                 timezone: timezone
             )
         }
-        // Backwards-compatibility fallback (TR-4). Before the app writes the
-        // shared Keychain capsule — the post-app-update, pre-first-app-launch
-        // window — the widget reads the legacy App Group `supabaseAccessToken`
-        // bearer read-only here. The transport uses it directly with no refresh
-        // capability for one release. The app purges the legacy token from App
-        // Group `UserDefaults` on its first launch after upgrade (TR-5); once
-        // the capsule is non-nil the legacy branch is never taken.
+        // Best-effort backwards-compatibility fallback (TR-4). Before the app
+        // writes the shared Keychain capsule, the widget reads the legacy App
+        // Group `supabaseAccessToken` bearer read-only. It works only for the
+        // token's remaining lifetime; one updated-app launch is required to
+        // migrate the renewable session. The app then purges this legacy token
+        // (TR-5), and the non-nil capsule permanently owns this path.
         if let legacyAccessToken = userDefaults.string(forKey: "supabaseAccessToken") {
             return WidgetSnapshotIdentity(
                 accountId: accountId,

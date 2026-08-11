@@ -289,14 +289,12 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     /// token only if nothing has rotated it first, persists the renewed pair,
     /// and retries the original request exactly once.
     ///
-    /// Backwards-compatibility bridge: before the app wrote the shared Keychain
-    /// capsule (e.g. on a freshly upgraded install that has not been launched
-    /// yet), the widget falls back to the legacy App Group `supabaseAccessToken`
-    /// bearer — a single-use, refresh-less request — for one release. Once the
-    /// app launches and migrates its session into Keychain, the capsule is
-    /// non-nil and the legacy path is never taken. Without this fallback an
-    /// app update over an unopened device leaves the widget credential-less,
-    /// reproducing the stale-widget symptom the task fixes (see TR-4).
+    /// Best-effort backwards-compatibility bridge: before the updated app first
+    /// launches and writes the shared Keychain capsule, the widget can use the
+    /// legacy App Group `supabaseAccessToken` for its remaining lifetime. That
+    /// bearer is refresh-less, so an expired legacy token cannot bridge an
+    /// overnight update; one updated-app launch is required to migrate the full
+    /// session. Once the capsule exists, the legacy path is never taken.
     func send(buildRequest: @escaping @Sendable (String) -> URLRequest) async throws -> (Int, Data) {
         guard let current = try vault.read() else {
             if let legacyAccessToken = legacyAccessTokenProvider() {
