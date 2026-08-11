@@ -597,26 +597,28 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
            let anonKey = context["supabaseAnonKey"] as? String,
            let sessionCapsule = context["sessionCapsule"] as? String,
            let userId = context["userId"] as? String {
-            let defaults = authDefaults
             let incomingHouseholdId = context["householdId"] as? String
-            do {
-                try WatchSupabaseSessionEnvironment.vault.install(capsuleJson: sessionCapsule)
-                self.supabaseUrl = url
-                self.supabaseAnonKey = anonKey
-                self.supabaseUserId = userId
-                self.isTokenStale = false
-                defaults?.set(url, forKey: "watchSupabaseUrl")
-                defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
-                defaults?.set(userId, forKey: "watchSupabaseUserId")
-                if let householdId = incomingHouseholdId {
-                    defaults?.set(householdId, forKey: "watchHouseholdId")
-                } else {
-                    defaults?.removeObject(forKey: "watchHouseholdId")
+            self.supabaseUrl = url
+            self.supabaseAnonKey = anonKey
+            self.supabaseUserId = userId
+            let installed = authDefaults.map { defaults in
+                WatchCredentialContextInstaller.install(
+                    supabaseUrl: url,
+                    anonKey: anonKey,
+                    accountId: userId,
+                    householdId: incomingHouseholdId,
+                    in: defaults
+                ) {
+                    try WatchSupabaseSessionEnvironment.vault.install(capsuleJson: sessionCapsule)
                 }
+            } ?? false
+            if installed {
+                self.isTokenStale = false
                 print("[WatchConnector] parseApplicationContext: stored renewable auth session")
-            } catch {
+            } else {
                 self.isTokenStale = true
                 NSLog("[WatchSupabaseSession] rejected invalid application-context capsule")
+                sendAction(["action": "requestSync"])
             }
         } else if context["supabaseUrl"] is String,
                   context["supabaseAnonKey"] is String,

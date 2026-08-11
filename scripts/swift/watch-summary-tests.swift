@@ -78,6 +78,10 @@ enum TestWatchStoreFailure: Error {
     case writeFailed
 }
 
+enum TestWatchCredentialInstallFailure: Error {
+    case rejected
+}
+
 final class TestWatchIdentityReader: WatchSummaryIdentityReading, @unchecked Sendable {
     var identity: WatchSummaryIdentity?
 
@@ -260,6 +264,32 @@ enum WatchSummaryTests {
             ),
             "Watch rejected a complete fresh credential set"
         )
+
+        let metadataSuiteName = "watch-metadata-install-tests.\(UUID().uuidString)"
+        let metadataDefaults = UserDefaults(suiteName: metadataSuiteName)!
+        let capsuleInstalled = WatchCredentialContextInstaller.install(
+            supabaseUrl: "https://example.supabase.co",
+            anonKey: "anon-key",
+            accountId: "account-a",
+            householdId: "household-a",
+            in: metadataDefaults
+        ) {
+            throw TestWatchCredentialInstallFailure.rejected
+        }
+        requireWatch(!capsuleInstalled, "Watch reported a rejected capsule as installed")
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseUrl") == "https://example.supabase.co",
+            "Watch discarded public Supabase URL after capsule rejection"
+        )
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseAnonKey") == "anon-key",
+            "Watch discarded public anon key after capsule rejection"
+        )
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseUserId") == "account-a",
+            "Watch discarded account identity after capsule rejection"
+        )
+        metadataDefaults.removePersistentDomain(forName: metadataSuiteName)
 
         let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"
         let legacyDefaults = UserDefaults(suiteName: legacySuiteName)!

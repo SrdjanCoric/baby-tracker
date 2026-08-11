@@ -412,6 +412,32 @@ enum WatchNetworkCredentialPolicy {
     }
 }
 
+enum WatchCredentialContextInstaller {
+    static func install(
+        supabaseUrl: String,
+        anonKey: String,
+        accountId: String,
+        householdId: String?,
+        in defaults: UserDefaults,
+        installCapsule: () throws -> Void
+    ) -> Bool {
+        defaults.set(supabaseUrl, forKey: "watchSupabaseUrl")
+        defaults.set(anonKey, forKey: "watchSupabaseAnonKey")
+        defaults.set(accountId, forKey: "watchSupabaseUserId")
+        if let householdId {
+            defaults.set(householdId, forKey: "watchHouseholdId")
+        } else {
+            defaults.removeObject(forKey: "watchHouseholdId")
+        }
+        do {
+            try installCapsule()
+            return true
+        } catch {
+            return false
+        }
+    }
+}
+
 enum WatchLegacyCacheOwnership {
     private static let key = "watchLegacyCacheAccountId"
 
