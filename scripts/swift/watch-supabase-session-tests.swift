@@ -67,6 +67,7 @@ enum WatchSupabaseSessionTests {
         try testNewerPhoneCapsuleReplacesStoredCapsule()
         try testNewAccountLineageCanRestartRevisionCounter()
         try await testUnauthorizedRequestDoesNotRedeemSharedPhoneSession()
+        try await testConcurrentUnauthorizedRequestsDoNotRotateSharedSession()
         print("PASS: Watch Supabase session safety core")
     }
 
@@ -216,6 +217,36 @@ enum WatchSupabaseSessionTests {
         requireWatchSession(stored?.revision == 7, "Watch advanced the phone capsule revision")
         requireWatchSession(stored?.session.contains("refresh-1") == true, "Watch replaced the phone refresh token")
         requireWatchSession(logger.events.isEmpty, "Shared-session expiry emitted a renewal log")
+    }
+
+    static func testConcurrentUnauthorizedRequestsDoNotRotateSharedSession() async throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 7,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 1),
+            refreshToken: "refresh-1"
+        ))
+        store.writeCount = 0
+        let http = RecordedWatchHTTPClient(statuses: [401, 401])
+        let transport = WatchSupabaseTransport(
+            vault: vault,
+            httpClient: http,
+            logger: RecordingWatchSessionLogger()
+        )
+
+        async let first = transport.send(config: Self.config, buildRequest: Self.bearerRequest)
+        async let second = transport.send(config: Self.config, buildRequest: Self.bearerRequest)
+        let (firstResult, secondResult) = try await (first, second)
+
+        requireWatchSession(firstResult.0 == 401, "First concurrent request hid unauthorized")
+        requireWatchSession(secondResult.0 == 401, "Second concurrent request hid unauthorized")
+        let bearers = await http.recordedBearers()
+        requireWatchSession(bearers.count == 2, "Concurrent requests sent an unexpected retry")
+        requireWatchSession(store.writeCount == 0, "Concurrent 401s rotated the shared phone session")
+        let stored = try vault.read()
+        requireWatchSession(stored?.revision == 7, "Concurrent 401s advanced the capsule revision")
+        requireWatchSession(stored?.session.contains("refresh-1") == true, "Concurrent 401s replaced the refresh token")
     }
 
     static func capsule(

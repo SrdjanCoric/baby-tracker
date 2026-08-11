@@ -77,10 +77,6 @@ final class WatchSessionVault: @unchecked Sendable {
         }
     }
 
-    func replace(_ envelope: WatchSessionEnvelopeV1) throws {
-        try store.writeRaw(try JSONEncoder().encode(envelope))
-    }
-
     func remove() throws {
         try withLock {
             try store.deleteRaw()
