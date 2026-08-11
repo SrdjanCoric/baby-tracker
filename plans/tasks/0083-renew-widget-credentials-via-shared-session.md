@@ -58,7 +58,7 @@ store in task 0084.
       Android/web stay on AsyncStorage.
 - [x] Test-first on the TypeScript side: the adapter round-trips a session and the app picks
       up a pair the Widget wrote back.
-      — `src/services/shared-supabase-session.test.ts` (10 tests) and
+      — `src/services/shared-supabase-session.test.ts` (12 tests) and
       `src/__tests__/security/shared-supabase-session.security.test.ts` (static guards).
 - [x] In `targets/widget/index.swift` / `WidgetActivitySnapshot.swift`: on RPC 401, redeem the
       refresh token against Supabase auth, write the renewed pair back to the shared store, and
@@ -71,7 +71,7 @@ store in task 0084.
 - [x] Honor the agreed concurrent-redemption discipline between app and Widget.
       — one `flock` over the App Group lock file; a waiting caller re-reads the capsule and
       adopts a newer pair instead of redeeming again. Proven by
-      `scripts/swift/shared-supabase-session-tests.swift` (10 slices incl. concurrent
+      `scripts/swift/shared-supabase-session-tests.swift` (11 slices incl. concurrent
       redemption) compiled by `scripts/run-widget-swift-tests.mjs`.
 
 ## Human checkpoints
@@ -96,12 +96,12 @@ store in task 0084.
       cross-process redemption lock, migration, and one-retry 401 flow on 2026-08-11. Accepted
       consequence: the Widget holds an account-wide refresh credential, constrained to the shared
       Keychain access group; rollback to an older binary may require sign-in after migration.
-- [ ] [verify] Physical iPhone, launch the updated app once so it migrates the existing session,
+- [x] [verify] Physical iPhone, launch the updated app once so it migrates the existing session,
       then force-close it for over an hour and have the other caregiver log sleep from Android.
       · Expected: the widget updates without reopening the app. · Failure: widget stays stale until
       the app opens — the original symptom. · Reason: JWT expiry plus WidgetKit push and background
-      behavior cannot be reproduced in an automated harness; this is the exact >1h boundary that
-      was never physically verified after PR #224.
+      behavior cannot be reproduced in an automated harness. Passed on 2026-08-11; user confirmed
+      the widget updated without reopening the iPhone app.
 
 ## Acceptance criteria
 
@@ -128,6 +128,10 @@ store in task 0084.
 
 ## Verification evidence (focused pre-review)
 
+- README: updated the `iOS Native Integrations` WidgetKit description with credential renewal and
+  the one-launch migration requirement. `write-well` audit passed in 2 passes; pass 1 replaced a
+  vague shared-session/refresh claim with the Keychain mechanism and concrete scheduled/pushed
+  behavior, and pass 2 found no remaining issues in the affected prose.
 - `vitest run` (unit): 2741 tests across 155 files, exit 0.
 - `jest --runInBand` (component): 1070 tests across 115 suites, exit 0.
 - `npm run test:ci`: 65/65, exit 0.
@@ -160,3 +164,30 @@ store in task 0084.
 - skipped (nit): TR-20 — `writeAuthToAppGroup` still requires `accessToken` param it no longer reads — deferred; out of scope this review round
 - skipped (nit): TR-21 — `revision` compare-and-swap marker resets to 1 after sign-out (ABA across sessions) — deferred; out of scope this review round
 - skipped (nit): TR-22 — Task file ends with stray `"` and no trailing newline — deferred; out of scope this review round
+
+## Finish-task completion record
+
+- Built: the iOS app persists its complete Supabase session in a versioned shared-Keychain capsule;
+  auth-js and the Widget serialize refresh-token redemption through the App Group POSIX lock; the
+  Widget renews on 401, replaces the pair, and retries once. The app migrates an existing private
+  session on its first launch after updating and purges legacy App Group bearer data. Production
+  Widget Swift sources are compile-gated by `npm run test:widget:swift`.
+- Relevant implementation: `src/services/shared-supabase-session.ts`,
+  `src/services/shared-supabase-session-native.ts`, `src/services/supabase.ts`,
+  `plugins/with-shared-supabase-session/`, `targets/widget/SharedSupabaseSession.swift`,
+  `targets/widget/SharedSupabaseSessionAdapters.swift`, `targets/widget/index.swift`, and
+  `scripts/run-widget-swift-tests.mjs`.
+- Decision: existing installs must open the updated app once to migrate the renewable session; the
+  migration normally preserves sign-in. The user confirmed this contract on 2026-08-11.
+- Documentation: updated README `iOS Native Integrations` WidgetKit behavior. The affected prose
+  passed the 2-pass `write-well` audit recorded above.
+- Review: TR-1 through TR-7 and TR-17 fixed. TR-8 through TR-16 and TR-18 through TR-22 were
+  skipped as minor/nit findings with the recorded reason `deferred; out of scope this review
+  round`. No security finding was accepted as risk; TR-5 and TR-6 were fixed.
+- Automated proof: repository canonical gate passed on 2026-08-11. `npm run check:code` exited 0,
+  including lint, TypeScript, unit/component/CI/Widget Swift tests, and the production bundle gate;
+  `npm run test:sql:setup && npm run test:sql` exited 0 after applying all 64 migrations. Logs:
+  `/tmp/agent-workflows/e2f8af45fd34/0a9094bf718e/canonical.log` and
+  `/tmp/agent-workflows/e2f8af45fd34/0a9094bf718e/sql.log`.
+- Manual proof: physical iPhone migration and >1-hour closed-app Widget renewal passed on
+  2026-08-11, confirmed by the user after an Android caregiver logged sleep.
