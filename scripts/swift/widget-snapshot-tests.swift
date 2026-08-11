@@ -84,6 +84,12 @@ actor TestSnapshotFetcher: WidgetSnapshotFetching {
     }
 }
 
+struct TestPendingStopReader: WidgetSnapshotPendingStopReading {
+    let types: Set<String>
+    init(_ types: Set<String>) { self.types = types }
+    func pendingStopActivityTypes(for babyId: String) -> Set<String> { types }
+}
+
 func changedFixture(_ data: Data, _ updates: [String: Any]) throws -> Data {
     var object = try JSONSerialization.jsonObject(with: data) as! [String: Any]
     for (key, value) in updates {
@@ -523,6 +529,24 @@ enum WidgetSnapshotTests {
             "the merged cache lost the preserved timer's lock state"
         )
 
+        // A pending widget Stop command for the offline timer's type must clear
+        // it on the next refresh, so the widget's own Stop button is not
+        // defeated by indefinite accountless/offline re-appending.
+        let stopStore = TestSnapshotStore()
+        stopStore.bytesByBaby["baby-local"] = localStamped
+        let stopCoordinator = WidgetSnapshotCoordinator(
+            store: stopStore,
+            identityReader: TestIdentityReader(localSurviveIdentity),
+            fetcher: TestSnapshotFetcher(bytes: newerServerSnapshot),
+            pendingStopReader: TestPendingStopReader(["sleep"]),
+            reload: { stopStore.events.append("reload") }
+        )
+        let stoppedSnapshot = await stopCoordinator.refresh(for: "baby-local")
+        require(
+            stoppedSnapshot?.hasActiveTimer(for: .sleep) == false,
+            "an offline-started timer with a pending widget stop command survived the refresh"
+        )
+
         let raceLocalAsOf = try changedFixture(localStamped, [
             "localAsOf": "2026-08-08T10:05:00.000Z",
             "updatedAt": "2026-08-08T10:05:00.000Z",
@@ -553,9 +577,24 @@ enum WidgetSnapshotTests {
             raceSnapshot?.hasActiveTimer(for: .sleep) == true,
             "a just-written local timer newer than the server snapshot was erased by the refresh race"
         )
+        // Second consecutive refresh with the same older server snapshot must
+        // still keep the locally-known timer — the merged cache carries the
+        // local freshness stamp forward so survival is not single-shot.
+        let secondRaceSnapshot = await raceCoordinator.refresh(for: "baby-local")
+        require(
+            secondRaceSnapshot?.hasActiveTimer(for: .sleep) == true,
+            "a locally-known timer was erased on a second refresh (localAsOf stamp not carried forward)"
+        )
+        let storedRace = try WidgetSnapshotDecoder.decodeCache(
+            raceStore.bytesByBaby["baby-local"]!
+        ).data
+        require(
+            storedRace.localAsOf == "2026-08-08T10:05:00.000Z",
+            "the merged cache did not retain the local freshness stamp across refreshes"
+        )
 
-        var remotePriorObject = try JSONSerialization.jsonObject(with: versioned) as! [String: Any]
-        remotePriorObject["babyId"] = "baby-local"
+        var remotePriorObject = try JSONSerialization.jsonObject(with: localStamped) as! [String: Any]
+        remotePriorObject["localAsOf"] = "2026-08-08T10:10:00.000Z"
         remotePriorObject["activeTimer"] = [
             "type": "sleep",
             "startTime": "2026-08-08T09:30:00.000Z",
