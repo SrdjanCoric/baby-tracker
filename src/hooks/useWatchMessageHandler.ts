@@ -30,7 +30,7 @@ const WATCH_ACTIONS = new Set([
 ]);
 
 interface UseWatchMessageHandlerOptions {
-  onRequestSync?: (replyHandler?: WatchReplyHandler) => void;
+  onRequestSync?: (replyHandler?: WatchReplyHandler) => void | Promise<void>;
   onSelectBabyRequest?: (babyId: string) => void;
 }
 
@@ -143,7 +143,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
         switch (action) {
           case "requestSync":
             if (onRequestSync) {
-              onRequestSync(replyHandler);
+              await onRequestSync(replyHandler);
               return null;
             }
             return { success: true };

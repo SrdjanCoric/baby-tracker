@@ -25,7 +25,10 @@ import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { useStoreReview } from "@/hooks/useStoreReview";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
-import { startWatchMessageListening } from "@/services/watch-service";
+import {
+  refreshWatchCredentialsFromPhone,
+  startWatchMessageListening,
+} from "@/services/watch-service";
 import {
   appendExternalTimerCommand,
   createRoutedExternalTimerCommand,
@@ -143,7 +146,14 @@ function StoreReviewHandler({ children }: { children: React.ReactNode }) {
 function WatchMessageHandler({ children }: { children: React.ReactNode }) {
   const { getWidgetDataJson } = useWidget();
   const { registerHandler } = useWatchMessageHandler({
-    onRequestSync: (replyHandler) => {
+    onRequestSync: async (replyHandler) => {
+      const published = await refreshWatchCredentialsFromPhone(async () => {
+        const { error } = await supabase.auth.refreshSession();
+        if (error) throw error;
+      });
+      if (!published) {
+        throw new Error("Watch credential refresh could not be published");
+      }
       const json = getWidgetDataJson();
       if (replyHandler && json) {
         replyHandler({ widgetData: json });

@@ -1,4 +1,4 @@
-# Task 0084: Watch uses the shared Supabase credential safely
+# Task 0084: Watch renews its credential through phone-mediated sync
 
 **Branch**: `feature/renew-watch-credentials-from-shared-session`
 **Depends on**: 0083
@@ -10,8 +10,10 @@
 The Watch receives task 0083's versioned session capsule through WatchConnectivity and uses its
 access token for Supabase RPCs. It must never redeem the phone's refresh token: no cross-device
 lock or best-effort replication channel can guarantee that the phone and Watch will not reuse
-different generations of one rotating refresh-token family. On 401, the Watch marks the credential
-stale and requests a fresh phone publication.
+different generations of one rotating refresh-token family. On 401, the Watch asks the paired
+phone to refresh its authoritative session and republish the renewed capsule. The iPhone app may
+be backgrounded or suspended; when the phone is unavailable or the app was explicitly force-quit,
+the Watch waits for the phone instead of owning an independent session.
 
 ## Implementation decision
 
@@ -23,27 +25,36 @@ stale and requests a fresh phone publication.
 - [x] [confirm-security] After review, the user confirmed on 2026-08-11 that the Watch must never
       redeem the phone's rotating refresh token. A 401 requests a phone sync instead. An
       independently renewable Watch requires a separately designed device-specific session.
+- [x] [decision] The user clarified on 2026-08-11 that no independent Watch session is required.
+      The normal path must work while the paired phone app is backgrounded: the phone refreshes and
+      republishes its authoritative session when Watch requests sync. If iOS cannot run the phone
+      app, the Watch may wait until it can.
 
 ## Implementation work
 
 - [x] In `targets/watch/index.swift` / `WatchActivitySummary.swift`, read the session from the
       shared store from 0083 instead of the static access token.
 - [x] On RPC 401: surface unauthorized, mark the credential stale, and request a phone sync without
-      redeeming or replacing the shared refresh-token family.
+      redeeming or replacing the shared refresh-token family on Watch. The phone handles that
+      request by refreshing its shared session and republishing the latest capsule.
 - [x] Remove the Watch's reliance on any credential field 0083 deprecated (e.g. the old
       `UserDefaults` access token), if anything still reads it.
 
 ## Human checkpoints
 
-- [ ] [verify] Physical Apple Watch with an expired access token, then trigger a Watch summary
-      refresh. · Expected: the stale-credential banner appears and the Watch requests a phone sync;
-      opening the phone republishes a fresh capsule and Watch requests resume. · Failure: the Watch
-      silently keeps stale data or redeems the phone refresh token.
+- [ ] [verify] Physical Apple Watch with an expired access token while the paired iPhone app is
+      backgrounded, then trigger a Watch request. · Expected: the Watch requests phone sync; iOS
+      wakes the companion app, the phone refreshes and republishes, and Watch requests resume
+      without opening the app UI. · Failure: manual app opening is required, the Watch silently
+      keeps stale data, or the Watch redeems the phone refresh token.
 
 ## Acceptance criteria
 
 - [x] The Watch never redeems or replaces the phone's rotating refresh-token family.
-- [x] A Watch 401 activates stale-credential recovery and requests a fresh capsule from the phone.
+- [x] A Watch 401 activates stale-credential recovery and asks the phone to refresh and republish
+      its authoritative capsule.
+- [x] The phone-side `requestSync` handler refreshes and republishes without requiring the app UI to
+      be foregrounded; an unavailable or explicitly force-quit phone may defer delivery.
 - [x] The app and Widget cannot be signed out by Watch-side refresh-token reuse.
 - [x] No Watch code path still reads a credential field deprecated by 0083.
 - [x] Missing, rejected, or expired Watch credentials activate stale-session recovery instead of

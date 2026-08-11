@@ -382,6 +382,22 @@ describe("useWatchMessageHandler", () => {
     });
   });
 
+  it("reports a phone-side credential refresh failure to the Watch", async () => {
+    mockOnRequestSync.mockRejectedValue(new Error("refresh failed"));
+    render(<TestHarness />);
+    await waitFor(() => expect(registeredHandler).not.toBeNull());
+
+    const reply = jest.fn();
+    sendMessage(
+      { action: "requestSync", babyId: "baby-a", requestId: "failed-refresh" },
+      reply
+    );
+
+    await waitFor(() => {
+      expect(reply).toHaveBeenCalledWith({ success: false, error: "action-failed" });
+    });
+  });
+
   it("terminalizes successful activity requests and returns the cached success to duplicates", async () => {
     render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());

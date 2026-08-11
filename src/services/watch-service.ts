@@ -6,6 +6,7 @@ type WatchPayload = Record<string, unknown>;
 
 interface WatchConnectivityModule {
   updateApplicationContext: (context: WatchPayload) => void;
+  getApplicationContext: () => Promise<WatchPayload | null>;
   sendMessage: (
     message: WatchPayload,
     replyCb?: (reply: WatchPayload) => void,
@@ -31,6 +32,7 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
     if (connectivity?.updateApplicationContext && connectivity?.sendMessage) {
       watchModule = {
         updateApplicationContext: connectivity.updateApplicationContext,
+        getApplicationContext: connectivity.getApplicationContext,
         sendMessage: connectivity.sendMessage,
         getReachability: connectivity.getReachability,
         getIsWatchAppInstalled: connectivity.getIsWatchAppInstalled,
@@ -112,6 +114,31 @@ async function publishApplicationContext(context: WatchPayload): Promise<void> {
 
   lastContext = context;
   module.updateApplicationContext(context);
+}
+
+/**
+ * Refresh the phone-owned Supabase session and republish its latest capsule.
+ *
+ * WatchConnectivity can wake the companion app without mounting the normal UI,
+ * so restore the last system-persisted application context instead of relying
+ * only on this module's process-local cache.
+ */
+export async function refreshWatchCredentialsFromPhone(
+  refreshSession: () => Promise<void>
+): Promise<boolean> {
+  const module = await getWatchConnectivityModule();
+  const bridge = loadSharedSupabaseSessionBridge();
+  if (!module || !bridge) return false;
+
+  const persistedContext = lastContext ?? await module.getApplicationContext() ?? {};
+  await refreshSession();
+  const sessionCapsule = await bridge.readSession();
+  if (!sessionCapsule) return false;
+
+  const context = { ...persistedContext, sessionCapsule };
+  lastContext = context;
+  module.updateApplicationContext(context);
+  return true;
 }
 
 export async function syncToWatch(data: WidgetData, watchData?: WatchData, authContext?: WatchAuthContext): Promise<void> {

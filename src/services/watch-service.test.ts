@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
+const getApplicationContext = vi.fn();
 const getIsWatchAppInstalled = vi.fn(async () => true);
 const sharedSessionCapsule = JSON.stringify({
   version: 1,
@@ -27,6 +28,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
+  getApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
   getIsWatchAppInstalled,
@@ -50,8 +52,48 @@ async function loadWatchService() {
 describe("watch language transport", () => {
   beforeEach(() => {
     updateApplicationContext.mockClear();
+    getApplicationContext.mockReset();
+    getApplicationContext.mockResolvedValue(null);
     getIsWatchAppInstalled.mockResolvedValue(true);
-    readSharedSession.mockClear();
+    readSharedSession.mockReset();
+    readSharedSession.mockResolvedValue(sharedSessionCapsule);
+  });
+
+  it("refreshes and republishes credentials when the Watch requests sync", async () => {
+    const renewedSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 8,
+      lineage: "session-lineage",
+      session: JSON.stringify({
+        access_token: "renewed-access-token",
+        refresh_token: "renewed-refresh-token",
+      }),
+    });
+    let currentCapsule = sharedSessionCapsule;
+    readSharedSession.mockImplementation(async () => currentCapsule);
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => {
+      currentCapsule = renewedSessionCapsule;
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await refreshWatchCredentialsFromPhone(refreshSession);
+
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(updateApplicationContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        widgetData: JSON.stringify(widgetData),
+        sessionCapsule: renewedSessionCapsule,
+        userId: authContext.userId,
+      })
+    );
   });
 
   it("holds the language until the watch session can receive it", async () => {
