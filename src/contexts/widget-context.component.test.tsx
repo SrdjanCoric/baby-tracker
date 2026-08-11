@@ -14,15 +14,16 @@ function makeTimerState(isPaused: boolean) {
   };
 
   return {
-    feeding: { ...shared, timerInstanceId: "feeding-1", side: "left" },
+    feeding: { ...shared, timerInstanceId: "feeding-1", side: "left", lockState: "offline" },
     sleep: {
       ...shared,
       timerInstanceId: "sleep-1",
       sleepType: "nap",
       morningClassification: "automatic",
+      lockState: "offline",
     },
-    pumping: { ...shared, timerInstanceId: "pumping-1", side: "both" },
-    tummyTime: { ...shared, timerInstanceId: "tummy-1" },
+    pumping: { ...shared, timerInstanceId: "pumping-1", side: "both", lockState: "accountless" },
+    tummyTime: { ...shared, timerInstanceId: "tummy-1", lockState: "owned" },
   };
 }
 
@@ -130,12 +131,17 @@ function activeTimers() {
     </WidgetProvider>
   );
 
-  return JSON.parse(capturedJson!).activeTimers as Array<{
-    type: string;
-    startTime: string;
-    accumulatedSeconds?: number;
-    isRemote?: boolean;
-  }>;
+  const parsed = JSON.parse(capturedJson!);
+  return {
+    timers: parsed.activeTimers as Array<{
+      type: string;
+      startTime: string;
+      accumulatedSeconds?: number;
+      isRemote?: boolean;
+      lockState?: string;
+    }>,
+    root: parsed as { localAsOf?: string; updatedAt?: string },
+  };
 }
 
 describe("WidgetProvider running timer payload", () => {
@@ -146,7 +152,7 @@ describe("WidgetProvider running timer payload", () => {
   });
 
   it("keeps the real start after a pause is resumed for every timer type", () => {
-    const timers = activeTimers();
+    const { timers } = activeTimers();
 
     expect(timers.map(({ type, startTime }) => ({ type, startTime }))).toEqual([
       { type: "feeding", startTime: START.toISOString() },
@@ -159,7 +165,7 @@ describe("WidgetProvider running timer payload", () => {
   it("freezes every paused timer at pausedAt minus the real start", () => {
     mockTimerState = makeTimerState(true);
 
-    const timers = activeTimers();
+    const { timers } = activeTimers();
 
     expect(timers.map(({ type, startTime, accumulatedSeconds }) => ({
       type,
@@ -185,7 +191,7 @@ describe("WidgetProvider running timer payload", () => {
       })
     );
 
-    const timers = activeTimers().filter(({ isRemote }) => isRemote);
+    const timers = activeTimers().timers.filter(({ isRemote }) => isRemote);
 
     expect(timers.map(({ type, startTime, accumulatedSeconds }) => ({
       type,
@@ -196,6 +202,19 @@ describe("WidgetProvider running timer payload", () => {
       { type: "sleep", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
       { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
       { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+    ]);
+  });
+
+  it("stamps the local write and propagates each timer's lockState", () => {
+    const { timers, root } = activeTimers();
+
+    expect(root.localAsOf).toBe(root.updatedAt);
+    expect(root.localAsOf).toBeTruthy();
+    expect(timers.map(({ type, lockState }) => ({ type, lockState }))).toEqual([
+      { type: "feeding", lockState: "offline" },
+      { type: "sleep", lockState: "offline" },
+      { type: "pumping", lockState: "accountless" },
+      { type: "tummyTime", lockState: "owned" },
     ]);
   });
 });

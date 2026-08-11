@@ -122,8 +122,10 @@ When the latest completed sleep is the current evening's stored `night` session,
 
 - **WidgetKit** home screen widgets refresh the selected baby's complete activity summary on scheduled
   timeline updates and after timer-change pushes or Widget actions. A failed refresh keeps the previous
-  summary intact. Widgets also show locally cached activity data for accountless and signed-out users.
-  Accountless timers keep running in the widget; a timer left behind by sign-out does not continue ticking.
+  summary intact. A successful refresh preserves locally-known accountless or offline timers that have
+  no server row, while server-owned timer removals still apply. Widgets also show locally cached activity
+  data for accountless and signed-out users. Accountless timers keep running in the widget; a timer left
+  behind by sign-out does not continue ticking.
 - **Live Activities + Dynamic Island** for active feeding and sleep timers
 - **Apple Watch** companion app using WCSession as an optional fast path and direct Supabase fallback.
   While a timer is active, it probes that baby's timer state every 30 seconds and requests a complete

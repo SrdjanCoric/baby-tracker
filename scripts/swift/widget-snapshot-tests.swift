@@ -84,6 +84,12 @@ actor TestSnapshotFetcher: WidgetSnapshotFetching {
     }
 }
 
+struct TestPendingStopReader: WidgetSnapshotPendingStopReading {
+    let types: Set<String>
+    init(_ types: Set<String>) { self.types = types }
+    func pendingStopActivityTypes(for babyId: String) -> Set<String> { types }
+}
+
 func changedFixture(_ data: Data, _ updates: [String: Any]) throws -> Data {
     var object = try JSONSerialization.jsonObject(with: data) as! [String: Any]
     for (key, value) in updates {
@@ -109,6 +115,7 @@ enum WidgetSnapshotTests {
         let missingMorningPending = try Data(
             contentsOf: fixtures.appendingPathComponent("versioned-missing-morning-pending.json")
         )
+        let localStamped = try Data(contentsOf: fixtures.appendingPathComponent("local-stamped.json"))
 
         let legacyDecoded = try WidgetSnapshotDecoder.decodeCache(legacy)
         require(legacyDecoded.kind == .legacy, "legacy fixture lost its compatibility classification")
@@ -468,6 +475,159 @@ enum WidgetSnapshotTests {
         )
         _ = await staleCoordinator.refresh(for: "baby-versioned")
         require(staleStore.bytesByBaby["baby-versioned"] == legacy, "stale account generation was installed")
+
+        let localDecoded = try WidgetSnapshotDecoder.decodeCache(localStamped)
+        require(localDecoded.kind == .local, "stamped local cache was classified as legacy instead of local")
+        require(
+            localDecoded.data.localAsOf == "2026-08-08T10:01:00.000Z",
+            "local cache did not expose its localAsOf freshness stamp"
+        )
+        require(
+            localDecoded.data.activeTimer?.lockState == "offline",
+            "local cache did not preserve the timer's offline lock state"
+        )
+
+        let localSurviveIdentity = WidgetSnapshotIdentity(
+            accountId: "account-a",
+            babyId: "baby-local",
+            generation: "generation-1",
+            timezone: "Europe/Belgrade"
+        )
+        let newerServerSnapshot = try changedFixture(versioned, [
+            "babyId": "baby-local",
+            "serverAsOf": "2026-08-08T10:05:00.000Z",
+            "updatedAt": "2026-08-08T10:05:00.000Z",
+            "activeTimer": NSNull(),
+            "activeTimers": []
+        ])
+        let surviveStore = TestSnapshotStore()
+        surviveStore.bytesByBaby["baby-local"] = localStamped
+        let surviveCoordinator = WidgetSnapshotCoordinator(
+            store: surviveStore,
+            identityReader: TestIdentityReader(localSurviveIdentity),
+            fetcher: TestSnapshotFetcher(bytes: newerServerSnapshot),
+            reload: { surviveStore.events.append("reload") }
+        )
+        let survivedSnapshot = await surviveCoordinator.refresh(for: "baby-local")
+        require(
+            survivedSnapshot?.hasActiveTimer(for: .sleep) == true,
+            "an offline-started local timer was erased by a newer server snapshot refresh"
+        )
+        require(
+            survivedSnapshot?.activities.sleep.todayMinutes == 120,
+            "server-owned totals were not replaced wholesale during the timer merge"
+        )
+        let storedSurvived = try WidgetSnapshotDecoder.decodeCache(
+            surviveStore.bytesByBaby["baby-local"]!
+        ).data
+        require(
+            storedSurvived.hasActiveTimer(for: .sleep) == true,
+            "the merged cache did not retain the locally-known offline timer"
+        )
+        require(
+            storedSurvived.getActiveTimer(for: .sleep)?.lockState == "offline",
+            "the merged cache lost the preserved timer's lock state"
+        )
+
+        // A pending widget Stop command for the offline timer's type must clear
+        // it on the next refresh, so the widget's own Stop button is not
+        // defeated by indefinite accountless/offline re-appending.
+        let stopStore = TestSnapshotStore()
+        stopStore.bytesByBaby["baby-local"] = localStamped
+        let stopCoordinator = WidgetSnapshotCoordinator(
+            store: stopStore,
+            identityReader: TestIdentityReader(localSurviveIdentity),
+            fetcher: TestSnapshotFetcher(bytes: newerServerSnapshot),
+            pendingStopReader: TestPendingStopReader(["sleep"]),
+            reload: { stopStore.events.append("reload") }
+        )
+        let stoppedSnapshot = await stopCoordinator.refresh(for: "baby-local")
+        require(
+            stoppedSnapshot?.hasActiveTimer(for: .sleep) == false,
+            "an offline-started timer with a pending widget stop command survived the refresh"
+        )
+
+        let raceLocalAsOf = try changedFixture(localStamped, [
+            "localAsOf": "2026-08-08T10:05:00.000Z",
+            "updatedAt": "2026-08-08T10:05:00.000Z",
+            "activeTimer": [
+                "type": "sleep",
+                "startTime": "2026-08-08T09:30:00.000Z",
+                "timerInstanceId": "race-timer",
+                "lockState": "owned"
+            ]
+        ])
+        let olderServerSnapshot = try changedFixture(versioned, [
+            "babyId": "baby-local",
+            "serverAsOf": "2026-08-08T10:00:00.000Z",
+            "updatedAt": "2026-08-08T10:00:00.000Z",
+            "activeTimer": NSNull(),
+            "activeTimers": []
+        ])
+        let raceStore = TestSnapshotStore()
+        raceStore.bytesByBaby["baby-local"] = raceLocalAsOf
+        let raceCoordinator = WidgetSnapshotCoordinator(
+            store: raceStore,
+            identityReader: TestIdentityReader(localSurviveIdentity),
+            fetcher: TestSnapshotFetcher(bytes: olderServerSnapshot),
+            reload: { raceStore.events.append("reload") }
+        )
+        let raceSnapshot = await raceCoordinator.refresh(for: "baby-local")
+        require(
+            raceSnapshot?.hasActiveTimer(for: .sleep) == true,
+            "a just-written local timer newer than the server snapshot was erased by the refresh race"
+        )
+        // Second consecutive refresh with the same older server snapshot must
+        // still keep the locally-known timer — the merged cache carries the
+        // local freshness stamp forward so survival is not single-shot.
+        let secondRaceSnapshot = await raceCoordinator.refresh(for: "baby-local")
+        require(
+            secondRaceSnapshot?.hasActiveTimer(for: .sleep) == true,
+            "a locally-known timer was erased on a second refresh (localAsOf stamp not carried forward)"
+        )
+        let storedRace = try WidgetSnapshotDecoder.decodeCache(
+            raceStore.bytesByBaby["baby-local"]!
+        ).data
+        require(
+            storedRace.localAsOf == "2026-08-08T10:05:00.000Z",
+            "the merged cache did not retain the local freshness stamp across refreshes"
+        )
+
+        var remotePriorObject = try JSONSerialization.jsonObject(with: localStamped) as! [String: Any]
+        remotePriorObject["localAsOf"] = "2026-08-08T10:10:00.000Z"
+        remotePriorObject["activeTimer"] = [
+            "type": "sleep",
+            "startTime": "2026-08-08T09:30:00.000Z",
+            "timerInstanceId": "remote-timer",
+            "isRemote": true
+        ]
+        remotePriorObject["activeTimers"] = [[
+            "type": "sleep",
+            "startTime": "2026-08-08T09:30:00.000Z",
+            "timerInstanceId": "remote-timer",
+            "isRemote": true
+        ]]
+        let remotePrior = try JSONSerialization.data(withJSONObject: remotePriorObject)
+        let remoteResponse = try changedFixture(versioned, [
+            "babyId": "baby-local",
+            "serverAsOf": "2026-08-08T10:05:00.000Z",
+            "updatedAt": "2026-08-08T10:05:00.000Z",
+            "activeTimer": NSNull(),
+            "activeTimers": []
+        ])
+        let remoteStore = TestSnapshotStore()
+        remoteStore.bytesByBaby["baby-local"] = remotePrior
+        let remoteCoordinator = WidgetSnapshotCoordinator(
+            store: remoteStore,
+            identityReader: TestIdentityReader(localSurviveIdentity),
+            fetcher: TestSnapshotFetcher(bytes: remoteResponse),
+            reload: { remoteStore.events.append("reload") }
+        )
+        let remoteSnapshot = await remoteCoordinator.refresh(for: "baby-local")
+        require(
+            remoteSnapshot?.hasActiveTimer(for: .sleep) == false,
+            "a server-owned remote timer survived a server snapshot that no longer lists it"
+        )
 
         print("PASS: Swift decoder and coordinator preserve one coherent Widget snapshot")
     }

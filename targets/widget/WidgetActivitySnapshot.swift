@@ -77,6 +77,9 @@ struct ActiveTimerData: Codable, Equatable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    /// Sync provenance for the widget timer-list merge. Only "accountless" or
+    /// "offline" have no server row and must survive a server snapshot refresh.
+    var lockState: String?
 }
 
 struct WidgetLocalDay: Codable, Equatable {
@@ -89,6 +92,10 @@ struct WidgetDataModel: Codable, Equatable {
     var serverAsOf: String?
     var timezone: String?
     var localDay: WidgetLocalDay?
+    /// Freshness stamp for an app-written local snapshot, in the same clock
+    /// domain as `updatedAt`. Present (with `schemaVersion` absent) marks a
+    /// `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh.
+    var localAsOf: String?
     var babyId: String
     var babyName: String
     var activities: WidgetActivityData
@@ -101,6 +108,7 @@ struct WidgetDataModel: Codable, Equatable {
         case serverAsOf
         case timezone
         case localDay
+        case localAsOf
         case babyId
         case babyName
         case activities
@@ -114,6 +122,7 @@ struct WidgetDataModel: Codable, Equatable {
         serverAsOf: String? = nil,
         timezone: String? = nil,
         localDay: WidgetLocalDay? = nil,
+        localAsOf: String? = nil,
         babyId: String,
         babyName: String,
         activities: WidgetActivityData,
@@ -125,6 +134,7 @@ struct WidgetDataModel: Codable, Equatable {
         self.serverAsOf = serverAsOf
         self.timezone = timezone
         self.localDay = localDay
+        self.localAsOf = localAsOf
         self.babyId = babyId
         self.babyName = babyName
         self.activities = activities
@@ -140,6 +150,7 @@ struct WidgetDataModel: Codable, Equatable {
         serverAsOf = try container.decodeIfPresent(String.self, forKey: .serverAsOf)
         timezone = try container.decodeIfPresent(String.self, forKey: .timezone)
         localDay = try container.decodeIfPresent(WidgetLocalDay.self, forKey: .localDay)
+        localAsOf = try container.decodeIfPresent(String.self, forKey: .localAsOf)
         babyId = try container.decode(String.self, forKey: .babyId)
         babyName = try container.decode(String.self, forKey: .babyName)
         activities = try container.decode(WidgetActivityData.self, forKey: .activities)
@@ -169,6 +180,7 @@ struct WidgetDataModel: Codable, Equatable {
         try container.encodeIfPresent(serverAsOf, forKey: .serverAsOf)
         try container.encodeIfPresent(timezone, forKey: .timezone)
         try container.encodeIfPresent(localDay, forKey: .localDay)
+        try container.encodeIfPresent(localAsOf, forKey: .localAsOf)
         try container.encode(babyId, forKey: .babyId)
         try container.encode(babyName, forKey: .babyName)
         try container.encode(activities, forKey: .activities)
@@ -227,6 +239,7 @@ private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
 
 enum WidgetSnapshotKind: Equatable {
     case legacy
+    case local
     case versioned
 }
 
@@ -258,6 +271,9 @@ enum WidgetSnapshotDecoder {
         data.activities.sleep.napCountToday = data.activities.sleep.napCountToday ?? 0
         data.activities.sleep.morningConfirmationPending =
             data.activities.sleep.morningConfirmationPending ?? false
+        if data.localAsOf != nil {
+            return DecodedWidgetSnapshot(kind: .local, data: data)
+        }
         return DecodedWidgetSnapshot(kind: .legacy, data: data)
     }
 
@@ -356,6 +372,17 @@ protocol WidgetSnapshotFetching: Sendable {
     func fetchSnapshot(for identity: WidgetSnapshotIdentity) async throws -> Data
 }
 
+/// Reads pending widget stop commands so the timer-list merge can drop a
+/// locally-known timer the user has already stopped from the widget surface.
+/// `activityType` values are DB column names (e.g. `"tummy_time"`).
+protocol WidgetSnapshotPendingStopReading: Sendable {
+    func pendingStopActivityTypes(for babyId: String) -> Set<String>
+}
+
+struct EmptyPendingStopReader: WidgetSnapshotPendingStopReading {
+    func pendingStopActivityTypes(for babyId: String) -> Set<String> { [] }
+}
+
 private struct WidgetSnapshotRefreshOutcome {
     let data: WidgetDataModel?
     let displayChanged: Bool
@@ -365,6 +392,7 @@ actor WidgetSnapshotCoordinator {
     private let store: WidgetSnapshotStoring
     private let identityReader: WidgetSnapshotIdentityReading
     private let fetcher: WidgetSnapshotFetching
+    private let pendingStopReader: WidgetSnapshotPendingStopReading
     private let reload: @Sendable () -> Void
     private var inFlight: [String: Task<WidgetSnapshotRefreshOutcome, Never>] = [:]
 
@@ -372,11 +400,13 @@ actor WidgetSnapshotCoordinator {
         store: WidgetSnapshotStoring,
         identityReader: WidgetSnapshotIdentityReading,
         fetcher: WidgetSnapshotFetching,
+        pendingStopReader: WidgetSnapshotPendingStopReading = EmptyPendingStopReader(),
         reload: @escaping @Sendable () -> Void
     ) {
         self.store = store
         self.identityReader = identityReader
         self.fetcher = fetcher
+        self.pendingStopReader = pendingStopReader
         self.reload = reload
     }
 
@@ -395,12 +425,14 @@ actor WidgetSnapshotCoordinator {
         let store = self.store
         let identityReader = self.identityReader
         let fetcher = self.fetcher
+        let pendingStopReader = self.pendingStopReader
         let task = Task<WidgetSnapshotRefreshOutcome, Never> {
             await Self.performRefresh(
                 for: babyId,
                 store: store,
                 identityReader: identityReader,
-                fetcher: fetcher
+                fetcher: fetcher,
+                pendingStopReader: pendingStopReader
             )
         }
         inFlight[babyId] = task
@@ -416,7 +448,8 @@ actor WidgetSnapshotCoordinator {
         for babyId: String,
         store: WidgetSnapshotStoring,
         identityReader: WidgetSnapshotIdentityReading,
-        fetcher: WidgetSnapshotFetching
+        fetcher: WidgetSnapshotFetching,
+        pendingStopReader: WidgetSnapshotPendingStopReading
     ) async -> WidgetSnapshotRefreshOutcome {
         let priorBytes = store.readSnapshot(for: babyId)
         let prior = priorBytes.flatMap { try? WidgetSnapshotDecoder.decodeCache($0).data }
@@ -439,14 +472,39 @@ actor WidgetSnapshotCoordinator {
             guard !isOlder(response, than: prior) else {
                 return WidgetSnapshotRefreshOutcome(data: prior, displayChanged: false)
             }
-            if responseBytes == priorBytes {
-                return WidgetSnapshotRefreshOutcome(data: response, displayChanged: false)
+
+            var merged = response
+            let pendingStopTypes = pendingStopReader.pendingStopActivityTypes(for: babyId)
+            let mergeResult = mergeTimers(
+                prior: prior,
+                into: response,
+                pendingStopTypes: pendingStopTypes
+            )
+            let mergedTimerList = mergeResult.list
+            merged.activeTimers = mergedTimerList
+            merged.activeTimer = mergedTimerList.first
+            merged.activities.sleep.isActive = mergedTimerList.contains { $0.type == "sleep" }
+            // Carry the local freshness stamp forward when a locally-known timer
+            // was preserved, so survival is not single-shot across refreshes.
+            if mergeResult.preservedLocal, let priorLocalAsOf = prior?.localAsOf {
+                merged.localAsOf = priorLocalAsOf
             }
 
-            let shouldReload = !isDisplayEquivalent(response, to: prior)
-            try store.writeSnapshot(responseBytes, for: babyId)
+            let mergedBytes: Data
+            if mergedTimerList == (response.activeTimers ?? []) {
+                mergedBytes = responseBytes
+            } else {
+                mergedBytes = try JSONEncoder().encode(merged)
+            }
+
+            if mergedBytes == priorBytes {
+                return WidgetSnapshotRefreshOutcome(data: merged, displayChanged: false)
+            }
+
+            let shouldReload = !isDisplayEquivalent(merged, to: prior)
+            try store.writeSnapshot(mergedBytes, for: babyId)
             return WidgetSnapshotRefreshOutcome(
-                data: response,
+                data: merged,
                 displayChanged: shouldReload
             )
         } catch {
@@ -469,6 +527,52 @@ actor WidgetSnapshotCoordinator {
             return true
         }
         return candidateDate < cachedDate
+    }
+
+    private struct MergeResult {
+        let list: [ActiveTimerData]
+        let preservedLocal: Bool
+    }
+
+    /// Merge the timer list instead of replacing it: server-owned removals apply
+    /// (a remote/server timer missing from the response is dropped), but a
+    /// locally-known timer survives when it can have no server row
+    /// (lockState accountless/offline) or when the app wrote it after the server
+    /// snapshot (prior.localAsOf newer than response.serverAsOf). A locally-known
+    /// timer with a pending widget stop command for its type is dropped so the
+    /// widget's own Stop button can clear it.
+    private static func mergeTimers(
+        prior: WidgetDataModel?,
+        into response: WidgetDataModel,
+        pendingStopTypes: Set<String>
+    ) -> MergeResult {
+        var result = response.activeTimers ?? []
+        var presentTypes = Set(result.map { $0.type })
+        let responseAsOf = response.serverAsOf.flatMap { parseWidgetSnapshotTimestamp($0) }
+        let priorAsOf = prior?.localAsOf.flatMap { parseWidgetSnapshotTimestamp($0) }
+        var preservedLocal = false
+        for priorTimer in prior?.activeTimers ?? [] {
+            if presentTypes.contains(priorTimer.type) { continue }
+            if priorTimer.isRemote == true { continue }
+            if pendingStopTypes.contains(dbActivityType(for: priorTimer.type)) { continue }
+            let lockState = priorTimer.lockState
+            if lockState == "accountless" || lockState == "offline" {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+                preservedLocal = true
+                continue
+            }
+            if let local = priorAsOf, let server = responseAsOf, local > server {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+                preservedLocal = true
+            }
+        }
+        return MergeResult(list: result, preservedLocal: preservedLocal)
+    }
+
+    private static func dbActivityType(for type: String) -> String {
+        type == "tummyTime" ? "tummy_time" : type
     }
 
     private static func isDisplayEquivalent(

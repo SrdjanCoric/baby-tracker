@@ -275,6 +275,26 @@ func pendingSleepStopAt(for babyId: String) -> String? {
     })?.eventAt
 }
 
+/// Widget-side reader of pending stop commands for the snapshot coordinator's
+/// timer-list merge. A locally-known timer whose DB activity type has a queued
+/// stop command is dropped on the next refresh so the widget's own Stop button
+/// can clear accountless/offline timers that have no server row to delete.
+final class AppGroupPendingStopReader: WidgetSnapshotPendingStopReading, @unchecked Sendable {
+    private let userDefaults: UserDefaults
+
+    init(userDefaults: UserDefaults) {
+        self.userDefaults = userDefaults
+    }
+
+    func pendingStopActivityTypes(for babyId: String) -> Set<String> {
+        readExternalTimerCommandQueue(from: userDefaults)
+            .commands
+            .filter { $0.action == "stop" && $0.babyId == babyId }
+            .map { $0.activityType }
+            .reduce(into: Set<String>()) { $0.insert($1) }
+    }
+}
+
 func writeExternalTimerCommandQueue(_ queue: ExternalTimerCommandQueue, to userDefaults: UserDefaults) {
     if let data = try? JSONEncoder().encode(queue),
        let json = String(data: data, encoding: .utf8) {
@@ -873,6 +893,7 @@ private let widgetSnapshotRuntime: (
         store: store,
         identityReader: identity,
         fetcher: fetcher,
+        pendingStopReader: AppGroupPendingStopReader(userDefaults: userDefaults),
         reload: { WidgetCenter.shared.reloadAllTimelines() }
     )
     return (store, identity, coordinator)

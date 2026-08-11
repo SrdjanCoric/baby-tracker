@@ -194,7 +194,12 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   read-only, versioned server snapshot returns only the current fields those native surfaces display —
   baby identity, active timers, latest relevant facts, current-day aggregates, applicable goals and
   wake-window state — never histories or multiple babies. A successful refresh replaces the complete
-  per-baby base; no client may merge a fresh timer list into stale summaries. Widget fetches on its
+  per-baby base; the only merge a client may perform into a server response is preserving
+  locally-known timers the server cannot know about — an accountless or offline-started timer
+  (no server row), or a just-written timer in the write-then-refresh race guarded by an app-stamped
+  freshness value (`localAsOf`) newer than the response's `serverAsOf`. Server-owned removals still
+  apply to those timers once the server knows about them, and all non-timer fields (totals, last
+  times, wake windows) keep coming wholesale from the response. Widget fetches on its
   existing timer-change push, action, and scheduled timeline opportunities without short polling.
   Watch keeps its 30-second selected-baby timer probe only while a timer appears active and fetches the
   complete summary only when that fingerprint changes or another explicit full-refresh trigger occurs.
@@ -285,7 +290,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0078 · Refresh Apple Watch summaries after timer changes (after 0077) → tasks/done/0078-refresh-watch-summaries-after-timer-changes.md
 - [x] 0079 · Cap automatic rating prompts to three per rolling year and add a Rate App entry point → tasks/done/0079-improve-rating-prompts-and-rate-app-entry.md
 - [x] 0081 · Show widget data without an account or sign-in → tasks/done/0081-show-widget-data-without-account.md
-- [ ] 0082 · Preserve locally-known timers across widget server refreshes (after 0081) → tasks/0082-preserve-local-timers-across-widget-refreshes.md
+- [>] 0082 · Preserve locally-known timers across widget server refreshes (after 0081) → tasks/0082-preserve-local-timers-across-widget-refreshes.md
 - [ ] 0083 · Widget renews its Supabase credential via a shared App Group session (after 0082) → tasks/0083-renew-widget-credentials-via-shared-session.md
 - [ ] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/0084-renew-watch-credentials-from-shared-session.md
 - [ ] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/0085-preserve-local-timers-across-watch-refreshes.md
