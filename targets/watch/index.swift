@@ -564,6 +564,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         // session capsule. Never retain another account's cached baby data or
         // credential merely because capsule publication failed.
         let authDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        let hasIncomingSessionCapsule = context["sessionCapsule"] is String
         var authScopeChanged = false
         if let userId = context["userId"] as? String,
            let authDefaults {
@@ -583,10 +584,18 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 localStoppedActivityTimes.removeAll()
                 pendingDiaperLogs.removeAll()
                 stopNetworkPolling()
-                do {
-                    try WatchSupabaseSessionEnvironment.vault.remove()
-                } catch {
-                    NSLog("[WatchSupabaseSession] scope-change credential cleanup failed")
+                if WatchCredentialContextPolicy.shouldRemoveStoredSession(
+                    scopeChanged: authScopeChanged,
+                    hasIncomingCapsule: hasIncomingSessionCapsule
+                ) {
+                    do {
+                        try WatchSupabaseSessionEnvironment.vault.remove()
+                    } catch {
+                        NSLog("[WatchSupabaseSession] scope-change credential cleanup failed")
+                    }
+                } else {
+                    isTokenStale = true
+                    sendAction(["action": "requestSync"])
                 }
             }
         }

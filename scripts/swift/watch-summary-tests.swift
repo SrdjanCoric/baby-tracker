@@ -278,6 +278,13 @@ enum WatchSummaryTests {
             ),
             "missing phone and stored capsules did not request recovery"
         )
+        requireWatch(
+            !WatchCredentialContextPolicy.shouldRemoveStoredSession(
+                scopeChanged: true,
+                hasIncomingCapsule: false
+            ),
+            "scope change deleted the only session without a replacement"
+        )
 
         let metadataSuiteName = "watch-metadata-install-tests.\(UUID().uuidString)"
         let metadataDefaults = UserDefaults(suiteName: metadataSuiteName)!

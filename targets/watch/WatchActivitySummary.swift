@@ -419,6 +419,13 @@ enum WatchCredentialContextPolicy {
     ) -> Bool {
         !hasIncomingCapsule && !hasStoredSession
     }
+
+    static func shouldRemoveStoredSession(
+        scopeChanged: Bool,
+        hasIncomingCapsule: Bool
+    ) -> Bool {
+        scopeChanged && hasIncomingCapsule
+    }
 }
 
 enum WatchCredentialContextInstaller {
