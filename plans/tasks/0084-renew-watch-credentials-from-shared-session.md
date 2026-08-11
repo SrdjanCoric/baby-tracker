@@ -73,3 +73,29 @@ stale and requests a fresh phone publication.
   `watch-swift.log`, `eslint.log`, and `typecheck.log`).
 - Not run here: the physical >1-hour phone-closed Watch checkpoint above and the final canonical
   gate, which remain owned by the manual review loop and `finish-task`.
+
+## Review remediation evidence
+
+- The user confirmed the security-safe behavior: the Watch never redeems the phone's rotating
+  refresh token. An expired Watch access token marks credentials stale and requests a phone sync;
+  independently renewable Watch authentication remains a separate architecture task.
+- `npm run test:widget:swift` passed, including Widget and Watch production typechecks, the shared
+  session harness, the Watch session safety harness, and Watch summary tests.
+- Focused Vitest batch passed 29/29 across Watch publication, shared-session security, Watch
+  credential retention, and summary wiring.
+- `npm run test:component -- --runInBand --runTestsByPath
+  src/contexts/auth-context.component.test.tsx` passed 22/22.
+- Focused ESLint and repository TypeScript typecheck passed. Final logs are under
+  `/tmp/agent-workflows/e2f8af45fd34/49b8e8362ee8/` (`final-swift.log`,
+  `final-vitest.log`, `final-auth-component.log`, `final-eslint.log`, and
+  `final-typecheck.log`).
+- The final canonical gate remains owned by `finish-task`.
+
+## Review decisions
+
+- skipped (minor): TR-12 — Watch credential-guard tests do not fully prove the properties they
+  name — I don't care about them.
+- skipped (minor): TR-13 — Renewal failures can emit a misleading refresh-rejection diagnostic —
+  I don't care about them.
+- skipped (minor): TR-14 — Planning artifacts were bundled into the implementation commit — I
+  don't care about them.
