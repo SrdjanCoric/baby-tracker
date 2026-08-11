@@ -219,6 +219,17 @@ describe("SharedSupabaseAuthStorage", () => {
     expect(lockCalls).toHaveLength(1);
   });
 
+  it("does not return an auth-js lock on iOS (the storage adapter already serializes; reusing the same flock as the auth-js lock self-deadlocks)", async () => {
+    const { lock } = createSharedSupabaseClientOptions({
+      isIOS: true,
+      bridge: makeBridge(),
+      sessionKey: SESSION_KEY,
+      legacyStorage: asyncStorage,
+      appLock: immediateLock(),
+    });
+    expect(lock).toBeUndefined();
+  });
+
   it("leaves Android and web on AsyncStorage with no cross-process lock", async () => {
     const { storage, lock } = createSharedSupabaseClientOptions({
       isIOS: false,

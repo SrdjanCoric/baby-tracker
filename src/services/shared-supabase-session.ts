@@ -28,12 +28,6 @@ export type SupabaseAuthStorage = {
   removeItem(key: string): Promise<void>;
 };
 
-export type SupabaseAuthLock = <T>(
-  name: string,
-  acquireTimeoutMillis: number,
-  fn: () => Promise<T>
-) => Promise<T>;
-
 const SHARED_SESSION_VERSION = 1;
 
 /**
@@ -105,7 +99,6 @@ export interface CreateSharedSupabaseClientOptionsOptions {
 
 export interface SharedSupabaseClientOptions {
   storage: SupabaseAuthStorage;
-  lock?: SupabaseAuthLock;
 }
 
 /**
@@ -115,6 +108,14 @@ export interface SharedSupabaseClientOptions {
  * verifier) keep using AsyncStorage. On Android and web the legacy AsyncStorage
  * storage stays the single source of truth with no cross-process lock, since no
  * extension holds the Supabase credential there.
+ *
+ * The adapter returns no `lock` for `createClient`: auth-js would wrap every
+ * storage call in the *same* native flock that the storage adapter already
+ * takes internally. flock locks are per open-file-description, so a nested
+ * acquire opens a distinct fd and self-deadlocks against the held one for the
+ * full native timeout (and on iOS a held-but-unreleased sign-out lock leaves the
+ * shared Keychain capsule in place). The storage adapter owns serialization; a
+ * second auth-js lock adds no protection and breaks it.
  */
 export function createSharedSupabaseClientOptions(
   options: CreateSharedSupabaseClientOptionsOptions
@@ -179,9 +180,7 @@ export function createSharedSupabaseClientOptions(
     },
   };
 
-  const lock: SupabaseAuthLock = (_name, _acquireTimeoutMillis, fn) => appLock.withLock(fn);
-
-  return { storage, lock };
+  return { storage };
 }
 
 // Pure base64 -> UTF-8 decoder that avoids Node `Buffer` so the module runs in

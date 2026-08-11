@@ -26,7 +26,7 @@ const projectRef = (() => {
 const sessionStorageKey = `sb-${projectRef}-auth-token`;
 
 const sharedBridge = loadSharedSupabaseSessionBridge();
-const { storage, lock } = sharedBridge
+const { storage } = sharedBridge
   ? createSharedSupabaseClientOptions({
       isIOS: true,
       bridge: sharedBridge,
@@ -34,12 +34,11 @@ const { storage, lock } = sharedBridge
       sessionKey: sessionStorageKey,
       legacyStorage: AsyncStorage,
     })
-  : { storage: AsyncStorage, lock: undefined };
+  : { storage: AsyncStorage };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage,
-    lock,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
