@@ -412,6 +412,15 @@ enum WatchNetworkCredentialPolicy {
     }
 }
 
+enum WatchCredentialContextPolicy {
+    static func shouldMarkStale(
+        hasIncomingCapsule: Bool,
+        hasStoredSession: Bool
+    ) -> Bool {
+        !hasIncomingCapsule && !hasStoredSession
+    }
+}
+
 enum WatchCredentialContextInstaller {
     static func install(
         supabaseUrl: String,

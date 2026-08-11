@@ -264,6 +264,20 @@ enum WatchSummaryTests {
             ),
             "Watch rejected a complete fresh credential set"
         )
+        requireWatch(
+            !WatchCredentialContextPolicy.shouldMarkStale(
+                hasIncomingCapsule: false,
+                hasStoredSession: true
+            ),
+            "capsule-less context disabled a valid stored session"
+        )
+        requireWatch(
+            WatchCredentialContextPolicy.shouldMarkStale(
+                hasIncomingCapsule: false,
+                hasStoredSession: false
+            ),
+            "missing phone and stored capsules did not request recovery"
+        )
 
         let metadataSuiteName = "watch-metadata-install-tests.\(UUID().uuidString)"
         let metadataDefaults = UserDefaults(suiteName: metadataSuiteName)!

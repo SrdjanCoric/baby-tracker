@@ -623,7 +623,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         } else if context["supabaseUrl"] is String,
                   context["supabaseAnonKey"] is String,
                   context["userId"] is String,
-                  context["sessionCapsule"] == nil {
+                  context["sessionCapsule"] == nil,
+                  WatchCredentialContextPolicy.shouldMarkStale(
+                      hasIncomingCapsule: false,
+                      hasStoredSession: WatchSupabaseSessionEnvironment.hasSession
+                  ) {
             isTokenStale = true
             NSLog("[WatchSupabaseSession] phone context did not include a session capsule")
             sendAction(["action": "requestSync"])
