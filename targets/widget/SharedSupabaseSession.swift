@@ -262,6 +262,7 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     private let httpClient: SupabaseHTTPClient
     private let config: SupabaseEndpointConfig
     private let logger: SharedSessionLogger
+    private let legacyAccessTokenProvider: @Sendable () -> String?
 
     init(
         vault: SharedSessionVaulting,
@@ -269,7 +270,8 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
         refreshClient: SupabaseRefreshClient,
         httpClient: SupabaseHTTPClient,
         config: SupabaseEndpointConfig,
-        logger: SharedSessionLogger
+        logger: SharedSessionLogger,
+        legacyAccessTokenProvider: @escaping @Sendable () -> String? = { nil }
     ) {
         self.vault = vault
         self.lock = lock
@@ -277,6 +279,7 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
         self.httpClient = httpClient
         self.config = config
         self.logger = logger
+        self.legacyAccessTokenProvider = legacyAccessTokenProvider
     }
 
     /// Send an authenticated Supabase request. `buildRequest` receives the
@@ -285,8 +288,23 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     /// the shared lock, re-reads the session, redeems the current refresh
     /// token only if nothing has rotated it first, persists the renewed pair,
     /// and retries the original request exactly once.
+    ///
+    /// Backwards-compatibility bridge: before the app wrote the shared Keychain
+    /// capsule (e.g. on a freshly upgraded install that has not been launched
+    /// yet), the widget falls back to the legacy App Group `supabaseAccessToken`
+    /// bearer — a single-use, refresh-less request — for one release. Once the
+    /// app launches and migrates its session into Keychain, the capsule is
+    /// non-nil and the legacy path is never taken. Without this fallback an
+    /// app update over an unopened device leaves the widget credential-less,
+    /// reproducing the stale-widget symptom the task fixes (see TR-4).
     func send(buildRequest: @escaping @Sendable (String) -> URLRequest) async throws -> (Int, Data) {
         guard let current = try vault.read() else {
+            if let legacyAccessToken = legacyAccessTokenProvider() {
+                // Legacy App Group bearer token; no refresh token available.
+                // Use directly; a 401 here is surfaced to the caller (no retry).
+                let (status, body) = try await httpClient.send(buildRequest(legacyAccessToken))
+                return (status, body)
+            }
             logger.log(SharedSessionLogEvent(kind: .missingSession))
             throw SharedSessionError.missingSession
         }

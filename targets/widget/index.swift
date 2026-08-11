@@ -813,6 +813,27 @@ final class AppGroupWidgetSnapshotStore: WidgetSnapshotStoring, @unchecked Senda
     }
 }
 
+/// Read-only accessor for the legacy App Group `supabaseAccessToken` bearer
+/// token. Used only as a backwards-compatibility fallback (post-app-update,
+/// pre-first-app-launch window) by the widget transport; the app purges the
+/// token on its first launch after upgrade (TR-5). `UserDefaults` is not
+/// declared `Sendable` by the SDK but Apple documents it as thread-safe, hence
+/// the unchecked conformance for capture inside the transport's `@Sendable`
+/// legacy-token provider closure.
+struct AppGroupLegacyAccessTokenReader: @unchecked Sendable {
+    private let userDefaults: UserDefaults
+    private let key: String
+
+    init(userDefaults: UserDefaults, key: String = "supabaseAccessToken") {
+        self.userDefaults = userDefaults
+        self.key = key
+    }
+
+    func current() -> String? {
+        userDefaults.string(forKey: key)
+    }
+}
+
 final class AppGroupWidgetSnapshotIdentityReader: WidgetSnapshotIdentityReading, @unchecked Sendable {
     private let userDefaults: UserDefaults
     private let vault: SharedSessionVaulting
@@ -824,18 +845,36 @@ final class AppGroupWidgetSnapshotIdentityReader: WidgetSnapshotIdentityReading,
 
     func currentIdentity() -> WidgetSnapshotIdentity? {
         guard let accountId = userDefaults.string(forKey: "userId"),
-              let babyId = userDefaults.string(forKey: "selectedBabyId"),
-              let envelope = try? vault.read() else {
+              let babyId = userDefaults.string(forKey: "selectedBabyId") else {
             return nil
         }
         let timezone = userDefaults.string(forKey: "widgetTimezone")
             ?? TimeZone.current.identifier
-        return WidgetSnapshotIdentity(
-            accountId: accountId,
-            babyId: babyId,
-            generation: envelope.lineage,
-            timezone: timezone
-        )
+
+        if let envelope = try? vault.read() {
+            return WidgetSnapshotIdentity(
+                accountId: accountId,
+                babyId: babyId,
+                generation: envelope.lineage,
+                timezone: timezone
+            )
+        }
+        // Backwards-compatibility fallback (TR-4). Before the app writes the
+        // shared Keychain capsule — the post-app-update, pre-first-app-launch
+        // window — the widget reads the legacy App Group `supabaseAccessToken`
+        // bearer read-only here. The transport uses it directly with no refresh
+        // capability for one release. The app purges the legacy token from App
+        // Group `UserDefaults` on its first launch after upgrade (TR-5); once
+        // the capsule is non-nil the legacy branch is never taken.
+        if let legacyAccessToken = userDefaults.string(forKey: "supabaseAccessToken") {
+            return WidgetSnapshotIdentity(
+                accountId: accountId,
+                babyId: babyId,
+                generation: SupabaseSessionLineage.extract(fromAccessToken: legacyAccessToken) ?? "",
+                timezone: timezone
+            )
+        }
+        return nil
     }
 }
 
@@ -891,13 +930,15 @@ private let widgetSnapshotRuntime: (
     let identity = AppGroupWidgetSnapshotIdentityReader(userDefaults: userDefaults, vault: vault)
     let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
     let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
+    let legacyTokenReader = AppGroupLegacyAccessTokenReader(userDefaults: userDefaults)
     let transport = WidgetSupabaseTransport(
         vault: vault,
         lock: PosixSharedSessionLock(),
         refreshClient: URLSessionSupabaseRefreshClient(),
         httpClient: URLSessionSupabaseHTTPClient(),
         config: SupabaseEndpointConfig(supabaseUrl: supabaseUrl ?? "", anonKey: anonKey ?? ""),
-        logger: NSLogSessionLogger()
+        logger: NSLogSessionLogger(),
+        legacyAccessTokenProvider: { legacyTokenReader.current() }
     )
     let fetcher = SupabaseWidgetSnapshotFetcher(transport: transport, userDefaults: userDefaults)
     let coordinator = WidgetSnapshotCoordinator(

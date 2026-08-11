@@ -142,6 +142,7 @@ enum SharedSupabaseSessionTests {
         await Self.testTransportRefreshFailureLogsAndThrows()
         await Self.testTransportRetry401ReturnsOnce()
         await Self.testTransportMissingSessionLogsAndThrows()
+        await Self.testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent()
         await Self.testConcurrentRedemptionRedeemsOnce()
         print("PASS: Shared Supabase session renewal core")
     }
@@ -394,6 +395,37 @@ enum SharedSupabaseSessionTests {
     }
 
     // MARK: - Slice 10
+
+    static func testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent() async {
+        let store = InMemorySharedSessionStore()
+        // No capsule written; simulates the post-app-update, pre-first-launch
+        // window the widget must survive without a Keychain envelope.
+        let vault = SharedSessionVault(store: store)
+        let http = RecordedHTTPClient(status: 200, body: Data("snapshot".utf8))
+        let refreshClient = RecordedRefreshClient()
+        let logger = RecordingSessionLogger()
+        let transport = WidgetSupabaseTransport(
+            vault: vault,
+            lock: ImmediateLock(),
+            refreshClient: refreshClient,
+            httpClient: http,
+            config: SupabaseEndpointConfig(supabaseUrl: "https://example.supabase.co", anonKey: "anon"),
+            logger: logger,
+            legacyAccessTokenProvider: { "legacy-bearer-token" }
+        )
+        let (status, body) = try! await transport.send { token in Self.bearerRequest(token: token) }
+        requireSession(status == 200, "legacy fallback did not pass through 200")
+        requireSession(String(data: body, encoding: .utf8) == "snapshot", "legacy fallback did not return the body")
+        let requests = await http.recordedRequests()
+        requireSession(requests.count == 1, "legacy fallback sent more than one request")
+        requireSession(requests.first?.bearer == "Bearer legacy-bearer-token", "legacy fallback did not use the App Group bearer")
+        let refreshCalls = await refreshClient.callCount()
+        requireSession(refreshCalls == 0, "legacy path redeemed the refresh token (should be refresh-less)")
+        requireSession(store.writeCount == 0, "legacy fallback wrote the vault")
+        requireSession(logger.events.isEmpty, "legacy fallback logged a session event")
+    }
+
+    // MARK: - Slice 11
 
     static func testConcurrentRedemptionRedeemsOnce() async {
         let store = InMemorySharedSessionStore()
