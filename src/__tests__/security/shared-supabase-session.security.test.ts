@@ -15,9 +15,39 @@ const appJson = read("../../../app.json");
 const widgetTargetConfig = read("../../../targets/widget/expo-target.config.js");
 
 describe("shared Supabase session credential storage", () => {
-  it("keeps no bearer access token in the Widget App Group UserDefaults", () => {
-    expect(widgetIndex).not.toContain("supabaseAccessToken");
-    expect(widgetIndex).not.toMatch(/userDefaults\.string\(forKey:\s*"supabaseAccessToken"\)/);
+  it("does not publish a NEW access token from the app into the Widget App Group (legacy read fallback is bounded to one release)", () => {
+    // The app must NOT write `supabaseAccessToken` into App Group UserDefaults
+    // anymore — that path put a bearer JWT in unencrypted shared storage,
+    // included in backups, readable by every target.
+    expect(widgetDataService).not.toContain('extensionStorage.set("supabaseAccessToken"');
+    // The widget may READ the legacy App Group `supabaseAccessToken` ONLY as a
+    // backward-compatibility fallback, when the shared Keychain capsule has
+    // not been written yet (post-app-update, pre-first-app-launch window). It
+    // must never WRITE / SET that key, and the app must purge it on its first
+    // launch after upgrade (see `purgeLegacyAppGroupAccessToken`).
+    expect(widgetIndex).not.toContain("userDefaults.set(\"supabaseAccessToken\"");
+    expect(widgetIndex).not.toMatch(/userDefaults\.set\([^)]*supabaseAccessToken/);
+  });
+
+  it("purges the legacy App Group `supabaseAccessToken` bearer on app start-up", () => {
+    // AC: no bearer token remains in App Group `UserDefaults`. Previous
+    // versions wrote the access token there; the app must remove it on each
+    // iOS launch (bounded to one release — the fallback in the widget reads
+    // it only between an app update and the first app launch).
+    expect(widgetDataService).toContain("export async function purgeLegacyAppGroupAccessToken");
+    expect(widgetDataService).toContain('LEGACY_APP_GROUP_ACCESS_TOKEN_KEY = "supabaseAccessToken"');
+    expect(widgetDataService).toMatch(/extensionStorage\.remove\(LEGACY_APP_GROUP_ACCESS_TOKEN_KEY/);
+  });
+
+  it("purges a Keychain capsule left by a previous owner on the first post-reinstall launch", () => {
+    // iOS keeps `kSecClassGenericPassword` items across uninstall; without a
+    // first-launch purge a reinstalled copy would silently restore the prior
+    // owner's session. The app uses the native bridge's `removeSession` and an
+    // AsyncStorage one-shot marker so subsequent launches keep a legitimate
+    // session.
+    expect(widgetDataService).toContain("export async function purgeStaleSharedSessionOnFirstLaunch");
+    expect(widgetDataService).toContain('SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY');
+    expect(widgetDataService).toMatch(/bridge\.removeSession\(\)/);
   });
 
   it("does not publish the access token from the app into the Widget App Group", () => {

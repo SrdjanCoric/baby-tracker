@@ -24,7 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
-import { clearWidgetData } from "@/services/widget-data-service";
+import { clearWidgetData, purgeLegacyAppGroupAccessToken, purgeStaleSharedSessionOnFirstLaunch } from "@/services/widget-data-service";
 import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
@@ -183,6 +183,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // TR-6: purge a Keychain capsule left by a previous owner on the first
+        // launch after a reinstall (iOS keeps Keychain items across uninstall).
+        // The shared-relational `kSecClassGenericPassword` capsule is removed via
+        // the native bridge before any auth call that would read it back, so a
+        // freshly reinstalled copy never silently restores the prior owner's
+        // session. AsyncStorage carries the marker so subsequent launches keep
+        // a legitimate capsule.
+        await purgeStaleSharedSessionOnFirstLaunch();
+
         if (isE2EMode()) {
           const credentials = getE2ECredentials();
           if (credentials) {
@@ -202,6 +211,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+        // TR-5: `getSession()` triggers the iOS storage adapter's migration of
+        // the AsyncStorage session into the shared Keychain capsule, so by this
+        // point the Keychain is the source of truth. Unconditionally remove the
+        // legacy App Group `supabaseAccessToken` bearer (a previous version wrote
+        // it there in the clear, included in iTunes/Finder backups, readable by
+        // every target) so no JWT lingers in unencrypted shared storage after
+        // the upgrade. Best-effort; `remove` on a missing key is a no-op.
+        await purgeLegacyAppGroupAccessToken();
 
         if (currentSession?.user) {
           setStorageUserId(currentSession.user.id);

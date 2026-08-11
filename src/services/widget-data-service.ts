@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import type { ActivityType, BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import { loadExtensionStorage } from "@/services/extension-storage";
+import { loadSharedSupabaseSessionBridge } from "@/services/shared-supabase-session-native";
 import {
   decodeWidgetActivitySnapshotJson,
   type ActiveTimerData,
@@ -19,6 +20,75 @@ const APP_GROUP = "group.com.sofibaby.app";
 const WIDGET_DATA_KEY = "@widget_data";
 const WIDGET_CONFIG_KEY = "@widget_config";
 const WIDGET_DATA_ORPHANED_KEY = "widgetDataOrphaned";
+const LEGACY_APP_GROUP_ACCESS_TOKEN_KEY = "supabaseAccessToken";
+const SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY =
+  "sharedSessionFirstLaunchPurgeDone";
+
+/**
+ * Purge the legacy bearer access token that previous versions wrote to App
+ * Group `UserDefaults`. This task moved the access token out of App Group
+ * `UserDefaults` (the write was removed in this change), but existing installs
+ * still carry the old token in the shared (and iTunes/Finder-backup-included)
+ * plist until it is explicitly deleted. The previous version only cleaned the
+ * key on sign-out, so every upgrade that never signs out kept a live JWT in
+ * unencrypted shared storage readable by every target. This purge runs
+ * unconditionally on each iOS app start (best-effort; `remove` on a missing
+ * key is a no-op) and converges every install to the AC of "no bearer token
+ * in App Group `UserDefaults`". Intentionally ordered AFTER the auth session
+ * migration (`supabase.auth.getSession()`) so the widget's legacy-token
+ * fallback (see TR-4) is only taken between app update and first app launch;
+ * once the app has launched once the Keychain capsule is the source of truth
+ * and the legacy token is gone.
+ */
+export async function purgeLegacyAppGroupAccessToken(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const extensionStorage = await loadExtensionStorage();
+    if (!extensionStorage) return;
+    await extensionStorage.remove(LEGACY_APP_GROUP_ACCESS_TOKEN_KEY, APP_GROUP);
+  } catch (error) {
+    console.warn(
+      "[WidgetDataService] legacy App Group access token purge failed:",
+      error
+    );
+  }
+}
+
+/**
+ * Delete a Keychain capsule left by a previous owner after an app uninstall.
+ * iOS keeps `kSecClassGenericPassword` items across uninstall (only a full
+ * device erase clears them), so a freshly reinstalled copy of the app would
+ * otherwise read a capsule written by the prior owner and silently restore
+ * their session — including a refresh_token that never expires by default.
+ * This purge runs once, on the first launch after a fresh install that has no
+ * AsyncStorage marker (the marker is destroyed with the app container on
+ * uninstall, matching the lifecycle requirement). It removes the capsule via
+ * the native bridge before the Supabase client loads the session, then writes
+ * the marker so subsequent launches of the same install never purge a
+ * legitimate session.
+ */
+export async function purgeStaleSharedSessionOnFirstLaunch(): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    const marker = await AsyncStorage.getItem(
+      SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY
+    );
+    if (marker === "1") return;
+    const bridge = loadSharedSupabaseSessionBridge();
+    if (bridge) {
+      await bridge.removeSession();
+    }
+    await AsyncStorage.setItem(
+      SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY,
+      "1"
+    );
+  } catch (error) {
+    console.warn(
+      "[WidgetDataService] first-launch shared session purge failed:",
+      error
+    );
+  }
+}
 
 export interface BabyWatchData {
   id: string;
