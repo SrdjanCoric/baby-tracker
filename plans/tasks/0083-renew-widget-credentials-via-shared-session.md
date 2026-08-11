@@ -138,3 +138,20 @@ store in task 0084.
   the canonical/`[verify]` boundary (CI native build + the physical iPhone checkpoint).
 
 "
+## Review round 1 — skipped minor/nit findings
+
+- skipped (minor): TR-8 — AsyncStorage→Keychain migration copy-then-delete without verification step — deferred; out of scope this review round
+- skipped (minor): TR-9 — Widget fabricates `{"id":"unknown"}` user object when refresh response omits `user` — deferred; out of scope this review round
+- skipped (minor): TR-10 — TS `unknown` lineage fallback disagrees with widget's strict lineage equality check — deferred; out of scope this review round
+- skipped (minor): TR-11 — `removeItem` deletes only Keychain capsule, leaves legacy AsyncStorage session behind — deferred; out of scope this review round
+- skipped (minor): TR-12 — `acquireSessionLock` busy-waits with `Thread.sleep` on serial method queue, ignores caller acquire timeout — deferred; out of scope this review round
+- skipped (minor): TR-13 — widget transport never checks stored `expires_at` before sending — deferred; out of scope this review round
+- skipped (minor): TR-14 — cross-task architectural decision not recorded in master-plan's "Architectural decisions" section — deferred; out of scope this review round
+- skipped (minor): TR-15 — docs/SECURITY.md still describes pre-change session model — deferred; out of scope this review round
+- skipped (minor): TR-16 — widget-stop-intent-order test assertion now vacuous (marker points at "return request") — deferred; out of scope this review round
+- skipped (minor): TR-17 — New production Swift (SharedSupabaseSessionAdapters.swift, index.swift) not compile-gated by committed command — deferred; out of scope this review round
+- skipped (minor): TR-18 — Acceptance criterion retro-fit carve-out for Watch's `watchSupabaseAccessToken` App Group channel — deferred; out of scope this review round
+- skipped (nit): TR-19 — `loadSharedSupabaseSessionBridge` native wrapper has no vitest test — deferred; out of scope this review round
+- skipped (nit): TR-20 — `writeAuthToAppGroup` still requires `accessToken` param it no longer reads — deferred; out of scope this review round
+- skipped (nit): TR-21 — `revision` compare-and-swap marker resets to 1 after sign-out (ABA across sessions) — deferred; out of scope this review round
+- skipped (nit): TR-22 — Task file ends with stray `"` and no trailing newline — deferred; out of scope this review round
