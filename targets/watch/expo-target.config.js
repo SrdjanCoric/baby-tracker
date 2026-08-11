@@ -4,7 +4,7 @@ module.exports = {
   name: "SofiBabyWatch",
   displayName: "SofiBaby",
   deploymentTarget: "10.0",
-  frameworks: ["SwiftUI", "WatchConnectivity", "WidgetKit"],
+  frameworks: ["SwiftUI", "WatchConnectivity", "WidgetKit", "Security"],
   icon: "./Assets.xcassets/AppIcon.appiconset/appicon.png",
   images: {},
   colors: {

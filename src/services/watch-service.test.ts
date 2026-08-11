@@ -2,8 +2,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
 const getIsWatchAppInstalled = vi.fn(async () => true);
+const sharedSessionCapsule = JSON.stringify({
+  version: 1,
+  revision: 7,
+  lineage: "session-lineage",
+  session: JSON.stringify({
+    access_token: "access-token",
+    refresh_token: "refresh-token",
+  }),
+});
+const readSharedSession = vi.fn(async () => sharedSessionCapsule);
 
-vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+vi.mock("react-native", () => ({
+  NativeModules: {
+    SharedSupabaseSession: {
+      readSession: readSharedSession,
+      writeSession: vi.fn(),
+      removeSession: vi.fn(),
+      acquireSessionLock: vi.fn(),
+      releaseSessionLock: vi.fn(),
+    },
+  },
+  Platform: { OS: "ios" },
+}));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
   sendMessage: vi.fn(),
@@ -30,6 +51,7 @@ describe("watch language transport", () => {
   beforeEach(() => {
     updateApplicationContext.mockClear();
     getIsWatchAppInstalled.mockResolvedValue(true);
+    readSharedSession.mockClear();
   });
 
   it("holds the language until the watch session can receive it", async () => {
@@ -71,10 +93,14 @@ describe("watch language transport", () => {
     await setWatchLanguage("pt-PT");
     await syncToWatch(widgetData, undefined, authContext);
 
-    // The sync carries the language alongside the data and credentials.
+    // The sync carries the language alongside the data and renewable session.
     expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
-      expect.objectContaining({ language: "pt-PT", accessToken: "access-token" })
+      expect.objectContaining({
+        language: "pt-PT",
+        sessionCapsule: sharedSessionCapsule,
+      })
     );
+    expect(updateApplicationContext.mock.calls.at(-1)?.[0].accessToken).toBeUndefined();
   });
 
   it("republishes the previous context when the language changes instead of erasing it", async () => {
@@ -91,7 +117,7 @@ describe("watch language transport", () => {
     expect(republished).toEqual(
       expect.objectContaining({
         language: "de",
-        accessToken: "access-token",
+        sessionCapsule: sharedSessionCapsule,
         supabaseUrl: "https://example.supabase.co",
         userId: "user-1",
       })
@@ -121,6 +147,7 @@ describe("watch language transport", () => {
     const published = updateApplicationContext.mock.calls[0][0];
     expect(published).toEqual({ language: "de" });
     expect(published.accessToken).toBeUndefined();
+    expect(published.sessionCapsule).toBeUndefined();
     expect(published.supabaseAnonKey).toBeUndefined();
     expect(published.userId).toBeUndefined();
     expect(published.widgetData).toBeUndefined();
@@ -144,6 +171,17 @@ describe("watch language transport", () => {
     expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
       expect.objectContaining({ householdId: "household-1", userId: "user-1" })
     );
+  });
+
+  it("publishes the exact versioned shared-session capsule instead of a static bearer", async () => {
+    const { syncToWatch } = await loadWatchService();
+
+    await syncToWatch(widgetData, undefined, authContext);
+
+    expect(readSharedSession).toHaveBeenCalledTimes(1);
+    const published = updateApplicationContext.mock.calls.at(-1)?.[0];
+    expect(published.sessionCapsule).toBe(sharedSessionCapsule);
+    expect(published.accessToken).toBeUndefined();
   });
 
   it("keeps the latest language on subsequent syncs without repeating the language call", async () => {

@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
+import { loadSharedSupabaseSessionBridge } from "./shared-supabase-session-native";
 
 type WatchPayload = Record<string, unknown>;
 
@@ -91,8 +92,8 @@ async function watchCanReceive(module: WatchConnectivityModule): Promise<boolean
 /**
  * Forget the cached application context.
  *
- * The cache holds the signed-in session's access token so a language change can
- * republish it instead of erasing it. Once the session ends that token must not
+ * The cache holds the signed-in session capsule so a language change can
+ * republish it instead of erasing it. Once the session ends that capsule must not
  * be sent again: on a shared device the next caregiver changing language would
  * otherwise hand the Watch the previous account's still-valid credentials, and
  * the Watch treats any received credentials as fresh.
@@ -134,8 +135,11 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     if (authContext) {
       context.supabaseUrl = authContext.supabaseUrl;
       context.supabaseAnonKey = authContext.supabaseAnonKey;
-      context.accessToken = authContext.accessToken;
       context.userId = authContext.userId;
+      const sessionCapsule = await loadSharedSupabaseSessionBridge()?.readSession();
+      if (sessionCapsule) {
+        context.sessionCapsule = sessionCapsule;
+      }
       if (authContext.householdId) {
         context.householdId = authContext.householdId;
       }
