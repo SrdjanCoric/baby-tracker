@@ -631,7 +631,7 @@ struct TogglePauseActivityIntent: AppIntent {
                 #if DEBUG
                 edgeBody["isSandbox"] = true
                 #endif
-                await callTogglePauseEdgeFunction(anonKey: anonKey ?? "", body: edgeBody)
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", body: edgeBody)
                 NSLog("[TogglePause] edge function returned")
             } else {
                 NSLog("[TogglePause] SKIPPED edge function: missing Supabase URL")
@@ -678,7 +678,7 @@ struct TogglePauseActivityIntent: AppIntent {
                 #if DEBUG
                 edgeBody["isSandbox"] = true
                 #endif
-                await callTogglePauseEdgeFunction(anonKey: anonKey ?? "", body: edgeBody)
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", body: edgeBody)
                 NSLog("[TogglePause] edge function returned")
             } else {
                 NSLog("[TogglePause] SKIPPED edge function: missing Supabase URL")
@@ -691,9 +691,9 @@ struct TogglePauseActivityIntent: AppIntent {
         return .result()
     }
 
-    private func callTogglePauseEdgeFunction(anonKey: String, body: [String: Any]) async {
+    private func callTogglePauseEdgeFunction(supabaseUrl: String?, anonKey: String, body: [String: Any]) async {
         guard let runtime = widgetSnapshotRuntime,
-              let supabaseUrl = userDefaults.string(forKey: "supabaseUrl"),
+              let supabaseUrl,
               let url = URL(string: "\(supabaseUrl)/functions/v1/toggle-timer-pause") else { return }
         let bodyData = try? JSONSerialization.data(withJSONObject: body)
         do {
@@ -825,8 +825,7 @@ final class AppGroupWidgetSnapshotIdentityReader: WidgetSnapshotIdentityReading,
     func currentIdentity() -> WidgetSnapshotIdentity? {
         guard let accountId = userDefaults.string(forKey: "userId"),
               let babyId = userDefaults.string(forKey: "selectedBabyId"),
-              let envelope = try? vault.read(),
-              let envelope else {
+              let envelope = try? vault.read() else {
             return nil
         }
         let timezone = userDefaults.string(forKey: "widgetTimezone")
