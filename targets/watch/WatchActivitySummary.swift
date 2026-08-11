@@ -378,6 +378,29 @@ enum WatchLegacyCredentialPurger {
     }
 }
 
+enum WatchAccountScopeInstaller {
+    static func install(
+        accountId: String,
+        householdId: String?,
+        in defaults: UserDefaults
+    ) -> Bool {
+        let storedAccountId = defaults.string(forKey: "watchSupabaseUserId")
+        let storedHouseholdId = defaults.string(forKey: "watchHouseholdId")
+        let scopeChanged = (storedAccountId != nil && storedAccountId != accountId) ||
+            (storedHouseholdId != nil && storedHouseholdId != householdId)
+        if scopeChanged {
+            WatchAccountCachePurger.purge(from: defaults)
+        }
+        defaults.set(accountId, forKey: "watchSupabaseUserId")
+        if let householdId {
+            defaults.set(householdId, forKey: "watchHouseholdId")
+        } else {
+            defaults.removeObject(forKey: "watchHouseholdId")
+        }
+        return scopeChanged
+    }
+}
+
 enum WatchLegacyCacheOwnership {
     private static let key = "watchLegacyCacheAccountId"
 

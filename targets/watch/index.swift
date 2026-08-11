@@ -560,33 +560,47 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             print("[WatchConnector] parseApplicationContext: stored language")
         }
 
-        // Persist non-secret metadata in UserDefaults and the renewable capsule
+        // Account scope is authoritative even when the phone cannot attach a
+        // session capsule. Never retain another account's cached baby data or
+        // credential merely because capsule publication failed.
+        let authDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        var authScopeChanged = false
+        if let userId = context["userId"] as? String,
+           let authDefaults {
+            authScopeChanged = WatchAccountScopeInstaller.install(
+                accountId: userId,
+                householdId: context["householdId"] as? String,
+                in: authDefaults
+            )
+            self.supabaseUserId = userId
+            if authScopeChanged {
+                widgetData = nil
+                multiBabyData = nil
+                selectedBabyId = nil
+                authDefaults.removeObject(forKey: "watchSelectedBabyId")
+                localActiveTimers.removeAll()
+                locallyStoppedTimerTypes.removeAll()
+                localStoppedActivityTimes.removeAll()
+                pendingDiaperLogs.removeAll()
+                stopNetworkPolling()
+                do {
+                    try WatchSupabaseSessionEnvironment.vault.remove()
+                } catch {
+                    NSLog("[WatchSupabaseSession] scope-change credential cleanup failed")
+                }
+            }
+        }
+
+        // Persist non-secret metadata in UserDefaults and the session capsule
         // in Watch-local Keychain.
         if let url = context["supabaseUrl"] as? String,
            let anonKey = context["supabaseAnonKey"] as? String,
            let sessionCapsule = context["sessionCapsule"] as? String,
            let userId = context["userId"] as? String {
-            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+            let defaults = authDefaults
             let incomingHouseholdId = context["householdId"] as? String
-            let storedHouseholdId = defaults?.string(forKey: "watchHouseholdId")
-            let scopeChanged = (supabaseUserId != nil && supabaseUserId != userId) ||
-                (storedHouseholdId != nil && storedHouseholdId != incomingHouseholdId)
             do {
                 try WatchSupabaseSessionEnvironment.vault.install(capsuleJson: sessionCapsule)
-                if scopeChanged {
-                    if let defaults {
-                        WatchAccountCachePurger.purge(from: defaults)
-                    }
-                    widgetData = nil
-                    multiBabyData = nil
-                    selectedBabyId = nil
-                    defaults?.removeObject(forKey: "watchSelectedBabyId")
-                    localActiveTimers.removeAll()
-                    locallyStoppedTimerTypes.removeAll()
-                    localStoppedActivityTimes.removeAll()
-                    pendingDiaperLogs.removeAll()
-                    stopNetworkPolling()
-                }
                 self.supabaseUrl = url
                 self.supabaseAnonKey = anonKey
                 self.supabaseUserId = userId
@@ -604,6 +618,13 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 self.isTokenStale = true
                 NSLog("[WatchSupabaseSession] rejected invalid application-context capsule")
             }
+        } else if context["supabaseUrl"] is String,
+                  context["supabaseAnonKey"] is String,
+                  context["userId"] is String,
+                  context["sessionCapsule"] == nil {
+            isTokenStale = true
+            NSLog("[WatchSupabaseSession] phone context did not include a session capsule")
+            sendAction(["action": "requestSync"])
         }
 
         if let pushToken = context["liveActivityPushToken"] as? String, !pushToken.isEmpty {

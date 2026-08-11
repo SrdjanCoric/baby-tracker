@@ -215,6 +215,33 @@ enum WatchSummaryTests {
         )
         resetDefaults.removePersistentDomain(forName: resetSuiteName)
 
+        let scopeSuiteName = "watch-scope-change-tests.\(UUID().uuidString)"
+        let scopeDefaults = UserDefaults(suiteName: scopeSuiteName)!
+        scopeDefaults.set("account-a", forKey: "watchSupabaseUserId")
+        scopeDefaults.set("household-a", forKey: "watchHouseholdId")
+        scopeDefaults.set("old-summary", forKey: "watchSummary.account-a.baby-a")
+
+        let scopeChanged = WatchAccountScopeInstaller.install(
+            accountId: "account-b",
+            householdId: "household-b",
+            in: scopeDefaults
+        )
+
+        requireWatch(scopeChanged, "Watch did not detect the account scope change")
+        requireWatch(
+            scopeDefaults.object(forKey: "watchSummary.account-a.baby-a") == nil,
+            "Watch retained the previous account's cached baby data"
+        )
+        requireWatch(
+            scopeDefaults.string(forKey: "watchSupabaseUserId") == "account-b",
+            "Watch did not store the incoming account independently of its capsule"
+        )
+        requireWatch(
+            scopeDefaults.string(forKey: "watchHouseholdId") == "household-b",
+            "Watch did not store the incoming household independently of its capsule"
+        )
+        scopeDefaults.removePersistentDomain(forName: scopeSuiteName)
+
         let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"
         let legacyDefaults = UserDefaults(suiteName: legacySuiteName)!
         legacyDefaults.set("legacy", forKey: "watchData")
