@@ -242,6 +242,25 @@ enum WatchSummaryTests {
         )
         scopeDefaults.removePersistentDomain(forName: scopeSuiteName)
 
+        requireWatch(
+            !WatchNetworkCredentialPolicy.canRequest(
+                hasConfig: true,
+                hasUser: true,
+                hasSession: true,
+                isStale: true
+            ),
+            "Watch kept polling with credentials already marked stale"
+        )
+        requireWatch(
+            WatchNetworkCredentialPolicy.canRequest(
+                hasConfig: true,
+                hasUser: true,
+                hasSession: true,
+                isStale: false
+            ),
+            "Watch rejected a complete fresh credential set"
+        )
+
         let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"
         let legacyDefaults = UserDefaults(suiteName: legacySuiteName)!
         legacyDefaults.set("legacy", forKey: "watchData")

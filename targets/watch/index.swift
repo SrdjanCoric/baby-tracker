@@ -1417,7 +1417,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private var hasAuthCredentials: Bool {
-        supabaseConfig != nil && supabaseUserId != nil && WatchSupabaseSessionEnvironment.hasSession
+        WatchNetworkCredentialPolicy.canRequest(
+            hasConfig: supabaseConfig != nil,
+            hasUser: supabaseUserId != nil,
+            hasSession: WatchSupabaseSessionEnvironment.hasSession,
+            isStale: isTokenStale
+        )
     }
 
     func refreshFromNetwork() {

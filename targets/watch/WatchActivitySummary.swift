@@ -401,6 +401,17 @@ enum WatchAccountScopeInstaller {
     }
 }
 
+enum WatchNetworkCredentialPolicy {
+    static func canRequest(
+        hasConfig: Bool,
+        hasUser: Bool,
+        hasSession: Bool,
+        isStale: Bool
+    ) -> Bool {
+        hasConfig && hasUser && hasSession && !isStale
+    }
+}
+
 enum WatchLegacyCacheOwnership {
     private static let key = "watchLegacyCacheAccountId"
 
