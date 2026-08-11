@@ -357,6 +357,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         super.init()
         print("[WatchConnector] init: starting")
         let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        if let defaults {
+            WatchLegacyCredentialPurger.purge(from: defaults)
+        }
         selectedBabyId = defaults?.string(forKey: "watchSelectedBabyId")
         supabaseUrl = defaults?.string(forKey: "watchSupabaseUrl")
         supabaseAnonKey = defaults?.string(forKey: "watchSupabaseAnonKey")
@@ -516,7 +519,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 "watchSupabaseUrl",
                 "watchSupabaseAnonKey",
                 "watchSupabaseUserId",
-                "watchHouseholdId"
+                "watchHouseholdId",
+                "watchSupabaseAccessToken"
             ] {
                 defaults?.removeObject(forKey: key)
             }

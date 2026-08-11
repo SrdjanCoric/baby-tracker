@@ -15,6 +15,7 @@ const appJson = read("../../../app.json");
 const widgetTargetConfig = read("../../../targets/widget/expo-target.config.js");
 const watchIndex = read("../../../targets/watch/index.swift");
 const watchAdapters = read("../../../targets/watch/WatchSupabaseSessionAdapters.swift");
+const watchSummary = read("../../../targets/watch/WatchActivitySummary.swift");
 const watchService = read("../../../src/services/watch-service.ts");
 const watchTargetConfig = read("../../../targets/watch/expo-target.config.js");
 
@@ -90,7 +91,10 @@ describe("shared Supabase session credential storage", () => {
 
 describe("Watch renewable Supabase session", () => {
   it("never reads or writes the deprecated Watch UserDefaults bearer", () => {
-    expect(watchIndex).not.toContain("watchSupabaseAccessToken");
+    expect(watchIndex).not.toContain('string(forKey: "watchSupabaseAccessToken")');
+    expect(watchIndex).not.toContain('set(token, forKey: "watchSupabaseAccessToken")');
+    expect(watchIndex).toContain("WatchLegacyCredentialPurger.purge");
+    expect(watchSummary).toContain('removeObject(forKey: "watchSupabaseAccessToken")');
     expect(watchService).not.toContain("context.accessToken");
     expect(watchService).toContain("context.sessionCapsule");
     expect(watchIndex).toContain('context["sessionCapsule"]');

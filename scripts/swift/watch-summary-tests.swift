@@ -193,8 +193,10 @@ enum WatchSummaryTests {
         resetDefaults.set("overlay", forKey: "watchPendingOverlays.account-a.baby-a")
         resetDefaults.set("optimism", forKey: "watchOptimisticState.account-a.baby-a")
         resetDefaults.set("sr", forKey: "watchLanguage")
+        resetDefaults.set("legacy-bearer", forKey: "watchSupabaseAccessToken")
 
         WatchAccountCachePurger.purge(from: resetDefaults)
+        WatchLegacyCredentialPurger.purge(from: resetDefaults)
 
         for key in [
             "multiBabyWatchData",
@@ -207,6 +209,10 @@ enum WatchSummaryTests {
             requireWatch(resetDefaults.object(forKey: key) == nil, "scope reset retained \(key)")
         }
         requireWatch(resetDefaults.string(forKey: "watchLanguage") == "sr", "scope reset removed language")
+        requireWatch(
+            resetDefaults.object(forKey: "watchSupabaseAccessToken") == nil,
+            "Watch retained the deprecated App Group bearer"
+        )
         resetDefaults.removePersistentDomain(forName: resetSuiteName)
 
         let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"

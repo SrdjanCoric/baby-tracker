@@ -372,6 +372,12 @@ enum WatchAccountCachePurger {
     }
 }
 
+enum WatchLegacyCredentialPurger {
+    static func purge(from defaults: UserDefaults) {
+        defaults.removeObject(forKey: "watchSupabaseAccessToken")
+    }
+}
+
 enum WatchLegacyCacheOwnership {
     private static let key = "watchLegacyCacheAccountId"
 
