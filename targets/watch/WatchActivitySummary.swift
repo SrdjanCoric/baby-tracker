@@ -412,6 +412,19 @@ enum WatchNetworkCredentialPolicy {
     }
 }
 
+enum WatchAuthenticatedRequestCoordinator {
+    static func send<Response>(
+        perform: () async throws -> (Int, Response),
+        recoverUnauthorized: () async -> Void
+    ) async rethrows -> (Int, Response) {
+        let result = try await perform()
+        if result.0 == 401 {
+            await recoverUnauthorized()
+        }
+        return result
+    }
+}
+
 enum WatchCredentialContextPolicy {
     static func shouldMarkStale(
         hasIncomingCapsule: Bool,

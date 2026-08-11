@@ -1440,6 +1440,27 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         )
     }
 
+    private func sendSupabaseRequest(
+        config: WatchSupabaseEndpointConfig,
+        buildRequest: @escaping @Sendable (String) -> URLRequest
+    ) async throws -> (Int, Data) {
+        try await WatchAuthenticatedRequestCoordinator.send(
+            perform: {
+                try await self.supabaseTransport.send(
+                    config: config,
+                    buildRequest: buildRequest
+                )
+            },
+            recoverUnauthorized: { [weak self] in
+                guard let self else { return }
+                await MainActor.run {
+                    self.isTokenStale = true
+                }
+                self.sendAction(["action": "requestSync"])
+            }
+        )
+    }
+
     func refreshFromNetwork() {
         guard hasAuthCredentials else {
             print("[WatchConnector] refreshFromNetwork: no auth credentials")
@@ -1471,7 +1492,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         let result: (Int, Data)
         do {
-            result = try await supabaseTransport.send(config: config) { token in
+            result = try await sendSupabaseRequest(config: config) { token in
                 var request = URLRequest(url: url)
                 request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -1484,11 +1505,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
 
         if result.0 == 401 {
-            print("[WatchConnector] fetchActiveTimersFromNetwork: renewal retry returned 401")
-            await MainActor.run {
-                self.isTokenStale = true
-            }
-            sendAction(["action": "requestSync"])
+            print("[WatchConnector] fetchActiveTimersFromNetwork: unauthorized")
             return nil
         }
 
@@ -1546,7 +1563,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         Task {
             do {
-                let (status, _) = try await supabaseTransport.send(config: config) { token in
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
@@ -1575,7 +1592,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         Task {
             do {
-                let (status, _) = try await supabaseTransport.send(config: config) { token in
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
                     var request = URLRequest(url: url)
                     request.httpMethod = "DELETE"
                     request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
@@ -1609,7 +1626,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
 
         do {
-            let (status, _) = try await supabaseTransport.send(config: config) { token in
+            let (status, _) = try await sendSupabaseRequest(config: config) { token in
                 var request = URLRequest(url: url)
                 request.httpMethod = "POST"
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1659,7 +1676,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         Task {
             do {
-                let (status, _) = try await supabaseTransport.send(config: config) { token in
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1734,7 +1751,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         Task {
             do {
-                let (status, _) = try await supabaseTransport.send(config: config) { token in
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
                     var request = URLRequest(url: url)
                     request.httpMethod = "POST"
                     request.setValue(config.anonKey, forHTTPHeaderField: "apikey")

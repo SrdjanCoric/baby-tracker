@@ -285,6 +285,24 @@ enum WatchSummaryTests {
             ),
             "scope change deleted the only session without a replacement"
         )
+        let unauthorizedRecoveries = TestWatchCounter()
+        let unauthorizedRequest = await WatchAuthenticatedRequestCoordinator.send(
+            perform: { (401, Data()) },
+            recoverUnauthorized: { unauthorizedRecoveries.increment() }
+        )
+        requireWatch(unauthorizedRequest.0 == 401, "request boundary hid unauthorized")
+        requireWatch(
+            unauthorizedRecoveries.read() == 1,
+            "authenticated 401 did not request exactly one credential sync"
+        )
+        _ = await WatchAuthenticatedRequestCoordinator.send(
+            perform: { (204, Data()) },
+            recoverUnauthorized: { unauthorizedRecoveries.increment() }
+        )
+        requireWatch(
+            unauthorizedRecoveries.read() == 1,
+            "successful authenticated request triggered credential recovery"
+        )
 
         let metadataSuiteName = "watch-metadata-install-tests.\(UUID().uuidString)"
         let metadataDefaults = UserDefaults(suiteName: metadataSuiteName)!
