@@ -123,3 +123,15 @@ is only observable under WidgetKit on a simulator/device and has no Swift XCUITe
 - [ ] The write-then-refresh race no longer erases a just-written timer.
 - [ ] A timer stopped on the server is still removed from the widget on refresh.
 - [ ] Totals, last times, and wake windows continue to come wholesale from the server snapshot.
+
+## Review closeout records
+
+- skipped (minor): TR-6 — merged snapshot stored as re-encoded model bytes instead of verbatim response, dropping additive fields — deferred; forward-compat re-encoding concern out of scope for this pass.
+- skipped (minor): TR-7 — type-keyed merge discards a fresher local timer of same type — deferred; narrow stop-then-restart race out of scope.
+- skipped (minor): TR-8 — `isOlder` not extended for `localAsOf` — deferred; criterion 1 satisfied at timer granularity per task evidence.
+- skipped (minor): TR-9 — `lockState` rejection branch untested and duplicates union as string literals — deferred; minor test gap.
+- skipped (minor): TR-12 — `!hasSchemaVersion` decoder branch is dead code — deferred; no behavior impact.
+- skipped (minor): TR-13 — completed work item names files the diff never touches — deferred; cosmetic task-file wording.
+- accepted (security): TR-10 — accountless/offline retention has no session binding or age bound — very small user base at present; limited exposure.
+- accepted (security): TR-11 — unvalidated `.local`/`.legacy` cache timers merged into versioned envelope — very small user base at present; limited exposure.
+- deferred (race): TR-3 — cross-domain clock comparison in survival branch — race-condition scenarios out of scope per user.
