@@ -101,28 +101,48 @@ Validation (focused tier, logs in `/tmp/agent-workflows/e2f8af45fd34/9567f0a1f7e
 - `npm run test:widget:swift` → widget snapshot harness `PASS`, watch summary harness passed
   (`swift-green.log`).
 
-The `[verify]` simulator/device checkpoint stays unchecked by design; the merge/refresh cycle
-is only observable under WidgetKit on a simulator/device and has no Swift XCUITest target.
+The direct rendered-WidgetKit checkpoint has no Swift XCUITest target. User accepted the clean
+simulator household-timer gate recorded below as its manual proof.
 
 ## Human checkpoints
 
-- [ ] [verify] On a simulator or device: (1) start a timer while offline or accountless, add the
-      widget, force a timeline refresh (or wait for one) — the timer keeps ticking; (2) with an
-      account and network, stop a timer from another caregiver's device — the widget drops it
-      after its refresh (server-owned removal still applies). · Expected: local timer survives,
-      server removals apply. · Failure: timer disappears after refresh, or a server-stopped timer
-      keeps ticking. · Reason: no Swift test target exists for the widget extension; the
-      refresh/merge cycle can only be observed under WidgetKit on simulator/device.
+- [x] [verify] Clean simulator household-timer gate accepted by user in place of direct WidgetKit
+      surface automation: `npm run e2e:household-timers:clean` passed on prepared Owner/Member
+      simulators after resetting local Supabase, rebuilding the app, and running offline start,
+      reconnect, caregiver handoff, and server widget-snapshot checks. · Evidence:
+      `e2e/artifacts/household-timers/2026-08-11T08-14-23-974Z/`. · Limitation: no WidgetKit
+      XCUITest target exists, so this does not inspect the rendered Home Screen widget directly.
 
 ## Acceptance criteria
 
-- [ ] The app's local widget write carries a freshness stamp; a server snapshot older than it no
+- [x] The app's local widget write carries a freshness stamp; a server snapshot older than it no
       longer wins.
-- [ ] An accountless or offline-started timer survives a server snapshot refresh and keeps
+- [x] An accountless or offline-started timer survives a server snapshot refresh and keeps
       ticking.
-- [ ] The write-then-refresh race no longer erases a just-written timer.
-- [ ] A timer stopped on the server is still removed from the widget on refresh.
-- [ ] Totals, last times, and wake windows continue to come wholesale from the server snapshot.
+- [x] [waived] The write-then-refresh race no longer erases a just-written timer. User explicitly
+      waived race-condition coverage during review; TR-3 remains `deferred-out-of-scope`.
+- [x] A timer stopped on the server is still removed from the widget on refresh.
+- [x] Totals, last times, and wake windows continue to come wholesale from the server snapshot.
+
+## Completion record
+
+- Built: local timer-list preservation in `targets/widget/WidgetActivitySnapshot.swift`, including
+  `localAsOf` carry-forward across consecutive refreshes and pending-widget-stop filtering through
+  `WidgetSnapshotPendingStopReading`; app-group wiring is in `targets/widget/index.swift`.
+- Tests: `scripts/swift/widget-snapshot-tests.swift` covers a second refresh retaining `localAsOf`,
+  an offline timer cleared by a pending widget Stop command, and a local-stamped remote prior that
+  binds the `isRemote` guard.
+- Documentation: `plans/master-plan.md` records the approved locally-known-timer merge exception.
+  README `iOS Native Integrations` now describes successful-refresh retention for accountless/offline
+  timers. `write-well` audit completed in two passes with no findings.
+- Review: TR-1, TR-2, TR-4, and TR-5 fixed. TR-3 deferred by user as race-condition scope. TR-6,
+  TR-7, TR-8, TR-9, TR-12, and TR-13 skipped as minor/nit scope. TR-10 and TR-11 accepted as
+  security risks because current user base is very small and exposure limited.
+- Automated proof: `npm run test:widget:swift` passed (`finish-swift.log`); final focused Swift and
+  TypeScript proofs passed (`final-swift.log`, `final-ts.log`); mutation checks failed as expected
+  when each new guard/path was removed. Clean simulator gate passed (`finish-e2e-household-timers-clean.log`).
+- Manual proof: user accepted the clean simulator gate above in lieu of a direct rendered-WidgetKit
+  check; direct surface inspection remains unavailable without a WidgetKit XCUITest target.
 
 ## Review closeout records
 
