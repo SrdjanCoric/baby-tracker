@@ -35,7 +35,9 @@ const SHARED_SESSION_VERSION = 1;
  * verifying the signature. Refresh preserves `session_id`, so it is a stable
  * lineage across rotations and changes only on a new sign-in.
  */
-export function decodeSupabaseSessionLineage(accessToken: string): string | null {
+export function decodeSupabaseSessionLineage(
+  accessToken: string
+): string | null {
   const segments = accessToken.split(".");
   if (segments.length < 2) return null;
   let base64 = segments[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -60,7 +62,9 @@ function extractAccessToken(sessionJson: string): string | null {
   }
 }
 
-function parseEnvelope(envelopeJson: string): SharedSupabaseSessionEnvelope | null {
+function parseEnvelope(
+  envelopeJson: string
+): SharedSupabaseSessionEnvelope | null {
   try {
     const parsed = JSON.parse(envelopeJson) as Record<string, unknown>;
     if (parsed.version !== SHARED_SESSION_VERSION) return null;
@@ -85,8 +89,15 @@ export function buildSharedSessionEnvelope(
 ): SharedSupabaseSessionEnvelope {
   const accessToken = extractAccessToken(sessionJson);
   const lineage =
-    (accessToken ? decodeSupabaseSessionLineage(accessToken) : null) ?? fallbackLineage ?? "unknown";
-  return { version: SHARED_SESSION_VERSION, revision, lineage, session: sessionJson };
+    (accessToken ? decodeSupabaseSessionLineage(accessToken) : null) ??
+    fallbackLineage ??
+    "unknown";
+  return {
+    version: SHARED_SESSION_VERSION,
+    revision,
+    lineage,
+    session: sessionJson,
+  };
 }
 
 export interface CreateSharedSupabaseClientOptionsOptions {
@@ -99,23 +110,23 @@ export interface CreateSharedSupabaseClientOptionsOptions {
 
 export interface SharedSupabaseClientOptions {
   storage: SupabaseAuthStorage;
+  lock?: <T>(
+    name: string,
+    acquireTimeoutMillis: number,
+    fn: () => Promise<T>
+  ) => Promise<T>;
 }
 
 /**
  * Build the Supabase client `auth` options for the shared session. On iOS the
- * auth session key routes to the shared Keychain capsule through `bridge` and
- * every read/write/redeem is serialized by `appLock`; unrelated keys (the PKCE
- * verifier) keep using AsyncStorage. On Android and web the legacy AsyncStorage
- * storage stays the single source of truth with no cross-process lock, since no
- * extension holds the Supabase credential there.
- *
- * The adapter returns no `lock` for `createClient`: auth-js would wrap every
- * storage call in the *same* native flock that the storage adapter already
- * takes internally. flock locks are per open-file-description, so a nested
- * acquire opens a distinct fd and self-deadlocks against the held one for the
- * full native timeout (and on iOS a held-but-unreleased sign-out lock leaves the
- * shared Keychain capsule in place). The storage adapter owns serialization; a
- * second auth-js lock adds no protection and breaks it.
+ * auth session key routes to the shared Keychain capsule through `bridge`.
+ * The auth-js lock owns the native flock across each complete auth transaction,
+ * including session read, refresh-token redemption, and renewed-session write.
+ * The storage methods therefore assume their auth-js caller already holds the
+ * lock; acquiring again would self-deadlock because flock is not reentrant
+ * across distinct file descriptors. Unrelated keys (the PKCE verifier) keep
+ * using AsyncStorage. Android and web keep AsyncStorage with no cross-process
+ * lock because no extension holds the Supabase credential there.
  */
 export function createSharedSupabaseClientOptions(
   options: CreateSharedSupabaseClientOptionsOptions
@@ -126,61 +137,66 @@ export function createSharedSupabaseClientOptions(
 
   const { bridge, appLock, sessionKey, legacyStorage } = options;
   const legacy = legacyStorage as SupabaseAuthStorage;
+  const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = (
+    _name,
+    _acquireTimeoutMillis,
+    fn
+  ) => appLock.withLock(fn);
 
   const storage: SupabaseAuthStorage = {
     async getItem(key: string): Promise<string | null> {
       if (key !== sessionKey) {
         return legacy.getItem(key);
       }
-      return appLock.withLock(async () => {
-        const raw = await bridge.readSession();
-        if (raw != null) {
-          const envelope = parseEnvelope(raw);
-          if (envelope) return envelope.session;
-          // A corrupt Keychain capsule cannot be trusted as a session; surface
-          // a sign-out rather than serving malformed credentials.
-          return null;
-        }
-        const legacySession = await legacy.getItem(sessionKey);
-        if (legacySession == null) return null;
-        const accessToken = extractAccessToken(legacySession);
-        const lineage = accessToken ? decodeSupabaseSessionLineage(accessToken) : null;
-        if (!lineage) {
-          // Cannot safely persist an unidentifiable session; keep it available
-          // for this read without deleting the legacy copy.
-          return legacySession;
-        }
-        const envelope = buildSharedSessionEnvelope(1, legacySession, lineage);
-        await bridge.writeSession(JSON.stringify(envelope));
-        await legacy.removeItem(sessionKey);
+      const raw = await bridge.readSession();
+      if (raw != null) {
+        const envelope = parseEnvelope(raw);
+        if (envelope) return envelope.session;
+        // A corrupt Keychain capsule cannot be trusted as a session; surface
+        // a sign-out rather than serving malformed credentials.
+        return null;
+      }
+      const legacySession = await legacy.getItem(sessionKey);
+      if (legacySession == null) return null;
+      const accessToken = extractAccessToken(legacySession);
+      const lineage = accessToken
+        ? decodeSupabaseSessionLineage(accessToken)
+        : null;
+      if (!lineage) {
+        // Cannot safely persist an unidentifiable session; keep it available
+        // for this read without deleting the legacy copy.
         return legacySession;
-      });
+      }
+      const envelope = buildSharedSessionEnvelope(1, legacySession, lineage);
+      await bridge.writeSession(JSON.stringify(envelope));
+      await legacy.removeItem(sessionKey);
+      return legacySession;
     },
 
     async setItem(key: string, value: string): Promise<void> {
       if (key !== sessionKey) {
         return legacy.setItem(key, value);
       }
-      await appLock.withLock(async () => {
-        const raw = await bridge.readSession();
-        const current = raw != null ? parseEnvelope(raw) : null;
-        const revision = (current?.revision ?? 0) + 1;
-        const envelope = buildSharedSessionEnvelope(revision, value, current?.lineage);
-        await bridge.writeSession(JSON.stringify(envelope));
-      });
+      const raw = await bridge.readSession();
+      const current = raw != null ? parseEnvelope(raw) : null;
+      const revision = (current?.revision ?? 0) + 1;
+      const envelope = buildSharedSessionEnvelope(
+        revision,
+        value,
+        current?.lineage
+      );
+      await bridge.writeSession(JSON.stringify(envelope));
     },
 
     async removeItem(key: string): Promise<void> {
       if (key !== sessionKey) {
         return legacy.removeItem(key);
       }
-      await appLock.withLock(async () => {
-        await bridge.removeSession();
-      });
+      await bridge.removeSession();
     },
   };
 
-  return { storage };
+  return { storage, lock };
 }
 
 // Pure base64 -> UTF-8 decoder that avoids Node `Buffer` so the module runs in
