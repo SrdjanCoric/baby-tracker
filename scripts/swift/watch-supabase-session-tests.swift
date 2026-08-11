@@ -62,8 +62,100 @@ func requireWatchSession(
 enum WatchSupabaseSessionTests {
     static func main() async throws {
         try testVersionedCapsuleInstallsInWatchLocalStore()
+        try testStalePhoneCapsuleCannotReplaceNewerWatchCapsule()
+        try testEqualRevisionReplayIsIdempotent()
+        try testNewerPhoneCapsuleReplacesStoredCapsule()
+        try testNewAccountLineageCanRestartRevisionCounter()
         try await testUnauthorizedRequestDoesNotRedeemSharedPhoneSession()
         print("PASS: Watch Supabase session safety core")
+    }
+
+    static func testStalePhoneCapsuleCannotReplaceNewerWatchCapsule() throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 8,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 2),
+            refreshToken: "refresh-2"
+        ))
+
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 7,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 1),
+            refreshToken: "refresh-1"
+        ))
+
+        let installed = try vault.read()
+        requireWatchSession(installed?.revision == 8, "Watch replayed an older phone capsule")
+        requireWatchSession(
+            installed?.session.contains("refresh-2") == true,
+            "Watch replaced the current pair with a spent refresh token"
+        )
+        requireWatchSession(store.writeCount == 1, "Watch rewrote Keychain for a stale capsule")
+    }
+
+    static func testEqualRevisionReplayIsIdempotent() throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 8,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 2),
+            refreshToken: "refresh-2"
+        ))
+
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 8,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 3),
+            refreshToken: "conflicting-refresh"
+        ))
+
+        let installed = try vault.read()
+        requireWatchSession(installed?.session.contains("refresh-2") == true, "Watch rewrote an equal revision")
+        requireWatchSession(store.writeCount == 1, "Watch persisted an equal-revision replay")
+    }
+
+    static func testNewerPhoneCapsuleReplacesStoredCapsule() throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 7,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 1),
+            refreshToken: "refresh-1"
+        ))
+
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 8,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 2),
+            refreshToken: "refresh-2"
+        ))
+
+        let installed = try vault.read()
+        requireWatchSession(installed?.revision == 8, "Watch ignored a newer phone capsule")
+        requireWatchSession(installed?.session.contains("refresh-2") == true, "Watch kept the older pair")
+        requireWatchSession(store.writeCount == 2, "Watch did not persist the newer capsule")
+    }
+
+    static func testNewAccountLineageCanRestartRevisionCounter() throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 8,
+            lineage: "lineage-a",
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 2),
+            refreshToken: "refresh-a"
+        ))
+
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 1,
+            lineage: "lineage-b",
+            accessToken: Self.jwt(lineage: "lineage-b", marker: 1),
+            refreshToken: "refresh-b"
+        ))
+
+        let installed = try vault.read()
+        requireWatchSession(installed?.revision == 1, "Watch rejected a new account's revision counter")
+        requireWatchSession(installed?.lineage == "lineage-b", "Watch kept the previous account lineage")
+        requireWatchSession(store.writeCount == 2, "Watch did not persist the new account capsule")
     }
 
     static func testVersionedCapsuleInstallsInWatchLocalStore() throws {
@@ -126,7 +218,12 @@ enum WatchSupabaseSessionTests {
         requireWatchSession(logger.events.isEmpty, "Shared-session expiry emitted a renewal log")
     }
 
-    static func capsule(revision: Int, accessToken: String, refreshToken: String) -> String {
+    static func capsule(
+        revision: Int,
+        lineage: String = "lineage-a",
+        accessToken: String,
+        refreshToken: String
+    ) -> String {
         let session = String(
             data: try! JSONSerialization.data(withJSONObject: [
                 "access_token": accessToken,
@@ -141,7 +238,7 @@ enum WatchSupabaseSessionTests {
             data: try! JSONSerialization.data(withJSONObject: [
                 "version": 1,
                 "revision": revision,
-                "lineage": "lineage-a",
+                "lineage": lineage,
                 "session": session,
             ], options: [.sortedKeys]),
             encoding: .utf8

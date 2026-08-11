@@ -43,14 +43,17 @@ protocol WatchSessionStore: Sendable {
 
 final class WatchSessionVault: @unchecked Sendable {
     private let store: WatchSessionStore
+    private let lock = NSLock()
 
     init(store: WatchSessionStore) {
         self.store = store
     }
 
     func read() throws -> WatchSessionEnvelopeV1? {
-        guard let data = try store.readRaw() else { return nil }
-        return try Self.decode(data)
+        try withLock {
+            guard let data = try store.readRaw() else { return nil }
+            return try Self.decode(data)
+        }
     }
 
     func install(capsuleJson: String) throws {
@@ -62,7 +65,16 @@ final class WatchSessionVault: @unchecked Sendable {
         guard session.lineage == capsule.lineage else {
             throw WatchSessionError.identityMismatch
         }
-        try store.writeRaw(try JSONEncoder().encode(capsule))
+        try withLock {
+            if let storedData = try store.readRaw() {
+                let stored = try Self.decode(storedData)
+                if stored.lineage == capsule.lineage,
+                   stored.revision >= capsule.revision {
+                    return
+                }
+            }
+            try store.writeRaw(try JSONEncoder().encode(capsule))
+        }
     }
 
     func replace(_ envelope: WatchSessionEnvelopeV1) throws {
@@ -70,7 +82,15 @@ final class WatchSessionVault: @unchecked Sendable {
     }
 
     func remove() throws {
-        try store.deleteRaw()
+        try withLock {
+            try store.deleteRaw()
+        }
+    }
+
+    private func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body()
     }
 
     private static func decode(_ data: Data) throws -> WatchSessionEnvelopeV1 {
