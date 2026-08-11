@@ -4,10 +4,12 @@ final class InMemoryWatchSessionStore: WatchSessionStore, @unchecked Sendable {
     var bytes: Data?
     var writeCount = 0
     var deleteCount = 0
+    var failWrites = false
 
     func readRaw() throws -> Data? { bytes }
 
     func writeRaw(_ data: Data) throws {
+        if failWrites { throw WatchSessionError.storeFailure }
         bytes = data
         writeCount += 1
     }
@@ -69,6 +71,7 @@ enum WatchSupabaseSessionTests {
         try await testUnauthorizedRequestDoesNotRedeemSharedPhoneSession()
         try await testConcurrentUnauthorizedRequestsDoNotRotateSharedSession()
         try await testMissingSessionReturnsUnauthorizedWithoutNetworkRequest()
+        try await testUnauthorizedRequestCannotLoseSessionToPersistenceFailure()
         print("PASS: Watch Supabase session safety core")
     }
 
@@ -272,6 +275,34 @@ enum WatchSupabaseSessionTests {
             logger.events == [WatchSessionLogEvent(kind: .missingSession)],
             "Missing session was not logged exactly once"
         )
+    }
+
+    static func testUnauthorizedRequestCannotLoseSessionToPersistenceFailure() async throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 7,
+            accessToken: Self.jwt(lineage: "lineage-a", marker: 1),
+            refreshToken: "refresh-1"
+        ))
+        store.failWrites = true
+        store.writeCount = 0
+        let transport = WatchSupabaseTransport(
+            vault: vault,
+            httpClient: RecordedWatchHTTPClient(statuses: [401]),
+            logger: RecordingWatchSessionLogger()
+        )
+
+        let (status, _) = try await transport.send(
+            config: Self.config,
+            buildRequest: Self.bearerRequest
+        )
+
+        requireWatchSession(status == 401, "Keychain state changed the unauthorized result")
+        requireWatchSession(store.writeCount == 0, "Watch tried to persist a replacement after 401")
+        let stored = try vault.read()
+        requireWatchSession(stored?.revision == 7, "Watch lost the original capsule after 401")
+        requireWatchSession(stored?.session.contains("refresh-1") == true, "Watch discarded the original pair")
     }
 
     static func capsule(
