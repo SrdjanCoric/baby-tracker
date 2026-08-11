@@ -100,6 +100,13 @@ the Watch waits for the phone instead of owning an independent session.
   `/tmp/agent-workflows/e2f8af45fd34/49b8e8362ee8/` (`final-swift.log`,
   `final-vitest.log`, `final-auth-component.log`, `final-eslint.log`, and
   `final-typecheck.log`).
+- The remediation-verification pass confirmed the intended phone-mediated behavior: the Watch has
+  no independent session, and a Watch `requestSync` asks the background-capable companion app to
+  refresh the phone-owned session and republish its persisted application context.
+- TR-15–TR-18 focused validation passed: `npm run test:widget:swift`, 13/13 Watch-service Vitest
+  tests, 18/18 Watch message-handler component tests, focused ESLint, and repository TypeScript
+  typecheck. Logs are under `/tmp/agent-workflows/e2f8af45fd34/49b8e8362ee8/` with the
+  `tr15-18-final-` prefix.
 - The final canonical gate remains owned by `finish-task`.
 
 ## Review decisions
