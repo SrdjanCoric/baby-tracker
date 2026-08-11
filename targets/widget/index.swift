@@ -419,7 +419,6 @@ struct StopActivityIntent: AppIntent {
 
         let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
         let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
-        let accessToken = userDefaults.string(forKey: "supabaseAccessToken")
         let babyId = userDefaults.string(forKey: "selectedBabyId")
         let userId = userDefaults.string(forKey: "userId")
         let laPushToken = userDefaults.string(forKey: "liveActivityPushToken")
@@ -465,15 +464,15 @@ struct StopActivityIntent: AppIntent {
             appendExternalTimerCommand(command, to: userDefaults)
         }
 
-        if let supabaseUrl, let anonKey, let accessToken, let babyId, let userId {
-            let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(userId)"
-            if let url = URL(string: urlString) {
+        if let supabaseUrl, let anonKey, let babyId, let userId,
+           let url = URL(string: "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(userId)") {
+            _ = try? await widgetSnapshotRuntime?.transport.send { token in
                 var request = URLRequest(url: url)
                 request.httpMethod = "DELETE"
                 request.setValue(anonKey, forHTTPHeaderField: "apikey")
-                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 request.timeoutInterval = 10
-                _ = try? await URLSession.shared.data(for: request)
+                return request
             }
         }
 
@@ -481,21 +480,22 @@ struct StopActivityIntent: AppIntent {
 
         if let pushToken = userDefaults.string(forKey: "liveActivityPushToken"),
            !pushToken.isEmpty,
-           let supabaseUrl = supabaseUrl {
-            let edgeUrl = "\(supabaseUrl)/functions/v1/end-live-activity"
-            if let url = URL(string: edgeUrl) {
+           let supabaseUrl = supabaseUrl,
+           let url = URL(string: "\(supabaseUrl)/functions/v1/end-live-activity") {
+            var laBody: [String: Any] = ["pushToken": pushToken]
+            #if DEBUG
+            laBody["isSandbox"] = true
+            #endif
+            let bodyData = try? JSONSerialization.data(withJSONObject: laBody)
+            _ = try? await widgetSnapshotRuntime?.transport.send { token in
                 var laRequest = URLRequest(url: url)
                 laRequest.httpMethod = "POST"
                 laRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 laRequest.setValue(anonKey ?? "", forHTTPHeaderField: "apikey")
-                laRequest.setValue("Bearer \(accessToken ?? anonKey ?? "")", forHTTPHeaderField: "Authorization")
+                laRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 laRequest.timeoutInterval = 10
-                var laBody: [String: Any] = ["pushToken": pushToken]
-                #if DEBUG
-                laBody["isSandbox"] = true
-                #endif
-                laRequest.httpBody = try? JSONSerialization.data(withJSONObject: laBody)
-                _ = try? await URLSession.shared.data(for: laRequest)
+                laRequest.httpBody = bodyData
+                return laRequest
             }
             userDefaults.removeObject(forKey: "liveActivityPushToken")
         }
@@ -544,11 +544,10 @@ struct TogglePauseActivityIntent: AppIntent {
 
         let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
         let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
-        let accessToken = userDefaults.string(forKey: "supabaseAccessToken")
         let babyId = userDefaults.string(forKey: "selectedBabyId")
         let userId = userDefaults.string(forKey: "userId")
 
-        NSLog("[TogglePause] supabaseUrl=\(supabaseUrl != nil) anonKey=\(anonKey != nil) accessToken=\(accessToken != nil) babyId=\(babyId != nil) userId=\(userId != nil)")
+        NSLog("[TogglePause] supabaseUrl=\(supabaseUrl != nil) anonKey=\(anonKey != nil) babyId=\(babyId != nil) userId=\(userId != nil)")
 
         var widgetData = loadWidgetData()
         if widgetData?.getActiveTimer(for: activity) == nil {
@@ -632,7 +631,7 @@ struct TogglePauseActivityIntent: AppIntent {
                 #if DEBUG
                 edgeBody["isSandbox"] = true
                 #endif
-                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", accessToken: accessToken, body: edgeBody)
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", body: edgeBody)
                 NSLog("[TogglePause] edge function returned")
             } else {
                 NSLog("[TogglePause] SKIPPED edge function: missing Supabase URL")
@@ -679,7 +678,7 @@ struct TogglePauseActivityIntent: AppIntent {
                 #if DEBUG
                 edgeBody["isSandbox"] = true
                 #endif
-                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", accessToken: accessToken, body: edgeBody)
+                await callTogglePauseEdgeFunction(supabaseUrl: supabaseUrl, anonKey: anonKey ?? "", body: edgeBody)
                 NSLog("[TogglePause] edge function returned")
             } else {
                 NSLog("[TogglePause] SKIPPED edge function: missing Supabase URL")
@@ -692,25 +691,25 @@ struct TogglePauseActivityIntent: AppIntent {
         return .result()
     }
 
-    private func callTogglePauseEdgeFunction(supabaseUrl: String, anonKey: String, accessToken: String?, body: [String: Any]) async {
-        let edgeUrl = "\(supabaseUrl)/functions/v1/toggle-timer-pause"
-        guard let url = URL(string: edgeUrl) else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(accessToken ?? anonKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 10
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+    private func callTogglePauseEdgeFunction(supabaseUrl: String?, anonKey: String, body: [String: Any]) async {
+        guard let runtime = widgetSnapshotRuntime,
+              let supabaseUrl,
+              let url = URL(string: "\(supabaseUrl)/functions/v1/toggle-timer-pause") else { return }
+        let bodyData = try? JSONSerialization.data(withJSONObject: body)
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse {
-                let bodyStr = String(data: data, encoding: .utf8) ?? ""
-                NSLog("[TogglePause] edge response: status=\(httpResponse.statusCode) body=\(bodyStr.prefix(200))")
+            let (status, data) = try await runtime.transport.send { token in
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue(anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.timeoutInterval = 10
+                request.httpBody = bodyData
+                return request
             }
+            NSLog("[TogglePause] edge response: status=\(status) body=\(String(data: data, encoding: .utf8)?.prefix(200) ?? "")")
         } catch {
-            NSLog("[TogglePause] edge request error: \(error.localizedDescription)")
+            NSLog("[TogglePause] edge transport error: \(error)")
         }
     }
 }
@@ -814,66 +813,103 @@ final class AppGroupWidgetSnapshotStore: WidgetSnapshotStoring, @unchecked Senda
     }
 }
 
+/// Read-only accessor for the legacy App Group `supabaseAccessToken` bearer
+/// token. Used only as a backwards-compatibility fallback (post-app-update,
+/// pre-first-app-launch window) by the widget transport; the app purges the
+/// token on its first launch after upgrade (TR-5). `UserDefaults` is not
+/// declared `Sendable` by the SDK but Apple documents it as thread-safe, hence
+/// the unchecked conformance for capture inside the transport's `@Sendable`
+/// legacy-token provider closure.
+struct AppGroupLegacyAccessTokenReader: @unchecked Sendable {
+    private let userDefaults: UserDefaults
+    private let key: String
+
+    init(userDefaults: UserDefaults, key: String = "supabaseAccessToken") {
+        self.userDefaults = userDefaults
+        self.key = key
+    }
+
+    func current() -> String? {
+        userDefaults.string(forKey: key)
+    }
+}
+
 final class AppGroupWidgetSnapshotIdentityReader: WidgetSnapshotIdentityReading, @unchecked Sendable {
     private let userDefaults: UserDefaults
+    private let vault: SharedSessionVaulting
 
-    init(userDefaults: UserDefaults) {
+    init(userDefaults: UserDefaults, vault: SharedSessionVaulting) {
         self.userDefaults = userDefaults
+        self.vault = vault
     }
 
     func currentIdentity() -> WidgetSnapshotIdentity? {
         guard let accountId = userDefaults.string(forKey: "userId"),
-              let babyId = userDefaults.string(forKey: "selectedBabyId"),
-              let accessToken = userDefaults.string(forKey: "supabaseAccessToken") else {
+              let babyId = userDefaults.string(forKey: "selectedBabyId") else {
             return nil
         }
         let timezone = userDefaults.string(forKey: "widgetTimezone")
             ?? TimeZone.current.identifier
-        return WidgetSnapshotIdentity(
-            accountId: accountId,
-            babyId: babyId,
-            generation: accessToken,
-            timezone: timezone
-        )
+
+        if let envelope = try? vault.read() {
+            return WidgetSnapshotIdentity(
+                accountId: accountId,
+                babyId: babyId,
+                generation: envelope.lineage,
+                timezone: timezone
+            )
+        }
+        // Best-effort backwards-compatibility fallback (TR-4). Before the app
+        // writes the shared Keychain capsule, the widget reads the legacy App
+        // Group `supabaseAccessToken` bearer read-only. It works only for the
+        // token's remaining lifetime; one updated-app launch is required to
+        // migrate the renewable session. The app then purges this legacy token
+        // (TR-5), and the non-nil capsule permanently owns this path.
+        if let legacyAccessToken = userDefaults.string(forKey: "supabaseAccessToken") {
+            return WidgetSnapshotIdentity(
+                accountId: accountId,
+                babyId: babyId,
+                generation: SupabaseSessionLineage.extract(fromAccessToken: legacyAccessToken) ?? "",
+                timezone: timezone
+            )
+        }
+        return nil
     }
 }
 
 final class SupabaseWidgetSnapshotFetcher: WidgetSnapshotFetching, @unchecked Sendable {
+    private let transport: WidgetSupabaseTransport
     private let userDefaults: UserDefaults
 
-    init(userDefaults: UserDefaults) {
+    init(transport: WidgetSupabaseTransport, userDefaults: UserDefaults) {
+        self.transport = transport
         self.userDefaults = userDefaults
     }
 
     func fetchSnapshot(for identity: WidgetSnapshotIdentity) async throws -> Data {
         guard let supabaseUrl = userDefaults.string(forKey: "supabaseUrl"),
               let anonKey = userDefaults.string(forKey: "supabaseAnonKey"),
-              let accessToken = userDefaults.string(forKey: "supabaseAccessToken") else {
-            throw WidgetSnapshotTransportError.missingCredentials
-        }
-        guard let url = URL(string: "\(supabaseUrl)/rest/v1/rpc/get_baby_activity_snapshot") else {
+              let url = URL(string: "\(supabaseUrl)/rest/v1/rpc/get_baby_activity_snapshot") else {
             throw WidgetSnapshotTransportError.invalidURL
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 10
-        request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "p_baby_id": identity.babyId,
-            "p_timezone": identity.timezone
-        ])
-
-        let (bytes, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw WidgetSnapshotTransportError.unsuccessfulResponse
+        let (status, bytes) = try await transport.send { accessToken in
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            request.timeoutInterval = 10
+            request.httpBody = try? JSONSerialization.data(withJSONObject: [
+                "p_baby_id": identity.babyId,
+                "p_timezone": identity.timezone
+            ])
+            return request
         }
-        if http.statusCode == 401 {
+        if status == 401 {
             throw WidgetSnapshotTransportError.unauthorized
         }
-        guard (200..<300).contains(http.statusCode) else {
+        guard (200..<300).contains(status) else {
             throw WidgetSnapshotTransportError.unsuccessfulResponse
         }
         return bytes
@@ -883,12 +919,27 @@ final class SupabaseWidgetSnapshotFetcher: WidgetSnapshotFetching, @unchecked Se
 private let widgetSnapshotRuntime: (
     store: AppGroupWidgetSnapshotStore,
     identity: AppGroupWidgetSnapshotIdentityReader,
-    coordinator: WidgetSnapshotCoordinator
+    coordinator: WidgetSnapshotCoordinator,
+    transport: WidgetSupabaseTransport
 )? = {
     guard let userDefaults = UserDefaults(suiteName: appGroupId) else { return nil }
     let store = AppGroupWidgetSnapshotStore(userDefaults: userDefaults)
-    let identity = AppGroupWidgetSnapshotIdentityReader(userDefaults: userDefaults)
-    let fetcher = SupabaseWidgetSnapshotFetcher(userDefaults: userDefaults)
+    let keychainStore = KeychainSharedSessionStore()
+    let vault = SharedSessionVault(store: keychainStore)
+    let identity = AppGroupWidgetSnapshotIdentityReader(userDefaults: userDefaults, vault: vault)
+    let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
+    let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
+    let legacyTokenReader = AppGroupLegacyAccessTokenReader(userDefaults: userDefaults)
+    let transport = WidgetSupabaseTransport(
+        vault: vault,
+        lock: PosixSharedSessionLock(),
+        refreshClient: URLSessionSupabaseRefreshClient(),
+        httpClient: URLSessionSupabaseHTTPClient(),
+        config: SupabaseEndpointConfig(supabaseUrl: supabaseUrl ?? "", anonKey: anonKey ?? ""),
+        logger: NSLogSessionLogger(),
+        legacyAccessTokenProvider: { legacyTokenReader.current() }
+    )
+    let fetcher = SupabaseWidgetSnapshotFetcher(transport: transport, userDefaults: userDefaults)
     let coordinator = WidgetSnapshotCoordinator(
         store: store,
         identityReader: identity,
@@ -896,7 +947,7 @@ private let widgetSnapshotRuntime: (
         pendingStopReader: AppGroupPendingStopReader(userDefaults: userDefaults),
         reload: { WidgetCenter.shared.reloadAllTimelines() }
     )
-    return (store, identity, coordinator)
+    return (store, identity, coordinator, transport)
 }()
 
 func refreshWidgetSnapshot(reloadTimelines: Bool = true) async -> WidgetDataModel? {
@@ -930,8 +981,7 @@ func loadWidgetData() -> WidgetDataModel? {
 }
 
 func isUserAuthenticated() -> Bool {
-    guard let userDefaults = UserDefaults(suiteName: appGroupId) else { return false }
-    return userDefaults.string(forKey: "supabaseAccessToken") != nil
+    return widgetSnapshotRuntime?.identity.currentIdentity() != nil
 }
 
 func getLastActivityTime(for activity: ActivityType, data: WidgetDataModel?) -> Date? {

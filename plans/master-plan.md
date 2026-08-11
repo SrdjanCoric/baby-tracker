@@ -291,7 +291,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0079 · Cap automatic rating prompts to three per rolling year and add a Rate App entry point → tasks/done/0079-improve-rating-prompts-and-rate-app-entry.md
 - [x] 0081 · Show widget data without an account or sign-in → tasks/done/0081-show-widget-data-without-account.md
 - [x] 0082 · Preserve locally-known timers across widget server refreshes (after 0081) → tasks/done/0082-preserve-local-timers-across-widget-refreshes.md
-- [ ] 0083 · Widget renews its Supabase credential via a shared App Group session (after 0082) → tasks/0083-renew-widget-credentials-via-shared-session.md
+- [>] 0083 · Widget renews its Supabase credential via a shared App Group session (after 0082) → tasks/0083-renew-widget-credentials-via-shared-session.md
 - [ ] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/0084-renew-watch-credentials-from-shared-session.md
 - [ ] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/0085-preserve-local-timers-across-watch-refreshes.md
 

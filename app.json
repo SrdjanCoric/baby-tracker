@@ -21,6 +21,9 @@
       "entitlements": {
         "com.apple.security.application-groups": [
           "group.com.sofibaby.app"
+        ],
+        "keychain-access-groups": [
+          "743WPPWD3W.com.sofibaby.shared-session"
         ]
       },
       "infoPlist": {
@@ -97,6 +100,7 @@
     "plugins": [
       "./plugins/with-16kb-pages",
       "./plugins/with-live-activity-controller",
+      "./plugins/with-shared-supabase-session",
       "expo-router",
       "expo-apple-authentication",
       [

@@ -8,5 +8,9 @@
     </array>
     <key>aps-environment</key>
     <string>production</string>
+    <key>keychain-access-groups</key>
+    <array>
+      <string>743WPPWD3W.com.sofibaby.shared-session</string>
+    </array>
   </dict>
 </plist>
