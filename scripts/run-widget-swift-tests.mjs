@@ -13,10 +13,66 @@ const moduleCache = join(buildDirectory, "module-cache");
 const executable = join(buildDirectory, "widget-snapshot-tests");
 const watchExecutable = join(buildDirectory, "watch-summary-tests");
 const sharedSessionExecutable = join(buildDirectory, "shared-supabase-session-tests");
+const swiftEnvironment = {
+  ...process.env,
+  CLANG_MODULE_CACHE_PATH: moduleCache,
+  SWIFT_MODULECACHE_PATH: moduleCache,
+};
+
+const widgetProductionSources = [
+  "targets/widget/GeneratedStrings.swift",
+  "targets/widget/LiveActivity.swift",
+  "targets/widget/SharedSupabaseSession.swift",
+  "targets/widget/SharedSupabaseSessionAdapters.swift",
+  "targets/widget/WidgetActivitySnapshot.swift",
+  "targets/widget/index.swift",
+];
+
+function typecheckWidgetProductionSources() {
+  if (process.platform !== "darwin") {
+    console.log("SKIP: Widget production Swift typecheck requires macOS/Xcode");
+    return;
+  }
+
+  const sdkPath = execFileSync(
+    "xcrun",
+    ["--sdk", "iphoneos", "--show-sdk-path"],
+    { cwd: root, encoding: "utf8" }
+  ).trim();
+  execFileSync(
+    "xcrun",
+    [
+      "--sdk",
+      "iphoneos",
+      "swiftc",
+      "-typecheck",
+      "-parse-as-library",
+      "-application-extension",
+      "-swift-version",
+      "5",
+      "-module-name",
+      "SofiBabyWidget",
+      "-target",
+      "arm64-apple-ios18.0",
+      "-sdk",
+      sdkPath,
+      "-module-cache-path",
+      moduleCache,
+      ...widgetProductionSources,
+    ],
+    {
+      cwd: root,
+      env: swiftEnvironment,
+      stdio: "inherit",
+    }
+  );
+  console.log("PASS: Widget production Swift typecheck");
+}
 
 mkdirSync(moduleCache);
 
 try {
+  typecheckWidgetProductionSources();
   execFileSync(
     "swiftc",
     [
@@ -28,11 +84,7 @@ try {
     ],
     {
       cwd: root,
-      env: {
-        ...process.env,
-        CLANG_MODULE_CACHE_PATH: moduleCache,
-        SWIFT_MODULECACHE_PATH: moduleCache,
-      },
+      env: swiftEnvironment,
       stdio: "inherit",
     }
   );
@@ -51,11 +103,7 @@ try {
     ],
     {
       cwd: root,
-      env: {
-        ...process.env,
-        CLANG_MODULE_CACHE_PATH: moduleCache,
-        SWIFT_MODULECACHE_PATH: moduleCache,
-      },
+      env: swiftEnvironment,
       stdio: "inherit",
     }
   );
@@ -74,11 +122,7 @@ try {
     ],
     {
       cwd: root,
-      env: {
-        ...process.env,
-        CLANG_MODULE_CACHE_PATH: moduleCache,
-        SWIFT_MODULECACHE_PATH: moduleCache,
-      },
+      env: swiftEnvironment,
       stdio: "inherit",
     }
   );

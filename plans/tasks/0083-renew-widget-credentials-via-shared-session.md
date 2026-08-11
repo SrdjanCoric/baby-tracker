@@ -134,9 +134,8 @@ store in task 0084.
 - `eslint . --max-warnings=0`: exit 0.
 - `tsc --noEmit`: exit 0.
 - `npm run test:widget:swift`: `PASS: Shared Supabase session renewal core` plus the existing
-  decoder/coordinator and Watch suites, exit 0, zero Swift warnings.
-- `swiftc -typecheck` on `SharedSupabaseSession.swift` + `SharedSupabaseSessionAdapters.swift`:
-  exit 0.
+  decoder/coordinator and Watch suites, plus the committed iPhoneOS production-source typecheck
+  covering all Widget Swift files, exit 0, zero Swift warnings.
 - Logs: `/tmp/agent-workflows/e2f8af45fd34/0a9094bf718e/` (`unit.log`, `component.log`, `ci.log`,
   `lint-full.log`, `typecheck.log`, `shared-session-swift.log`, `adapters-typecheck.log`).
 - Not run here (canonical, owned by finish-task): `test:local-dates`, `test:production-gating`
@@ -156,7 +155,6 @@ store in task 0084.
 - skipped (minor): TR-14 — cross-task architectural decision not recorded in master-plan's "Architectural decisions" section — deferred; out of scope this review round
 - skipped (minor): TR-15 — docs/SECURITY.md still describes pre-change session model — deferred; out of scope this review round
 - skipped (minor): TR-16 — widget-stop-intent-order test assertion now vacuous (marker points at "return request") — deferred; out of scope this review round
-- skipped (minor): TR-17 — New production Swift (SharedSupabaseSessionAdapters.swift, index.swift) not compile-gated by committed command — deferred; out of scope this review round
 - skipped (minor): TR-18 — Acceptance criterion retro-fit carve-out for Watch's `watchSupabaseAccessToken` App Group channel — deferred; out of scope this review round
 - skipped (nit): TR-19 — `loadSharedSupabaseSessionBridge` native wrapper has no vitest test — deferred; out of scope this review round
 - skipped (nit): TR-20 — `writeAuthToAppGroup` still requires `accessToken` param it no longer reads — deferred; out of scope this review round
