@@ -14,7 +14,7 @@ import React
 /// iCloud; holding the file lock across the awaited Redeme/retry body keeps two
 /// holders from redeeming the same (rotating) refresh token at once.
 @objc(SharedSupabaseSession)
-class SharedSupabaseSession: NSObject {
+class SharedSupabaseSession: NSObject, RCTInvalidating {
 
     private static let appGroup = "group.com.sofibaby.app"
     private static let keychainService = "com.sofibaby.supabase.session"
@@ -171,5 +171,26 @@ class SharedSupabaseSession: NSObject {
         flock(fd, LOCK_UN)
         close(fd)
         resolve(true)
+    }
+
+    // MARK: - Bridge teardown
+
+    /// Closes every still-open lock handle when the React Native bridge is torn
+    /// down (dev reload, JS error paths, app background eviction). The JS-side
+    /// caller normally releases each handle in a `finally` block, but a
+    /// `static var lockDescriptors` survives the bridge and an in-flight
+    /// acquire whose `finally` never ran would otherwise leave its flock held
+    /// for the life of the process — permanently breaking every later Supabase
+    /// auth read/write until force-quit. Reclaiming on `invalidate()` keeps an
+    /// orphaned JS context from poisoning the next one.
+    @objc func invalidate() {
+        SharedSupabaseSession.descriptorLock.lock()
+        let handles = SharedSupabaseSession.lockDescriptors
+        SharedSupabaseSession.lockDescriptors.removeAll()
+        SharedSupabaseSession.descriptorLock.unlock()
+        for (_, fd) in handles {
+            flock(fd, LOCK_UN)
+            close(fd)
+        }
     }
 }
