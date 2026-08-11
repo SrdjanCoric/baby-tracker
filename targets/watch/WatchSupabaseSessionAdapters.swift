@@ -79,6 +79,8 @@ final class WatchNSLogSessionLogger: WatchSessionLogger, @unchecked Sendable {
         switch event.kind {
         case .missingSession:
             NSLog("[WatchSupabaseSession] no local session capsule")
+        case .invalidSession:
+            NSLog("[WatchSupabaseSession] local session capsule is unavailable or invalid")
         }
     }
 }

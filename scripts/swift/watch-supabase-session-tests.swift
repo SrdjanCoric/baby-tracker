@@ -68,6 +68,7 @@ enum WatchSupabaseSessionTests {
         try testNewAccountLineageCanRestartRevisionCounter()
         try await testUnauthorizedRequestDoesNotRedeemSharedPhoneSession()
         try await testConcurrentUnauthorizedRequestsDoNotRotateSharedSession()
+        try await testMissingSessionReturnsUnauthorizedWithoutNetworkRequest()
         print("PASS: Watch Supabase session safety core")
     }
 
@@ -247,6 +248,30 @@ enum WatchSupabaseSessionTests {
         let stored = try vault.read()
         requireWatchSession(stored?.revision == 7, "Concurrent 401s advanced the capsule revision")
         requireWatchSession(stored?.session.contains("refresh-1") == true, "Concurrent 401s replaced the refresh token")
+    }
+
+    static func testMissingSessionReturnsUnauthorizedWithoutNetworkRequest() async throws {
+        let http = RecordedWatchHTTPClient(statuses: [200])
+        let logger = RecordingWatchSessionLogger()
+        let transport = WatchSupabaseTransport(
+            vault: WatchSessionVault(store: InMemoryWatchSessionStore()),
+            httpClient: http,
+            logger: logger
+        )
+
+        let (status, body) = try await transport.send(
+            config: Self.config,
+            buildRequest: Self.bearerRequest
+        )
+
+        requireWatchSession(status == 401, "Missing session did not surface as unauthorized")
+        requireWatchSession(body.isEmpty, "Missing session returned a synthetic response body")
+        let bearers = await http.recordedBearers()
+        requireWatchSession(bearers.isEmpty, "Missing session reached the network")
+        requireWatchSession(
+            logger.events == [WatchSessionLogEvent(kind: .missingSession)],
+            "Missing session was not logged exactly once"
+        )
     }
 
     static func capsule(

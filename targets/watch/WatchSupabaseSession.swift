@@ -143,6 +143,7 @@ enum WatchSessionLineage {
 
 enum WatchSessionLogKind: Equatable {
     case missingSession
+    case invalidSession
 }
 
 struct WatchSessionLogEvent: Equatable {
@@ -181,11 +182,17 @@ final class WatchSupabaseTransport: @unchecked Sendable {
         config: WatchSupabaseEndpointConfig,
         buildRequest: @escaping @Sendable (String) -> URLRequest
     ) async throws -> (Int, Data) {
-        guard let capsule = try vault.read() else {
-            logger.log(WatchSessionLogEvent(kind: .missingSession))
-            throw WatchSessionError.missingSession
+        let session: WatchSessionView
+        do {
+            guard let capsule = try vault.read() else {
+                logger.log(WatchSessionLogEvent(kind: .missingSession))
+                return (401, Data())
+            }
+            session = try WatchSessionView.read(capsule)
+        } catch is WatchSessionError {
+            logger.log(WatchSessionLogEvent(kind: .invalidSession))
+            return (401, Data())
         }
-        let session = try WatchSessionView.read(capsule)
         return try await httpClient.send(buildRequest(session.accessToken))
     }
 }
