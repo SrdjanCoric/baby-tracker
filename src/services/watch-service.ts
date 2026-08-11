@@ -98,9 +98,10 @@ async function watchCanReceive(module: WatchConnectivityModule): Promise<boolean
  * otherwise hand the Watch the previous account's still-valid credentials, and
  * the Watch treats any received credentials as fresh.
  */
-export function clearWatchContext(): void {
+export async function clearWatchContext(): Promise<void> {
   lastContext = null;
-  watchModule?.updateApplicationContext({ signedOut: true });
+  const module = await getWatchConnectivityModule();
+  module?.updateApplicationContext({ signedOut: true });
 }
 
 async function publishApplicationContext(context: WatchPayload): Promise<void> {

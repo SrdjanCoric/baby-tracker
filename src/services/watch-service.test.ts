@@ -139,7 +139,7 @@ describe("watch language transport", () => {
     const { clearWatchContext, setWatchLanguage, syncToWatch } = await loadWatchService();
 
     await syncToWatch(widgetData, undefined, authContext);
-    clearWatchContext();
+    await clearWatchContext();
     updateApplicationContext.mockClear();
 
     await setWatchLanguage("de");
@@ -158,7 +158,15 @@ describe("watch language transport", () => {
     await syncToWatch(widgetData, undefined, authContext);
     updateApplicationContext.mockClear();
 
-    clearWatchContext();
+    await clearWatchContext();
+
+    expect(updateApplicationContext).toHaveBeenCalledWith({ signedOut: true });
+  });
+
+  it("publishes sign-out before any prior Watch sync loaded connectivity", async () => {
+    const { clearWatchContext } = await loadWatchService();
+
+    await clearWatchContext();
 
     expect(updateApplicationContext).toHaveBeenCalledWith({ signedOut: true });
   });
