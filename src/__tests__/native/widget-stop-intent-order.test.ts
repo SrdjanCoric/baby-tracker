@@ -29,9 +29,7 @@ describe("StopActivityIntent", () => {
     const userPredicate = releaseScope.indexOf("&started_by=eq.");
     const requestCreation = releaseScope.indexOf("URLRequest(url: url)");
     const deleteRequest = releaseScope.indexOf('request.httpMethod = "DELETE"');
-    const releaseLock = releaseScope.indexOf(
-      "await URLSession.shared.data(for: request)"
-    );
+    const releaseLock = releaseScope.indexOf("return request");
 
     expect(intentStart).toBeGreaterThanOrEqual(0);
     expect(targetBaby).toBeGreaterThanOrEqual(0);

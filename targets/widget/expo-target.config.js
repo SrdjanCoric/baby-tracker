@@ -4,7 +4,7 @@ module.exports = {
   name: "SofiBabyWidget",
   displayName: "SofiBaby",
   deploymentTarget: "18.0",
-  frameworks: ["SwiftUI", "WidgetKit", "ActivityKit", "AppIntents"],
+  frameworks: ["SwiftUI", "WidgetKit", "ActivityKit", "AppIntents", "Security"],
   colors: {
     $accent: "#8CB369",
     $widgetBackground: { light: "#F5EDE8", dark: "#1E1B19" },
@@ -24,5 +24,6 @@ module.exports = {
   entitlements: {
     "com.apple.security.application-groups": ["group.com.sofibaby.app"],
     "aps-environment": "production",
+    "keychain-access-groups": ["743WPPWD3W.com.sofibaby.shared-session"],
   },
 };

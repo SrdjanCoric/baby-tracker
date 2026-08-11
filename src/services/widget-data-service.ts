@@ -374,7 +374,6 @@ export async function writeAuthToAppGroup(params: {
     if (extensionStorage) {
       await extensionStorage.set("supabaseUrl", params.supabaseUrl, APP_GROUP);
       await extensionStorage.set("supabaseAnonKey", params.supabaseAnonKey, APP_GROUP);
-      await extensionStorage.set("supabaseAccessToken", params.accessToken, APP_GROUP);
       await extensionStorage.set("userId", params.userId, APP_GROUP);
       await extensionStorage.set("selectedBabyId", params.selectedBabyId, APP_GROUP);
       await extensionStorage.set("widgetTimezone", params.timezone, APP_GROUP);

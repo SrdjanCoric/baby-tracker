@@ -3,6 +3,7 @@
 **Branch**: `feature/renew-widget-credentials-via-shared-session`
 **Depends on**: 0082
 **Source**: `handoffs/main/widget-refresh-and-credential-renewal.md` (2026-08-10 investigation), Part 2
+**Execution classification**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: yes
 
 ## What to build
 
@@ -48,23 +49,48 @@ store in task 0084.
 
 ## Implementation work
 
-- [ ] Implement a custom storage adapter for the app's Supabase client that persists the session
-      to the shared store agreed in the `[decision]` below (refresh token in Keychain with an
-      access group; move the existing access token out of App Group `UserDefaults`).
-- [ ] Test-first on the TypeScript side: the adapter round-trips a session and the app picks up a
-      pair the Widget wrote back.
-- [ ] In `targets/widget/index.swift` / `WidgetActivitySnapshot.swift`: on RPC 401, redeem the
+- [x] Implement a custom storage adapter for the app's Supabase client that persists the
+      session to the shared store agreed in the `[decision]` below (refresh token in Keychain
+      with an access group; move the existing access token out of App Group `UserDefaults`).
+      — `src/services/shared-supabase-session.ts` + `src/services/shared-supabase-session-native.ts`
+      wired into `src/services/supabase.ts`; the iOS auth session key routes to the shared
+      Keychain capsule through `plugins/with-shared-supabase-session` while PKCE verifiers and
+      Android/web stay on AsyncStorage.
+- [x] Test-first on the TypeScript side: the adapter round-trips a session and the app picks
+      up a pair the Widget wrote back.
+      — `src/services/shared-supabase-session.test.ts` (10 tests) and
+      `src/__tests__/security/shared-supabase-session.security.test.ts` (static guards).
+- [x] In `targets/widget/index.swift` / `WidgetActivitySnapshot.swift`: on RPC 401, redeem the
       refresh token against Supabase auth, write the renewed pair back to the shared store, and
       retry the RPC once. Surface (log) renewal failure instead of silently serving stale cache.
-- [ ] Honor the agreed concurrent-redemption discipline between app and Widget.
+      — `targets/widget/SharedSupabaseSession.swift` (Foundation core) +
+      `targets/widget/SharedSupabaseSessionAdapters.swift` (Keychain/POSIX/URLSession/NSLog);
+      `WidgetSupabaseTransport` renews under a cross-process `flock`, retries once, and logs
+      `missingSession`/`refreshRejected`/`retryUnauthorized`. The snapshot RPC, stop DELETE,
+      end-live-activity, and toggle-pause edge calls all route through the transport.
+- [x] Honor the agreed concurrent-redemption discipline between app and Widget.
+      — one `flock` over the App Group lock file; a waiting caller re-reads the capsule and
+      adopts a newer pair instead of redeeming again. Proven by
+      `scripts/swift/shared-supabase-session-tests.swift` (10 slices incl. concurrent
+      redemption) compiled by `scripts/run-widget-swift-tests.mjs`.
 
 ## Human checkpoints
 
-- [ ] [decision] Where exactly the session lives (Keychain access-group layout, what remains in
-      `UserDefaults`) and how app, Widget, and Watch avoid concurrent refresh-token redemption
-      (`talk-it-through`) — the handoff names this the gate for implementation.
-- [ ] [confirm-security] Approve the final storage and redemption design before merge: Keychain
-      items, access group, what each target may read/write, and the 401-renewal flow.
+- [x] [decision] Use one versioned Keychain item, protected by
+      `AfterFirstUnlockThisDeviceOnly` and shared with the app and Widget only, to hold the complete
+      Supabase session JSON. Keep only public configuration and non-secret identity metadata in App
+      Group `UserDefaults`. Serialize app and Widget refreshes with one permanent App Group POSIX
+      file lock; after acquiring it, re-read the session, redeem only the still-current refresh
+      token, validate the same account, replace the whole session, then retry the original request
+      once. A waiting caller adopts a newer pair instead of redeeming again. The app migrates its
+      existing iOS AsyncStorage session by copy, verification, then deletion; Android and web keep
+      AsyncStorage. The Widget routes every authenticated request through this transport. Widget
+      refresh failures retain prior cache or queued actions and emit redacted logs. Watch access
+      remains deferred to Task 0084. Approved by the user on 2026-08-11.
+- [x] [confirm-security] The user approved this Keychain layout, app/Widget access boundary,
+      cross-process redemption lock, migration, and one-retry 401 flow on 2026-08-11. Accepted
+      consequence: the Widget holds an account-wide refresh credential, constrained to the shared
+      Keychain access group; rollback to an older binary may require sign-in after migration.
 - [ ] [verify] Physical iPhone, app force-closed for over an hour, then the other caregiver logs
       sleep from Android. · Expected: the widget updates without the app being opened. · Failure:
       widget stays stale until the app opens — the original symptom. · Reason: JWT expiry plus
@@ -73,10 +99,42 @@ store in task 0084.
 
 ## Acceptance criteria
 
-- [ ] The shared store is the single source of truth for the session; the refresh token is in
+- [x] The shared store is the single source of truth for the session; the refresh token is in
       Keychain (access group), and no bearer token remains in App Group `UserDefaults`.
-- [ ] A Widget refresh more than one hour after the last app session succeeds: 401 → redeem →
+      — the Widget no longer reads `supabaseAccessToken`; the app no longer writes it to the App
+      Group (the Watch keeps its separate `watchSupabaseAccessToken` channel until Task 0084).
+      Only the non-secret URL/anon key, user/baby ids, and timezone remain in App Group
+      `UserDefaults`.
+- [x] A Widget refresh more than one hour after the last app session succeeds: 401 → redeem →
       retry → fresh snapshot.
-- [ ] The app continues working with a session pair the Widget renewed (no sign-out).
-- [ ] Renewal failures are logged, not swallowed.
-- [ ] JWT expiry remains 3600s.
+      — proven by the Swift renewal-core slices; the physical boundary is the `[verify]`
+      checkpoint below.
+- [x] The app continues working with a session pair the Widget renewed (no sign-out).
+      — supabase-js `__loadSession` re-reads the Keychain on every `getSession()`/request, so the
+      app adopts the Widget-rotated access/refresh token automatically; its next refresh redeems
+      the rotated refresh token instead of the revoked one.
+- [x] Renewal failures are logged, not swallowed.
+      — `NSLogSessionLogger` redacts tokens and the transport logs every failure kind before
+      letting the coordinator preserve the prior cache.
+- [x] JWT expiry remains 3600s.
+      — no Supabase Auth configuration changed.
+
+## Verification evidence (focused pre-review)
+
+- `vitest run` (unit): 2741 tests across 155 files, exit 0.
+- `jest --runInBand` (component): 1070 tests across 115 suites, exit 0.
+- `npm run test:ci`: 65/65, exit 0.
+- `eslint . --max-warnings=0`: exit 0.
+- `tsc --noEmit`: exit 0.
+- `npm run test:widget:swift`: `PASS: Shared Supabase session renewal core` plus the existing
+  decoder/coordinator and Watch suites, exit 0, zero Swift warnings.
+- `swiftc -typecheck` on `SharedSupabaseSession.swift` + `SharedSupabaseSessionAdapters.swift`:
+  exit 0.
+- Logs: `/tmp/agent-workflows/e2f8af45fd34/0a9094bf718e/` (`unit.log`, `component.log`, `ci.log`,
+  `lint-full.log`, `typecheck.log`, `shared-session-swift.log`, `adapters-typecheck.log`).
+- Not run here (canonical, owned by finish-task): `test:local-dates`, `test:production-gating`
+  (Metro/Hermes bundle), `test:sql`. The iOS widget/app build that compiles
+  `targets/widget/index.swift` and the new native module cannot run in this environment; it is
+  the canonical/`[verify]` boundary (CI native build + the physical iPhone checkpoint).
+
+"

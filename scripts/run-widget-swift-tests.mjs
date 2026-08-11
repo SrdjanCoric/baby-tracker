@@ -12,6 +12,7 @@ const buildDirectory = mkdtempSync(join(tmpdir(), "widget-snapshot-tests-"));
 const moduleCache = join(buildDirectory, "module-cache");
 const executable = join(buildDirectory, "widget-snapshot-tests");
 const watchExecutable = join(buildDirectory, "watch-summary-tests");
+const sharedSessionExecutable = join(buildDirectory, "shared-supabase-session-tests");
 
 mkdirSync(moduleCache);
 
@@ -36,6 +37,29 @@ try {
     }
   );
   execFileSync(executable, ["fixtures/widget-activity-snapshots"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  execFileSync(
+    "swiftc",
+    [
+      "-parse-as-library",
+      "targets/widget/SharedSupabaseSession.swift",
+      "scripts/swift/shared-supabase-session-tests.swift",
+      "-o",
+      sharedSessionExecutable,
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        CLANG_MODULE_CACHE_PATH: moduleCache,
+        SWIFT_MODULECACHE_PATH: moduleCache,
+      },
+      stdio: "inherit",
+    }
+  );
+  execFileSync(sharedSessionExecutable, [], {
     cwd: root,
     stdio: "inherit",
   });
