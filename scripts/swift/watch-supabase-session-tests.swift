@@ -72,6 +72,8 @@ enum WatchSupabaseSessionTests {
         try await testConcurrentUnauthorizedRequestsDoNotRotateSharedSession()
         try await testMissingSessionReturnsUnauthorizedWithoutNetworkRequest()
         try await testUnauthorizedRequestCannotLoseSessionToPersistenceFailure()
+        try await testUnknownPhoneLineageAcceptsTokenWithoutSessionId()
+        try testSpecificLineageStillRejectsTokenWithoutSessionId()
         print("PASS: Watch Supabase session safety core")
     }
 
@@ -305,6 +307,48 @@ enum WatchSupabaseSessionTests {
         requireWatchSession(stored?.session.contains("refresh-1") == true, "Watch discarded the original pair")
     }
 
+    static func testUnknownPhoneLineageAcceptsTokenWithoutSessionId() async throws {
+        let store = InMemoryWatchSessionStore()
+        let vault = WatchSessionVault(store: store)
+        let accessToken = Self.jwtWithoutSessionId(marker: 1)
+        try vault.install(capsuleJson: Self.capsule(
+            revision: 1,
+            lineage: "unknown",
+            accessToken: accessToken,
+            refreshToken: "refresh-1"
+        ))
+        let http = RecordedWatchHTTPClient(statuses: [200])
+        let transport = WatchSupabaseTransport(
+            vault: vault,
+            httpClient: http,
+            logger: RecordingWatchSessionLogger()
+        )
+
+        let (status, _) = try await transport.send(
+            config: Self.config,
+            buildRequest: Self.bearerRequest
+        )
+
+        requireWatchSession(status == 200, "Watch rejected the phone's unknown-lineage convention")
+        let bearers = await http.recordedBearers()
+        requireWatchSession(bearers == ["Bearer \(accessToken)"], "Watch did not use the unknown-lineage access token")
+    }
+
+    static func testSpecificLineageStillRejectsTokenWithoutSessionId() throws {
+        let vault = WatchSessionVault(store: InMemoryWatchSessionStore())
+        do {
+            try vault.install(capsuleJson: Self.capsule(
+                revision: 1,
+                lineage: "lineage-a",
+                accessToken: Self.jwtWithoutSessionId(marker: 1),
+                refreshToken: "refresh-1"
+            ))
+            fatalError("Watch accepted missing session_id for a specific lineage")
+        } catch WatchSessionError.identityMismatch {
+            // Expected: only the phone's explicit "unknown" convention is accepted.
+        }
+    }
+
     static func capsule(
         revision: Int,
         lineage: String = "lineage-a",
@@ -347,6 +391,15 @@ enum WatchSupabaseSessionTests {
         let header = Data("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".utf8).base64EncodedString()
         let payload = try! JSONSerialization.data(withJSONObject: [
             "session_id": lineage,
+            "sub": "user-1",
+            "iat": marker,
+        ]).base64EncodedString()
+        return "\(base64Url(header)).\(base64Url(payload)).signature"
+    }
+
+    static func jwtWithoutSessionId(marker: Int) -> String {
+        let header = Data("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".utf8).base64EncodedString()
+        let payload = try! JSONSerialization.data(withJSONObject: [
             "sub": "user-1",
             "iat": marker,
         ]).base64EncodedString()

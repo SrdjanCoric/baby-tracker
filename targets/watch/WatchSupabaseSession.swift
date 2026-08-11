@@ -114,13 +114,17 @@ struct WatchSessionView {
               !refreshToken.isEmpty else {
             throw WatchSessionError.malformedSession
         }
-        guard let lineage = WatchSessionLineage.extract(fromAccessToken: accessToken) else {
+        if let tokenLineage = WatchSessionLineage.extract(fromAccessToken: accessToken) {
+            guard tokenLineage == envelope.lineage else {
+                throw WatchSessionError.identityMismatch
+            }
+        } else if envelope.lineage != "unknown" {
             throw WatchSessionError.identityMismatch
         }
         return WatchSessionView(
             accessToken: accessToken,
             refreshToken: refreshToken,
-            lineage: lineage
+            lineage: envelope.lineage
         )
     }
 }
