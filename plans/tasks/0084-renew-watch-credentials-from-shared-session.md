@@ -1,4 +1,4 @@
-# Task 0084: Watch renews its Supabase credential from the shared session
+# Task 0084: Watch uses the shared Supabase credential safely
 
 **Branch**: `feature/renew-watch-credentials-from-shared-session`
 **Depends on**: 0083
@@ -7,56 +7,49 @@
 
 ## What to build
 
-Extend task 0083's credential renewal to the Apple Watch. The Watch authenticates its Supabase
-RPCs with the same stored static access token as the Widget and has the same failure: one hour
-after the last app session, every request returns 401 and summaries go permanently stale until the
-phone app is opened.
-
-The Watch reads the shared session store established in task 0083 and follows the same
-concurrent-redemption discipline approved there: on 401, redeem the refresh token, write the
-renewed pair back to the shared store, retry once, and log renewal failures instead of swallowing
-them. No new storage design — the `[decision]` and `[confirm-security]` outcomes from 0083 are
-binding here.
+The Watch receives task 0083's versioned session capsule through WatchConnectivity and uses its
+access token for Supabase RPCs. It must never redeem the phone's refresh token: no cross-device
+lock or best-effort replication channel can guarantee that the phone and Watch will not reuse
+different generations of one rotating refresh-token family. On 401, the Watch marks the credential
+stale and requests a fresh phone publication.
 
 ## Implementation decision
 
 - [x] [decision] The supported topology is one account with one paired Watch. The Watch receives
       task 0083's versioned session capsule through the existing WatchConnectivity channel, stores
-      it in Watch-local Keychain, and owns no cross-device locking protocol. Within the Watch it
-      follows the existing renew-on-401, replace-the-pair, retry-once behavior. The old
+      it in Watch-local Keychain, and uses only the current access token. The old
       `watchSupabaseAccessToken` UserDefaults channel is removed. Confirmed by the user on
       2026-08-11.
-- [x] [confirm-security] The user confirmed on 2026-08-11 that the single-user, single-paired-Watch
-      topology does not require a cross-device refresh lock. The Watch may hold the renewable
-      session capsule in its local Keychain so it can refresh while the phone app is closed.
+- [x] [confirm-security] After review, the user confirmed on 2026-08-11 that the Watch must never
+      redeem the phone's rotating refresh token. A 401 requests a phone sync instead. An
+      independently renewable Watch requires a separately designed device-specific session.
 
 ## Implementation work
 
 - [x] In `targets/watch/index.swift` / `WatchActivitySummary.swift`, read the session from the
       shared store from 0083 instead of the static access token.
-- [x] On RPC 401: redeem, write back, retry once, log on failure — using the redemption
-      discipline approved in 0083.
+- [x] On RPC 401: surface unauthorized, mark the credential stale, and request a phone sync without
+      redeeming or replacing the shared refresh-token family.
 - [x] Remove the Watch's reliance on any credential field 0083 deprecated (e.g. the old
       `UserDefaults` access token), if anything still reads it.
 
 ## Human checkpoints
 
-- [ ] [verify] Physical Apple Watch, phone app force-closed for over an hour, then trigger a Watch
-      summary refresh (open the Watch app or wait for its scheduled refresh). · Expected: the
-      Watch shows fresh data without the phone app being opened. · Failure: Watch summaries stay
-      stale until the phone app opens. · Reason: JWT expiry and watchOS background refresh cannot
-      be reproduced in an automated harness; no Swift test target exists.
+- [ ] [verify] Physical Apple Watch with an expired access token, then trigger a Watch summary
+      refresh. · Expected: the stale-credential banner appears and the Watch requests a phone sync;
+      opening the phone republishes a fresh capsule and Watch requests resume. · Failure: the Watch
+      silently keeps stale data or redeems the phone refresh token.
 
 ## Acceptance criteria
 
-- [x] A Watch refresh more than one hour after the last app session succeeds via 401 → redeem →
-      retry.
-- [x] The Watch and the app both keep working after either one renews the pair (no sign-out, no
-      redemption race).
+- [x] The Watch never redeems or replaces the phone's rotating refresh-token family.
+- [x] A Watch 401 activates stale-credential recovery and requests a fresh capsule from the phone.
+- [x] The app and Widget cannot be signed out by Watch-side refresh-token reuse.
 - [x] No Watch code path still reads a credential field deprecated by 0083.
-- [x] Renewal failures are logged, not swallowed.
+- [x] Missing, rejected, or expired Watch credentials activate stale-session recovery instead of
+      being swallowed.
 
-## Verification evidence (focused pre-review)
+## Verification evidence (original focused pre-review; superseded by review remediation)
 
 - Phone publication contract: `npm run test:unit -- src/services/watch-service.test.ts` passed
   11/11. The application context carries the exact versioned Task 0083 capsule, retains it across

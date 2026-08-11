@@ -5,7 +5,6 @@ enum WatchSessionError: Error, Equatable {
     case malformedSession
     case unsupportedSchema
     case identityMismatch
-    case refreshRejected
     case storeFailure
 }
 
@@ -128,8 +127,6 @@ enum WatchSessionLineage {
 
 enum WatchSessionLogKind: Equatable {
     case missingSession
-    case refreshRejected
-    case retryUnauthorized
 }
 
 struct WatchSessionLogEvent: Equatable {
@@ -144,10 +141,6 @@ protocol WatchSupabaseHTTPClient: Sendable {
     func send(_ request: URLRequest) async throws -> (Int, Data)
 }
 
-protocol WatchSupabaseRefreshClient: Sendable {
-    func refresh(refreshToken: String, config: WatchSupabaseEndpointConfig) async throws -> String
-}
-
 struct WatchSupabaseEndpointConfig: Sendable {
     let supabaseUrl: String
     let anonKey: String
@@ -155,18 +148,15 @@ struct WatchSupabaseEndpointConfig: Sendable {
 
 final class WatchSupabaseTransport: @unchecked Sendable {
     private let vault: WatchSessionVault
-    private let refreshClient: WatchSupabaseRefreshClient
     private let httpClient: WatchSupabaseHTTPClient
     private let logger: WatchSessionLogger
 
     init(
         vault: WatchSessionVault,
-        refreshClient: WatchSupabaseRefreshClient,
         httpClient: WatchSupabaseHTTPClient,
         logger: WatchSessionLogger
     ) {
         self.vault = vault
-        self.refreshClient = refreshClient
         self.httpClient = httpClient
         self.logger = logger
     }
@@ -180,76 +170,6 @@ final class WatchSupabaseTransport: @unchecked Sendable {
             throw WatchSessionError.missingSession
         }
         let session = try WatchSessionView.read(capsule)
-        let (status, body) = try await httpClient.send(buildRequest(session.accessToken))
-        guard status == 401 else { return (status, body) }
-
-        let renewedToken = try await redeem(
-            capsule: capsule,
-            refreshToken: session.refreshToken,
-            config: config
-        )
-        let (retryStatus, retryBody) = try await httpClient.send(buildRequest(renewedToken))
-        if retryStatus == 401 {
-            logger.log(WatchSessionLogEvent(kind: .retryUnauthorized))
-        }
-        return (retryStatus, retryBody)
-    }
-
-    private func redeem(
-        capsule: WatchSessionEnvelopeV1,
-        refreshToken: String,
-        config: WatchSupabaseEndpointConfig
-    ) async throws -> String {
-        do {
-            let body = try await refreshClient.refresh(refreshToken: refreshToken, config: config)
-            let renewed = try WatchRefreshedSession.read(responseBody: body)
-            guard renewed.lineage == capsule.lineage else {
-                throw WatchSessionError.identityMismatch
-            }
-            let replacement = WatchSessionEnvelopeV1(
-                version: 1,
-                revision: capsule.revision + 1,
-                lineage: capsule.lineage,
-                session: renewed.sessionJson
-            )
-            try vault.replace(replacement)
-            return try WatchSessionView.read(replacement).accessToken
-        } catch {
-            logger.log(WatchSessionLogEvent(kind: .refreshRejected))
-            if let sessionError = error as? WatchSessionError {
-                throw sessionError
-            }
-            throw WatchSessionError.refreshRejected
-        }
-    }
-}
-
-private struct WatchRefreshedSession {
-    let sessionJson: String
-    let lineage: String
-
-    static func read(responseBody: String, now: Date = Date()) throws -> WatchRefreshedSession {
-        guard let data = responseBody.data(using: .utf8),
-              var response = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = response["access_token"] as? String,
-              let refreshToken = response["refresh_token"] as? String,
-              let expiresIn = response["expires_in"] as? Int,
-              !accessToken.isEmpty,
-              !refreshToken.isEmpty,
-              expiresIn > 0 else {
-            throw WatchSessionError.refreshRejected
-        }
-        guard let lineage = WatchSessionLineage.extract(fromAccessToken: accessToken) else {
-            throw WatchSessionError.identityMismatch
-        }
-        response["expires_at"] = Int(now.addingTimeInterval(TimeInterval(expiresIn)).timeIntervalSince1970)
-        response["token_type"] = response["token_type"] as? String ?? "bearer"
-        guard let sessionJson = String(
-            data: try JSONSerialization.data(withJSONObject: response, options: [.sortedKeys]),
-            encoding: .utf8
-        ) else {
-            throw WatchSessionError.refreshRejected
-        }
-        return WatchRefreshedSession(sessionJson: sessionJson, lineage: lineage)
+        return try await httpClient.send(buildRequest(session.accessToken))
     }
 }

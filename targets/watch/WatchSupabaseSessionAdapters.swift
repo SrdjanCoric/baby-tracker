@@ -74,37 +74,11 @@ final class WatchURLSessionHTTPClient: WatchSupabaseHTTPClient, @unchecked Senda
     }
 }
 
-final class WatchURLSessionRefreshClient: WatchSupabaseRefreshClient, @unchecked Sendable {
-    func refresh(refreshToken: String, config: WatchSupabaseEndpointConfig) async throws -> String {
-        guard let url = URL(string: "\(config.supabaseUrl)/auth/v1/token?grant_type=refresh_token") else {
-            throw WatchSessionError.refreshRejected
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        request.timeoutInterval = 10
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": refreshToken])
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode),
-              let body = String(data: data, encoding: .utf8) else {
-            throw WatchSessionError.refreshRejected
-        }
-        return body
-    }
-}
-
 final class WatchNSLogSessionLogger: WatchSessionLogger, @unchecked Sendable {
     func log(_ event: WatchSessionLogEvent) {
         switch event.kind {
         case .missingSession:
             NSLog("[WatchSupabaseSession] no local session capsule")
-        case .refreshRejected:
-            NSLog("[WatchSupabaseSession] renewal failed; preserving the prior credential pair")
-        case .retryUnauthorized:
-            NSLog("[WatchSupabaseSession] retry after renewal still returned 401")
         }
     }
 }
@@ -113,7 +87,6 @@ enum WatchSupabaseSessionEnvironment {
     static let vault = WatchSessionVault(store: WatchKeychainSessionStore())
     static let transport = WatchSupabaseTransport(
         vault: vault,
-        refreshClient: WatchURLSessionRefreshClient(),
         httpClient: WatchURLSessionHTTPClient(),
         logger: WatchNSLogSessionLogger()
     )
