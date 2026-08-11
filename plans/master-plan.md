@@ -194,7 +194,12 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   read-only, versioned server snapshot returns only the current fields those native surfaces display —
   baby identity, active timers, latest relevant facts, current-day aggregates, applicable goals and
   wake-window state — never histories or multiple babies. A successful refresh replaces the complete
-  per-baby base; no client may merge a fresh timer list into stale summaries. Widget fetches on its
+  per-baby base; the only merge a client may perform into a server response is preserving
+  locally-known timers the server cannot know about — an accountless or offline-started timer
+  (no server row), or a just-written timer in the write-then-refresh race guarded by an app-stamped
+  freshness value (`localAsOf`) newer than the response's `serverAsOf`. Server-owned removals still
+  apply to those timers once the server knows about them, and all non-timer fields (totals, last
+  times, wake windows) keep coming wholesale from the response. Widget fetches on its
   existing timer-change push, action, and scheduled timeline opportunities without short polling.
   Watch keeps its 30-second selected-baby timer probe only while a timer appears active and fetches the
   complete summary only when that fingerprint changes or another explicit full-refresh trigger occurs.
