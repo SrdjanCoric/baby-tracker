@@ -717,6 +717,7 @@ actor WatchSummaryCoordinator {
         if candidate.kind == .legacy, priorDecoded?.kind == .versioned {
             return prior
         }
+        var accepted = (data: candidate.data, bytes: candidateBytes)
         if candidate.kind == .versioned {
             guard (try? WatchSummaryDecoder.decodeNetwork(
                 candidateBytes,
@@ -726,16 +727,28 @@ actor WatchSummaryCoordinator {
                 return prior
             }
         } else if candidate.kind == .local {
-            guard !isLocalOlder(candidate.data, than: prior) else {
+            guard isLocalNewer(candidate.data, than: prior) else {
                 return prior
+            }
+            if priorDecoded?.kind == .versioned,
+               let prior,
+               let priorBytes {
+                guard let merged = try? mergeNetworkResponse(
+                    prior,
+                    responseBytes: priorBytes,
+                    with: candidate.data
+                ) else {
+                    return prior
+                }
+                accepted = merged
             }
         } else if isLegacyOlder(candidate.data, than: prior) {
             return prior
         }
         guard identityReader.currentIdentity() == identity else { return prior }
-        if candidateBytes != priorBytes {
+        if accepted.bytes != priorBytes {
             do {
-                try store.writeSummary(candidateBytes, for: identity)
+                try store.writeSummary(accepted.bytes, for: identity)
                 reload()
             } catch {
                 return prior
@@ -744,7 +757,7 @@ actor WatchSummaryCoordinator {
         if candidate.kind == .versioned {
             reconcileOverlays(with: candidate.data, previous: prior, identity: identity)
         }
-        return candidate.data
+        return accepted.data
     }
 
     private func isOlder(_ candidate: WatchSummaryData, than cached: WatchSummaryData?) -> Bool {
@@ -842,15 +855,17 @@ actor WatchSummaryCoordinator {
         return candidateDate < cachedDate
     }
 
-    private func isLocalOlder(_ candidate: WatchSummaryData, than cached: WatchSummaryData?) -> Bool {
+    private func isLocalNewer(_ candidate: WatchSummaryData, than cached: WatchSummaryData?) -> Bool {
         guard let candidateValue = candidate.localAsOf,
               let candidateDate = parseTimestamp(candidateValue) else {
-            return true
+            return false
         }
-        guard let cached else { return false }
-        let cachedValue = cached.localAsOf ?? cached.serverAsOf ?? cached.updatedAt
-        guard let cachedDate = parseTimestamp(cachedValue) else { return true }
-        return candidateDate < cachedDate
+        guard let cached else { return true }
+        let cachedDates = [cached.localAsOf, cached.serverAsOf, cached.updatedAt]
+            .compactMap { $0 }
+            .compactMap(parseTimestamp)
+        guard let freshestCachedDate = cachedDates.max() else { return false }
+        return candidateDate > freshestCachedDate
     }
 
     private func reconcileOverlays(

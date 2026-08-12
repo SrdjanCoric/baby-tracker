@@ -794,18 +794,27 @@ enum WatchSummaryTests {
         requireWatch(lateResult == runningSummary, "late prior-scope response was published")
         requireWatch(lateStore.writes == 0, "late prior-scope response wrote the cache")
 
+        var ownedPhoneLocalObject = try JSONSerialization.jsonObject(with: localStamped) as! [String: Any]
+        var ownedPhoneTimer = ownedPhoneLocalObject["activeTimer"] as! [String: Any]
+        ownedPhoneTimer["lockState"] = "owned"
+        ownedPhoneLocalObject["activeTimer"] = ownedPhoneTimer
+        let ownedPhoneLocal = try JSONSerialization.data(
+            withJSONObject: ownedPhoneLocalObject,
+            options: [.sortedKeys]
+        )
         let localMulti = try changedWatchFixture(
-            legacyMultiBabyFixture(localStamped, babyId: identity.babyId),
+            legacyMultiBabyFixture(ownedPhoneLocal, babyId: identity.babyId),
             ["localAsOf": "2026-08-08T10:01:00.000Z"]
         )
         let localPhoneStore = TestWatchSummaryStore()
         localPhoneStore.bytesByScope[identity.cacheKey] = versioned
         let localPhoneReader = TestWatchIdentityReader()
         localPhoneReader.identity = identity
+        let localPhoneFetcher = TestWatchSummaryFetcher(response: versioned)
         let localPhoneCoordinator = WatchSummaryCoordinator(
             store: localPhoneStore,
             identityReader: localPhoneReader,
-            fetcher: TestWatchSummaryFetcher(response: versioned),
+            fetcher: localPhoneFetcher,
             reload: {}
         )
 
@@ -813,9 +822,41 @@ enum WatchSummaryTests {
 
         requireWatch(
             localPhoneResult?.activeTimers?.first?.timerInstanceId == "offline-timer",
-            "newer stamped Watch envelope did not replace the older server base"
+            "newer stamped Watch envelope did not merge its timer into the server base"
+        )
+        requireWatch(
+            localPhoneResult?.schemaVersion == 1 &&
+                localPhoneResult?.serverAsOf == "2026-08-08T10:00:00.000Z" &&
+                localPhoneResult?.activities.sleep.todayMinutes == 120,
+            "stamped Watch envelope replaced server-owned summary fields"
         )
         requireWatch(localPhoneStore.writes == 1, "newer stamped Watch envelope was not cached")
+
+        localPhoneFetcher.response = try versionedWatchFixture(
+            versioned,
+            timer: nil,
+            serverAsOf: "2026-08-08T10:30:00.000Z"
+        )
+        let freshServerResult = await localPhoneCoordinator.refresh(trigger: .activation)
+        requireWatch(
+            freshServerResult?.serverAsOf == "2026-08-08T10:30:00.000Z" &&
+                freshServerResult?.activeTimers?.isEmpty == true,
+            "fresh server summary did not replace the locally merged timer"
+        )
+        let writesBeforeReplay = localPhoneStore.writes
+
+        let replayedLocalResult = await localPhoneCoordinator.acceptPhonePayload(localMulti)
+
+        requireWatch(
+            replayedLocalResult?.schemaVersion == 1 &&
+                replayedLocalResult?.serverAsOf == "2026-08-08T10:30:00.000Z" &&
+                replayedLocalResult?.activeTimers?.isEmpty == true,
+            "replayed stamped Watch envelope replaced a fresher server summary"
+        )
+        requireWatch(
+            localPhoneStore.writes == writesBeforeReplay,
+            "replayed stamped Watch envelope rewrote a fresher server summary"
+        )
 
         let sameBabyLegacy = try changedWatchFixture(legacy, [
             "babyId": identity.babyId,
