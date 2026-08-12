@@ -704,9 +704,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             if session.isReachable {
                 self.refreshCompleteSummary(.reachability)
                 self.requestFreshDataFromPhone()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.requestFreshDataFromPhone()
-                }
             } else {
                 self.refreshCompleteSummary(.reachability)
             }

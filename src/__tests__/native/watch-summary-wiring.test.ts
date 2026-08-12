@@ -11,6 +11,14 @@ const coordinatorSource = fs.readFileSync(
 const swiftRunner = fs.readFileSync(path.join(root, "scripts/run-widget-swift-tests.mjs"), "utf8");
 
 describe("Watch complete-summary wiring", () => {
+  it("requests phone data once when Watch reachability changes", () => {
+    const reachabilityHandler = watchSource.slice(
+      watchSource.indexOf("func sessionReachabilityDidChange"),
+      watchSource.indexOf("func session(_ session: WCSession, didReceiveApplicationContext")
+    );
+    expect(reachabilityHandler.match(/requestFreshDataFromPhone\(\)/g)).toHaveLength(1);
+  });
+
   it("keeps the active-timer request as a probe and never commits its rows directly", () => {
     expect(watchSource).toContain("/rest/v1/active_timers?baby_id=eq.");
     expect(watchSource).toContain("acceptTimerProbe(fingerprint)");

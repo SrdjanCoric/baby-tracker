@@ -96,6 +96,37 @@ describe("watch language transport", () => {
     );
   });
 
+  it("republishes a fresh shared session without rotating its refresh-token family", async () => {
+    const freshSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 7,
+      lineage: "session-lineage",
+      session: JSON.stringify({
+        access_token: "fresh-access-token",
+        refresh_token: "fresh-refresh-token",
+        expires_at: 4_000_000_000,
+      }),
+    });
+    readSharedSession.mockResolvedValue(freshSessionCapsule);
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: freshSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => undefined);
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await refreshWatchCredentialsFromPhone(refreshSession);
+
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(updateApplicationContext).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionCapsule: freshSessionCapsule })
+    );
+  });
+
   it("holds the language until the watch session can receive it", async () => {
     // WCSession activates asynchronously during launch, and a context published
     // before it is ready is discarded with no error the JS side can observe.

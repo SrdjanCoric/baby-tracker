@@ -55,6 +55,22 @@ let currentLanguage: string | null = null;
 let lastContext: WatchPayload | null = null;
 
 let languageAwaitingWatch = false;
+const WATCH_SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
+
+function watchSessionNeedsRefresh(capsuleJson: string | null): boolean {
+  if (!capsuleJson) return true;
+  try {
+    const capsule = JSON.parse(capsuleJson) as Record<string, unknown>;
+    if (typeof capsule.session !== "string") return true;
+    const session = JSON.parse(capsule.session) as Record<string, unknown>;
+    if (typeof session.expires_at !== "number" || !Number.isFinite(session.expires_at)) {
+      return true;
+    }
+    return session.expires_at * 1000 <= Date.now() + WATCH_SESSION_REFRESH_WINDOW_MS;
+  } catch {
+    return true;
+  }
+}
 
 export async function setWatchLanguage(language: string): Promise<void> {
   currentLanguage = language;
@@ -131,8 +147,11 @@ export async function refreshWatchCredentialsFromPhone(
   if (!module || !bridge) return false;
 
   const persistedContext = lastContext ?? await module.getApplicationContext() ?? {};
-  await refreshSession();
-  const sessionCapsule = await bridge.readSession();
+  let sessionCapsule = await bridge.readSession();
+  if (watchSessionNeedsRefresh(sessionCapsule)) {
+    await refreshSession();
+    sessionCapsule = await bridge.readSession();
+  }
   if (!sessionCapsule) return false;
 
   const context = { ...persistedContext, sessionCapsule };

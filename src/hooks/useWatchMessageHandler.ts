@@ -144,7 +144,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
           case "requestSync":
             if (onRequestSync) {
               await onRequestSync(replyHandler);
-              return null;
+              return replyHandler ? null : { success: true };
             }
             return { success: true };
 
@@ -583,7 +583,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       }
 
       const requestId = typeof message.requestId === "string" ? message.requestId : undefined;
-      const requestKey = requestId && (action !== "requestSync" || replyHandler)
+      const requestKey = requestId
         ? `${authScope}\u0000${requestId}`
         : undefined;
       const fingerprint = requestFingerprint(message);

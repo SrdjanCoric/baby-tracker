@@ -362,7 +362,7 @@ describe("useWatchMessageHandler", () => {
     expect(duplicateReply).toHaveBeenCalledWith({ widgetData: "same-response" });
   });
 
-  it("does not leave a reply-less requestSync permanently pending", async () => {
+  it("deduplicates a reply-less requestSync when its reply-bearing copy arrives", async () => {
     mockOnRequestSync.mockImplementation((replyHandler) => {
       replyHandler?.({ widgetData: "fresh-response" });
     });
@@ -377,8 +377,8 @@ describe("useWatchMessageHandler", () => {
     sendMessage(message, laterReply);
 
     await waitFor(() => {
-      expect(mockOnRequestSync).toHaveBeenCalledTimes(2);
-      expect(laterReply).toHaveBeenCalledWith({ widgetData: "fresh-response" });
+      expect(mockOnRequestSync).toHaveBeenCalledTimes(1);
+      expect(laterReply).toHaveBeenCalledWith({ success: true });
     });
   });
 
