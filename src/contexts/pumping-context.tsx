@@ -440,6 +440,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     restorePumpingTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {

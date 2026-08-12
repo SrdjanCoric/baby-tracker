@@ -944,6 +944,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     restoreSleepTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {

@@ -113,82 +113,125 @@ WAL-poller cost, any watch/widget credential work (separate branch in flight), a
 
 ## Implementation work
 
-- [ ] Test-first: a simulated realtime `babies` UPDATE carrying only derived-timestamp changes
+- [x] Test-first: a simulated realtime `babies` UPDATE carrying only derived-timestamp changes
       leaves `selectedBaby` referentially stable and triggers zero activity-context refetches; a
       genuine baby edit (name, birth date) still propagates.
-- [ ] Implement the reducer deep-equal no-op in the baby context.
-- [ ] Test-first: concurrent timer restore across all four activity types performs exactly one
+- [x] Implement the reducer deep-equal no-op in the baby context.
+- [x] Test-first: concurrent timer restore across all four activity types performs exactly one
       `active_timers` fetch via the awaited baby-keyed single-flight snapshot, with no race
       between the providers; restore behavior (own running timer resumes, other-user timer
       displayed, no timer clears state) is unchanged; remaining `getActiveTimerLock` callers
       return empty results without 406 (`.maybeSingle()`).
-- [ ] Implement the single-flight timer snapshot and the `.maybeSingle()` fallback.
-- [ ] Test-first for the refresh coordinator: AppState wake plus offline→online coalesce into one
+- [x] Implement the single-flight timer snapshot and the `.maybeSingle()` fallback.
+- [x] Test-first for the refresh coordinator: AppState wake plus offline→online coalesce into one
       pass when the first pass ran online; a wake whose first pass ran offline still gets exactly
       one online catch-up when connectivity returns; late triggers await the in-flight pass's
       completion promise rather than starting another; the completion promise resolves only after
       every registered loader settles; a pass in which any loader fails leaves the wake cycle
       unsatisfied and the next trigger retries.
-- [ ] Implement the refresh coordinator in the sync context with provider loader registration,
+- [x] Implement the refresh coordinator in the sync context with provider loader registration,
       replacing the bare `foregroundRefreshKey` bumps.
-- [ ] Migration 064: add `updated_at` to the four tables lacking it, add enforcing
+- [x] Migration 064: add `updated_at` to the four tables lacking it, add enforcing
       `BEFORE UPDATE` triggers to all eight activity tables, add `(baby_id, updated_at, id)`
       indexes; SQL vector tests prove `merge_record` and direct updates bump `updated_at` on all
       eight tables and that the cursor query plan uses the new index (`EXPLAIN`).
-- [ ] Correct the four transformers to read `data.updated_at`.
-- [ ] Test-first for cursor catch-up: composite `(updated_at, id)` continuation returns every row
+- [x] Correct the four transformers to read `data.updated_at`.
+- [x] Test-first for cursor catch-up: composite `(updated_at, id)` continuation returns every row
       across pages of more than 1,000 changes, including batches where many rows share one
       `updated_at`; tombstones apply; the cursor advances only after reconciliation and local
       persistence succeed; a revisited baby reuses its stored cursor; offline round-trip and CRDT
       merge tests stay green.
-- [ ] Test-first for bootstrap: an existing installation with more than 1,000 rows — all sharing
+- [x] Test-first for bootstrap: an existing installation with more than 1,000 rows — all sharing
       the migration-064 backfill timestamp — and an old tombstone outside the first page ends the
       crawl with every row and the tombstone applied locally, and the cursor installed only after
       the final short page; an interrupted bootstrap does not install a partial cursor and
       resumes or restarts on the next pass.
-- [ ] Implement the cursor store and switch the eight activity fetchers to cursor catch-up.
-- [ ] Commit migration 063 unchanged.
-- [ ] Run `npm run test:sync`, `npm run test:unit`, `npm run test:component`, and the SQL vector
+- [x] Implement the cursor store and switch the eight activity fetchers to cursor catch-up.
+- [x] Commit migration 063 unchanged.
+- [x] Run `npm run test:sync`, `npm run test:unit`, `npm run test:component`, and the SQL vector
       suite (`npm run test:sql:setup && npm run test:sql`); finish with `npm run check`.
 
 ## Human checkpoints
 
-- [ ] [confirm-db] Apply migrations 063 (already live in production via SQL-editor hotfix —
+- [x] [confirm-db] Apply migrations 063 (already live in production via SQL-editor hotfix —
       confirm repo copy matches what was executed) and 064 (four `updated_at` columns,
       `BEFORE UPDATE` triggers on eight tables, eight `(baby_id, updated_at, id)` indexes) to the
-      hosted database.
+      hosted database. The owner confirmed the hosted migration application on 2026-08-12.
 - [ ] [verify] After the release ships, watch the production API gateway for ten minutes of normal
       traffic · Expected: one refetch burst per app-open at most, zero 406 `active_timers`
       responses, catch-up queries carrying composite-cursor filters, and a materially lower
       request rate · Failure: repeated bursts from a single device within seconds, per-type 406s,
       or unfiltered `select=*` catch-up queries from devices with a stored cursor · Reason:
       request-volume behavior of the released build under real multi-device traffic cannot be
-      reproduced by automated tests.
+      reproduced by automated tests. Deferred by the owner on 2026-08-12 until the client release
+      ships.
 
 ## Acceptance criteria
 
 - [ ] A logged activity on one device updates other household devices through the realtime row
       delta alone — no full-table refetch burst appears in the gateway log.
-- [ ] One app-open produces at most one online catch-up pass; an app that woke offline still
+      Automated provider coverage passes; the production gateway observation is deferred with the
+      post-release verification checkpoint above.
+- [x] One app-open produces at most one online catch-up pass; an app that woke offline still
       catches up exactly once when connectivity returns; a pass with any failed loader leaves the
       wake cycle unsatisfied and is retried on the next trigger.
-- [ ] Catch-up queries use the composite `(updated_at, id)` cursor except during bootstrap; a
+- [x] Catch-up queries use the composite `(updated_at, id)` cursor except during bootstrap; a
       revisited baby reuses its cursor; a device without a cursor completes a fully paginated
       bootstrap (proven against >1,000 same-timestamp rows with an out-of-page tombstone) before
       any cursor is installed.
-- [ ] `active_timers` restore issues exactly one query per burst; no 406 responses remain from
+- [x] `active_timers` restore issues exactly one query per burst; no 406 responses remain from
       timer reads.
-- [ ] All eight activity tables have `updated_at`, enforcing triggers, and
+- [x] All eight activity tables have `updated_at`, enforcing triggers, and
       `(baby_id, updated_at, id)` indexes; SQL vector tests prove every write path bumps
       `updated_at` and `EXPLAIN` shows index scans for cursor queries; `babies` has no generic
       `updated_at` trigger.
-- [ ] The four previously-fabricating transformers read `data.updated_at`.
-- [ ] Migrations 063 and 064 are committed; local reset (`npm run test:sql:setup`) applies them
+- [x] The four previously-fabricating transformers read `data.updated_at`.
+- [x] Migrations 063 and 064 are committed; local reset (`npm run test:sql:setup`) applies them
       cleanly.
-- [ ] `npm run check` passes.
+- [x] `npm run check` passes.
 
 ## Review decisions
 
 - skipped (minor): TR-19 — The sync-context wiring of the refresh coordinator has no test — user limited this pass to TR-1–TR-18.
 - skipped (minor): TR-20 — Stale `useSync` mocks plus optional registration skip loader coverage — user limited this pass to TR-1–TR-18.
 - skipped (minor): TR-23 — Single-flight cleanup and per-baby keying lack direct tests — user limited this pass to TR-1–TR-18.
+
+## Completion record
+
+**Implemented:** Realtime baby updates preserve the selected-baby reference when only derived
+timestamps change. Timer restoration shares one baby-keyed `active_timers` snapshot. Foreground
+refreshes run registered loaders through a completion-aware coordinator. Eight activity tables use
+bounded composite-cursor catch-up with overlap replay, durable cursor ordering, and paginated
+bootstrap. Migrations 063 and 064 contain the required reminder-scan bounds, timestamp enforcement,
+and cursor indexes.
+
+**Decisions:** Catch-up uses a ten-second overlap to recover late commits and processes at most
+5,000 rows per table in one pass before storing an exact continuation. Activity timestamps are
+server-authored on insert and update. Migration 064 is idempotent so fresh and already-partially-
+migrated schemas converge. Achievements, Watch polling, realtime WAL cost, and credential work
+remain outside this task.
+
+**Relevant files:** `src/contexts/baby-context.tsx`, `src/contexts/sync-context.tsx`, the eight
+activity providers under `src/contexts/`, `src/services/activity-sync-service.ts`,
+`src/services/active-timer-service.ts`, `src/services/foreground-refresh-coordinator.ts`,
+`supabase/migrations/063_bound_wake_window_reminder_scans.sql`,
+`supabase/migrations/064_activity_sync_cursors.sql`, and `docs/ACTIVITY_HISTORY.md`.
+
+**README:** Updated `Architecture > Offline-First Sync Engine` for coordinated foreground catch-up,
+composite cursors, bounded bootstrap continuation, overlap replay, and retry behavior. The affected
+prose passed two `write-well` audit passes.
+
+**Review:** The retained Task 0086 review records TR-1 through TR-18 and TR-21 through TR-22 as
+fixed. The owner skipped minor findings TR-19, TR-20, and TR-23 because the remediation pass was
+limited to TR-1 through TR-18. No security finding was accepted as a risk.
+
+**Proof:** On 2026-08-12, the exact PR worktree passed `npm run check`, including lint, strict type
+checking, unit and component suites, CI contract tests, native Swift checks, production-bundle
+gating, a clean local database reset applying all 66 migrations through 064, all SQL vectors, all
+eight cursor index-plan assertions, and concurrency tests. Focused provider verification also
+passed 61 of 61 tests. `git diff --check` passed.
+
+**Manual verification:** The owner confirmed migrations 063 and 064 were applied to the hosted
+database. The owner explicitly deferred the ten-minute production API-gateway observation until a
+client release containing this task ships; its checkpoint and gateway-dependent acceptance
+criterion remain unchecked as release follow-up work.

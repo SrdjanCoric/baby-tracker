@@ -381,7 +381,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     try {
       let tummyTimes: StoredTummyTimeEntry[];
 
-      if (user?.householdId) {
+      if (householdId) {
         try {
           tummyTimes = await fetchTummyTimeFromDatabase(selectedBaby.id);
         } catch (error) {
@@ -411,7 +411,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_GOAL_SOURCE", payload: goalInfo.source });
       dispatch({ type: "SET_AGE_GROUP", payload: goalInfo.ageGroup });
 
-      if (user?.householdId) {
+      if (householdId) {
         try {
           const { data: dbGoal } = await fetchActivityGoal(selectedBaby.id, 'tummy_time');
           if (!isCurrentBinding()) return;
@@ -466,7 +466,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       }
     }
     if (reportFailure && loadError) throw loadError;
-  }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, restoreTummyTimeTimer, selectedBaby, user?.householdId]);
+  }, [beginBabyBinding, finishBabyBinding, householdId, isCurrentBabyBinding, restoreTummyTimeTimer, selectedBaby, userId]);
 
   useEffect(() => {
     void loadTummyTimes();

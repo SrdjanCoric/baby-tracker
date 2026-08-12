@@ -543,6 +543,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     restoreFeedingTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {
