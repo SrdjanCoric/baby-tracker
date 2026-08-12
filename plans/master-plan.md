@@ -293,7 +293,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0082 · Preserve locally-known timers across widget server refreshes (after 0081) → tasks/done/0082-preserve-local-timers-across-widget-refreshes.md
 - [x] 0083 · Widget renews its Supabase credential via a shared App Group session (after 0082) → tasks/done/0083-renew-widget-credentials-via-shared-session.md
 - [x] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/done/0084-renew-watch-credentials-from-shared-session.md
-- [ ] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/0085-preserve-local-timers-across-watch-refreshes.md
+- [~] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 
 ## Workflow status

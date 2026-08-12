@@ -77,6 +77,7 @@ struct WatchSummaryTimer: Codable, Equatable, Hashable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    var lockState: String? = nil
 }
 
 struct WatchSummaryLocalDay: Codable, Equatable {
@@ -89,6 +90,7 @@ struct WatchSummaryData: Codable, Equatable {
     var serverAsOf: String?
     var timezone: String?
     var localDay: WatchSummaryLocalDay?
+    var localAsOf: String?
     var babyId: String
     var babyName: String
     var activities: WatchSummaryActivityData
@@ -101,6 +103,7 @@ struct WatchSummaryData: Codable, Equatable {
         case serverAsOf
         case timezone
         case localDay
+        case localAsOf
         case babyId
         case babyName
         case activities
@@ -114,6 +117,7 @@ struct WatchSummaryData: Codable, Equatable {
         serverAsOf: String? = nil,
         timezone: String? = nil,
         localDay: WatchSummaryLocalDay? = nil,
+        localAsOf: String? = nil,
         babyId: String,
         babyName: String,
         activities: WatchSummaryActivityData,
@@ -125,6 +129,7 @@ struct WatchSummaryData: Codable, Equatable {
         self.serverAsOf = serverAsOf
         self.timezone = timezone
         self.localDay = localDay
+        self.localAsOf = localAsOf
         self.babyId = babyId
         self.babyName = babyName
         self.activities = activities
@@ -140,6 +145,7 @@ struct WatchSummaryData: Codable, Equatable {
         serverAsOf = try container.decodeIfPresent(String.self, forKey: .serverAsOf)
         timezone = try container.decodeIfPresent(String.self, forKey: .timezone)
         localDay = try container.decodeIfPresent(WatchSummaryLocalDay.self, forKey: .localDay)
+        localAsOf = try container.decodeIfPresent(String.self, forKey: .localAsOf)
         babyId = try container.decode(String.self, forKey: .babyId)
         babyName = try container.decode(String.self, forKey: .babyName)
         activities = try container.decode(WatchSummaryActivityData.self, forKey: .activities)
@@ -166,6 +172,7 @@ struct WatchSummaryData: Codable, Equatable {
 private struct WatchLegacyMultiBabyEnvelope: Decodable {
     let babies: [Baby]
     let selectedBabyId: String
+    let localAsOf: String?
     let updatedAt: String
 
     struct Baby: Decodable {
@@ -181,6 +188,7 @@ private struct WatchLegacyMultiBabyEnvelope: Decodable {
             return nil
         }
         return WatchSummaryData(
+            localAsOf: localAsOf,
             babyId: baby.id,
             babyName: baby.name,
             activities: baby.activities,
@@ -193,6 +201,7 @@ private struct WatchLegacyMultiBabyEnvelope: Decodable {
 
 enum WatchSummaryKind: Equatable {
     case legacy
+    case local
     case versioned
 }
 
@@ -230,6 +239,9 @@ enum WatchSummaryDecoder {
         data.activities.sleep.napCountToday = data.activities.sleep.napCountToday ?? 0
         data.activities.sleep.morningConfirmationPending =
             data.activities.sleep.morningConfirmationPending ?? false
+        if data.localAsOf != nil {
+            return DecodedWatchSummary(kind: .local, data: data)
+        }
         return DecodedWatchSummary(kind: .legacy, data: data)
     }
 
@@ -278,6 +290,7 @@ struct WatchTimerFingerprint: Equatable, Sendable {
     init(timers: [WatchSummaryTimer]) {
         self.timers = timers.map { timer in
             var normalized = timer
+            normalized.lockState = nil
             if normalized.isRemote == true {
                 normalized.context = nil
             }
@@ -597,12 +610,17 @@ actor WatchSummaryCoordinator {
                   !isOlder(response, than: current) else {
                 return current
             }
-            if responseBytes != currentBytes {
-                try store.writeSummary(responseBytes, for: identity)
+            let installed = try mergeNetworkResponse(
+                response,
+                responseBytes: responseBytes,
+                with: current
+            )
+            if installed.bytes != currentBytes {
+                try store.writeSummary(installed.bytes, for: identity)
                 reload()
             }
             reconcileOverlays(with: response, previous: current, identity: identity)
-            return response
+            return installed.data
         } catch WatchSummaryTransportError.unauthorized {
             requestCredentials()
             return prior
@@ -629,12 +647,17 @@ actor WatchSummaryCoordinator {
             guard !isOlder(response, than: current) else {
                 return current
             }
-            if responseBytes != currentBytes {
-                try store.writeSummary(responseBytes, for: identity)
+            let installed = try mergeNetworkResponse(
+                response,
+                responseBytes: responseBytes,
+                with: current
+            )
+            if installed.bytes != currentBytes {
+                try store.writeSummary(installed.bytes, for: identity)
                 reload()
             }
             reconcileOverlays(with: response, previous: current, identity: identity)
-            return response
+            return installed.data
         } catch WatchSummaryTransportError.unauthorized {
             requestCredentials()
             return prior
@@ -681,8 +704,9 @@ actor WatchSummaryCoordinator {
             candidateBytes = bytes
         } else if let envelope = try? JSONDecoder().decode(WatchLegacyMultiBabyEnvelope.self, from: bytes),
                   let adapted = envelope.summary(for: identity.babyId),
-                  let adaptedBytes = try? JSONEncoder().encode(adapted) {
-            candidate = DecodedWatchSummary(kind: .legacy, data: adapted)
+                  let adaptedBytes = try? JSONEncoder().encode(adapted),
+                  let adaptedDecoded = try? WatchSummaryDecoder.decodeCache(adaptedBytes) {
+            candidate = adaptedDecoded
             candidateBytes = adaptedBytes
         } else {
             return prior
@@ -699,6 +723,10 @@ actor WatchSummaryCoordinator {
                 expectedBabyId: identity.babyId
             )) != nil,
             !isOlder(candidate.data, than: prior) else {
+                return prior
+            }
+        } else if candidate.kind == .local {
+            guard !isLocalOlder(candidate.data, than: prior) else {
                 return prior
             }
         } else if isLegacyOlder(candidate.data, than: prior) {
@@ -733,6 +761,57 @@ actor WatchSummaryCoordinator {
         return candidateDate < cachedDate
     }
 
+    private struct TimerMergeResult {
+        let list: [WatchSummaryTimer]
+        let preservedLocal: Bool
+    }
+
+    private func mergeNetworkResponse(
+        _ response: WatchSummaryData,
+        responseBytes: Data,
+        with prior: WatchSummaryData?
+    ) throws -> (data: WatchSummaryData, bytes: Data) {
+        var merged = response
+        let mergeResult = mergeTimers(prior: prior, into: response)
+        merged.activeTimers = mergeResult.list
+        merged.activeTimer = mergeResult.list.first
+        merged.activities.sleep.isActive = mergeResult.list.contains { $0.type == "sleep" }
+        if mergeResult.preservedLocal, let priorLocalAsOf = prior?.localAsOf {
+            merged.localAsOf = priorLocalAsOf
+        }
+        if mergeResult.list == (response.activeTimers ?? []) {
+            return (response, responseBytes)
+        }
+        return (merged, try JSONEncoder().encode(merged))
+    }
+
+    private func mergeTimers(
+        prior: WatchSummaryData?,
+        into response: WatchSummaryData
+    ) -> TimerMergeResult {
+        var result = response.activeTimers ?? []
+        var presentTypes = Set(result.map(\.type))
+        let responseAsOf = response.serverAsOf.flatMap(parseTimestamp)
+        let priorAsOf = prior?.localAsOf.flatMap(parseTimestamp)
+        var preservedLocal = false
+        for priorTimer in prior?.activeTimers ?? [] {
+            if presentTypes.contains(priorTimer.type) { continue }
+            if priorTimer.isRemote == true { continue }
+            if priorTimer.lockState == "accountless" || priorTimer.lockState == "offline" {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+                preservedLocal = true
+                continue
+            }
+            if let local = priorAsOf, let server = responseAsOf, local > server {
+                result.append(priorTimer)
+                presentTypes.insert(priorTimer.type)
+                preservedLocal = true
+            }
+        }
+        return TimerMergeResult(list: result, preservedLocal: preservedLocal)
+    }
+
     private func fetchCoalesced(for identity: WatchSummaryIdentity) async throws -> Data {
         let key = "\(identity.cacheKey).\(identity.generation)"
         if let existing = inFlightFetches[key] {
@@ -760,6 +839,17 @@ actor WatchSummaryCoordinator {
               let cachedDate = formatter.date(from: cached.updatedAt) else {
             return true
         }
+        return candidateDate < cachedDate
+    }
+
+    private func isLocalOlder(_ candidate: WatchSummaryData, than cached: WatchSummaryData?) -> Bool {
+        guard let candidateValue = candidate.localAsOf,
+              let candidateDate = parseTimestamp(candidateValue) else {
+            return true
+        }
+        guard let cached else { return false }
+        let cachedValue = cached.localAsOf ?? cached.serverAsOf ?? cached.updatedAt
+        guard let cachedDate = parseTimestamp(cachedValue) else { return true }
         return candidateDate < cachedDate
     }
 

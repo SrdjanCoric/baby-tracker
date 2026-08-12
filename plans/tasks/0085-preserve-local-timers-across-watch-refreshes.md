@@ -3,6 +3,7 @@
 **Branch**: `feature/preserve-local-timers-across-watch-refreshes`
 **Depends on**: 0082, 0084
 **Source**: `handoffs/main/widget-refresh-and-credential-renewal.md` (2026-08-10 investigation), Part 3 extended to the Watch (approved 2026-08-10)
+**Change class**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: `true`
 
 ## What to build
 
@@ -25,13 +26,24 @@ If confirmed, mirror 0082's fix shape:
    survives.
 3. Server-owned fields (totals, last times) keep being replaced wholesale.
 
+## Reconnaissance finding
+
+Confirmed on 2026-08-12. The app publishes locally-known timers with `lockState` and a root
+`localAsOf` stamp, and `syncToWatch` sends the complete app snapshot to the Watch. However, the
+dedicated multi-baby Watch envelope omitted `localAsOf`, while the Watch summary decoder discarded
+both `localAsOf` and each timer's `lockState`. A stamped app snapshot was therefore treated as legacy
+and rejected once a versioned server cache existed. When a local snapshot was cached, both the full
+refresh and changed-timer probe wrote the server response wholesale, erasing an accountless,
+offline-started, or newer app-written timer. The existing portable Swift summary harness provides an
+automated coordinator seam even though there is no Xcode Watch unit-test target.
+
 ## Implementation work
 
-- [ ] Reconnaissance: trace how app-local timer writes reach the Watch and whether `isOlder` in
+- [x] Reconnaissance: trace how app-local timer writes reach the Watch and whether `isOlder` in
       `WatchActivitySummary.swift` can erase them; record the finding here.
-- [ ] If confirmed: reuse/extend the 0082 freshness stamp on the Watch-bound write (TypeScript
+- [x] If confirmed: reuse/extend the 0082 freshness stamp on the Watch-bound write (TypeScript
       side, test-first where it touches `src/services/`).
-- [ ] If confirmed: implement the timer-list merge in the Watch refresh path
+- [x] If confirmed: implement the timer-list merge in the Watch refresh path
       (`WatchActivitySummary.swift`).
 
 ## Human checkpoints
@@ -45,6 +57,26 @@ If confirmed, mirror 0082's fix shape:
 
 ## Acceptance criteria
 
-- [ ] The reconnaissance finding (bug confirmed or not applicable) is recorded in this file.
-- [ ] If confirmed: a locally-known timer survives a Watch server refresh; server-owned removals
+- [x] The reconnaissance finding (bug confirmed or not applicable) is recorded in this file.
+- [x] If confirmed: a locally-known timer survives a Watch server refresh; server-owned removals
       still apply; server-owned fields still replace wholesale.
+
+## Verification evidence
+
+- TypeScript transport RED→GREEN: `npm run test:unit --
+  src/services/widget-data-service.test.ts` failed when the dedicated Watch envelope omitted
+  `localAsOf`, then passed 8/8 after the envelope carried the app snapshot stamp.
+- Swift merge RED→GREEN: `npm run test:widget:swift` first failed when a full refresh erased the
+  offline fixture timer, then passed after both full-refresh and changed-timer-probe paths merged
+  locally-known timers. The harness covers accountless/offline survival, the newer-local race,
+  freshness-stamp carry-forward, newer server removal, and wholesale replacement of summary totals.
+- Swift phone-payload RED→GREEN: the same harness failed when a stamped multi-baby Watch envelope
+  was rejected over a versioned base, then passed after stamped local payloads gained their own
+  freshness ordering.
+- Timer-probe RED→GREEN: the Swift harness failed when merge-only `lockState` provenance changed
+  the lightweight timer fingerprint, then passed after fingerprint normalization ignored it.
+- Stable focused checks passed: `npm run test:widget:swift`, targeted ESLint for the two changed
+  TypeScript files, repository TypeScript typecheck, and `git diff --check`. Logs are under
+  `/tmp/agent-workflows/e2f8af45fd34/39f39e542a95/`.
+- Not run here: the paired Watch simulator/physical-device checkpoint above and the final canonical
+  gate; those remain owned by the manual review loop and `finish-task`.

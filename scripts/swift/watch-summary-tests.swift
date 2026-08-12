@@ -168,6 +168,8 @@ enum WatchSummaryTests {
             .appendingPathComponent("versioned.json"))
         let legacy = try Data(contentsOf: URL(fileURLWithPath: fixtureDirectory)
             .appendingPathComponent("legacy.json"))
+        let localStamped = try Data(contentsOf: URL(fileURLWithPath: fixtureDirectory)
+            .appendingPathComponent("local-stamped.json"))
         let identity = WatchSummaryIdentity(
             accountId: "account-a",
             babyId: "baby-versioned",
@@ -444,6 +446,13 @@ enum WatchSummaryTests {
                 WatchTimerFingerprint(timers: [rpcTimer]),
             "phone-started sleep type did not match the RPC timer context"
         )
+        var locallyStampedTimer = rpcTimer
+        locallyStampedTimer.lockState = "owned"
+        requireWatch(
+            WatchTimerFingerprint(timers: [locallyStampedTimer]) ==
+                WatchTimerFingerprint(timers: [rpcTimer]),
+            "local lock provenance caused a false timer-fingerprint change"
+        )
 
         let baseTimer: [String: Any] = [
             "type": "sleep",
@@ -523,6 +532,95 @@ enum WatchSummaryTests {
             requireWatch(triggerStore.writes == 1, "\(trigger) did not commit the complete base")
             requireWatch(triggerReloads.read() == 1, "\(trigger) did not reload complications")
         }
+
+        let offlineLocal = try changedWatchFixture(localStamped, [
+            "babyId": identity.babyId,
+            "babyName": "Local Baby"
+        ])
+        let offlineStore = TestWatchSummaryStore()
+        offlineStore.bytesByScope[identity.cacheKey] = offlineLocal
+        let offlineReader = TestWatchIdentityReader()
+        offlineReader.identity = identity
+        let offlineCoordinator = WatchSummaryCoordinator(
+            store: offlineStore,
+            identityReader: offlineReader,
+            fetcher: TestWatchSummaryFetcher(response: versioned),
+            reload: {}
+        )
+
+        let offlineRefreshed = await offlineCoordinator.refresh(trigger: .activation)
+
+        requireWatch(
+            offlineRefreshed?.activeTimers?.first?.timerInstanceId == "offline-timer",
+            "server refresh erased an offline app-local timer"
+        )
+        requireWatch(
+            offlineRefreshed?.activities.sleep.todayMinutes == 120,
+            "timer preservation retained stale server-owned summary fields"
+        )
+
+        var ownedLocalObject = try JSONSerialization.jsonObject(with: offlineLocal) as! [String: Any]
+        var ownedLocalTimer = ownedLocalObject["activeTimer"] as! [String: Any]
+        ownedLocalTimer["lockState"] = "owned"
+        ownedLocalTimer["timerInstanceId"] = "owned-local-race"
+        ownedLocalObject["activeTimer"] = ownedLocalTimer
+        let ownedLocal = try JSONSerialization.data(
+            withJSONObject: ownedLocalObject,
+            options: [.sortedKeys]
+        )
+        let ownedRaceStore = TestWatchSummaryStore()
+        ownedRaceStore.bytesByScope[identity.cacheKey] = ownedLocal
+        let ownedRaceReader = TestWatchIdentityReader()
+        ownedRaceReader.identity = identity
+        let ownedRaceFetcher = TestWatchSummaryFetcher(response: versioned)
+        let ownedRaceCoordinator = WatchSummaryCoordinator(
+            store: ownedRaceStore,
+            identityReader: ownedRaceReader,
+            fetcher: ownedRaceFetcher,
+            reload: {}
+        )
+
+        let ownedRaceResult = await ownedRaceCoordinator.refresh(trigger: .activation)
+        let ownedRaceCached = ownedRaceStore.bytesByScope[identity.cacheKey]
+            .flatMap { try? WatchSummaryDecoder.decodeCache($0).data }
+
+        requireWatch(
+            ownedRaceResult?.activeTimers?.first?.timerInstanceId == "owned-local-race",
+            "newer app-local timer did not survive the write-then-refresh race"
+        )
+        requireWatch(
+            ownedRaceCached?.localAsOf == "2026-08-08T10:01:00.000Z",
+            "merged Watch cache lost the local freshness stamp"
+        )
+
+        ownedRaceFetcher.response = try versionedWatchFixture(
+            versioned,
+            timer: nil,
+            serverAsOf: "2026-08-08T10:02:00.000Z"
+        )
+        let serverRemovalResult = await ownedRaceCoordinator.refresh(trigger: .activation)
+        requireWatch(
+            serverRemovalResult?.activeTimers?.isEmpty == true,
+            "newer server-owned removal did not clear the local timer"
+        )
+
+        let offlineProbeStore = TestWatchSummaryStore()
+        offlineProbeStore.bytesByScope[identity.cacheKey] = offlineLocal
+        let offlineProbeReader = TestWatchIdentityReader()
+        offlineProbeReader.identity = identity
+        let offlineProbeCoordinator = WatchSummaryCoordinator(
+            store: offlineProbeStore,
+            identityReader: offlineProbeReader,
+            fetcher: TestWatchSummaryFetcher(response: versioned),
+            reload: {}
+        )
+        let offlineProbeResult = await offlineProbeCoordinator.acceptTimerProbe(
+            WatchTimerFingerprint(timers: [])
+        )
+        requireWatch(
+            offlineProbeResult?.activeTimers?.first?.timerInstanceId == "offline-timer",
+            "timer probe refresh erased an offline app-local timer"
+        )
 
         let unauthorizedStore = TestWatchSummaryStore()
         unauthorizedStore.bytesByScope[identity.cacheKey] = versioned
@@ -695,6 +793,29 @@ enum WatchSummaryTests {
         let lateResult = await lateTask.value
         requireWatch(lateResult == runningSummary, "late prior-scope response was published")
         requireWatch(lateStore.writes == 0, "late prior-scope response wrote the cache")
+
+        let localMulti = try changedWatchFixture(
+            legacyMultiBabyFixture(localStamped, babyId: identity.babyId),
+            ["localAsOf": "2026-08-08T10:01:00.000Z"]
+        )
+        let localPhoneStore = TestWatchSummaryStore()
+        localPhoneStore.bytesByScope[identity.cacheKey] = versioned
+        let localPhoneReader = TestWatchIdentityReader()
+        localPhoneReader.identity = identity
+        let localPhoneCoordinator = WatchSummaryCoordinator(
+            store: localPhoneStore,
+            identityReader: localPhoneReader,
+            fetcher: TestWatchSummaryFetcher(response: versioned),
+            reload: {}
+        )
+
+        let localPhoneResult = await localPhoneCoordinator.acceptPhonePayload(localMulti)
+
+        requireWatch(
+            localPhoneResult?.activeTimers?.first?.timerInstanceId == "offline-timer",
+            "newer stamped Watch envelope did not replace the older server base"
+        )
+        requireWatch(localPhoneStore.writes == 1, "newer stamped Watch envelope was not cached")
 
         let sameBabyLegacy = try changedWatchFixture(legacy, [
             "babyId": identity.babyId,

@@ -100,6 +100,7 @@ export interface BabyWatchData {
 export interface WatchData {
   babies: BabyWatchData[];
   selectedBabyId: string;
+  localAsOf?: string;
   updatedAt: string;
 }
 
@@ -219,6 +220,7 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
           },
         ],
         selectedBabyId: data.babyId,
+        localAsOf: data.localAsOf,
         updatedAt: data.updatedAt,
       };
       await syncToWatch(data, watchData, authContext);
