@@ -155,7 +155,9 @@ export async function refreshWatchCredentialsFromPhone(
   const bridge = loadSharedSupabaseSessionBridge();
   if (!module || !bridge) return false;
 
-  const persistedContext = lastContext ?? await module.getApplicationContext() ?? {};
+  // A widget update published without an auth context overwrites the cache with a
+  // credential-less payload, so fall back to the system-persisted context.
+  const persistedContext = (lastContext?.userId ? lastContext : await module.getApplicationContext()) ?? {};
   if (persistedContext.signedOut === true) return false;
   if (
     typeof persistedContext.supabaseUrl !== "string" || !persistedContext.supabaseUrl ||
