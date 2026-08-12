@@ -6,6 +6,7 @@ const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
 const PENDING_TIMER_START_EDITS_KEY = "@pending_timer_start_edits";
 let pendingLockReleaseMutation = Promise.resolve();
 let pendingTimerStartEditMutation = Promise.resolve();
+const activeTimerSnapshotFlights = new Map<string, Promise<readonly ActiveTimerLock[]>>();
 
 interface PendingLockRelease {
   babyId: string;
@@ -346,7 +347,7 @@ export async function getActiveTimerLock(
     )
     .eq("baby_id", babyId)
     .eq("activity_type", activityType)
-    .single();
+    .maybeSingle();
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -372,6 +373,33 @@ export async function getActiveTimerLock(
     startedAt: row.started_at,
     timerData: row.timer_data as Record<string, unknown> | undefined,
   };
+}
+
+export function findActiveTimerLock(
+  snapshot: readonly ActiveTimerLock[],
+  activityType: TimerActivityType
+): ActiveTimerLock | null {
+  return snapshot.find(lock => lock.activityType === activityType) ?? null;
+}
+
+/**
+ * Shares the aggregate timer read between concurrently-started provider restores.
+ * Callers intentionally capture this promise before doing any other awaited work.
+ */
+export function getActiveTimerSnapshotForBaby(
+  babyId: string
+): Promise<readonly ActiveTimerLock[]> {
+  const existing = activeTimerSnapshotFlights.get(babyId);
+  if (existing) return existing;
+
+  const request = getActiveTimersForBaby(babyId);
+  activeTimerSnapshotFlights.set(babyId, request);
+  void request.finally(() => {
+    if (activeTimerSnapshotFlights.get(babyId) === request) {
+      activeTimerSnapshotFlights.delete(babyId);
+    }
+  });
+  return request;
 }
 
 export async function getActiveTimersForBaby(

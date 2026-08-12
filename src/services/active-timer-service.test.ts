@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acquireTimerLock,
+  getActiveTimerLock,
+  getActiveTimerSnapshotForBaby,
   isRetryableTimerWriteError,
   queuePendingLockRelease,
   queuePendingTimerStartEdit,
@@ -10,13 +12,13 @@ import {
 } from "./active-timer-service";
 
 const storage = new Map<string, string>();
-const { fromMock, rpcMock, deleteMock, eqMock, selectMock, singleMock, updateMock } = vi.hoisted(() => ({
+const { fromMock, rpcMock, deleteMock, eqMock, selectMock, maybeSingleMock, updateMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   rpcMock: vi.fn(),
   deleteMock: vi.fn(),
   eqMock: vi.fn(),
   selectMock: vi.fn(),
-  singleMock: vi.fn(),
+  maybeSingleMock: vi.fn(),
   updateMock: vi.fn(),
 }));
 
@@ -72,6 +74,47 @@ describe("active timer acquisition", () => {
     expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", expect.objectContaining({
       p_started_at: requestedStart.toISOString(),
     }));
+  });
+});
+
+describe("active timer snapshots", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("single-flights concurrent aggregate reads for the same baby", async () => {
+    let resolveQuery!: (value: { data: unknown[]; error: null }) => void;
+    const queryResult = new Promise<{ data: unknown[]; error: null }>(resolve => {
+      resolveQuery = resolve;
+    });
+    const query = {
+      select: selectMock,
+      eq: eqMock,
+      then: queryResult.then.bind(queryResult),
+    };
+    selectMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    fromMock.mockReturnValue(query);
+
+    const first = getActiveTimerSnapshotForBaby("baby-flight");
+    const second = getActiveTimerSnapshotForBaby("baby-flight");
+
+    expect(first).toBe(second);
+    expect(fromMock).toHaveBeenCalledTimes(1);
+    resolveQuery({ data: [], error: null });
+    await expect(Promise.all([first, second])).resolves.toEqual([[], []]);
+  });
+
+  it("uses an empty-success read when no per-type lock exists", async () => {
+    const query = { select: selectMock, eq: eqMock, maybeSingle: maybeSingleMock };
+    selectMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    maybeSingleMock.mockResolvedValue({ data: null, error: null });
+    fromMock.mockReturnValue(query);
+
+    await expect(getActiveTimerLock("baby-empty", "sleep")).resolves.toBeNull();
+
+    expect(maybeSingleMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -150,14 +193,14 @@ describe("active timer cleanup", () => {
       delete: deleteMock,
       eq: eqMock,
       select: selectMock,
-      single: singleMock,
+      maybeSingle: maybeSingleMock,
       then: (resolve: (value: { error: null; count: number }) => unknown) =>
         Promise.resolve({ error: null, count: 1 }).then(resolve),
     };
     deleteMock.mockReturnValue(query);
     eqMock.mockReturnValue(query);
     selectMock.mockReturnValue(query);
-    singleMock.mockResolvedValue({
+    maybeSingleMock.mockResolvedValue({
       data: {
         id: "lock-1",
         baby_id: "baby-1",
@@ -201,7 +244,7 @@ describe("active timer cleanup", () => {
   });
 
   it("targets a legacy lock by its persisted start time without deleting a replacement", async () => {
-    singleMock.mockResolvedValue({
+    maybeSingleMock.mockResolvedValue({
       data: {
         id: "legacy-lock",
         baby_id: "baby-1",
@@ -287,14 +330,14 @@ describe("pending active timer start edits", () => {
       update: updateMock,
       select: selectMock,
       eq: eqMock,
-      single: singleMock,
+      maybeSingle: maybeSingleMock,
       then: (resolve: (value: { error: null; count: number }) => unknown) =>
         Promise.resolve({ error: null, count: 1 }).then(resolve),
     };
     updateMock.mockReturnValue(query);
     selectMock.mockReturnValue(query);
     eqMock.mockReturnValue(query);
-    singleMock.mockResolvedValue({
+    maybeSingleMock.mockResolvedValue({
       data: {
         id: "lock-1",
         baby_id: "baby-1",

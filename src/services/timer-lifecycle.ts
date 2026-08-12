@@ -1,11 +1,13 @@
 import {
   getActiveTimerLock,
+  findActiveTimerLock,
   isRetryableTimerWriteError,
   queuePendingLockRelease,
   queuePendingTimerStartEdit,
   releaseTimerLock,
   updateTimerStartTime,
   type TimerActivityType,
+  type ActiveTimerLock,
 } from "./active-timer-service";
 import {
   endLiveActivityByType,
@@ -157,6 +159,7 @@ export interface RestoreTimerLifecycleOptions<
   dispatchAddRecord(record: TRecord): void;
   onCompletionSecured?(): Promise<unknown> | unknown;
   errorLabel: string;
+  timerSnapshot?: Promise<readonly ActiveTimerLock[]>;
 }
 
 export function calculateTimerDurationSeconds(
@@ -330,6 +333,7 @@ export async function restoreTimerLifecycle<
   dispatchAddRecord,
   onCompletionSecured,
   errorLabel,
+  timerSnapshot,
 }: RestoreTimerLifecycleOptions<
   TPayload,
   TActiveTimer,
@@ -484,6 +488,7 @@ export async function restoreTimerLifecycle<
         timerInstanceId: identity.timerInstanceId,
         timerData: adapter.timerDataCodec.encode(payloadWithIdentity),
         persistState: persistLockState,
+        timerSnapshot,
       });
       if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
       if (reconciliation.state !== "offline") await refreshLocks();
@@ -576,7 +581,9 @@ export async function restoreTimerLifecycle<
     }
   } else if (user?.id && user.householdId) {
     try {
-      const lock = await getActiveTimerLock(baby.id, adapter.activityType);
+      const lock = timerSnapshot
+        ? findActiveTimerLock(await timerSnapshot, adapter.activityType)
+        : await getActiveTimerLock(baby.id, adapter.activityType);
       if (!isCurrentBabyBinding()) return;
       if (lock && lock.startedBy === user.id && !isRestoreObsolete()) {
         const timerData = lock.timerData ?? {};

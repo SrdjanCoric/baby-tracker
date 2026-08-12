@@ -16,7 +16,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock, updateTimerData, queuePendingLockRelease } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLock, updateTimerData, queuePendingLockRelease, getActiveTimerSnapshotForBaby, type ActiveTimerLock as ServerActiveTimerLock } from "@/services/active-timer-service";
 import {
   AgeGroup,
   GoalSource,
@@ -251,7 +251,7 @@ const TummyTimeContext = createContext<TummyTimeContextValue | null>(null);
 export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(tummyTimeReducer, initialTummyTimeState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const userId = user?.id;
   const householdId = user?.householdId ?? undefined;
@@ -325,7 +325,8 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const restoreTummyTimeTimer = useCallback(async (
     tummyTimes: StoredTummyTimeEntry[],
     bindingToken: BabyProviderBindingToken,
-    stopVersionAtStart: number
+    stopVersionAtStart: number,
+    timerSnapshot?: Promise<readonly ServerActiveTimerLock[]>
   ) => {
     if (!selectedBaby) return;
 
@@ -354,10 +355,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
       dispatchAddRecord: record => dispatch({ type: "ADD_TUMMY_TIME", payload: record }),
       errorLabel: "[TummyTimeContext]",
+      timerSnapshot,
     });
   }, [householdId, isCurrentBabyBinding, refreshLocks, selectedBaby, userId]);
 
-  const loadTummyTimes = useCallback(async () => {
+  const loadTummyTimes = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
     if (!selectedBaby) {
@@ -368,6 +371,9 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    const timerSnapshot = userId && householdId
+      ? getActiveTimerSnapshotForBaby(selectedBaby.id)
+      : undefined;
     let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -378,6 +384,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         try {
           tummyTimes = await fetchTummyTimeFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error("[TummyTimeContext] Failed to fetch from database, using local:", error);
           tummyTimes = await TummyTimeStorageService.getAllTummyTimes(selectedBaby.id);
@@ -445,8 +452,9 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         if (!isCurrentBinding()) return;
       }
 
-      await restoreTummyTimeTimer(tummyTimes, bindingToken, stopVersionAtStart);
+      await restoreTummyTimeTimer(tummyTimes, bindingToken, stopVersionAtStart, timerSnapshot);
     } catch (error) {
+      loadError = error;
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
       console.error("[TummyTimeContext] Failed to load tummy times:", error);
@@ -456,11 +464,17 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
+    if (reportFailure && loadError) throw loadError;
   }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, restoreTummyTimeTimer, selectedBaby, user?.householdId]);
 
   useEffect(() => {
-    loadTummyTimes();
-  }, [loadTummyTimes, foregroundRefreshKey]);
+    void loadTummyTimes();
+  }, [loadTummyTimes]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("tummy_time_sessions", () => loadTummyTimes(true)),
+    [loadTummyTimes, registerForegroundRefreshLoader]
+  );
 
   const startTummyTime = useCallback(async (requestedStartTime?: Date, requestedIdentity?: TimerIdentity): Promise<{ success: boolean; lockedByName?: string }> => {
     if (!selectedBaby) return { success: false };

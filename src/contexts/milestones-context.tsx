@@ -107,7 +107,7 @@ const MilestonesContext = createContext<MilestonesContextValue | null>(null);
 export function MilestonesProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(milestonesReducer, initialMilestonesState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -152,7 +152,8 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
-  const loadResponses = useCallback(async () => {
+  const loadResponses = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     if (!selectedBaby) {
       dispatch({ type: "SET_RESPONSES", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
@@ -168,6 +169,7 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
         try {
           responses = await fetchMilestoneResponsesFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           console.error("[MilestonesContext] Failed to fetch from database, using local:", error);
           responses = await MilestonesStorageService.getResponses(selectedBaby.id);
         }
@@ -177,15 +179,22 @@ export function MilestonesProvider({ children }: { children: React.ReactNode }) 
 
       dispatch({ type: "SET_RESPONSES", payload: responses });
     } catch (error) {
+      loadError = error;
       console.error("[MilestonesContext] Failed to load responses:", error);
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
+    if (reportFailure && loadError) throw loadError;
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
-    loadResponses();
-  }, [loadResponses, foregroundRefreshKey]);
+    void loadResponses();
+  }, [loadResponses]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("milestone_responses", () => loadResponses(true)),
+    [loadResponses, registerForegroundRefreshLoader]
+  );
 
   const setMilestoneStateAction = useCallback(
     async (milestoneId: string, milestoneState: MilestoneState) => {

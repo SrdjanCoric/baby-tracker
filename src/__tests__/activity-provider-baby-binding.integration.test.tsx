@@ -30,6 +30,7 @@ jest.mock("@/contexts/sync-context", () => ({
   useSync: () => ({
     foregroundRefreshKey: 0,
     subscribeToRemoteChanges: jest.fn(() => jest.fn()),
+    registerForegroundRefreshLoader: jest.fn(() => jest.fn()),
   }),
 }));
 
@@ -75,6 +76,7 @@ jest.mock("@/services/active-timer-service", () => ({
   releaseTimerLock: jest.fn(),
   updateTimerData: jest.fn(),
   getActiveTimerLock: jest.fn(),
+  getActiveTimerSnapshotForBaby: jest.fn(() => Promise.resolve([])),
   queuePendingLockRelease: jest.fn(),
 }));
 

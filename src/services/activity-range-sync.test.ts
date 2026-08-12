@@ -77,8 +77,8 @@ function queryChain(): Record<string, unknown> {
         .reverse()
         .find(([filter, value]) => filter === "or" && value.includes("id.gt."));
 
-      if (timestampFilter && cursorFilter) {
-        const timestampColumn = timestampFilter[0].slice(3);
+      if (cursorFilter) {
+        const timestampColumn = timestampFilter ? timestampFilter[0].slice(3) : "updated_at";
         const greaterMarker = `${timestampColumn}.gt.`;
         const equalMarker = `,and(${timestampColumn}.eq.`;
         const idMarker = ",id.gt.";
@@ -217,6 +217,72 @@ describe("activity range sync", () => {
 
     expect(entries.some((entry) => entry.id === "feeding-1000")).toBe(true);
     expect(new Set(entries.map((entry) => entry.id))).toHaveLength(1_005);
+  });
+
+  it("bootstraps every same-timestamp row, applies an out-of-page tombstone, and then reuses the cursor", async () => {
+    const timestamp = "2026-08-12T10:00:00.000Z";
+    for (let index = 0; index < 1_005; index += 1) {
+      serverRows.push({
+        id: `feeding-${index.toString().padStart(4, "0")}`,
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: timestamp,
+        created_at: timestamp,
+        updated_at: timestamp,
+        deleted: index === 1_003,
+        field_clocks: {},
+      });
+    }
+
+    const entries = await fetchFeedingsFromDatabase("baby-1");
+
+    expect(entries).toHaveLength(1_004);
+    expect(entries.some(entry => entry.id === "feeding-1003")).toBe(false);
+    expect(queriedLimits).toEqual([1_000, 1_000]);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({ updatedAt: timestamp, id: "feeding-1004" })
+    );
+
+    queriedLimits.length = 0;
+    queryFilters.length = 0;
+    serverRows.push({
+      id: "feeding-1005",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: timestamp,
+      created_at: timestamp,
+      updated_at: timestamp,
+      field_clocks: {},
+    });
+    const revisited = await fetchFeedingsFromDatabase("baby-1");
+    expect(revisited).toHaveLength(1_005);
+    expect(queryFilters).toContainEqual([
+      "or",
+      `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},id.gt.feeding-1004)`,
+    ]);
+  });
+
+  it("does not install a cursor when local persistence interrupts bootstrap", async () => {
+    serverRows.push({
+      id: "feeding-0001",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: range.start,
+      created_at: range.start,
+      updated_at: range.start,
+      field_clocks: {},
+    });
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    vi.mocked(AsyncStorage.setItem).mockRejectedValueOnce(new Error("disk full"));
+
+    await expect(fetchFeedingsFromDatabase("baby-1")).rejects.toThrow("disk full");
+    expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(false);
+
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      storage.set(key, value);
+    });
+    await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
+    expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(true);
   });
 
   it("replaces only the requested interval while preserving queued local mutations", async () => {

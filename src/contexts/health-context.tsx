@@ -104,7 +104,7 @@ const HealthContext = createContext<HealthContextValue | null>(null);
 export function HealthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(healthReducer, initialHealthState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const { t } = useTranslation();
   const acceptHealthRange = useCallback((entries: StoredHealthEntry[]) => {
@@ -157,7 +157,8 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
-  const loadHealth = useCallback(async () => {
+  const loadHealth = useCallback(async (reportFailure = false) => {
+    let remoteError: unknown;
     if (!selectedBaby) {
       dispatch({ type: "SET_HEALTH", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
@@ -172,6 +173,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       try {
         entries = await fetchHealthFromDatabase(selectedBaby.id);
       } catch (error) {
+        remoteError = error;
         console.error("[HealthContext] Failed to fetch from database, using local:", error);
         entries = await HealthStorageService.getAllHealth(selectedBaby.id);
       }
@@ -181,11 +183,17 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_HEALTH", payload: entries });
     dispatch({ type: "SET_LOADING", payload: false });
+    if (reportFailure && remoteError) throw remoteError;
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
-    loadHealth();
-  }, [loadHealth, foregroundRefreshKey]);
+    void loadHealth();
+  }, [loadHealth]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("health_entries", () => loadHealth(true)),
+    [loadHealth, registerForegroundRefreshLoader]
+  );
 
   const addHealth = useCallback(async (input: CreateHealthInput): Promise<StoredHealthEntry> => {
     let entry: StoredHealthEntry;

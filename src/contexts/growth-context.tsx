@@ -101,7 +101,7 @@ const GrowthContext = createContext<GrowthContextValue | null>(null);
 export function GrowthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(growthReducer, initialGrowthState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const acceptGrowthRange = useCallback((entries: StoredGrowthEntry[]) => {
     dispatch({ type: "SET_MEASUREMENTS", payload: entries });
@@ -141,7 +141,8 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
-  const loadMeasurements = useCallback(async () => {
+  const loadMeasurements = useCallback(async (reportFailure = false) => {
+    let remoteError: unknown;
     if (!selectedBaby) {
       dispatch({ type: "SET_MEASUREMENTS", payload: [] });
       dispatch({ type: "SET_LOADING", payload: false });
@@ -156,6 +157,7 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
       try {
         measurements = await fetchGrowthFromDatabase(selectedBaby.id);
       } catch (error) {
+        remoteError = error;
         console.error("[GrowthContext] Failed to fetch from database, using local:", error);
         measurements = await GrowthStorageService.getAllMeasurements(selectedBaby.id);
       }
@@ -165,11 +167,17 @@ export function GrowthProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "SET_MEASUREMENTS", payload: measurements });
     dispatch({ type: "SET_LOADING", payload: false });
+    if (reportFailure && remoteError) throw remoteError;
   }, [selectedBaby, user?.householdId]);
 
   useEffect(() => {
-    loadMeasurements();
-  }, [loadMeasurements, foregroundRefreshKey]);
+    void loadMeasurements();
+  }, [loadMeasurements]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("growth_measurements", () => loadMeasurements(true)),
+    [loadMeasurements, registerForegroundRefreshLoader]
+  );
 
   const addMeasurement = useCallback(
     async (input: CreateGrowthInput): Promise<StoredGrowthEntry> => {
@@ -311,4 +319,3 @@ function transformGrowthFromRemote(data: Record<string, unknown>): StoredGrowthE
     updatedAt: (data.updated_at as string) || new Date().toISOString(),
   };
 }
-

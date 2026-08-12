@@ -56,6 +56,16 @@ function applyBabyMutations(
   }, babies);
 }
 
+function sameBabyProfile(left: StoredBabyProfile, right: StoredBabyProfile): boolean {
+  return left.id === right.id &&
+    left.name === right.name &&
+    left.birthDate === right.birthDate &&
+    left.gender === right.gender &&
+    left.photoUri === right.photoUri &&
+    left.createdAt === right.createdAt &&
+    left.updatedAt === right.updatedAt;
+}
+
 export function babyReducer(state: BabyState, action: BabyAction): BabyState {
   switch (action.type) {
     case "SET_BABIES":
@@ -100,6 +110,10 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
     }
 
     case "REMOTE_UPDATE": {
+      const currentBaby = state.babies.find(baby => baby.id === action.payload.id);
+      if (currentBaby && sameBabyProfile(currentBaby, action.payload)) {
+        return state;
+      }
       const updatedSelectedBaby =
         state.selectedBaby?.id === action.payload.id
           ? action.payload

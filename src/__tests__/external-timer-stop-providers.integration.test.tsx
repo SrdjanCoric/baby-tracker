@@ -81,6 +81,7 @@ jest.mock("@/contexts/sync-context", () => ({
       mockRemoteSubscribers.set(table, callback);
       return () => mockRemoteSubscribers.delete(table);
     },
+    registerForegroundRefreshLoader: jest.fn(() => jest.fn()),
   }),
 }));
 
@@ -120,15 +121,34 @@ jest.mock("@/services/activity-sync-service", () => ({
   deleteTummyTimeFromDatabase: jest.fn(),
 }));
 
-jest.mock("@/services/active-timer-service", () => ({
-  acquireTimerLock: jest.fn(),
-  releaseTimerLock: jest.fn(),
-  updateTimerData: jest.fn(),
-  updateTimerStartTime: jest.fn(),
-  queuePendingTimerStartEdit: jest.fn(),
-  getActiveTimerLock: jest.fn(),
-  queuePendingLockRelease: jest.fn(),
-}));
+jest.mock("@/services/active-timer-service", () => {
+  const getActiveTimerLock = jest.fn();
+  const snapshots = new Map<string, Promise<unknown[]>>();
+  return {
+    acquireTimerLock: jest.fn(),
+    releaseTimerLock: jest.fn(),
+    updateTimerData: jest.fn(),
+    updateTimerStartTime: jest.fn(),
+    queuePendingTimerStartEdit: jest.fn(),
+    getActiveTimerLock,
+    getActiveTimerSnapshotForBaby: jest.fn((babyId: string) => {
+      const existing = snapshots.get(babyId);
+      if (existing) return existing;
+      const request = Promise.all(
+        ["feeding", "sleep", "pumping", "tummy_time"].map(activityType =>
+          getActiveTimerLock(babyId, activityType)
+        )
+      ).then(locks => {
+        getActiveTimerLock.mockClear();
+        return locks.filter(Boolean);
+      });
+      snapshots.set(babyId, request);
+      void request.finally(() => snapshots.delete(babyId));
+      return request;
+    }),
+    queuePendingLockRelease: jest.fn(),
+  };
+});
 
 jest.mock("@/services/live-activity-service", () => ({
   startTimerLiveActivity: jest.fn(),

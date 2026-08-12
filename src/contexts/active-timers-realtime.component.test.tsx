@@ -1,10 +1,10 @@
 import React from "react";
 import { act, render, screen, waitFor } from "@testing-library/react-native";
-import { AppState, Text, type AppStateStatus } from "react-native";
+import { Text } from "react-native";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
 
 let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null;
-let appStateHandler: ((state: AppStateStatus) => void) | null = null;
+let registeredRefresh: (() => Promise<void>) | null = null;
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Baby" } }),
@@ -23,11 +23,15 @@ jest.mock("./sync-context", () => ({
       if (table === "active_timers") remoteChangeHandler = handler;
       return jest.fn();
     },
+    registerForegroundRefreshLoader: (_id: string, loader: () => Promise<void>) => {
+      registeredRefresh = loader;
+      return jest.fn();
+    },
   }),
 }));
 
 jest.mock("@/services/active-timer-service", () => ({
-  getActiveTimersForBaby: jest.fn().mockResolvedValue([
+  getActiveTimerSnapshotForBaby: jest.fn().mockResolvedValue([
     {
       id: "lock-1",
       babyId: "baby-1",
@@ -76,13 +80,7 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
     remoteChangeHandler = null;
-    appStateHandler = null;
-    jest
-      .spyOn(AppState, "addEventListener")
-      .mockImplementation((_type, handler) => {
-        appStateHandler = handler;
-        return { remove: jest.fn() };
-      });
+    registeredRefresh = null;
   });
 
   afterEach(() => {
@@ -124,11 +122,10 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
         <RemoteElapsed />
       </ActiveTimersProvider>
     );
-    await waitFor(() => expect(appStateHandler).not.toBeNull());
+    await waitFor(() => expect(registeredRefresh).not.toBeNull());
 
     await act(async () => {
-      appStateHandler!("active");
-      await Promise.resolve();
+      await registeredRefresh!();
     });
 
     const activeTimerService = jest.requireMock(
