@@ -9,13 +9,22 @@ ALTER TABLE public.growth_measurements
 ALTER TABLE public.tummy_time_sessions
   ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
+UPDATE public.feedings
+SET updated_at = COALESCE(updated_at, created_at, clock_timestamp())
+WHERE updated_at IS NULL;
+UPDATE public.sleep_sessions
+SET updated_at = COALESCE(updated_at, created_at, clock_timestamp())
+WHERE updated_at IS NULL;
+ALTER TABLE public.feedings ALTER COLUMN updated_at SET NOT NULL;
+ALTER TABLE public.sleep_sessions ALTER COLUMN updated_at SET NOT NULL;
+
 CREATE OR REPLACE FUNCTION public.enforce_activity_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = pg_catalog, public
 AS $$
 BEGIN
-  NEW.updated_at := pg_catalog.now();
+  NEW.updated_at := pg_catalog.clock_timestamp();
   RETURN NEW;
 END;
 $$;
@@ -36,7 +45,7 @@ BEGIN
   ]
   LOOP
     EXECUTE format(
-      'CREATE TRIGGER enforce_activity_updated_at BEFORE UPDATE ON public.%I '
+      'CREATE TRIGGER enforce_activity_updated_at BEFORE INSERT OR UPDATE ON public.%I '
       'FOR EACH ROW EXECUTE FUNCTION public.enforce_activity_updated_at()',
       activity_table
     );

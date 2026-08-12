@@ -39,6 +39,42 @@ DO $$
 DECLARE
   activity_table text;
   stamped_at timestamptz;
+  nullable text;
+BEGIN
+  FOREACH activity_table IN ARRAY ARRAY[
+    'feedings', 'sleep_sessions', 'diapers', 'pumping_sessions',
+    'growth_measurements', 'tummy_time_sessions', 'health_entries',
+    'milestone_responses'
+  ] LOOP
+    EXECUTE format(
+      'SELECT updated_at FROM public.%I WHERE baby_id = %L',
+      activity_table, '86000000-0000-0000-0000-000000000002'
+    ) INTO stamped_at;
+    IF stamped_at <= '2000-01-01'::timestamptz THEN
+      RAISE EXCEPTION 'insert accepted caller timestamp for %: %', activity_table, stamped_at;
+    END IF;
+  END LOOP;
+
+  SELECT is_nullable INTO nullable
+  FROM information_schema.columns
+  WHERE table_schema = 'public' AND table_name = 'feedings' AND column_name = 'updated_at';
+  IF nullable IS DISTINCT FROM 'NO' THEN
+    RAISE EXCEPTION 'feedings.updated_at remains nullable';
+  END IF;
+  SELECT is_nullable INTO nullable
+  FROM information_schema.columns
+  WHERE table_schema = 'public' AND table_name = 'sleep_sessions' AND column_name = 'updated_at';
+  IF nullable IS DISTINCT FROM 'NO' THEN
+    RAISE EXCEPTION 'sleep_sessions.updated_at remains nullable';
+  END IF;
+END
+$$;
+\echo 'PASS: inserts cannot forge or null activity updated_at cursors'
+
+DO $$
+DECLARE
+  activity_table text;
+  stamped_at timestamptz;
 BEGIN
   FOREACH activity_table IN ARRAY ARRAY[
     'feedings', 'sleep_sessions', 'diapers', 'pumping_sessions',
