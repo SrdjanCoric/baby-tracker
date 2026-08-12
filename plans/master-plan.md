@@ -294,6 +294,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0083 · Widget renews its Supabase credential via a shared App Group session (after 0082) → tasks/done/0083-renew-widget-credentials-via-shared-session.md
 - [~] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/0084-renew-watch-credentials-from-shared-session.md
 - [ ] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/0085-preserve-local-timers-across-watch-refreshes.md
+- [ ] 0086 · Cut redundant client sync traffic → tasks/0086-cut-redundant-client-sync-traffic.md
 
 ## Workflow status
 
@@ -414,3 +415,23 @@ shown, by design. The owner chose a single task over a split despite the physica
 verification it carries. The task also corrects the hardcoded version string in the Settings About
 section, which read `4.0.0` against an app config declaring `4.8.1`; the release rolling it out is
 `4.8.2`.
+
+Task 0086 was added on 2026-08-12 after a production incident: at 200 users the backend hit ~190K
+API requests per day and a Supabase disk-I/O budget warning. Gateway logs and `pg_stat` data traced
+most traffic to redundant client behavior — a realtime `babies` UPDATE (fired by database triggers
+on feeding inserts and qualifying sleep mutations) destabilizes the `selectedBaby` reference and
+stampedes the eight activity contexts into full-table refetches on every household device, timer
+restore adds four per-type `active_timers` probes that 406, phone wake fires the foreground refresh
+twice, and every catch-up pull re-downloads full 1000-row pages with no incremental filter. The
+owner chose a single task over a split despite four distinct sub-fixes. A same-day review pass
+hardened the design: composite `(updated_at, id)` cursors instead of timestamp-only, `updated_at`
+columns added to the four activity tables that lack them, a refresh coordinator that never
+suppresses the post-offline catch-up and whose wake cycle counts as satisfied only when every
+registered provider loader succeeds, a fully paginated one-time cursor bootstrap (a single-page
+bootstrap would permanently skip edits and tombstones on rows sharing the migration backfill
+timestamp), and `achievements` excluded from the cursor design for lack of `updated_at` and
+tombstones. The same incident produced migration 063 (bounding
+`get_due_wake_window_reminders()`'s full-table `sleep_sessions` scans, which ran twice every five
+minutes from pg_cron), applied to production as a SQL-editor hotfix the same day; committing it is
+part of Task 0086. The Watch's 30-second `active_timers` poll was examined and deliberately left
+unchanged by owner decision.
