@@ -105,6 +105,34 @@ describe("active timer snapshots", () => {
     await expect(Promise.all([first, second])).resolves.toEqual([[], []]);
   });
 
+  it("does not create an unhandled rejection when an aggregate read fails", async () => {
+    const queryResult = Promise.resolve({
+      data: null,
+      error: { message: "offline" },
+    });
+    const query = {
+      select: selectMock,
+      eq: eqMock,
+      then: queryResult.then.bind(queryResult),
+    };
+    selectMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    fromMock.mockReturnValue(query);
+    const unhandled: unknown[] = [];
+    const listener = (reason: unknown) => unhandled.push(reason);
+    process.on("unhandledRejection", listener);
+
+    try {
+      await expect(getActiveTimerSnapshotForBaby("baby-error")).rejects.toEqual({
+        message: "offline",
+      });
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", listener);
+    }
+  });
+
   it("uses an empty-success read when no per-type lock exists", async () => {
     const query = { select: selectMock, eq: eqMock, maybeSingle: maybeSingleMock };
     selectMock.mockReturnValue(query);

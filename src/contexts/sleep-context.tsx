@@ -698,6 +698,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const timerSnapshot = user?.id && user.householdId
       ? getActiveTimerSnapshotForBaby(selectedBaby.id)
       : undefined;
+    void timerSnapshot?.catch(() => undefined);
     let bindingStatus: "ready" | "error" = "ready";
 
     dispatch({ type: "SET_LOADING", payload: true });

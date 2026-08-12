@@ -394,11 +394,12 @@ export function getActiveTimerSnapshotForBaby(
 
   const request = getActiveTimersForBaby(babyId);
   activeTimerSnapshotFlights.set(babyId, request);
-  void request.finally(() => {
+  const clearFlight = () => {
     if (activeTimerSnapshotFlights.get(babyId) === request) {
       activeTimerSnapshotFlights.delete(babyId);
     }
-  });
+  };
+  void request.then(clearFlight, clearFlight);
   return request;
 }
 
