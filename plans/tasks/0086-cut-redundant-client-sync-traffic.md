@@ -186,3 +186,11 @@ WAL-poller cost, any watch/widget credential work (separate branch in flight), a
 - [ ] Migrations 063 and 064 are committed; local reset (`npm run test:sql:setup`) applies them
       cleanly.
 - [ ] `npm run check` passes.
+
+## Review decisions
+
+- skipped (minor): TR-19 — The sync-context wiring of the refresh coordinator has no test — user limited this pass to TR-1–TR-18.
+- skipped (minor): TR-20 — Stale `useSync` mocks plus optional registration skip loader coverage — user limited this pass to TR-1–TR-18.
+- skipped (minor): TR-21 — Activity-history startup-pull documentation contradicts the implementation — user limited this pass to TR-1–TR-18.
+- skipped (minor): TR-22 — Duplicate coordinator join branches can spawn redundant failure retries — user limited this pass to TR-1–TR-18.
+- skipped (minor): TR-23 — Single-flight cleanup and per-baby keying lack direct tests — user limited this pass to TR-1–TR-18.
