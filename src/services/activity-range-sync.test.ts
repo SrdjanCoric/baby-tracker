@@ -416,7 +416,10 @@ describe("activity range sync", () => {
       field_clocks: {},
     });
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
-    vi.mocked(AsyncStorage.setItem).mockRejectedValueOnce(new Error("disk full"));
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      if (key === "@feedings:baby-1:user-1") throw new Error("disk full");
+      storage.set(key, value);
+    });
 
     await expect(fetchFeedingsFromDatabase("baby-1")).rejects.toThrow("disk full");
     expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(false);
@@ -426,6 +429,34 @@ describe("activity range sync", () => {
     });
     await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
     expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(true);
+  });
+
+  it("keeps the collection but restarts bootstrap when cursor persistence fails", async () => {
+    serverRows.push({
+      id: "feeding-0001",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: range.start,
+      created_at: range.start,
+      updated_at: range.start,
+      field_clocks: {},
+    });
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    const cursorKey = "@activity_sync_cursor:feedings:baby-1:user-1";
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      if (key === cursorKey) throw new Error("cursor disk full");
+      storage.set(key, value);
+    });
+
+    await expect(fetchFeedingsFromDatabase("baby-1")).rejects.toThrow("cursor disk full");
+    expect(JSON.parse(storage.get("@feedings:baby-1:user-1")!)).toHaveLength(1);
+    expect(storage.has(cursorKey)).toBe(false);
+
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      storage.set(key, value);
+    });
+    await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
+    expect(storage.has(cursorKey)).toBe(true);
   });
 
   it("replaces only the requested interval while preserving queued local mutations", async () => {
