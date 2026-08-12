@@ -42,6 +42,18 @@ describe("foreground refresh coordinator", () => {
     expect(loader).toHaveBeenCalledTimes(2);
   });
 
+  it("runs a new catch-up after a later offline period", async () => {
+    const coordinator = createForegroundRefreshCoordinator();
+    const loader = vi.fn().mockResolvedValue(undefined);
+    coordinator.register("feedings", loader);
+
+    await coordinator.trigger(true);
+    coordinator.noteOffline();
+    await coordinator.trigger(true);
+
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
   it("waits for every loader and retries after any loader rejects", async () => {
     const coordinator = createForegroundRefreshCoordinator();
     const slow = deferred();

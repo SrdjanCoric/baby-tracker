@@ -3,6 +3,7 @@ export type ForegroundRefreshLoader = () => Promise<void>;
 export interface ForegroundRefreshCoordinator {
   register(id: string, loader: ForegroundRefreshLoader): () => void;
   startWakeCycle(): void;
+  noteOffline(): void;
   trigger(isOnline: boolean): Promise<void>;
 }
 
@@ -51,6 +52,9 @@ export function createForegroundRefreshCoordinator(): ForegroundRefreshCoordinat
       };
     },
     startWakeCycle() {
+      onlineSatisfied = false;
+    },
+    noteOffline() {
       onlineSatisfied = false;
     },
     trigger,

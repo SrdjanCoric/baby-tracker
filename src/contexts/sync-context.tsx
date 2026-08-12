@@ -138,6 +138,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
       if (!engineState.isConnected) {
         wasOfflineRef.current = true;
+        refreshCoordinatorRef.current.noteOffline();
       }
 
       if (wasOfflineRef.current && engineState.isConnected && engineState.status === 'online') {
