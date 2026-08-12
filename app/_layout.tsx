@@ -143,20 +143,24 @@ function StoreReviewHandler({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function WatchMessageHandler({ children }: { children: React.ReactNode }) {
+export function WatchMessageHandler({ children }: { children: React.ReactNode }) {
   const { getWidgetDataJson } = useWidget();
   const { registerHandler } = useWatchMessageHandler({
     onRequestSync: async (replyHandler) => {
-      const published = await refreshWatchCredentialsFromPhone(async () => {
-        const { error } = await supabase.auth.refreshSession();
-        if (error) throw error;
-      });
-      if (!published) {
-        throw new Error("Watch credential refresh could not be published");
-      }
       const json = getWidgetDataJson();
       if (replyHandler && json) {
         replyHandler({ widgetData: json });
+      }
+      try {
+        await refreshWatchCredentialsFromPhone(async () => {
+          const { error } = await supabase.auth.refreshSession();
+          if (error) throw error;
+        });
+      } catch (error) {
+        console.warn(
+          "[WatchMessageHandler] Credential refresh failed during data sync:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     },
   });
