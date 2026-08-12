@@ -625,6 +625,36 @@ enum WatchSummaryTests {
             "offline timer was resurrected after its one preservation opportunity"
         )
 
+        var accountlessLocalObject = try JSONSerialization.jsonObject(with: offlineLocal) as! [String: Any]
+        var accountlessTimer = accountlessLocalObject["activeTimer"] as! [String: Any]
+        accountlessTimer["lockState"] = "accountless"
+        accountlessTimer["timerInstanceId"] = "accountless-timer"
+        accountlessLocalObject["activeTimer"] = accountlessTimer
+        accountlessLocalObject["activeTimers"] = [accountlessTimer]
+        accountlessLocalObject["localAsOf"] = "2026-08-08T10:00:00.000Z"
+        let accountlessLocal = try JSONSerialization.data(
+            withJSONObject: accountlessLocalObject,
+            options: [.sortedKeys]
+        )
+        let accountlessStore = TestWatchSummaryStore()
+        accountlessStore.bytesByScope[identity.cacheKey] = accountlessLocal
+        let accountlessReader = TestWatchIdentityReader()
+        accountlessReader.identity = identity
+        let accountlessCoordinator = WatchSummaryCoordinator(
+            store: accountlessStore,
+            identityReader: accountlessReader,
+            fetcher: TestWatchSummaryFetcher(response: stoppedOfflineResponse),
+            reload: {}
+        )
+
+        let accountlessResult = await accountlessCoordinator.refresh(trigger: .activation)
+
+        requireWatch(
+            accountlessResult?.activeTimers?.first?.timerInstanceId == "accountless-timer" &&
+                accountlessResult?.activeTimers?.first?.lockState == nil,
+            "accountless provenance did not preserve an older local timer exactly once"
+        )
+
         var ownedLocalObject = try JSONSerialization.jsonObject(with: offlineLocal) as! [String: Any]
         var ownedLocalTimer = ownedLocalObject["activeTimer"] as! [String: Any]
         ownedLocalTimer["lockState"] = "owned"
