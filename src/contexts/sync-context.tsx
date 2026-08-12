@@ -104,7 +104,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleAppStateChange = async (nextState: AppStateStatus) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+      const previousState = appStateRef.current;
+      appStateRef.current = nextState;
+      if (previousState.match(/inactive|background/) && nextState === 'active') {
         refreshCoordinatorRef.current.startWakeCycle();
         if (syncEngineInstance && syncEngineInstance.getPendingCount() > 0) {
           try {
@@ -117,7 +119,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           syncEngineInstance?.getState().isConnected ?? false
         );
       }
-      appStateRef.current = nextState;
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
