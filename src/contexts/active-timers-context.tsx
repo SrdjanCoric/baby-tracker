@@ -10,6 +10,7 @@ import { useBaby } from "./baby-context";
 import { useAuth } from "./auth-context";
 import { useSync } from "./sync-context";
 import {
+  getActiveTimersForBaby,
   getActiveTimerSnapshotForBaby,
   transformActiveTimerFromRemote,
   retryPendingLockReleases,
@@ -136,7 +137,10 @@ export function ActiveTimersProvider({
     isLoading: true,
   });
 
-  const loadLocks = useCallback(async (throwOnError: boolean) => {
+  const loadLocks = useCallback(async (
+    throwOnError: boolean,
+    requireFreshSnapshot = false
+  ) => {
     if (!selectedBaby?.id) {
       dispatch({ type: "SET_LOCKS", locks: [] });
       return;
@@ -150,7 +154,9 @@ export function ActiveTimersProvider({
 
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      const locks = await getActiveTimerSnapshotForBaby(selectedBaby.id);
+      const locks = await (requireFreshSnapshot
+        ? getActiveTimersForBaby(selectedBaby.id)
+        : getActiveTimerSnapshotForBaby(selectedBaby.id));
       dispatch({ type: "SET_LOCKS", locks: [...locks] });
     } catch (error) {
       console.error("[ActiveTimersContext] Failed to load locks:", error);
@@ -175,7 +181,7 @@ export function ActiveTimersProvider({
         retryPendingLockReleases(),
         retryPendingTimerStartEdits(),
       ]);
-      await loadLocks(true);
+      await loadLocks(true, true);
     });
   }, [loadLocks, registerForegroundRefreshLoader]);
 

@@ -32,6 +32,7 @@ jest.mock("./sync-context", () => ({
 }));
 
 jest.mock("@/services/active-timer-service", () => ({
+  getActiveTimersForBaby: jest.fn().mockResolvedValue([]),
   getActiveTimerSnapshotForBaby: jest.fn().mockResolvedValue([
     {
       id: "lock-1",
@@ -139,11 +140,18 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     const activeTimerService = jest.requireMock(
       "@/services/active-timer-service"
     ) as {
+      getActiveTimersForBaby: jest.Mock;
       retryPendingLockReleases: jest.Mock;
       retryPendingTimerStartEdits: jest.Mock;
     };
     expect(activeTimerService.retryPendingLockReleases).toHaveBeenCalled();
     expect(activeTimerService.retryPendingTimerStartEdits).toHaveBeenCalled();
+    expect(activeTimerService.getActiveTimersForBaby).toHaveBeenCalledWith("baby-1");
+    expect(
+      activeTimerService.retryPendingLockReleases.mock.invocationCallOrder[0]
+    ).toBeLessThan(
+      activeTimerService.getActiveTimersForBaby.mock.invocationCallOrder[0]
+    );
   });
 
   it("keeps public lock refresh non-throwing while loader failures remain retryable", async () => {
@@ -155,8 +163,14 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     await waitFor(() => expect(registeredRefresh).not.toBeNull());
     const activeTimerService = jest.requireMock(
       "@/services/active-timer-service"
-    ) as { getActiveTimerSnapshotForBaby: jest.Mock };
+    ) as {
+      getActiveTimersForBaby: jest.Mock;
+      getActiveTimerSnapshotForBaby: jest.Mock;
+    };
     activeTimerService.getActiveTimerSnapshotForBaby.mockRejectedValue(
+      new Error("network unavailable")
+    );
+    activeTimerService.getActiveTimersForBaby.mockRejectedValue(
       new Error("network unavailable")
     );
 
