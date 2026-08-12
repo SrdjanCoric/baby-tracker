@@ -111,6 +111,8 @@ the Watch waits for the phone instead of owning an independent session.
 
 ## Review decisions
 
+- accepted (security risk): TR-23 — A capsule-less account change can retain the previous account's
+  Watch credential across relaunch — there won't be account switching.
 - skipped (minor): TR-12 — Watch credential-guard tests do not fully prove the properties they
   name — I don't care about them.
 - skipped (minor): TR-13 — Renewal failures can emit a misleading refresh-rejection diagnostic —
