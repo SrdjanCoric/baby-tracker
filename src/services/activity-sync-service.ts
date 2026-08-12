@@ -41,6 +41,7 @@ export type ActivityCursorTable = TimelineActivityTable | "milestone_responses";
 interface ActivitySyncCursor {
   updatedAt: string;
   id: string;
+  resumeExact?: true;
 }
 
 interface CursorPull {
@@ -50,6 +51,7 @@ interface CursorPull {
 }
 
 const ACTIVITY_RANGE_PAGE_SIZE = 1_000;
+const ACTIVITY_CURSOR_PASS_LIMIT = 5_000;
 const ACTIVITY_CURSOR_OVERLAP_MS = 10_000;
 const MIN_CURSOR_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -83,7 +85,11 @@ function parseActivityCursor(raw: string | null): ActivitySyncCursor | null {
   try {
     const value = JSON.parse(raw) as Partial<ActivitySyncCursor>;
     return typeof value.updatedAt === "string" && typeof value.id === "string"
-      ? { updatedAt: value.updatedAt, id: value.id }
+      ? {
+          updatedAt: value.updatedAt,
+          id: value.id,
+          ...(value.resumeExact === true ? { resumeExact: true as const } : {}),
+        }
       : null;
   } catch {
     return null;
@@ -99,7 +105,12 @@ async function fetchActivityCursorRows(
   const storedCursor = parseActivityCursor(await AsyncStorage.getItem(cursorKey));
   assertActivityPullScope(scope);
   const rows: Record<string, unknown>[] = [];
-  let pageCursor = storedCursor ? overlapActivityCursor(storedCursor) : null;
+  let pageCursor = storedCursor
+    ? storedCursor.resumeExact
+      ? { updatedAt: storedCursor.updatedAt, id: storedCursor.id }
+      : overlapActivityCursor(storedCursor)
+    : null;
+  let hitPassLimit = false;
 
   while (true) {
     let query = supabase
@@ -116,7 +127,10 @@ async function fetchActivityCursorRows(
     const { data, error } = await query
       .order("updated_at", { ascending: true })
       .order("id", { ascending: true })
-      .limit(ACTIVITY_RANGE_PAGE_SIZE);
+      .limit(Math.min(
+        ACTIVITY_RANGE_PAGE_SIZE,
+        ACTIVITY_CURSOR_PASS_LIMIT - rows.length
+      ));
 
     if (error) {
       console.error(`[ActivitySync] Failed to fetch ${table}:`, error.message);
@@ -128,15 +142,28 @@ async function fetchActivityCursorRows(
     if (page.length === 0) break;
     const last = page[page.length - 1];
     pageCursor = { updatedAt: last.updated_at as string, id: last.id as string };
+    if (rows.length >= ACTIVITY_CURSOR_PASS_LIMIT) {
+      hitPassLimit = true;
+      break;
+    }
     if (page.length < ACTIVITY_RANGE_PAGE_SIZE) break;
   }
 
+  const storedHighWater = storedCursor
+    ? { updatedAt: storedCursor.updatedAt, id: storedCursor.id }
+    : null;
+  const nextHighWater = rows.length > 0 && pageCursor
+    ? storedHighWater && compareActivityCursors(storedHighWater, pageCursor) > 0
+      ? storedHighWater
+      : pageCursor
+    : storedCursor?.resumeExact
+      ? storedHighWater
+      : null;
+
   return {
     rows,
-    nextCursor: rows.length > 0 && pageCursor
-      ? storedCursor && compareActivityCursors(storedCursor, pageCursor) > 0
-        ? storedCursor
-        : pageCursor
+    nextCursor: nextHighWater
+      ? { ...nextHighWater, ...(hitPassLimit ? { resumeExact: true as const } : {}) }
       : null,
     cursorKey,
   };

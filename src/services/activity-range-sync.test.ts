@@ -374,6 +374,37 @@ describe("activity range sync", () => {
     expect(settled.map(entry => entry.id)).not.toContain("sensitive-entry");
   });
 
+  it("bounds a bootstrap pass and resumes the remaining history on the next pull", async () => {
+    const timestamp = "2026-08-12T12:00:00.000Z";
+    for (let index = 0; index < 5_005; index += 1) {
+      serverRows.push({
+        id: `feeding-${index.toString().padStart(5, "0")}`,
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: timestamp,
+        created_at: timestamp,
+        updated_at: timestamp,
+        field_clocks: {},
+      });
+    }
+
+    const firstPass = await fetchFeedingsFromDatabase("baby-1");
+    expect(firstPass).toHaveLength(5_000);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({
+        updatedAt: timestamp,
+        id: "feeding-04999",
+        resumeExact: true,
+      })
+    );
+
+    const secondPass = await fetchFeedingsFromDatabase("baby-1");
+    expect(secondPass).toHaveLength(5_005);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({ updatedAt: timestamp, id: "feeding-05004" })
+    );
+  });
+
   it("does not install a cursor when local persistence interrupts bootstrap", async () => {
     serverRows.push({
       id: "feeding-0001",
