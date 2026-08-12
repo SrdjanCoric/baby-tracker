@@ -32,6 +32,8 @@ import {
   releaseTimerLock,
   updateTimerData,
   queuePendingLockRelease,
+  getActiveTimerSnapshotForBaby,
+  type ActiveTimerLock as ServerActiveTimerLock,
 } from "@/services/active-timer-service";
 import {
   fetchWakeWindowPreference,
@@ -483,7 +485,7 @@ const SleepContext = createContext<SleepContextValue | null>(null);
 export function SleepProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sleepReducer, initialSleepState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const { removeLock, refreshLocks } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
@@ -625,7 +627,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       sleeps: StoredSleepEntry[],
       bindingToken: BabyProviderBindingToken,
       stopVersionAtStart: number,
-      wakeConfig: WakeWindowConfig | null
+      wakeConfig: WakeWindowConfig | null,
+      timerSnapshot?: Promise<readonly ServerActiveTimerLock[]>
     ) => {
       if (!selectedBaby) return;
 
@@ -667,6 +670,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: "ADD_SLEEP", payload: record }),
         onCompletionSecured: () => removeLock(selectedBaby.id, "sleep"),
         errorLabel: "[SleepContext]",
+        timerSnapshot,
       });
     },
     [
@@ -679,7 +683,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  const loadSleeps = useCallback(async () => {
+  const loadSleeps = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
     if (!selectedBaby) {
@@ -690,6 +695,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    const timerSnapshot = user?.id && user.householdId
+      ? getActiveTimerSnapshotForBaby(selectedBaby.id)
+      : undefined;
+    void timerSnapshot?.catch(() => undefined);
     let bindingStatus: "ready" | "error" = "ready";
 
     dispatch({ type: "SET_LOADING", payload: true });
@@ -701,6 +710,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         try {
           sleeps = await fetchSleepFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error(
             "[SleepContext] Failed to fetch from database, using local:",
@@ -764,6 +774,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             if (!isCurrentBinding()) return;
           }
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error(
             "[SleepContext] Failed to fetch activity goal from DB:",
@@ -809,6 +820,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             if (!isCurrentBinding()) return;
           }
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error(
             "[SleepContext] Failed to fetch wake window prefs from DB:",
@@ -910,9 +922,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         sleeps,
         bindingToken,
         stopVersionAtStart,
-        wakeConfig
+        wakeConfig,
+        timerSnapshot
       );
     } catch (error) {
+      loadError = error;
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
       console.error("[SleepContext] Failed to load sleeps:", error);
@@ -922,6 +936,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
+    if (reportFailure && loadError) throw loadError;
   }, [
     beginBabyBinding,
     finishBabyBinding,
@@ -929,11 +944,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     restoreSleepTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {
-    loadSleeps();
-  }, [loadSleeps, foregroundRefreshKey]);
+    void loadSleeps();
+  }, [loadSleeps]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("sleep_sessions", () => loadSleeps(true)),
+    [loadSleeps, registerForegroundRefreshLoader]
+  );
 
   const computingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const driftDismissedRef = useRef<{

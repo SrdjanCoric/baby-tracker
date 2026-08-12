@@ -6,12 +6,12 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { AppState, type AppStateStatus } from "react-native";
 import { useBaby } from "./baby-context";
 import { useAuth } from "./auth-context";
 import { useSync } from "./sync-context";
 import {
   getActiveTimersForBaby,
+  getActiveTimerSnapshotForBaby,
   transformActiveTimerFromRemote,
   retryPendingLockReleases,
   retryPendingTimerStartEdits,
@@ -130,14 +130,17 @@ export function ActiveTimersProvider({
 }) {
   const { selectedBaby } = useBaby();
   const { user } = useAuth();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
 
   const [state, dispatch] = useReducer(activeTimersReducer, {
     locks: [],
     isLoading: true,
   });
 
-  const refreshLocks = useCallback(async () => {
+  const loadLocks = useCallback(async (
+    throwOnError: boolean,
+    requireFreshSnapshot = false
+  ) => {
     if (!selectedBaby?.id) {
       dispatch({ type: "SET_LOCKS", locks: [] });
       return;
@@ -151,32 +154,36 @@ export function ActiveTimersProvider({
 
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      const locks = await getActiveTimersForBaby(selectedBaby.id);
-      dispatch({ type: "SET_LOCKS", locks });
+      const locks = await (requireFreshSnapshot
+        ? getActiveTimersForBaby(selectedBaby.id)
+        : getActiveTimerSnapshotForBaby(selectedBaby.id));
+      dispatch({ type: "SET_LOCKS", locks: [...locks] });
     } catch (error) {
       console.error("[ActiveTimersContext] Failed to load locks:", error);
       dispatch({ type: "SET_LOADING", isLoading: false });
+      if (throwOnError) throw error;
     }
   }, [selectedBaby?.id, user?.id]);
 
+  const refreshLocks = useCallback(
+    () => loadLocks(false),
+    [loadLocks]
+  );
+
   useEffect(() => {
-    refreshLocks();
+    void refreshLocks().catch(() => undefined);
   }, [refreshLocks]);
 
   useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === "active") {
-        Promise.all([
-          retryPendingLockReleases(),
-          retryPendingTimerStartEdits(),
-        ])
-          .then(() => refreshLocks())
-          .catch(() => refreshLocks());
-      }
-    };
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
-    return () => subscription.remove();
-  }, [refreshLocks]);
+    if (!registerForegroundRefreshLoader) return;
+    return registerForegroundRefreshLoader("active_timers", async () => {
+      await Promise.all([
+        retryPendingLockReleases(),
+        retryPendingTimerStartEdits(),
+      ]);
+      await loadLocks(true, true);
+    });
+  }, [loadLocks, registerForegroundRefreshLoader]);
 
   useEffect(() => {
     const handleChange = async (change: RemoteChange) => {

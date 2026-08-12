@@ -1,6 +1,7 @@
 import {
   acquireTimerLock,
   getActiveTimerLock,
+  type ActiveTimerLock,
   type TimerActivityType,
 } from "./active-timer-service";
 
@@ -15,7 +16,7 @@ export interface TimerLockReconciliationSnapshot {
   lockState?: TimerLockReconciliationState;
 }
 
-interface ReconcileTimerLockInput {
+export interface ReconcileTimerLockInput {
   babyId: string;
   activityType: TimerActivityType;
   userId: string;
@@ -23,6 +24,7 @@ interface ReconcileTimerLockInput {
   timerInstanceId: string;
   timerData: Record<string, unknown>;
   persistState: (state: TimerLockReconciliationState) => Promise<void>;
+  timerSnapshot?: Promise<readonly ActiveTimerLock[]>;
 }
 
 export type ReconcileTimerLockResult =

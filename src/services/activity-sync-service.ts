@@ -36,8 +36,160 @@ export interface ActivityRangeEntryMap {
 }
 
 export type TimelineActivityTable = keyof ActivityRangeEntryMap;
+export type ActivityCursorTable = TimelineActivityTable | "milestone_responses";
+
+interface ActivitySyncCursor {
+  updatedAt: string;
+  id: string;
+  resumeExact?: true;
+}
+
+interface CursorPull {
+  rows: Record<string, unknown>[];
+  nextCursor: ActivitySyncCursor | null;
+  cursorKey: string;
+}
 
 const ACTIVITY_RANGE_PAGE_SIZE = 1_000;
+const ACTIVITY_CURSOR_PASS_LIMIT = 5_000;
+const ACTIVITY_CURSOR_OVERLAP_MS = 10_000;
+const MIN_CURSOR_ID = "00000000-0000-0000-0000-000000000000";
+
+function compareActivityCursors(
+  left: ActivitySyncCursor,
+  right: ActivitySyncCursor
+): number {
+  const timestampOrder = left.updatedAt.localeCompare(right.updatedAt);
+  return timestampOrder !== 0 ? timestampOrder : left.id.localeCompare(right.id);
+}
+
+function overlapActivityCursor(cursor: ActivitySyncCursor): ActivitySyncCursor {
+  return {
+    updatedAt: new Date(
+      Date.parse(cursor.updatedAt) - ACTIVITY_CURSOR_OVERLAP_MS
+    ).toISOString(),
+    id: MIN_CURSOR_ID,
+  };
+}
+
+function requireActivityUpdatedAt(
+  table: ActivityCursorTable,
+  row: Record<string, unknown>
+): string {
+  if (typeof row.updated_at !== "string" || row.updated_at.length === 0) {
+    throw new Error(`${table} row is missing a valid updated_at`);
+  }
+  return row.updated_at;
+}
+
+function activityCursorKey(
+  table: ActivityCursorTable,
+  babyId: string,
+  storageUserId: string | null
+): string {
+  return getUserScopedKeyFor(`@activity_sync_cursor:${table}:${babyId}`, storageUserId);
+}
+
+function parseActivityCursor(raw: string | null): ActivitySyncCursor | null {
+  if (!raw) return null;
+  try {
+    const value = JSON.parse(raw) as Partial<ActivitySyncCursor>;
+    return typeof value.updatedAt === "string" && typeof value.id === "string"
+      ? {
+          updatedAt: value.updatedAt,
+          id: value.id,
+          ...(value.resumeExact === true ? { resumeExact: true as const } : {}),
+        }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchActivityCursorRows(
+  table: ActivityCursorTable,
+  babyId: string,
+  scope: ActivityPullScope
+): Promise<CursorPull> {
+  const cursorKey = activityCursorKey(table, babyId, scope.storageUserId);
+  const storedCursor = parseActivityCursor(await AsyncStorage.getItem(cursorKey));
+  assertActivityPullScope(scope);
+  const rows: Record<string, unknown>[] = [];
+  let pageCursor = storedCursor
+    ? storedCursor.resumeExact
+      ? { updatedAt: storedCursor.updatedAt, id: storedCursor.id }
+      : overlapActivityCursor(storedCursor)
+    : null;
+  let hitPassLimit = false;
+
+  while (true) {
+    let query = supabase
+      .from(table)
+      .select("*")
+      .eq("baby_id", babyId);
+
+    if (pageCursor) {
+      query = query.or(
+        `updated_at.gt.${pageCursor.updatedAt},and(updated_at.eq.${pageCursor.updatedAt},id.gt.${pageCursor.id})`
+      );
+    }
+
+    const { data, error } = await query
+      .order("updated_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(Math.min(
+        ACTIVITY_RANGE_PAGE_SIZE,
+        ACTIVITY_CURSOR_PASS_LIMIT - rows.length
+      ));
+
+    if (error) {
+      console.error(`[ActivitySync] Failed to fetch ${table}:`, error.message);
+      throw new Error(`Failed to fetch ${table}`);
+    }
+
+    const page = (data || []) as Record<string, unknown>[];
+    for (const row of page) requireActivityUpdatedAt(table, row);
+    rows.push(...page);
+    if (page.length === 0) break;
+    const last = page[page.length - 1];
+    pageCursor = { updatedAt: requireActivityUpdatedAt(table, last), id: last.id as string };
+    if (rows.length >= ACTIVITY_CURSOR_PASS_LIMIT) {
+      hitPassLimit = true;
+      break;
+    }
+    if (page.length < ACTIVITY_RANGE_PAGE_SIZE) break;
+  }
+
+  const storedHighWater = storedCursor
+    ? { updatedAt: storedCursor.updatedAt, id: storedCursor.id }
+    : null;
+  const nextHighWater = rows.length > 0 && pageCursor
+    ? storedHighWater && compareActivityCursors(storedHighWater, pageCursor) > 0
+      ? storedHighWater
+      : pageCursor
+    : storedCursor?.resumeExact
+      ? storedHighWater
+      : null;
+
+  return {
+    rows,
+    nextCursor: nextHighWater
+      ? { ...nextHighWater, ...(hitPassLimit ? { resumeExact: true as const } : {}) }
+      : null,
+    cursorKey,
+  };
+}
+
+async function persistActivityCursor(
+  scope: ActivityPullScope,
+  cursorKey: string,
+  cursor: ActivitySyncCursor | null
+): Promise<void> {
+  if (!cursor) return;
+  assertActivityPullScope(scope);
+  await AsyncStorage.setItem(cursorKey, JSON.stringify(cursor));
+  assertActivityPullScope(scope);
+}
 
 export async function fetchActivityRangeFromDatabase<T extends TimelineActivityTable>(
   table: T,
@@ -188,7 +340,8 @@ async function commitPulledRecentCollection<T extends { id: string }>(
   scope: ActivityPullScope,
   table: SyncableTable,
   reconciledRows: Record<string, unknown>[],
-  transform: (row: Record<string, unknown>) => T
+  transform: (row: Record<string, unknown>) => T,
+  afterCommit?: () => Promise<void>
 ): Promise<T[]> {
   const serverEntries = dropTombstoned(reconciledRows).map(transform);
   const tombstonedIds = new Set(
@@ -200,6 +353,10 @@ async function commitPulledRecentCollection<T extends { id: string }>(
   return withStorageLock(scope.key, async () => {
     assertActivityPullScope(scope);
     const pendingOperations = await getPendingEntityOperations(scope.engine, table);
+    const hasDeferredTombstone = [...tombstonedIds].some((id) => {
+      const pendingType = pendingOperations.get(id);
+      return pendingType !== undefined && pendingType !== "DELETE";
+    });
     assertActivityPullScope(scope);
     const localData = await AsyncStorage.getItem(scope.key);
     assertActivityPullScope(scope);
@@ -227,6 +384,7 @@ async function commitPulledRecentCollection<T extends { id: string }>(
     const entries = [...entriesById.values()];
     assertActivityPullScope(scope);
     await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
+    if (!hasDeferredTombstone) await afterCommit?.();
     assertActivityPullScope(scope);
     return entries;
   });
@@ -368,7 +526,8 @@ function reconcileMilestoneIdentity(
 async function commitPulledMilestoneResponses(
   scope: ActivityPullScope,
   serverResponses: StoredMilestoneResponse[],
-  serverClocks: Map<string, string | null>
+  serverClocks: Map<string, string | null>,
+  afterCommit?: () => Promise<void>
 ): Promise<StoredMilestoneResponse[]> {
   return withStorageLock(scope.key, async () => {
     assertActivityPullScope(scope);
@@ -377,7 +536,15 @@ async function commitPulledMilestoneResponses(
     const localData = await AsyncStorage.getItem(scope.key);
     assertActivityPullScope(scope);
     const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
-    let responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
+    const mergedDelta = mergeWithPendingLocal(
+      serverResponses,
+      localResponses,
+      pendingOperations
+    );
+    let responses = mergedDelta.reduce(
+      replaceLogicalMilestoneResponse,
+      localResponses
+    );
     let previousValue = localData;
     let queuedRecovery = false;
 
@@ -408,6 +575,7 @@ async function commitPulledMilestoneResponses(
     if (!queuedRecovery || finalValue !== previousValue) {
       await AsyncStorage.setItem(scope.key, finalValue);
     }
+    await afterCommit?.();
     assertActivityPullScope(scope);
     return responses;
   });
@@ -628,21 +796,10 @@ function createConditionalDurableQueueCommit(
 
 export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredFeedingEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.feedings}${babyId}`);
-  const { data, error } = await supabase
-    .from("feedings")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("started_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch feedings:", error.message);
-    throw new Error("Failed to fetch feedings");
-  }
-
-  const reconciled = await reconcilePulled("feedings", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "feedings", reconciled, transformFeedingFromDb);
+  const pull = await fetchActivityCursorRows("feedings", babyId, scope);
+  const reconciled = await reconcilePulled("feedings", pull.rows);
+  return commitPulledRecentCollection(scope, "feedings", reconciled, transformFeedingFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createFeedingInDatabase(
@@ -827,21 +984,10 @@ async function updateLocalFeedings(
 
 export async function fetchDiapersFromDatabase(babyId: string): Promise<StoredDiaperEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.diapers}${babyId}`);
-  const { data, error } = await supabase
-    .from("diapers")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("changed_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch diapers:", error.message);
-    throw new Error("Failed to fetch diapers");
-  }
-
-  const reconciled = await reconcilePulled("diapers", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "diapers", reconciled, transformDiaperFromDb);
+  const pull = await fetchActivityCursorRows("diapers", babyId, scope);
+  const reconciled = await reconcilePulled("diapers", pull.rows);
+  return commitPulledRecentCollection(scope, "diapers", reconciled, transformDiaperFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createDiaperInDatabase(
@@ -955,7 +1101,7 @@ function transformDiaperFromDb(data: Record<string, unknown>): StoredDiaperEntry
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: requireActivityUpdatedAt("diapers", data),
   };
 }
 
@@ -972,21 +1118,10 @@ async function updateLocalDiapers(
 
 export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSleepEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.sleep}${babyId}`);
-  const { data, error } = await supabase
-    .from("sleep_sessions")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("started_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch sleep sessions:", error.message);
-    throw new Error("Failed to fetch sleep sessions");
-  }
-
-  const reconciled = await reconcilePulled("sleep_sessions", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "sleep_sessions", reconciled, transformSleepFromDb);
+  const pull = await fetchActivityCursorRows("sleep_sessions", babyId, scope);
+  const reconciled = await reconcilePulled("sleep_sessions", pull.rows);
+  return commitPulledRecentCollection(scope, "sleep_sessions", reconciled, transformSleepFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createSleepInDatabase(
@@ -1149,21 +1284,10 @@ async function updateLocalSleep(
 
 export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPumpingEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.pumping}${babyId}`);
-  const { data, error } = await supabase
-    .from("pumping_sessions")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("started_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch pumping sessions:", error.message);
-    throw new Error("Failed to fetch pumping sessions");
-  }
-
-  const reconciled = await reconcilePulled("pumping_sessions", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "pumping_sessions", reconciled, transformPumpingFromDb);
+  const pull = await fetchActivityCursorRows("pumping_sessions", babyId, scope);
+  const reconciled = await reconcilePulled("pumping_sessions", pull.rows);
+  return commitPulledRecentCollection(scope, "pumping_sessions", reconciled, transformPumpingFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createPumpingInDatabase(
@@ -1298,7 +1422,7 @@ function transformPumpingFromDb(data: Record<string, unknown>): StoredPumpingEnt
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    updatedAt: requireActivityUpdatedAt("pumping_sessions", data),
   };
 }
 
@@ -1315,21 +1439,10 @@ async function updateLocalPumping(
 
 export async function fetchGrowthFromDatabase(babyId: string): Promise<StoredGrowthEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.growth}${babyId}`);
-  const { data, error } = await supabase
-    .from("growth_measurements")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("measured_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch growth measurements:", error.message);
-    throw new Error("Failed to fetch growth measurements");
-  }
-
-  const reconciled = await reconcilePulled("growth_measurements", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "growth_measurements", reconciled, transformGrowthFromDb);
+  const pull = await fetchActivityCursorRows("growth_measurements", babyId, scope);
+  const reconciled = await reconcilePulled("growth_measurements", pull.rows);
+  return commitPulledRecentCollection(scope, "growth_measurements", reconciled, transformGrowthFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createGrowthInDatabase(
@@ -1447,7 +1560,7 @@ function transformGrowthFromDb(data: Record<string, unknown>): StoredGrowthEntry
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    updatedAt: requireActivityUpdatedAt("growth_measurements", data),
   };
 }
 
@@ -1464,21 +1577,10 @@ async function updateLocalGrowth(
 
 export async function fetchTummyTimeFromDatabase(babyId: string): Promise<StoredTummyTimeEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.tummyTime}${babyId}`);
-  const { data, error } = await supabase
-    .from("tummy_time_sessions")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("started_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch tummy time sessions:", error.message);
-    throw new Error("Failed to fetch tummy time sessions");
-  }
-
-  const reconciled = await reconcilePulled("tummy_time_sessions", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "tummy_time_sessions", reconciled, transformTummyTimeFromDb);
+  const pull = await fetchActivityCursorRows("tummy_time_sessions", babyId, scope);
+  const reconciled = await reconcilePulled("tummy_time_sessions", pull.rows);
+  return commitPulledRecentCollection(scope, "tummy_time_sessions", reconciled, transformTummyTimeFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createTummyTimeInDatabase(
@@ -1605,7 +1707,7 @@ function transformTummyTimeFromDb(data: Record<string, unknown>): StoredTummyTim
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: (data.created_at as string) || new Date().toISOString(),
+    updatedAt: requireActivityUpdatedAt("tummy_time_sessions", data),
   };
 }
 
@@ -1622,17 +1724,8 @@ async function updateLocalTummyTime(
 
 export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promise<StoredMilestoneResponse[]> {
   const scope = captureActivityPullScope(`${KEYS.milestones}${babyId}`);
-  const { data, error } = await supabase
-    .from("milestone_responses")
-    .select("*")
-    .eq("baby_id", babyId);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch milestone responses:", error.message);
-    throw new Error("Failed to fetch milestone responses");
-  }
-
-  const reconciled = await reconcilePulled("milestone_responses", (data || []) as Record<string, unknown>[]);
+  const pull = await fetchActivityCursorRows("milestone_responses", babyId, scope);
+  const reconciled = await reconcilePulled("milestone_responses", pull.rows);
   const serverResponses = reconciled.map(transformMilestoneResponseFromDb);
   const serverClocks = new Map(reconciled.map((row) => {
     const clocks = row.field_clocks && typeof row.field_clocks === 'object'
@@ -1640,7 +1733,8 @@ export async function fetchMilestoneResponsesFromDatabase(babyId: string): Promi
       : {};
     return [row.id as string, greatestClock(clocks)] as const;
   }));
-  return commitPulledMilestoneResponses(scope, serverResponses, serverClocks);
+  return commitPulledMilestoneResponses(scope, serverResponses, serverClocks,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function upsertMilestoneResponseInDatabase(
@@ -2251,21 +2345,10 @@ async function syncMilestonesForBaby(oldBabyId: string, newBabyId: string, userI
 
 export async function fetchHealthFromDatabase(babyId: string): Promise<StoredHealthEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.health}${babyId}`);
-  const { data, error } = await supabase
-    .from("health_entries")
-    .select("*")
-    .eq("baby_id", babyId)
-    .order("logged_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(ACTIVITY_RANGE_PAGE_SIZE);
-
-  if (error) {
-    console.error("[ActivitySync] Failed to fetch health:", error.message);
-    throw new Error("Failed to fetch health");
-  }
-
-  const reconciled = await reconcilePulled("health_entries", (data || []) as Record<string, unknown>[]);
-  return commitPulledRecentCollection(scope, "health_entries", reconciled, transformHealthFromDb);
+  const pull = await fetchActivityCursorRows("health_entries", babyId, scope);
+  const reconciled = await reconcilePulled("health_entries", pull.rows);
+  return commitPulledRecentCollection(scope, "health_entries", reconciled, transformHealthFromDb,
+    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
 }
 
 export async function createHealthInDatabase(

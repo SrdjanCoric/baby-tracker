@@ -1,10 +1,11 @@
 import React from "react";
 import { act, render, screen, waitFor } from "@testing-library/react-native";
-import { AppState, Text, type AppStateStatus } from "react-native";
+import { Text } from "react-native";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
 
 let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null;
-let appStateHandler: ((state: AppStateStatus) => void) | null = null;
+let registeredRefresh: (() => Promise<void>) | null = null;
+let activeTimersContext: ReturnType<typeof useActiveTimers> | null = null;
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Baby" } }),
@@ -23,11 +24,16 @@ jest.mock("./sync-context", () => ({
       if (table === "active_timers") remoteChangeHandler = handler;
       return jest.fn();
     },
+    registerForegroundRefreshLoader: (_id: string, loader: () => Promise<void>) => {
+      registeredRefresh = loader;
+      return jest.fn();
+    },
   }),
 }));
 
 jest.mock("@/services/active-timer-service", () => ({
-  getActiveTimersForBaby: jest.fn().mockResolvedValue([
+  getActiveTimersForBaby: jest.fn().mockResolvedValue([]),
+  getActiveTimerSnapshotForBaby: jest.fn().mockResolvedValue([
     {
       id: "lock-1",
       babyId: "baby-1",
@@ -63,6 +69,11 @@ jest.mock("@/services/supabase", () => {
 
 import { ActiveTimersProvider, useActiveTimers } from "./active-timers-context";
 
+function ContextProbe() {
+  activeTimersContext = useActiveTimers();
+  return null;
+}
+
 function RemoteElapsed() {
   const lock = useActiveTimers().getLockForActivity("baby-1", "sleep");
   const elapsedMinutes = lock
@@ -76,13 +87,9 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
     remoteChangeHandler = null;
-    appStateHandler = null;
-    jest
-      .spyOn(AppState, "addEventListener")
-      .mockImplementation((_type, handler) => {
-        appStateHandler = handler;
-        return { remove: jest.fn() };
-      });
+    registeredRefresh = null;
+    activeTimersContext = null;
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -124,20 +131,50 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
         <RemoteElapsed />
       </ActiveTimersProvider>
     );
-    await waitFor(() => expect(appStateHandler).not.toBeNull());
+    await waitFor(() => expect(registeredRefresh).not.toBeNull());
 
     await act(async () => {
-      appStateHandler!("active");
-      await Promise.resolve();
+      await registeredRefresh!();
     });
 
     const activeTimerService = jest.requireMock(
       "@/services/active-timer-service"
     ) as {
+      getActiveTimersForBaby: jest.Mock;
       retryPendingLockReleases: jest.Mock;
       retryPendingTimerStartEdits: jest.Mock;
     };
     expect(activeTimerService.retryPendingLockReleases).toHaveBeenCalled();
     expect(activeTimerService.retryPendingTimerStartEdits).toHaveBeenCalled();
+    expect(activeTimerService.getActiveTimersForBaby).toHaveBeenCalledWith("baby-1");
+    expect(
+      activeTimerService.retryPendingLockReleases.mock.invocationCallOrder[0]
+    ).toBeLessThan(
+      activeTimerService.getActiveTimersForBaby.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("keeps public lock refresh non-throwing while loader failures remain retryable", async () => {
+    render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(registeredRefresh).not.toBeNull());
+    const activeTimerService = jest.requireMock(
+      "@/services/active-timer-service"
+    ) as {
+      getActiveTimersForBaby: jest.Mock;
+      getActiveTimerSnapshotForBaby: jest.Mock;
+    };
+    activeTimerService.getActiveTimerSnapshotForBaby.mockRejectedValue(
+      new Error("network unavailable")
+    );
+    activeTimerService.getActiveTimersForBaby.mockRejectedValue(
+      new Error("network unavailable")
+    );
+
+    await expect(activeTimersContext!.refreshLocks()).resolves.toBeUndefined();
+    await expect(registeredRefresh!()).rejects.toThrow("network unavailable");
   });
 });

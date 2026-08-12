@@ -8,6 +8,10 @@ const { acquireTimerLockMock, getActiveTimerLockMock } = vi.hoisted(() => ({
 
 vi.mock("./active-timer-service", () => ({
   acquireTimerLock: acquireTimerLockMock,
+  findActiveTimerLock: (
+    snapshot: Array<{ activityType: string }>,
+    activityType: string
+  ) => snapshot.find(lock => lock.activityType === activityType) ?? null,
   getActiveTimerLock: getActiveTimerLockMock,
 }));
 
@@ -121,6 +125,48 @@ describe("timer lock reconciliation", () => {
       "reconciling",
       "owned",
     ]);
+  });
+
+  it("uses a fresh lock read after same-user acquisition contention", async () => {
+    acquireTimerLockMock.mockResolvedValue({
+      success: false,
+      lockHolderId: "user-1",
+      lockHolderName: "Caregiver",
+      startedAt: "2026-07-15T08:05:00.000Z",
+    });
+    getActiveTimerLockMock.mockResolvedValue({
+      id: "lock-new",
+      babyId: "baby-1",
+      activityType: "feeding",
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt: "2026-07-15T08:05:00.000Z",
+      timerData: { timerInstanceId: "timer-new" },
+    });
+    const staleSnapshot = Promise.resolve([{
+      id: "lock-old",
+      babyId: "baby-1",
+      activityType: "feeding" as const,
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt: "2026-07-15T08:00:00.000Z",
+      timerData: { timerInstanceId: "timer-old" },
+    }]);
+
+    await expect(reconcileTimerLock({
+      babyId: "baby-1",
+      activityType: "feeding",
+      userId: "user-1",
+      startedAt: "2026-07-15T08:00:00.000Z",
+      timerInstanceId: "timer-old",
+      timerData: { timerInstanceId: "timer-old" },
+      persistState: vi.fn().mockResolvedValue(undefined),
+      timerSnapshot: staleSnapshot,
+    })).resolves.toEqual(expect.objectContaining({
+      state: "conflicted",
+      lockStartedAt: "2026-07-15T08:05:00.000Z",
+    }));
+    expect(getActiveTimerLockMock).toHaveBeenCalledWith("baby-1", "feeding");
   });
 
   it("recognizes a legacy owned lock when equivalent timestamps use different UTC forms", async () => {

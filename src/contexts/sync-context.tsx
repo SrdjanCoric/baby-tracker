@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { AppState, type AppStateStatus } from 'react-native';
 import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable, isCrdtTable, reconcileRemoteChange } from '@/services/sync';
 import { getCrdtSync } from '@/services/sync/crdt-sync-instance';
+import { createForegroundRefreshCoordinator, type ForegroundRefreshLoader } from '@/services/foreground-refresh-coordinator';
 
 export interface SyncState {
   status: SyncStatus;
@@ -68,7 +69,6 @@ export function syncReducer(state: SyncState, action: SyncAction): SyncState {
 type RemoteChangeCallback = (change: RemoteChange) => void;
 
 interface SyncContextValue extends SyncState {
-  foregroundRefreshKey: number;
   isInitialized: boolean;
   forceSync: () => Promise<void>;
   retryFailedSync: () => Promise<void>;
@@ -76,6 +76,7 @@ interface SyncContextValue extends SyncState {
   subscribeToRemoteChanges: (table: SyncableTable, callback: RemoteChangeCallback) => () => void;
   setAuthContext: (householdId: string, userId: string) => void;
   clearAuthContext: () => void;
+  registerForegroundRefreshLoader: (id: string, loader: ForegroundRefreshLoader) => () => void;
   enqueueOperation: (operation: {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
     table: SyncableTable;
@@ -94,16 +95,19 @@ let instanceRefCount = 0;
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(syncReducer, initialSyncState);
-  const [foregroundRefreshKey, setForegroundRefreshKey] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
   const remoteChangeListenersRef = useRef<Map<SyncableTable, Set<RemoteChangeCallback>>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const wasOfflineRef = useRef(false);
   const reconcileChainRef = useRef<Promise<void>>(Promise.resolve());
+  const refreshCoordinatorRef = useRef(createForegroundRefreshCoordinator());
 
   useEffect(() => {
     const handleAppStateChange = async (nextState: AppStateStatus) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+      const previousState = appStateRef.current;
+      appStateRef.current = nextState;
+      if (previousState.match(/inactive|background/) && nextState === 'active') {
+        refreshCoordinatorRef.current.startWakeCycle();
         if (syncEngineInstance && syncEngineInstance.getPendingCount() > 0) {
           try {
             await syncEngineInstance.sync();
@@ -111,9 +115,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             // Sync failed — still refresh to show best available data
           }
         }
-        setForegroundRefreshKey(k => k + 1);
+        await refreshCoordinatorRef.current.trigger(
+          syncEngineInstance?.getState().isConnected ?? false
+        );
       }
-      appStateRef.current = nextState;
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -134,11 +139,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
       if (!engineState.isConnected) {
         wasOfflineRef.current = true;
+        refreshCoordinatorRef.current.noteOffline();
       }
 
       if (wasOfflineRef.current && engineState.isConnected && engineState.status === 'online') {
         wasOfflineRef.current = false;
-        setForegroundRefreshKey(k => k + 1);
+        void refreshCoordinatorRef.current.trigger(true);
       }
 
       if (engineState.lastSyncedAt) {
@@ -279,6 +285,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     realTimeSyncInstance?.clearAuthContext();
   }, []);
 
+  const registerForegroundRefreshLoader = useCallback(
+    (id: string, loader: ForegroundRefreshLoader) =>
+      refreshCoordinatorRef.current.register(id, loader),
+    []
+  );
+
   const enqueueOperation = useCallback(async (operation: {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
     table: SyncableTable;
@@ -305,7 +317,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const value: SyncContextValue = useMemo(() => ({
     ...state,
-    foregroundRefreshKey,
     isInitialized,
     forceSync,
     retryFailedSync,
@@ -313,8 +324,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     subscribeToRemoteChanges,
     setAuthContext,
     clearAuthContext,
+    registerForegroundRefreshLoader,
     enqueueOperation,
-  }), [state, foregroundRefreshKey, isInitialized, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, clearAuthContext, enqueueOperation]);
+  }), [state, isInitialized, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, clearAuthContext, registerForegroundRefreshLoader, enqueueOperation]);
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

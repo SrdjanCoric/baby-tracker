@@ -101,7 +101,7 @@ const DiaperContext = createContext<DiaperContextValue | null>(null);
 export function DiaperProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(diaperReducer, initialDiaperState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const {
     babyBinding,
@@ -159,7 +159,8 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [subscribeToRemoteChanges, selectedBaby]);
 
-  const loadDiapers = useCallback(async () => {
+  const loadDiapers = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     if (!selectedBaby) {
       dispatch({ type: "SET_DIAPERS", payload: [] });
@@ -178,6 +179,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
         try {
           diapers = await fetchDiapersFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           if (!isCurrentBabyBinding(bindingToken)) return;
           console.error("[DiaperContext] Failed to fetch from database, using local:", error);
           diapers = await DiaperStorageService.getAllDiapers(selectedBaby.id);
@@ -189,6 +191,7 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
       if (!isCurrentBabyBinding(bindingToken)) return;
       dispatch({ type: "SET_DIAPERS", payload: diapers });
     } catch (error) {
+      loadError = error;
       if (!isCurrentBabyBinding(bindingToken)) return;
       bindingStatus = "error";
       console.error("[DiaperContext] Failed to load diapers:", error);
@@ -198,11 +201,17 @@ export function DiaperProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
+    if (reportFailure && loadError) throw loadError;
   }, [beginBabyBinding, finishBabyBinding, isCurrentBabyBinding, selectedBaby, user?.householdId]);
 
   useEffect(() => {
-    loadDiapers();
-  }, [loadDiapers, foregroundRefreshKey]);
+    void loadDiapers();
+  }, [loadDiapers]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("diapers", () => loadDiapers(true)),
+    [loadDiapers, registerForegroundRefreshLoader]
+  );
 
   const addDiaper = useCallback(async (input: CreateDiaperInput): Promise<StoredDiaperEntry> => {
     let diaper: StoredDiaperEntry;

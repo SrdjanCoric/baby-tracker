@@ -296,6 +296,7 @@ describe("lossless activity sync", () => {
       type: "night",
       started_at: "2026-07-14T08:30:00.000Z",
       ended_at: "2026-07-14T09:35:00.000Z",
+      updated_at: "2026-07-14T09:35:00.000Z",
       morning_classification: "confirmed_night_continuation",
       morning_classification_version: 1,
       field_clocks: {},

@@ -50,6 +50,7 @@ const APP_STORAGE_PREFIXES = [
   "@tummyTime_custom_goal:",
   "@tummyTime_milestone_check:",
   "@tummyTime_dismissed_milestones:",
+  "@activity_sync_cursor:",
   "@sync_queue",
 ];
 

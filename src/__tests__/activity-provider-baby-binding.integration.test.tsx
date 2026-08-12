@@ -17,6 +17,17 @@ import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboardin
 let mockSelectedBaby = { id: "baby-a", name: "Baby A" };
 let mockAuthUser: { id: string; householdId: string; displayName?: string } | null = null;
 const mockRemoveLock = jest.fn();
+const mockSupabaseFrom = jest.fn();
+let mockTimerQueryResult: Promise<{ data: unknown[]; error: null }> = Promise.resolve({
+  data: [],
+  error: null,
+});
+
+jest.mock("@/services/supabase", () => ({
+  supabase: {
+    from: (table: string) => mockSupabaseFrom(table),
+  },
+}));
 
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({ selectedBaby: mockSelectedBaby }),
@@ -30,6 +41,7 @@ jest.mock("@/contexts/sync-context", () => ({
   useSync: () => ({
     foregroundRefreshKey: 0,
     subscribeToRemoteChanges: jest.fn(() => jest.fn()),
+    registerForegroundRefreshLoader: jest.fn(() => jest.fn()),
   }),
 }));
 
@@ -70,13 +82,17 @@ jest.mock("@/services/activity-sync-service", () => ({
   deleteTummyTimeFromDatabase: jest.fn(),
 }));
 
-jest.mock("@/services/active-timer-service", () => ({
-  acquireTimerLock: jest.fn(),
-  releaseTimerLock: jest.fn(),
-  updateTimerData: jest.fn(),
-  getActiveTimerLock: jest.fn(),
-  queuePendingLockRelease: jest.fn(),
-}));
+jest.mock("@/services/active-timer-service", () => {
+  const actual = jest.requireActual("@/services/active-timer-service");
+  return {
+    ...actual,
+    acquireTimerLock: jest.fn(),
+    releaseTimerLock: jest.fn(),
+    updateTimerData: jest.fn(),
+    getActiveTimerLock: jest.fn(),
+    queuePendingLockRelease: jest.fn(),
+  };
+});
 
 jest.mock("@/services/live-activity-service", () => ({
   startTimerLiveActivity: jest.fn(),
@@ -210,7 +226,45 @@ describe("real activity provider baby binding", () => {
     providerState = null;
     mockSelectedBaby = { id: "baby-a", name: "Baby A" };
     mockAuthUser = null;
+    mockTimerQueryResult = Promise.resolve({ data: [], error: null });
+    mockSupabaseFrom.mockImplementation(() => {
+      const query = {
+        select: jest.fn(() => query),
+        eq: jest.fn(() => query),
+        then: mockTimerQueryResult.then.bind(mockTimerQueryResult),
+      };
+      return query;
+    });
     await AsyncStorage.clear();
+  });
+
+  it("single-flights one active-timer query across all four timer providers", async () => {
+    const timerQuery = deferred<{ data: unknown[]; error: null }>();
+    mockTimerQueryResult = timerQuery.promise;
+    mockAuthUser = { id: "user-a", householdId: "household-a" };
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as Record<
+      string,
+      jest.Mock
+    >;
+    for (const name of [
+      "fetchFeedingsFromDatabase",
+      "fetchSleepFromDatabase",
+      "fetchDiapersFromDatabase",
+      "fetchPumpingFromDatabase",
+      "fetchTummyTimeFromDatabase",
+    ]) {
+      activitySync[name].mockResolvedValue([]);
+    }
+
+    render(<RealActivityProviders />);
+    await waitFor(() => expect(mockSupabaseFrom).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      timerQuery.resolve({ data: [], error: null });
+      await timerQuery.promise;
+    });
+
+    expect(mockSupabaseFrom).toHaveBeenCalledWith("active_timers");
   });
 
   it("applies an explicit morning type edit using the edited start time", async () => {

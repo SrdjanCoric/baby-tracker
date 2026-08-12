@@ -154,6 +154,16 @@ function runBabyActivitySnapshotTests() {
   }
 }
 
+function runActivitySyncCursorTests() {
+  const file = join(ROOT, "scripts/sql/activity-sync-cursor-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 // Two overlapping transactions merge the same row concurrently, each editing a different field
 // with a newer clock. The advisory lock in merge_record must serialize them so neither field is
 // lost. Worker A holds the lock (pg_sleep) so B provably waits and re-reads A's committed write.
@@ -416,6 +426,17 @@ if (babyActivitySnapshot.ok) {
 } else {
   console.log(`${RED}✗ baby activity snapshot tests failed${RESET}`);
   process.stdout.write(babyActivitySnapshot.out);
+  hardFail = true;
+}
+
+console.log("");
+const activitySyncCursor = runActivitySyncCursorTests();
+if (activitySyncCursor.ok) {
+  console.log(`${GREEN}✓${RESET} activity sync cursors: update triggers and composite index plans`);
+  process.stdout.write(activitySyncCursor.out);
+} else {
+  console.log(`${RED}✗ activity sync cursor tests failed${RESET}`);
+  process.stdout.write(activitySyncCursor.out);
   hardFail = true;
 }
 

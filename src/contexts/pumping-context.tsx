@@ -31,6 +31,8 @@ import {
   releaseTimerLock,
   updateTimerData,
   queuePendingLockRelease,
+  getActiveTimerSnapshotForBaby,
+  type ActiveTimerLock as ServerActiveTimerLock,
 } from "@/services/active-timer-service";
 import {
   startTimerLiveActivity,
@@ -267,7 +269,7 @@ const PumpingContext = createContext<PumpingContextValue | null>(null);
 export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(pumpingReducer, initialPumpingState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const { refreshLocks } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
@@ -331,7 +333,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     async (
       pumpings: StoredPumpingEntry[],
       bindingToken: BabyProviderBindingToken,
-      stopVersionAtStart: number
+      stopVersionAtStart: number,
+      timerSnapshot?: Promise<readonly ServerActiveTimerLock[]>
     ) => {
       if (!selectedBaby) return;
 
@@ -363,6 +366,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         dispatchAddRecord: (record) =>
           dispatch({ type: "ADD_PUMPING", payload: record }),
         errorLabel: "[PumpingContext]",
+        timerSnapshot,
       });
     },
     [
@@ -374,7 +378,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  const loadPumpings = useCallback(async () => {
+  const loadPumpings = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
     if (!selectedBaby) {
@@ -385,6 +390,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    const timerSnapshot = user?.id && user.householdId
+      ? getActiveTimerSnapshotForBaby(selectedBaby.id)
+      : undefined;
+    void timerSnapshot?.catch(() => undefined);
     let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -395,6 +404,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         try {
           pumpings = await fetchPumpingFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error(
             "[PumpingContext] Failed to fetch from database, using local:",
@@ -410,8 +420,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
       if (!isCurrentBinding()) return;
       dispatch({ type: "SET_PUMPINGS", payload: pumpings });
-      await restorePumpingTimer(pumpings, bindingToken, stopVersionAtStart);
+      await restorePumpingTimer(pumpings, bindingToken, stopVersionAtStart, timerSnapshot);
     } catch (error) {
+      loadError = error;
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
       console.error("[PumpingContext] Failed to load pumpings:", error);
@@ -421,6 +432,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
+    if (reportFailure && loadError) throw loadError;
   }, [
     beginBabyBinding,
     finishBabyBinding,
@@ -428,11 +440,17 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     restorePumpingTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {
-    loadPumpings();
-  }, [loadPumpings, foregroundRefreshKey]);
+    void loadPumpings();
+  }, [loadPumpings]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("pumping_sessions", () => loadPumpings(true)),
+    [loadPumpings, registerForegroundRefreshLoader]
+  );
 
   const startPumping = useCallback(
     async (

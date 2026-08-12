@@ -5,6 +5,7 @@ import {
   fetchFeedingsFromDatabase,
   fetchGrowthFromDatabase,
   fetchHealthFromDatabase,
+  fetchMilestoneResponsesFromDatabase,
   fetchPumpingFromDatabase,
   fetchSleepFromDatabase,
   fetchTummyTimeFromDatabase,
@@ -77,8 +78,8 @@ function queryChain(): Record<string, unknown> {
         .reverse()
         .find(([filter, value]) => filter === "or" && value.includes("id.gt."));
 
-      if (timestampFilter && cursorFilter) {
-        const timestampColumn = timestampFilter[0].slice(3);
+      if (cursorFilter) {
+        const timestampColumn = timestampFilter ? timestampFilter[0].slice(3) : "updated_at";
         const greaterMarker = `${timestampColumn}.gt.`;
         const equalMarker = `,and(${timestampColumn}.eq.`;
         const idMarker = ",id.gt.";
@@ -217,6 +218,262 @@ describe("activity range sync", () => {
 
     expect(entries.some((entry) => entry.id === "feeding-1000")).toBe(true);
     expect(new Set(entries.map((entry) => entry.id))).toHaveLength(1_005);
+  });
+
+  it("bootstraps every same-timestamp row, applies an out-of-page tombstone, and then reuses the cursor", async () => {
+    const timestamp = "2026-08-12T10:00:00.000Z";
+    for (let index = 0; index < 1_005; index += 1) {
+      serverRows.push({
+        id: `feeding-${index.toString().padStart(4, "0")}`,
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: timestamp,
+        created_at: timestamp,
+        updated_at: timestamp,
+        deleted: index === 1_003,
+        field_clocks: {},
+      });
+    }
+
+    const entries = await fetchFeedingsFromDatabase("baby-1");
+
+    expect(entries).toHaveLength(1_004);
+    expect(entries.some(entry => entry.id === "feeding-1003")).toBe(false);
+    expect(queriedLimits).toEqual([1_000, 1_000]);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({ updatedAt: timestamp, id: "feeding-1004" })
+    );
+
+    queriedLimits.length = 0;
+    queryFilters.length = 0;
+    serverRows.push({
+      id: "feeding-1005",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: timestamp,
+      created_at: timestamp,
+      updated_at: timestamp,
+      field_clocks: {},
+    });
+    const revisited = await fetchFeedingsFromDatabase("baby-1");
+    expect(revisited).toHaveLength(1_005);
+    expect(queryFilters).toContainEqual([
+      "or",
+      "updated_at.gt.2026-08-12T09:59:50.000Z,and(updated_at.eq.2026-08-12T09:59:50.000Z,id.gt.00000000-0000-0000-0000-000000000000)",
+    ]);
+  });
+
+  it("preserves milestone responses when a cursor catch-up has no new rows", async () => {
+    serverRows.push(
+      {
+        id: "response-1",
+        baby_id: "baby-1",
+        milestone_id: "milestone-1",
+        state: "yes",
+        responded_at: "2026-08-12T09:00:00.000Z",
+        created_at: "2026-08-12T09:00:00.000Z",
+        updated_at: "2026-08-12T09:00:00.000Z",
+        field_clocks: {},
+      },
+      {
+        id: "response-2",
+        baby_id: "baby-1",
+        milestone_id: "milestone-2",
+        state: "not_yet",
+        responded_at: "2026-08-12T10:00:00.000Z",
+        created_at: "2026-08-12T10:00:00.000Z",
+        updated_at: "2026-08-12T10:00:00.000Z",
+        field_clocks: {},
+      }
+    );
+
+    await expect(fetchMilestoneResponsesFromDatabase("baby-1")).resolves.toHaveLength(2);
+    const revisited = await fetchMilestoneResponsesFromDatabase("baby-1");
+
+    expect(revisited.map(response => response.id).sort()).toEqual([
+      "response-1",
+      "response-2",
+    ]);
+    expect(JSON.parse(storage.get("@milestones:baby-1:user-1")!)).toEqual(revisited);
+  });
+
+  it("replays a late-committed row whose timestamp falls just behind the cursor", async () => {
+    storage.set(
+      "@activity_sync_cursor:feedings:baby-1:user-1",
+      JSON.stringify({
+        updatedAt: "2026-08-12T10:00:02.000Z",
+        id: "feeding-visible-first",
+      })
+    );
+    serverRows.push({
+      id: "feeding-late-commit",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: "2026-08-12T09:59:00.000Z",
+      created_at: "2026-08-12T09:59:00.000Z",
+      updated_at: "2026-08-12T10:00:00.000Z",
+      field_clocks: {},
+    });
+
+    const entries = await fetchFeedingsFromDatabase("baby-1");
+
+    expect(entries.map(entry => entry.id)).toContain("feeding-late-commit");
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({
+        updatedAt: "2026-08-12T10:00:02.000Z",
+        id: "feeding-visible-first",
+      })
+    );
+  });
+
+  it("revisits a tombstone skipped for a pending local edit", async () => {
+    storage.set("@health:baby-1:user-1", JSON.stringify([{
+      id: "sensitive-entry",
+      babyId: "baby-1",
+      type: "note",
+      loggedAt: "2026-08-12T09:00:00.000Z",
+      notes: "private note",
+      createdAt: "2026-08-12T09:00:00.000Z",
+      updatedAt: "2026-08-12T09:00:00.000Z",
+    }]));
+    const initialCursor = JSON.stringify({
+      updatedAt: "2026-08-12T09:00:00.000Z",
+      id: "prior-entry",
+    });
+    storage.set("@activity_sync_cursor:health_entries:baby-1:user-1", initialCursor);
+    pendingOperations.set("sensitive-entry", "UPDATE");
+    serverRows.push(
+      {
+        id: "sensitive-entry",
+        baby_id: "baby-1",
+        type: "note",
+        logged_at: "2026-08-12T09:00:00.000Z",
+        created_at: "2026-08-12T09:00:00.000Z",
+        updated_at: "2026-08-12T10:00:00.000Z",
+        deleted: true,
+        field_clocks: { deleted: "2026-08-12T10:00:00.000Z-0000-remote" },
+      },
+      {
+        id: "later-entry",
+        baby_id: "baby-1",
+        type: "temperature",
+        logged_at: "2026-08-12T11:00:00.000Z",
+        temperature_celsius: 37,
+        created_at: "2026-08-12T11:00:00.000Z",
+        updated_at: "2026-08-12T11:00:00.000Z",
+        field_clocks: {},
+      }
+    );
+
+    const pending = await fetchHealthFromDatabase("baby-1");
+    expect(pending.map(entry => entry.id)).toContain("sensitive-entry");
+    expect(storage.get("@activity_sync_cursor:health_entries:baby-1:user-1")).toBe(initialCursor);
+
+    pendingOperations.clear();
+    const settled = await fetchHealthFromDatabase("baby-1");
+    expect(settled.map(entry => entry.id)).not.toContain("sensitive-entry");
+  });
+
+  it("bounds a bootstrap pass and resumes the remaining history on the next pull", async () => {
+    const timestamp = "2026-08-12T12:00:00.000Z";
+    for (let index = 0; index < 5_005; index += 1) {
+      serverRows.push({
+        id: `feeding-${index.toString().padStart(5, "0")}`,
+        baby_id: "baby-1",
+        type: "bottle",
+        started_at: timestamp,
+        created_at: timestamp,
+        updated_at: timestamp,
+        field_clocks: {},
+      });
+    }
+
+    const firstPass = await fetchFeedingsFromDatabase("baby-1");
+    expect(firstPass).toHaveLength(5_000);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({
+        updatedAt: timestamp,
+        id: "feeding-04999",
+        resumeExact: true,
+      })
+    );
+
+    const secondPass = await fetchFeedingsFromDatabase("baby-1");
+    expect(secondPass).toHaveLength(5_005);
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({ updatedAt: timestamp, id: "feeding-05004" })
+    );
+  });
+
+  it.each([
+    ["diapers", fetchDiapersFromDatabase, { type: "wet", changed_at: range.start }],
+    ["pumping_sessions", fetchPumpingFromDatabase, { side: "both", started_at: range.start }],
+    ["growth_measurements", fetchGrowthFromDatabase, { weight_kg: 8, measured_at: range.start }],
+    ["tummy_time_sessions", fetchTummyTimeFromDatabase, { started_at: range.start }],
+  ] as const)("rejects a malformed %s row without updated_at", async (_table, fetch, fields) => {
+    serverRows.push({
+      id: "malformed-row",
+      baby_id: "baby-1",
+      created_at: range.start,
+      field_clocks: {},
+      ...fields,
+    });
+
+    await expect(fetch("baby-1")).rejects.toThrow("missing a valid updated_at");
+  });
+
+  it("does not install a cursor when local persistence interrupts bootstrap", async () => {
+    serverRows.push({
+      id: "feeding-0001",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: range.start,
+      created_at: range.start,
+      updated_at: range.start,
+      field_clocks: {},
+    });
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      if (key === "@feedings:baby-1:user-1") throw new Error("disk full");
+      storage.set(key, value);
+    });
+
+    await expect(fetchFeedingsFromDatabase("baby-1")).rejects.toThrow("disk full");
+    expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(false);
+
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      storage.set(key, value);
+    });
+    await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
+    expect(storage.has("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(true);
+  });
+
+  it("keeps the collection but restarts bootstrap when cursor persistence fails", async () => {
+    serverRows.push({
+      id: "feeding-0001",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: range.start,
+      created_at: range.start,
+      updated_at: range.start,
+      field_clocks: {},
+    });
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    const cursorKey = "@activity_sync_cursor:feedings:baby-1:user-1";
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      if (key === cursorKey) throw new Error("cursor disk full");
+      storage.set(key, value);
+    });
+
+    await expect(fetchFeedingsFromDatabase("baby-1")).rejects.toThrow("cursor disk full");
+    expect(JSON.parse(storage.get("@feedings:baby-1:user-1")!)).toHaveLength(1);
+    expect(storage.has(cursorKey)).toBe(false);
+
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key: string, value: string) => {
+      storage.set(key, value);
+    });
+    await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
+    expect(storage.has(cursorKey)).toBe(true);
   });
 
   it("replaces only the requested interval while preserving queued local mutations", async () => {

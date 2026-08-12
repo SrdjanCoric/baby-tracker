@@ -38,6 +38,8 @@ import {
   releaseTimerLock,
   updateTimerData,
   queuePendingLockRelease,
+  getActiveTimerSnapshotForBaby,
+  type ActiveTimerLock as ServerActiveTimerLock,
 } from "@/services/active-timer-service";
 import {
   startTimerLiveActivity,
@@ -362,7 +364,7 @@ const FeedingContext = createContext<FeedingContextValue | null>(null);
 export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(feedingReducer, initialFeedingState);
   const { selectedBaby } = useBaby();
-  const { subscribeToRemoteChanges, foregroundRefreshKey } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
   const { refreshLocks } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
@@ -430,7 +432,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     async (
       feedings: StoredFeedingEntry[],
       bindingToken: BabyProviderBindingToken,
-      stopVersionAtStart: number
+      stopVersionAtStart: number,
+      timerSnapshot?: Promise<readonly ServerActiveTimerLock[]>
     ) => {
       if (!selectedBaby) return;
 
@@ -462,6 +465,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         dispatchAddRecord: (record) =>
           dispatch({ type: "ADD_FEEDING", payload: record }),
         errorLabel: "[FeedingContext]",
+        timerSnapshot,
       });
     },
     [
@@ -473,7 +477,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  const loadFeedings = useCallback(async () => {
+  const loadFeedings = useCallback(async (reportFailure = false) => {
+    let loadError: unknown;
     const bindingToken = beginBabyBinding(selectedBaby?.id ?? null);
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
     if (!selectedBaby) {
@@ -484,6 +489,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     }
 
     const stopVersionAtStart = stopVersionRef.current;
+    const timerSnapshot = user?.id && user.householdId
+      ? getActiveTimerSnapshotForBaby(selectedBaby.id)
+      : undefined;
+    void timerSnapshot?.catch(() => undefined);
     let bindingStatus: "ready" | "error" = "ready";
     dispatch({ type: "SET_LOADING", payload: true });
 
@@ -494,6 +503,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         try {
           feedings = await fetchFeedingsFromDatabase(selectedBaby.id);
         } catch (error) {
+          loadError = error;
           if (!isCurrentBinding()) return;
           console.error(
             "[FeedingContext] Failed to fetch from database, using local:",
@@ -513,8 +523,9 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       const suggestedSide = computeSuggestedSide(feedings);
       dispatch({ type: "SET_LAST_BREAST_SIDE", payload: suggestedSide });
 
-      await restoreFeedingTimer(feedings, bindingToken, stopVersionAtStart);
+      await restoreFeedingTimer(feedings, bindingToken, stopVersionAtStart, timerSnapshot);
     } catch (error) {
+      loadError = error;
       if (!isCurrentBinding()) return;
       bindingStatus = "error";
       console.error("[FeedingContext] Failed to load feedings:", error);
@@ -524,6 +535,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         finishBabyBinding(bindingToken, bindingStatus);
       }
     }
+    if (reportFailure && loadError) throw loadError;
   }, [
     beginBabyBinding,
     finishBabyBinding,
@@ -531,11 +543,17 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     restoreFeedingTimer,
     selectedBaby,
     user?.householdId,
+    user?.id,
   ]);
 
   useEffect(() => {
-    loadFeedings();
-  }, [loadFeedings, foregroundRefreshKey]);
+    void loadFeedings();
+  }, [loadFeedings]);
+
+  useEffect(
+    () => registerForegroundRefreshLoader?.("feedings", () => loadFeedings(true)),
+    [loadFeedings, registerForegroundRefreshLoader]
+  );
 
   const startBreastfeeding = useCallback(
     async (
