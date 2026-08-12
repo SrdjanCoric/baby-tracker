@@ -315,6 +315,10 @@ async function commitPulledRecentCollection<T extends { id: string }>(
   return withStorageLock(scope.key, async () => {
     assertActivityPullScope(scope);
     const pendingOperations = await getPendingEntityOperations(scope.engine, table);
+    const hasDeferredTombstone = [...tombstonedIds].some((id) => {
+      const pendingType = pendingOperations.get(id);
+      return pendingType !== undefined && pendingType !== "DELETE";
+    });
     assertActivityPullScope(scope);
     const localData = await AsyncStorage.getItem(scope.key);
     assertActivityPullScope(scope);
@@ -342,7 +346,7 @@ async function commitPulledRecentCollection<T extends { id: string }>(
     const entries = [...entriesById.values()];
     assertActivityPullScope(scope);
     await AsyncStorage.setItem(scope.key, JSON.stringify(entries));
-    await afterCommit?.();
+    if (!hasDeferredTombstone) await afterCommit?.();
     assertActivityPullScope(scope);
     return entries;
   });

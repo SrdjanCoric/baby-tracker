@@ -326,6 +326,54 @@ describe("activity range sync", () => {
     );
   });
 
+  it("revisits a tombstone skipped for a pending local edit", async () => {
+    storage.set("@health:baby-1:user-1", JSON.stringify([{
+      id: "sensitive-entry",
+      babyId: "baby-1",
+      type: "note",
+      loggedAt: "2026-08-12T09:00:00.000Z",
+      notes: "private note",
+      createdAt: "2026-08-12T09:00:00.000Z",
+      updatedAt: "2026-08-12T09:00:00.000Z",
+    }]));
+    const initialCursor = JSON.stringify({
+      updatedAt: "2026-08-12T09:00:00.000Z",
+      id: "prior-entry",
+    });
+    storage.set("@activity_sync_cursor:health_entries:baby-1:user-1", initialCursor);
+    pendingOperations.set("sensitive-entry", "UPDATE");
+    serverRows.push(
+      {
+        id: "sensitive-entry",
+        baby_id: "baby-1",
+        type: "note",
+        logged_at: "2026-08-12T09:00:00.000Z",
+        created_at: "2026-08-12T09:00:00.000Z",
+        updated_at: "2026-08-12T10:00:00.000Z",
+        deleted: true,
+        field_clocks: { deleted: "2026-08-12T10:00:00.000Z-0000-remote" },
+      },
+      {
+        id: "later-entry",
+        baby_id: "baby-1",
+        type: "temperature",
+        logged_at: "2026-08-12T11:00:00.000Z",
+        temperature_celsius: 37,
+        created_at: "2026-08-12T11:00:00.000Z",
+        updated_at: "2026-08-12T11:00:00.000Z",
+        field_clocks: {},
+      }
+    );
+
+    const pending = await fetchHealthFromDatabase("baby-1");
+    expect(pending.map(entry => entry.id)).toContain("sensitive-entry");
+    expect(storage.get("@activity_sync_cursor:health_entries:baby-1:user-1")).toBe(initialCursor);
+
+    pendingOperations.clear();
+    const settled = await fetchHealthFromDatabase("baby-1");
+    expect(settled.map(entry => entry.id)).not.toContain("sensitive-entry");
+  });
+
   it("does not install a cursor when local persistence interrupts bootstrap", async () => {
     serverRows.push({
       id: "feeding-0001",
