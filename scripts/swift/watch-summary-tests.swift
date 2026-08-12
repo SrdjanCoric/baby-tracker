@@ -559,6 +559,72 @@ enum WatchSummaryTests {
             "timer preservation retained stale server-owned summary fields"
         )
 
+        let stoppedOfflineStore = TestWatchSummaryStore()
+        stoppedOfflineStore.bytesByScope[identity.cacheKey] = offlineLocal
+        let stoppedOfflineReader = TestWatchIdentityReader()
+        stoppedOfflineReader.identity = identity
+        let stoppedOfflineResponse = try versionedWatchFixture(
+            versioned,
+            timer: nil,
+            serverAsOf: "2026-08-08T10:07:00.000Z"
+        )
+        let stoppedOfflineCoordinator = WatchSummaryCoordinator(
+            store: stoppedOfflineStore,
+            identityReader: stoppedOfflineReader,
+            fetcher: TestWatchSummaryFetcher(response: stoppedOfflineResponse),
+            reload: {}
+        )
+        await stoppedOfflineCoordinator.recordOverlay(WatchOptimisticOverlay(
+            accountId: identity.accountId,
+            babyId: identity.babyId,
+            requestId: "request-stop-offline",
+            timerInstanceId: "offline-timer",
+            activityId: "offline-activity",
+            activityType: "sleep",
+            action: .stop,
+            requestedAt: "2026-08-08T10:06:00.000Z"
+        ))
+
+        let stoppedOfflineResult = await stoppedOfflineCoordinator.refresh(trigger: .postAction)
+
+        requireWatch(
+            stoppedOfflineResult?.activeTimers?.isEmpty == true,
+            "pending Watch stop resurrected an offline timer omitted by the server"
+        )
+
+        let singleShotStore = TestWatchSummaryStore()
+        singleShotStore.bytesByScope[identity.cacheKey] = offlineLocal
+        let singleShotReader = TestWatchIdentityReader()
+        singleShotReader.identity = identity
+        let singleShotFetcher = TestWatchSummaryFetcher(response: stoppedOfflineResponse)
+        let singleShotCoordinator = WatchSummaryCoordinator(
+            store: singleShotStore,
+            identityReader: singleShotReader,
+            fetcher: singleShotFetcher,
+            reload: {}
+        )
+
+        let firstOfflineMerge = await singleShotCoordinator.refresh(trigger: .activation)
+        requireWatch(
+            firstOfflineMerge?.activeTimers?.first?.timerInstanceId == "offline-timer",
+            "offline provenance did not preserve the timer for one server refresh"
+        )
+        requireWatch(
+            firstOfflineMerge?.activeTimers?.first?.lockState == nil,
+            "merged Watch cache retained reusable offline provenance"
+        )
+
+        singleShotFetcher.response = try versionedWatchFixture(
+            versioned,
+            timer: nil,
+            serverAsOf: "2026-08-08T10:08:00.000Z"
+        )
+        let secondOfflineMerge = await singleShotCoordinator.refresh(trigger: .activation)
+        requireWatch(
+            secondOfflineMerge?.activeTimers?.isEmpty == true,
+            "offline timer was resurrected after its one preservation opportunity"
+        )
+
         var ownedLocalObject = try JSONSerialization.jsonObject(with: offlineLocal) as! [String: Any]
         var ownedLocalTimer = ownedLocalObject["activeTimer"] as! [String: Any]
         ownedLocalTimer["lockState"] = "owned"

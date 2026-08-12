@@ -613,7 +613,8 @@ actor WatchSummaryCoordinator {
             let installed = try mergeNetworkResponse(
                 response,
                 responseBytes: responseBytes,
-                with: current
+                with: current,
+                identity: identity
             )
             if installed.bytes != currentBytes {
                 try store.writeSummary(installed.bytes, for: identity)
@@ -650,7 +651,8 @@ actor WatchSummaryCoordinator {
             let installed = try mergeNetworkResponse(
                 response,
                 responseBytes: responseBytes,
-                with: current
+                with: current,
+                identity: identity
             )
             if installed.bytes != currentBytes {
                 try store.writeSummary(installed.bytes, for: identity)
@@ -736,7 +738,8 @@ actor WatchSummaryCoordinator {
                 guard let merged = try? mergeNetworkResponse(
                     prior,
                     responseBytes: priorBytes,
-                    with: candidate.data
+                    with: candidate.data,
+                    identity: identity
                 ) else {
                     return prior
                 }
@@ -779,13 +782,23 @@ actor WatchSummaryCoordinator {
         let preservedLocal: Bool
     }
 
+    private struct TimerIdentity: Hashable {
+        let type: String
+        let instanceId: String?
+    }
+
     private func mergeNetworkResponse(
         _ response: WatchSummaryData,
         responseBytes: Data,
-        with prior: WatchSummaryData?
+        with prior: WatchSummaryData?,
+        identity: WatchSummaryIdentity
     ) throws -> (data: WatchSummaryData, bytes: Data) {
         var merged = response
-        let mergeResult = mergeTimers(prior: prior, into: response)
+        let mergeResult = mergeTimers(
+            prior: prior,
+            into: response,
+            excluding: pendingStopTimers(for: identity)
+        )
         merged.activeTimers = mergeResult.list
         merged.activeTimer = mergeResult.list.first
         merged.activities.sleep.isActive = mergeResult.list.contains { $0.type == "sleep" }
@@ -800,7 +813,8 @@ actor WatchSummaryCoordinator {
 
     private func mergeTimers(
         prior: WatchSummaryData?,
-        into response: WatchSummaryData
+        into response: WatchSummaryData,
+        excluding stoppedTimers: Set<TimerIdentity>
     ) -> TimerMergeResult {
         var result = response.activeTimers ?? []
         var presentTypes = Set(result.map(\.type))
@@ -809,9 +823,15 @@ actor WatchSummaryCoordinator {
         var preservedLocal = false
         for priorTimer in prior?.activeTimers ?? [] {
             if presentTypes.contains(priorTimer.type) { continue }
+            if stoppedTimers.contains(TimerIdentity(
+                type: priorTimer.type,
+                instanceId: priorTimer.timerInstanceId
+            )) { continue }
             if priorTimer.isRemote == true { continue }
             if priorTimer.lockState == "accountless" || priorTimer.lockState == "offline" {
-                result.append(priorTimer)
+                var singleShotTimer = priorTimer
+                singleShotTimer.lockState = nil
+                result.append(singleShotTimer)
                 presentTypes.insert(priorTimer.type)
                 preservedLocal = true
                 continue
@@ -823,6 +843,14 @@ actor WatchSummaryCoordinator {
             }
         }
         return TimerMergeResult(list: result, preservedLocal: preservedLocal)
+    }
+
+    private func pendingStopTimers(for identity: WatchSummaryIdentity) -> Set<TimerIdentity> {
+        loadOverlaysIfNeeded(for: identity)
+        return Set((overlaysByScope[identity.cacheKey] ?? []).compactMap { overlay in
+            guard overlay.action == .stop else { return nil }
+            return TimerIdentity(type: overlay.activityType, instanceId: overlay.timerInstanceId)
+        })
     }
 
     private func fetchCoalesced(for identity: WatchSummaryIdentity) async throws -> Data {
