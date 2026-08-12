@@ -72,6 +72,16 @@ function overlapActivityCursor(cursor: ActivitySyncCursor): ActivitySyncCursor {
   };
 }
 
+function requireActivityUpdatedAt(
+  table: ActivityCursorTable,
+  row: Record<string, unknown>
+): string {
+  if (typeof row.updated_at !== "string" || row.updated_at.length === 0) {
+    throw new Error(`${table} row is missing a valid updated_at`);
+  }
+  return row.updated_at;
+}
+
 function activityCursorKey(
   table: ActivityCursorTable,
   babyId: string,
@@ -138,10 +148,11 @@ async function fetchActivityCursorRows(
     }
 
     const page = (data || []) as Record<string, unknown>[];
+    for (const row of page) requireActivityUpdatedAt(table, row);
     rows.push(...page);
     if (page.length === 0) break;
     const last = page[page.length - 1];
-    pageCursor = { updatedAt: last.updated_at as string, id: last.id as string };
+    pageCursor = { updatedAt: requireActivityUpdatedAt(table, last), id: last.id as string };
     if (rows.length >= ACTIVITY_CURSOR_PASS_LIMIT) {
       hitPassLimit = true;
       break;
@@ -1090,7 +1101,7 @@ function transformDiaperFromDb(data: Record<string, unknown>): StoredDiaperEntry
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: data.updated_at as string,
+    updatedAt: requireActivityUpdatedAt("diapers", data),
   };
 }
 
@@ -1411,7 +1422,7 @@ function transformPumpingFromDb(data: Record<string, unknown>): StoredPumpingEnt
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: data.updated_at as string,
+    updatedAt: requireActivityUpdatedAt("pumping_sessions", data),
   };
 }
 
@@ -1549,7 +1560,7 @@ function transformGrowthFromDb(data: Record<string, unknown>): StoredGrowthEntry
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: data.updated_at as string,
+    updatedAt: requireActivityUpdatedAt("growth_measurements", data),
   };
 }
 
@@ -1696,7 +1707,7 @@ function transformTummyTimeFromDb(data: Record<string, unknown>): StoredTummyTim
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
-    updatedAt: data.updated_at as string,
+    updatedAt: requireActivityUpdatedAt("tummy_time_sessions", data),
   };
 }
 

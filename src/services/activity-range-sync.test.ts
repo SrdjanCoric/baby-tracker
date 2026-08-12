@@ -405,6 +405,23 @@ describe("activity range sync", () => {
     );
   });
 
+  it.each([
+    ["diapers", fetchDiapersFromDatabase, { type: "wet", changed_at: range.start }],
+    ["pumping_sessions", fetchPumpingFromDatabase, { side: "both", started_at: range.start }],
+    ["growth_measurements", fetchGrowthFromDatabase, { weight_kg: 8, measured_at: range.start }],
+    ["tummy_time_sessions", fetchTummyTimeFromDatabase, { started_at: range.start }],
+  ] as const)("rejects a malformed %s row without updated_at", async (_table, fetch, fields) => {
+    serverRows.push({
+      id: "malformed-row",
+      baby_id: "baby-1",
+      created_at: range.start,
+      field_clocks: {},
+      ...fields,
+    });
+
+    await expect(fetch("baby-1")).rejects.toThrow("missing a valid updated_at");
+  });
+
   it("does not install a cursor when local persistence interrupts bootstrap", async () => {
     serverRows.push({
       id: "feeding-0001",
