@@ -57,12 +57,21 @@ let lastContext: WatchPayload | null = null;
 let languageAwaitingWatch = false;
 const WATCH_SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
 
-function watchSessionNeedsRefresh(capsuleJson: string | null): boolean {
-  if (!capsuleJson) return true;
+function parseWatchSession(capsuleJson: string | null): Record<string, unknown> | null {
+  if (!capsuleJson) return null;
   try {
     const capsule = JSON.parse(capsuleJson) as Record<string, unknown>;
-    if (typeof capsule.session !== "string") return true;
-    const session = JSON.parse(capsule.session) as Record<string, unknown>;
+    if (typeof capsule.session !== "string") return null;
+    return JSON.parse(capsule.session) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function watchSessionNeedsRefresh(capsuleJson: string | null): boolean {
+  const session = parseWatchSession(capsuleJson);
+  if (!session) return true;
+  try {
     if (typeof session.expires_at !== "number" || !Number.isFinite(session.expires_at)) {
       return true;
     }
@@ -147,12 +156,29 @@ export async function refreshWatchCredentialsFromPhone(
   if (!module || !bridge) return false;
 
   const persistedContext = lastContext ?? await module.getApplicationContext() ?? {};
+  if (persistedContext.signedOut === true) return false;
+  if (
+    typeof persistedContext.supabaseUrl !== "string" || !persistedContext.supabaseUrl ||
+    typeof persistedContext.supabaseAnonKey !== "string" || !persistedContext.supabaseAnonKey ||
+    typeof persistedContext.userId !== "string" || !persistedContext.userId
+  ) {
+    return false;
+  }
   let sessionCapsule = await bridge.readSession();
   if (watchSessionNeedsRefresh(sessionCapsule)) {
     await refreshSession();
     sessionCapsule = await bridge.readSession();
   }
   if (!sessionCapsule) return false;
+
+  const session = parseWatchSession(sessionCapsule);
+  const sessionUser = session?.user;
+  const sessionUserId = sessionUser && typeof sessionUser === "object"
+    ? (sessionUser as Record<string, unknown>).id
+    : null;
+  if (typeof sessionUserId !== "string" || persistedContext.userId !== sessionUserId) {
+    return false;
+  }
 
   const context = { ...persistedContext, sessionCapsule };
   lastContext = context;
