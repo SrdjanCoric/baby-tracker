@@ -13,6 +13,11 @@ const appSupabaseModule = read(
 );
 const appJson = read("../../../app.json");
 const widgetTargetConfig = read("../../../targets/widget/expo-target.config.js");
+const watchIndex = read("../../../targets/watch/index.swift");
+const watchAdapters = read("../../../targets/watch/WatchSupabaseSessionAdapters.swift");
+const watchSummary = read("../../../targets/watch/WatchActivitySummary.swift");
+const watchService = read("../../../src/services/watch-service.ts");
+const watchTargetConfig = read("../../../targets/watch/expo-target.config.js");
 
 describe("shared Supabase session credential storage", () => {
   it("does not publish a NEW access token from the app into the Widget App Group (legacy read fallback is bounded to one release)", () => {
@@ -81,5 +86,33 @@ describe("shared Supabase session credential storage", () => {
       expect(source).toContain("flock");
       expect(source).toContain("forSecurityApplicationGroupIdentifier");
     }
+  });
+});
+
+describe("Watch renewable Supabase session", () => {
+  it("never reads or writes the deprecated Watch UserDefaults bearer", () => {
+    expect(watchIndex).not.toContain('string(forKey: "watchSupabaseAccessToken")');
+    expect(watchIndex).not.toContain('set(token, forKey: "watchSupabaseAccessToken")');
+    expect(watchIndex).toContain("WatchLegacyCredentialPurger.purge");
+    expect(watchSummary).toContain('removeObject(forKey: "watchSupabaseAccessToken")');
+    expect(watchService).not.toContain("context.accessToken");
+    expect(watchService).toContain("context.sessionCapsule");
+    expect(watchIndex).toContain('context["sessionCapsule"]');
+    expect(watchIndex).toContain("vault.install(capsuleJson: sessionCapsule)");
+  });
+
+  it("stores the renewable capsule in Watch-local Keychain", () => {
+    expect(watchTargetConfig).toContain('"Security"');
+    expect(watchAdapters).toContain("kSecClassGenericPassword");
+    expect(watchAdapters).toContain("kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly");
+    expect(watchAdapters).not.toContain("kSecAttrAccessGroup");
+    expect(watchAdapters).not.toContain("kSecAttrSynchronizable");
+  });
+
+  it("routes every authenticated Watch request through the renewing transport", () => {
+    expect(watchIndex).not.toContain("URLSession.shared.data(for:");
+    expect(watchIndex.match(/supabaseTransport\.send/g)).toHaveLength(2);
+    expect(watchIndex.match(/sendSupabaseRequest\(config: config\)/g)).toHaveLength(6);
+    expect(watchIndex.match(/forHTTPHeaderField: "Authorization"/g)).toHaveLength(7);
   });
 });

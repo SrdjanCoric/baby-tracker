@@ -372,6 +372,107 @@ enum WatchAccountCachePurger {
     }
 }
 
+enum WatchLegacyCredentialPurger {
+    static func purge(from defaults: UserDefaults) {
+        defaults.removeObject(forKey: "watchSupabaseAccessToken")
+    }
+}
+
+enum WatchAccountScopeInstaller {
+    static func install(
+        accountId: String,
+        householdId: String?,
+        in defaults: UserDefaults
+    ) -> Bool {
+        let storedAccountId = defaults.string(forKey: "watchSupabaseUserId")
+        let storedHouseholdId = defaults.string(forKey: "watchHouseholdId")
+        let scopeChanged = (storedAccountId != nil && storedAccountId != accountId) ||
+            (storedHouseholdId != nil && storedHouseholdId != householdId)
+        if scopeChanged {
+            WatchAccountCachePurger.purge(from: defaults)
+        }
+        defaults.set(accountId, forKey: "watchSupabaseUserId")
+        if let householdId {
+            defaults.set(householdId, forKey: "watchHouseholdId")
+        } else {
+            defaults.removeObject(forKey: "watchHouseholdId")
+        }
+        return scopeChanged
+    }
+}
+
+enum WatchNetworkCredentialPolicy {
+    static func canRequest(
+        hasConfig: Bool,
+        hasUser: Bool,
+        hasSession: Bool,
+        isStale: Bool
+    ) -> Bool {
+        hasConfig && hasUser && hasSession && !isStale
+    }
+}
+
+enum WatchNetworkPollingPolicy {
+    static func interval(isPhoneReachable: Bool) -> TimeInterval {
+        isPhoneReachable ? 600 : 120
+    }
+}
+
+enum WatchAuthenticatedRequestCoordinator {
+    static func send<Response>(
+        perform: () async throws -> (Int, Response),
+        recoverUnauthorized: () async -> Void
+    ) async rethrows -> (Int, Response) {
+        let result = try await perform()
+        if result.0 == 401 {
+            await recoverUnauthorized()
+        }
+        return result
+    }
+}
+
+enum WatchCredentialContextPolicy {
+    static func shouldMarkStale(
+        hasIncomingCapsule: Bool,
+        hasStoredSession: Bool
+    ) -> Bool {
+        !hasIncomingCapsule && !hasStoredSession
+    }
+
+    static func shouldRemoveStoredSession(
+        scopeChanged: Bool,
+        hasIncomingCapsule: Bool
+    ) -> Bool {
+        scopeChanged && hasIncomingCapsule
+    }
+}
+
+enum WatchCredentialContextInstaller {
+    static func install(
+        supabaseUrl: String,
+        anonKey: String,
+        accountId: String,
+        householdId: String?,
+        in defaults: UserDefaults,
+        installCapsule: () throws -> Void
+    ) -> Bool {
+        defaults.set(supabaseUrl, forKey: "watchSupabaseUrl")
+        defaults.set(anonKey, forKey: "watchSupabaseAnonKey")
+        defaults.set(accountId, forKey: "watchSupabaseUserId")
+        if let householdId {
+            defaults.set(householdId, forKey: "watchHouseholdId")
+        } else {
+            defaults.removeObject(forKey: "watchHouseholdId")
+        }
+        do {
+            try installCapsule()
+            return true
+        } catch {
+            return false
+        }
+    }
+}
+
 enum WatchLegacyCacheOwnership {
     private static let key = "watchLegacyCacheAccountId"
 

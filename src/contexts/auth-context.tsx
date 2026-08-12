@@ -252,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await clearSyncData();
           await clearWidgetData();
           // Keep the expired token out of any later language republish.
-          clearWatchContext();
+          await clearWatchContext();
         }
         return;
       }
@@ -425,12 +425,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async (options?: { preserveGuestData?: boolean }) => {
     const { error } = await supabase.auth.signOut();
+    await clearWatchContext();
     if (error) return { error };
     await clearAppStorage(options?.preserveGuestData ?? false);
     await clearSyncData();
     await clearWidgetData();
-    // The cached watch context holds this session's access token.
-    clearWatchContext();
     setStorageUserId(null);
     return { error: null };
   }, []);

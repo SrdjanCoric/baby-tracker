@@ -1,15 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
+const getApplicationContext = vi.fn(async () => null);
 const appGroupStorage = new Map<string, string>();
 const reloadWidget = vi.fn(async () => undefined);
 const setExtensionValue = vi.fn(async (key: string, value: string) => {
   appGroupStorage.set(key, value);
 });
+const sharedSessionCapsule = JSON.stringify({
+  version: 1,
+  revision: 4,
+  lineage: "session-lineage",
+  session: JSON.stringify({
+    access_token: "access-token",
+    refresh_token: "refresh-token",
+  }),
+});
 
-vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+vi.mock("react-native", () => ({
+  NativeModules: {
+    SharedSupabaseSession: {
+      readSession: vi.fn(async () => sharedSessionCapsule),
+    },
+  },
+  Platform: { OS: "ios" },
+}));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
+  getApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
   getIsWatchAppInstalled: vi.fn(async () => true),
@@ -42,6 +60,7 @@ describe("native language publishing", () => {
   beforeEach(() => {
     appGroupStorage.clear();
     updateApplicationContext.mockClear();
+    getApplicationContext.mockClear();
     reloadWidget.mockClear();
     setExtensionValue.mockClear();
   });
@@ -70,7 +89,10 @@ describe("native language publishing", () => {
 
     expect(updateApplicationContext).toHaveBeenCalledTimes(1);
     expect(updateApplicationContext.mock.calls[0][0]).toEqual(
-      expect.objectContaining({ language: "de", accessToken: "access-token" })
+      expect.objectContaining({
+        language: "de",
+        sessionCapsule: sharedSessionCapsule,
+      })
     );
   });
 

@@ -362,7 +362,7 @@ describe("useWatchMessageHandler", () => {
     expect(duplicateReply).toHaveBeenCalledWith({ widgetData: "same-response" });
   });
 
-  it("does not leave a reply-less requestSync permanently pending", async () => {
+  it("deduplicates a reply-less requestSync when its reply-bearing copy arrives", async () => {
     mockOnRequestSync.mockImplementation((replyHandler) => {
       replyHandler?.({ widgetData: "fresh-response" });
     });
@@ -377,8 +377,24 @@ describe("useWatchMessageHandler", () => {
     sendMessage(message, laterReply);
 
     await waitFor(() => {
-      expect(mockOnRequestSync).toHaveBeenCalledTimes(2);
-      expect(laterReply).toHaveBeenCalledWith({ widgetData: "fresh-response" });
+      expect(mockOnRequestSync).toHaveBeenCalledTimes(1);
+      expect(laterReply).toHaveBeenCalledWith({ success: true });
+    });
+  });
+
+  it("reports a phone-side credential refresh failure to the Watch", async () => {
+    mockOnRequestSync.mockRejectedValue(new Error("refresh failed"));
+    render(<TestHarness />);
+    await waitFor(() => expect(registeredHandler).not.toBeNull());
+
+    const reply = jest.fn();
+    sendMessage(
+      { action: "requestSync", babyId: "baby-a", requestId: "failed-refresh" },
+      reply
+    );
+
+    await waitFor(() => {
+      expect(reply).toHaveBeenCalledWith({ success: false, error: "action-failed" });
     });
   });
 

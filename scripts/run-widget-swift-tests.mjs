@@ -13,6 +13,7 @@ const moduleCache = join(buildDirectory, "module-cache");
 const executable = join(buildDirectory, "widget-snapshot-tests");
 const watchExecutable = join(buildDirectory, "watch-summary-tests");
 const sharedSessionExecutable = join(buildDirectory, "shared-supabase-session-tests");
+const watchSessionExecutable = join(buildDirectory, "watch-supabase-session-tests");
 const swiftEnvironment = {
   ...process.env,
   CLANG_MODULE_CACHE_PATH: moduleCache,
@@ -26,6 +27,14 @@ const widgetProductionSources = [
   "targets/widget/SharedSupabaseSessionAdapters.swift",
   "targets/widget/WidgetActivitySnapshot.swift",
   "targets/widget/index.swift",
+];
+
+const watchProductionSources = [
+  "targets/watch/GeneratedStrings.swift",
+  "targets/watch/WatchActivitySummary.swift",
+  "targets/watch/WatchSupabaseSession.swift",
+  "targets/watch/WatchSupabaseSessionAdapters.swift",
+  "targets/watch/index.swift",
 ];
 
 function typecheckWidgetProductionSources() {
@@ -69,10 +78,53 @@ function typecheckWidgetProductionSources() {
   console.log("PASS: Widget production Swift typecheck");
 }
 
+function typecheckWatchProductionSources() {
+  if (process.platform !== "darwin") {
+    console.log("SKIP: Watch production Swift typecheck requires macOS/Xcode");
+    return;
+  }
+
+  const sdkPath = execFileSync(
+    "xcrun",
+    ["--sdk", "watchos", "--show-sdk-path"],
+    { cwd: root, encoding: "utf8" }
+  ).trim();
+  execFileSync(
+    "xcrun",
+    [
+      "--sdk",
+      "watchos",
+      "swiftc",
+      "-typecheck",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-module-name",
+      "SofiBabyWatch",
+      "-target",
+      "arm64-apple-watchos10.0",
+      "-sdk",
+      sdkPath,
+      "-module-cache-path",
+      moduleCache,
+      "-Xfrontend",
+      "-disable-sandbox",
+      ...watchProductionSources,
+    ],
+    {
+      cwd: root,
+      env: swiftEnvironment,
+      stdio: "inherit",
+    }
+  );
+  console.log("PASS: Watch production Swift typecheck");
+}
+
 mkdirSync(moduleCache);
 
 try {
   typecheckWidgetProductionSources();
+  typecheckWatchProductionSources();
   execFileSync(
     "swiftc",
     [
@@ -108,6 +160,25 @@ try {
     }
   );
   execFileSync(sharedSessionExecutable, [], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  execFileSync(
+    "swiftc",
+    [
+      "-parse-as-library",
+      "targets/watch/WatchSupabaseSession.swift",
+      "scripts/swift/watch-supabase-session-tests.swift",
+      "-o",
+      watchSessionExecutable,
+    ],
+    {
+      cwd: root,
+      env: swiftEnvironment,
+      stdio: "inherit",
+    }
+  );
+  execFileSync(watchSessionExecutable, [], {
     cwd: root,
     stdio: "inherit",
   });

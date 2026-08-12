@@ -1,10 +1,12 @@
 import { Platform } from "react-native";
 import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
+import { loadSharedSupabaseSessionBridge } from "./shared-supabase-session-native";
 
 type WatchPayload = Record<string, unknown>;
 
 interface WatchConnectivityModule {
   updateApplicationContext: (context: WatchPayload) => void;
+  getApplicationContext: () => Promise<WatchPayload | null>;
   sendMessage: (
     message: WatchPayload,
     replyCb?: (reply: WatchPayload) => void,
@@ -30,6 +32,7 @@ async function getWatchConnectivityModule(): Promise<WatchConnectivityModule | n
     if (connectivity?.updateApplicationContext && connectivity?.sendMessage) {
       watchModule = {
         updateApplicationContext: connectivity.updateApplicationContext,
+        getApplicationContext: connectivity.getApplicationContext,
         sendMessage: connectivity.sendMessage,
         getReachability: connectivity.getReachability,
         getIsWatchAppInstalled: connectivity.getIsWatchAppInstalled,
@@ -52,6 +55,31 @@ let currentLanguage: string | null = null;
 let lastContext: WatchPayload | null = null;
 
 let languageAwaitingWatch = false;
+const WATCH_SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
+
+function parseWatchSession(capsuleJson: string | null): Record<string, unknown> | null {
+  if (!capsuleJson) return null;
+  try {
+    const capsule = JSON.parse(capsuleJson) as Record<string, unknown>;
+    if (typeof capsule.session !== "string") return null;
+    return JSON.parse(capsule.session) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function watchSessionNeedsRefresh(capsuleJson: string | null): boolean {
+  const session = parseWatchSession(capsuleJson);
+  if (!session) return true;
+  try {
+    if (typeof session.expires_at !== "number" || !Number.isFinite(session.expires_at)) {
+      return true;
+    }
+    return session.expires_at * 1000 <= Date.now() + WATCH_SESSION_REFRESH_WINDOW_MS;
+  } catch {
+    return true;
+  }
+}
 
 export async function setWatchLanguage(language: string): Promise<void> {
   currentLanguage = language;
@@ -91,15 +119,16 @@ async function watchCanReceive(module: WatchConnectivityModule): Promise<boolean
 /**
  * Forget the cached application context.
  *
- * The cache holds the signed-in session's access token so a language change can
- * republish it instead of erasing it. Once the session ends that token must not
+ * The cache holds the signed-in session capsule so a language change can
+ * republish it instead of erasing it. Once the session ends that capsule must not
  * be sent again: on a shared device the next caregiver changing language would
  * otherwise hand the Watch the previous account's still-valid credentials, and
  * the Watch treats any received credentials as fresh.
  */
-export function clearWatchContext(): void {
+export async function clearWatchContext(): Promise<void> {
   lastContext = null;
-  watchModule?.updateApplicationContext({ signedOut: true });
+  const module = await getWatchConnectivityModule();
+  module?.updateApplicationContext({ signedOut: true });
 }
 
 async function publishApplicationContext(context: WatchPayload): Promise<void> {
@@ -110,6 +139,53 @@ async function publishApplicationContext(context: WatchPayload): Promise<void> {
 
   lastContext = context;
   module.updateApplicationContext(context);
+}
+
+/**
+ * Refresh the phone-owned Supabase session and republish its latest capsule.
+ *
+ * WatchConnectivity can wake the companion app without mounting the normal UI,
+ * so restore the last system-persisted application context instead of relying
+ * only on this module's process-local cache.
+ */
+export async function refreshWatchCredentialsFromPhone(
+  refreshSession: () => Promise<void>
+): Promise<boolean> {
+  const module = await getWatchConnectivityModule();
+  const bridge = loadSharedSupabaseSessionBridge();
+  if (!module || !bridge) return false;
+
+  // A widget update published without an auth context overwrites the cache with a
+  // credential-less payload, so fall back to the system-persisted context.
+  const persistedContext = (lastContext?.userId ? lastContext : await module.getApplicationContext()) ?? {};
+  if (persistedContext.signedOut === true) return false;
+  if (
+    typeof persistedContext.supabaseUrl !== "string" || !persistedContext.supabaseUrl ||
+    typeof persistedContext.supabaseAnonKey !== "string" || !persistedContext.supabaseAnonKey ||
+    typeof persistedContext.userId !== "string" || !persistedContext.userId
+  ) {
+    return false;
+  }
+  let sessionCapsule = await bridge.readSession();
+  if (watchSessionNeedsRefresh(sessionCapsule)) {
+    await refreshSession();
+    sessionCapsule = await bridge.readSession();
+  }
+  if (!sessionCapsule) return false;
+
+  const session = parseWatchSession(sessionCapsule);
+  const sessionUser = session?.user;
+  const sessionUserId = sessionUser && typeof sessionUser === "object"
+    ? (sessionUser as Record<string, unknown>).id
+    : null;
+  if (typeof sessionUserId !== "string" || persistedContext.userId !== sessionUserId) {
+    return false;
+  }
+
+  const context = { ...persistedContext, sessionCapsule };
+  lastContext = context;
+  module.updateApplicationContext(context);
+  return true;
 }
 
 export async function syncToWatch(data: WidgetData, watchData?: WatchData, authContext?: WatchAuthContext): Promise<void> {
@@ -134,8 +210,11 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     if (authContext) {
       context.supabaseUrl = authContext.supabaseUrl;
       context.supabaseAnonKey = authContext.supabaseAnonKey;
-      context.accessToken = authContext.accessToken;
       context.userId = authContext.userId;
+      const sessionCapsule = await loadSharedSupabaseSessionBridge()?.readSession();
+      if (sessionCapsule) {
+        context.sessionCapsule = sessionCapsule;
+      }
       if (authContext.householdId) {
         context.householdId = authContext.householdId;
       }

@@ -25,7 +25,10 @@ import { useWidgetPauseHandler } from "@/hooks/useWidgetPauseHandler";
 import { useGlobalTimerAlerts } from "@/hooks/useGlobalTimerAlerts";
 import { useStoreReview } from "@/hooks/useStoreReview";
 import { useWatchMessageHandler } from "@/hooks/useWatchMessageHandler";
-import { startWatchMessageListening } from "@/services/watch-service";
+import {
+  refreshWatchCredentialsFromPhone,
+  startWatchMessageListening,
+} from "@/services/watch-service";
 import {
   appendExternalTimerCommand,
   createRoutedExternalTimerCommand,
@@ -140,13 +143,24 @@ function StoreReviewHandler({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function WatchMessageHandler({ children }: { children: React.ReactNode }) {
+export function WatchMessageHandler({ children }: { children: React.ReactNode }) {
   const { getWidgetDataJson } = useWidget();
   const { registerHandler } = useWatchMessageHandler({
-    onRequestSync: (replyHandler) => {
+    onRequestSync: async (replyHandler) => {
       const json = getWidgetDataJson();
       if (replyHandler && json) {
         replyHandler({ widgetData: json });
+      }
+      try {
+        await refreshWatchCredentialsFromPhone(async () => {
+          const { error } = await supabase.auth.refreshSession();
+          if (error) throw error;
+        });
+      } catch (error) {
+        console.warn(
+          "[WatchMessageHandler] Credential refresh failed during data sync:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     },
   });

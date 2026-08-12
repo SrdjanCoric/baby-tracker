@@ -30,7 +30,7 @@ const WATCH_ACTIONS = new Set([
 ]);
 
 interface UseWatchMessageHandlerOptions {
-  onRequestSync?: (replyHandler?: WatchReplyHandler) => void;
+  onRequestSync?: (replyHandler?: WatchReplyHandler) => void | Promise<void>;
   onSelectBabyRequest?: (babyId: string) => void;
 }
 
@@ -143,8 +143,8 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
         switch (action) {
           case "requestSync":
             if (onRequestSync) {
-              onRequestSync(replyHandler);
-              return null;
+              await onRequestSync(replyHandler);
+              return replyHandler ? null : { success: true };
             }
             return { success: true };
 
@@ -583,7 +583,7 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       }
 
       const requestId = typeof message.requestId === "string" ? message.requestId : undefined;
-      const requestKey = requestId && (action !== "requestSync" || replyHandler)
+      const requestKey = requestId
         ? `${authScope}\u0000${requestId}`
         : undefined;
       const fingerprint = requestFingerprint(message);

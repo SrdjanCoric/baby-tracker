@@ -78,6 +78,10 @@ enum TestWatchStoreFailure: Error {
     case writeFailed
 }
 
+enum TestWatchCredentialInstallFailure: Error {
+    case rejected
+}
+
 final class TestWatchIdentityReader: WatchSummaryIdentityReading, @unchecked Sendable {
     var identity: WatchSummaryIdentity?
 
@@ -193,8 +197,10 @@ enum WatchSummaryTests {
         resetDefaults.set("overlay", forKey: "watchPendingOverlays.account-a.baby-a")
         resetDefaults.set("optimism", forKey: "watchOptimisticState.account-a.baby-a")
         resetDefaults.set("sr", forKey: "watchLanguage")
+        resetDefaults.set("legacy-bearer", forKey: "watchSupabaseAccessToken")
 
         WatchAccountCachePurger.purge(from: resetDefaults)
+        WatchLegacyCredentialPurger.purge(from: resetDefaults)
 
         for key in [
             "multiBabyWatchData",
@@ -207,7 +213,122 @@ enum WatchSummaryTests {
             requireWatch(resetDefaults.object(forKey: key) == nil, "scope reset retained \(key)")
         }
         requireWatch(resetDefaults.string(forKey: "watchLanguage") == "sr", "scope reset removed language")
+        requireWatch(
+            resetDefaults.object(forKey: "watchSupabaseAccessToken") == nil,
+            "Watch retained the deprecated App Group bearer"
+        )
         resetDefaults.removePersistentDomain(forName: resetSuiteName)
+
+        let scopeSuiteName = "watch-scope-change-tests.\(UUID().uuidString)"
+        let scopeDefaults = UserDefaults(suiteName: scopeSuiteName)!
+        scopeDefaults.set("account-a", forKey: "watchSupabaseUserId")
+        scopeDefaults.set("household-a", forKey: "watchHouseholdId")
+        scopeDefaults.set("old-summary", forKey: "watchSummary.account-a.baby-a")
+
+        let scopeChanged = WatchAccountScopeInstaller.install(
+            accountId: "account-b",
+            householdId: "household-b",
+            in: scopeDefaults
+        )
+
+        requireWatch(scopeChanged, "Watch did not detect the account scope change")
+        requireWatch(
+            scopeDefaults.object(forKey: "watchSummary.account-a.baby-a") == nil,
+            "Watch retained the previous account's cached baby data"
+        )
+        requireWatch(
+            scopeDefaults.string(forKey: "watchSupabaseUserId") == "account-b",
+            "Watch did not store the incoming account independently of its capsule"
+        )
+        requireWatch(
+            scopeDefaults.string(forKey: "watchHouseholdId") == "household-b",
+            "Watch did not store the incoming household independently of its capsule"
+        )
+        scopeDefaults.removePersistentDomain(forName: scopeSuiteName)
+
+        requireWatch(
+            !WatchNetworkCredentialPolicy.canRequest(
+                hasConfig: true,
+                hasUser: true,
+                hasSession: true,
+                isStale: true
+            ),
+            "Watch kept polling with credentials already marked stale"
+        )
+        requireWatch(
+            WatchNetworkCredentialPolicy.canRequest(
+                hasConfig: true,
+                hasUser: true,
+                hasSession: true,
+                isStale: false
+            ),
+            "Watch rejected a complete fresh credential set"
+        )
+        requireWatch(
+            !WatchCredentialContextPolicy.shouldMarkStale(
+                hasIncomingCapsule: false,
+                hasStoredSession: true
+            ),
+            "capsule-less context disabled a valid stored session"
+        )
+        requireWatch(
+            WatchCredentialContextPolicy.shouldMarkStale(
+                hasIncomingCapsule: false,
+                hasStoredSession: false
+            ),
+            "missing phone and stored capsules did not request recovery"
+        )
+        requireWatch(
+            !WatchCredentialContextPolicy.shouldRemoveStoredSession(
+                scopeChanged: true,
+                hasIncomingCapsule: false
+            ),
+            "scope change deleted the only session without a replacement"
+        )
+        let unauthorizedRecoveries = TestWatchCounter()
+        let unauthorizedRequest = await WatchAuthenticatedRequestCoordinator.send(
+            perform: { (401, Data()) },
+            recoverUnauthorized: { unauthorizedRecoveries.increment() }
+        )
+        requireWatch(unauthorizedRequest.0 == 401, "request boundary hid unauthorized")
+        requireWatch(
+            unauthorizedRecoveries.read() == 1,
+            "authenticated 401 did not request exactly one credential sync"
+        )
+        _ = await WatchAuthenticatedRequestCoordinator.send(
+            perform: { (204, Data()) },
+            recoverUnauthorized: { unauthorizedRecoveries.increment() }
+        )
+        requireWatch(
+            unauthorizedRecoveries.read() == 1,
+            "successful authenticated request triggered credential recovery"
+        )
+
+        let metadataSuiteName = "watch-metadata-install-tests.\(UUID().uuidString)"
+        let metadataDefaults = UserDefaults(suiteName: metadataSuiteName)!
+        let capsuleInstalled = WatchCredentialContextInstaller.install(
+            supabaseUrl: "https://example.supabase.co",
+            anonKey: "anon-key",
+            accountId: "account-a",
+            householdId: "household-a",
+            in: metadataDefaults
+        ) {
+            throw TestWatchCredentialInstallFailure.rejected
+        }
+        requireWatch(!capsuleInstalled, "Watch reported a rejected capsule as installed")
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseUrl") == "https://example.supabase.co",
+            "Watch discarded public Supabase URL after capsule rejection"
+        )
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseAnonKey") == "anon-key",
+            "Watch discarded public anon key after capsule rejection"
+        )
+        requireWatch(
+            metadataDefaults.string(forKey: "watchSupabaseUserId") == "account-a",
+            "Watch discarded account identity after capsule rejection"
+        )
+        metadataDefaults.removePersistentDomain(forName: metadataSuiteName)
 
         let legacySuiteName = "watch-legacy-owner-tests.\(UUID().uuidString)"
         let legacyDefaults = UserDefaults(suiteName: legacySuiteName)!
@@ -747,6 +868,14 @@ enum WatchSummaryTests {
         coalescingFetcher.resolve()
         _ = await (firstRefresh, secondRefresh)
         requireWatch(coalescingStore.writes == 1, "coalesced refresh wrote the base more than once")
+        requireWatch(
+            WatchNetworkPollingPolicy.interval(isPhoneReachable: false) == 120,
+            "unreachable-phone polling did not use the two-minute cadence"
+        )
+        requireWatch(
+            WatchNetworkPollingPolicy.interval(isPhoneReachable: true) == 600,
+            "reachable-phone polling did not use the ten-minute cadence"
+        )
         print("Watch summary tests passed")
     }
 }

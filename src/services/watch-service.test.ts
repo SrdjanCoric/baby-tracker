@@ -1,11 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
+const getApplicationContext = vi.fn();
 const getIsWatchAppInstalled = vi.fn(async () => true);
+const sharedSessionCapsule = JSON.stringify({
+  version: 1,
+  revision: 7,
+  lineage: "session-lineage",
+  session: JSON.stringify({
+    access_token: "access-token",
+    refresh_token: "refresh-token",
+    user: { id: "user-1" },
+  }),
+});
+const readSharedSession = vi.fn(async () => sharedSessionCapsule);
 
-vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+vi.mock("react-native", () => ({
+  NativeModules: {
+    SharedSupabaseSession: {
+      readSession: readSharedSession,
+      writeSession: vi.fn(),
+      removeSession: vi.fn(),
+      acquireSessionLock: vi.fn(),
+      releaseSessionLock: vi.fn(),
+    },
+  },
+  Platform: { OS: "ios" },
+}));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
+  getApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
   getIsWatchAppInstalled,
@@ -29,7 +53,185 @@ async function loadWatchService() {
 describe("watch language transport", () => {
   beforeEach(() => {
     updateApplicationContext.mockClear();
+    getApplicationContext.mockReset();
+    getApplicationContext.mockResolvedValue(null);
     getIsWatchAppInstalled.mockResolvedValue(true);
+    readSharedSession.mockReset();
+    readSharedSession.mockResolvedValue(sharedSessionCapsule);
+  });
+
+  it("refreshes and republishes credentials when the Watch requests sync", async () => {
+    const renewedSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 8,
+      lineage: "session-lineage",
+      session: JSON.stringify({
+        access_token: "renewed-access-token",
+        refresh_token: "renewed-refresh-token",
+        user: { id: authContext.userId },
+      }),
+    });
+    let currentCapsule = sharedSessionCapsule;
+    readSharedSession.mockImplementation(async () => currentCapsule);
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => {
+      currentCapsule = renewedSessionCapsule;
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await refreshWatchCredentialsFromPhone(refreshSession);
+
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(updateApplicationContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        widgetData: JSON.stringify(widgetData),
+        sessionCapsule: renewedSessionCapsule,
+        userId: authContext.userId,
+      })
+    );
+  });
+
+  it("republishes a fresh shared session without rotating its refresh-token family", async () => {
+    const freshSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 7,
+      lineage: "session-lineage",
+      session: JSON.stringify({
+        access_token: "fresh-access-token",
+        refresh_token: "fresh-refresh-token",
+        expires_at: 4_000_000_000,
+        user: { id: authContext.userId },
+      }),
+    });
+    readSharedSession.mockResolvedValue(freshSessionCapsule);
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: freshSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => undefined);
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await refreshWatchCredentialsFromPhone(refreshSession);
+
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(updateApplicationContext).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionCapsule: freshSessionCapsule })
+    );
+  });
+
+  it("refuses to publish a session capsule under another account's persisted context", async () => {
+    const accountBSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 1,
+      lineage: "account-b-session",
+      session: JSON.stringify({
+        access_token: "account-b-access-token",
+        refresh_token: "account-b-refresh-token",
+        expires_at: 4_000_000_000,
+        user: { id: "user-b" },
+      }),
+    });
+    readSharedSession.mockResolvedValue(accountBSessionCapsule);
+    getApplicationContext.mockResolvedValue({
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: "user-a",
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    const published = await refreshWatchCredentialsFromPhone(vi.fn());
+
+    expect(published).toBe(false);
+    expect(updateApplicationContext).not.toHaveBeenCalled();
+  });
+
+  it("refuses to merge credentials into a persisted sign-out marker", async () => {
+    const freshSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 1,
+      lineage: "signed-in-session",
+      session: JSON.stringify({
+        access_token: "access-token",
+        refresh_token: "refresh-token",
+        expires_at: 4_000_000_000,
+      }),
+    });
+    readSharedSession.mockResolvedValue(freshSessionCapsule);
+    getApplicationContext.mockResolvedValue({ signedOut: true });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    const published = await refreshWatchCredentialsFromPhone(vi.fn());
+
+    expect(published).toBe(false);
+    expect(updateApplicationContext).not.toHaveBeenCalled();
+  });
+
+  it.each(["supabaseUrl", "supabaseAnonKey", "userId"] as const)(
+    "refuses to publish credentials when persisted context is missing %s",
+    async (missingField) => {
+      const freshSessionCapsule = JSON.stringify({
+        version: 1,
+        revision: 1,
+        lineage: "session-lineage",
+        session: JSON.stringify({
+          access_token: "access-token",
+          refresh_token: "refresh-token",
+          expires_at: 4_000_000_000,
+          user: { id: authContext.userId },
+        }),
+      });
+      readSharedSession.mockResolvedValue(freshSessionCapsule);
+      const persistedContext: Record<string, unknown> = {
+        supabaseUrl: authContext.supabaseUrl,
+        supabaseAnonKey: authContext.supabaseAnonKey,
+        userId: authContext.userId,
+      };
+      delete persistedContext[missingField];
+      getApplicationContext.mockResolvedValue(persistedContext);
+      const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+      const published = await refreshWatchCredentialsFromPhone(vi.fn());
+
+      expect(published).toBe(false);
+      expect(updateApplicationContext).not.toHaveBeenCalled();
+    }
+  );
+
+  it("refuses to publish a capsule whose authenticated user cannot be verified", async () => {
+    const unidentifiedSessionCapsule = JSON.stringify({
+      version: 1,
+      revision: 1,
+      lineage: "session-lineage",
+      session: JSON.stringify({
+        access_token: "access-token",
+        refresh_token: "refresh-token",
+        expires_at: 4_000_000_000,
+      }),
+    });
+    readSharedSession.mockResolvedValue(unidentifiedSessionCapsule);
+    getApplicationContext.mockResolvedValue({
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    const published = await refreshWatchCredentialsFromPhone(vi.fn());
+
+    expect(published).toBe(false);
+    expect(updateApplicationContext).not.toHaveBeenCalled();
   });
 
   it("holds the language until the watch session can receive it", async () => {
@@ -71,10 +273,14 @@ describe("watch language transport", () => {
     await setWatchLanguage("pt-PT");
     await syncToWatch(widgetData, undefined, authContext);
 
-    // The sync carries the language alongside the data and credentials.
+    // The sync carries the language alongside the data and renewable session.
     expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
-      expect.objectContaining({ language: "pt-PT", accessToken: "access-token" })
+      expect.objectContaining({
+        language: "pt-PT",
+        sessionCapsule: sharedSessionCapsule,
+      })
     );
+    expect(updateApplicationContext.mock.calls.at(-1)?.[0].accessToken).toBeUndefined();
   });
 
   it("republishes the previous context when the language changes instead of erasing it", async () => {
@@ -91,7 +297,7 @@ describe("watch language transport", () => {
     expect(republished).toEqual(
       expect.objectContaining({
         language: "de",
-        accessToken: "access-token",
+        sessionCapsule: sharedSessionCapsule,
         supabaseUrl: "https://example.supabase.co",
         userId: "user-1",
       })
@@ -113,7 +319,7 @@ describe("watch language transport", () => {
     const { clearWatchContext, setWatchLanguage, syncToWatch } = await loadWatchService();
 
     await syncToWatch(widgetData, undefined, authContext);
-    clearWatchContext();
+    await clearWatchContext();
     updateApplicationContext.mockClear();
 
     await setWatchLanguage("de");
@@ -121,6 +327,7 @@ describe("watch language transport", () => {
     const published = updateApplicationContext.mock.calls[0][0];
     expect(published).toEqual({ language: "de" });
     expect(published.accessToken).toBeUndefined();
+    expect(published.sessionCapsule).toBeUndefined();
     expect(published.supabaseAnonKey).toBeUndefined();
     expect(published.userId).toBeUndefined();
     expect(published.widgetData).toBeUndefined();
@@ -131,7 +338,15 @@ describe("watch language transport", () => {
     await syncToWatch(widgetData, undefined, authContext);
     updateApplicationContext.mockClear();
 
-    clearWatchContext();
+    await clearWatchContext();
+
+    expect(updateApplicationContext).toHaveBeenCalledWith({ signedOut: true });
+  });
+
+  it("publishes sign-out before any prior Watch sync loaded connectivity", async () => {
+    const { clearWatchContext } = await loadWatchService();
+
+    await clearWatchContext();
 
     expect(updateApplicationContext).toHaveBeenCalledWith({ signedOut: true });
   });
@@ -144,6 +359,17 @@ describe("watch language transport", () => {
     expect(updateApplicationContext.mock.calls.at(-1)?.[0]).toEqual(
       expect.objectContaining({ householdId: "household-1", userId: "user-1" })
     );
+  });
+
+  it("publishes the exact versioned shared-session capsule instead of a static bearer", async () => {
+    const { syncToWatch } = await loadWatchService();
+
+    await syncToWatch(widgetData, undefined, authContext);
+
+    expect(readSharedSession).toHaveBeenCalledTimes(1);
+    const published = updateApplicationContext.mock.calls.at(-1)?.[0];
+    expect(published.sessionCapsule).toBe(sharedSessionCapsule);
+    expect(published.accessToken).toBeUndefined();
   });
 
   it("keeps the latest language on subsequent syncs without repeating the language call", async () => {

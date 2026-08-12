@@ -131,6 +131,11 @@ jest.mock("@/contexts/sync-context", () => ({
   clearSyncData: () => mockClearSyncData(),
 }));
 
+const mockClearWatchContext = jest.fn().mockResolvedValue(undefined);
+jest.mock("@/services/watch-service", () => ({
+  clearWatchContext: () => mockClearWatchContext(),
+}));
+
 import { AuthProvider, useAuth } from "./auth-context";
 
 function TestConsumer({ testID }: { testID: string }) {
@@ -495,6 +500,7 @@ describe("AuthContext", () => {
       expect(AsyncStorage.multiRemove).not.toHaveBeenCalled();
       expect(mockClearSyncData).not.toHaveBeenCalled();
       expect(mockSetStorageUserId).not.toHaveBeenCalledWith(null);
+      expect(mockClearWatchContext).toHaveBeenCalledTimes(1);
     });
 
     it("preserves unscoped guest data when switching away from a conflicting account", async () => {

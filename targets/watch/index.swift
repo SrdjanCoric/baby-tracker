@@ -215,15 +215,14 @@ final class AppGroupWatchSummaryIdentityReader: WatchSummaryIdentityReading, @un
 
     func currentIdentity() -> WatchSummaryIdentity? {
         guard let accountId = defaults.string(forKey: "watchSupabaseUserId"),
-              let babyId = defaults.string(forKey: "watchSelectedBabyId"),
-              let accessToken = defaults.string(forKey: "watchSupabaseAccessToken") else {
+              let babyId = defaults.string(forKey: "watchSelectedBabyId") else {
             return nil
         }
         let householdId = defaults.string(forKey: "watchHouseholdId") ?? "legacy-household"
         return WatchSummaryIdentity(
             accountId: accountId,
             babyId: babyId,
-            generation: "\(householdId)|\(accessToken)",
+            generation: householdId,
             timezone: TimeZone.current.identifier
         )
     }
@@ -231,39 +230,44 @@ final class AppGroupWatchSummaryIdentityReader: WatchSummaryIdentityReading, @un
 
 final class SupabaseWatchSummaryFetcher: WatchSummaryFetching, @unchecked Sendable {
     private let defaults: UserDefaults
+    private let supabaseTransport: WatchSupabaseTransport
 
-    init?(defaults: UserDefaults? = UserDefaults(suiteName: "group.com.sofibaby.app")) {
+    init?(
+        defaults: UserDefaults? = UserDefaults(suiteName: "group.com.sofibaby.app"),
+        supabaseTransport: WatchSupabaseTransport = WatchSupabaseSessionEnvironment.transport
+    ) {
         guard let defaults else { return nil }
         self.defaults = defaults
+        self.supabaseTransport = supabaseTransport
     }
 
     func fetchSummary(for identity: WatchSummaryIdentity) async throws -> Data {
         guard let supabaseUrl = defaults.string(forKey: "watchSupabaseUrl"),
-              let anonKey = defaults.string(forKey: "watchSupabaseAnonKey"),
-              let accessToken = defaults.string(forKey: "watchSupabaseAccessToken") else {
+              let anonKey = defaults.string(forKey: "watchSupabaseAnonKey") else {
             throw WatchSummaryTransportError.missingCredentials
         }
         guard let url = URL(string: "\(supabaseUrl)/rest/v1/rpc/get_baby_activity_snapshot") else {
             throw WatchSummaryTransportError.invalidURL
         }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 10
-        request.httpBody = try JSONSerialization.data(withJSONObject: [
+        let body = try JSONSerialization.data(withJSONObject: [
             "p_baby_id": identity.babyId,
             "p_timezone": identity.timezone
         ])
-        let (bytes, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw WatchSummaryTransportError.unsuccessfulResponse
+        let config = WatchSupabaseEndpointConfig(supabaseUrl: supabaseUrl, anonKey: anonKey)
+        let (status, bytes) = try await supabaseTransport.send(config: config) { token in
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.timeoutInterval = 10
+            request.httpBody = body
+            return request
         }
-        if http.statusCode == 401 {
+        if status == 401 {
             throw WatchSummaryTransportError.unauthorized
         }
-        guard (200..<300).contains(http.statusCode) else {
+        guard (200..<300).contains(status) else {
             throw WatchSummaryTransportError.unsuccessfulResponse
         }
         return bytes
@@ -292,11 +296,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     // phone re-renders these views instead of requiring a relaunch or reinstall.
     @Published var language: String = NativeLanguageResolver.current
 
-    // Supabase auth credentials (received via applicationContext, persisted to UserDefaults)
+    // Non-secret Supabase metadata received via applicationContext.
     private var supabaseUrl: String?
     private var supabaseAnonKey: String?
-    private var supabaseAccessToken: String?
     private var supabaseUserId: String?
+    private let supabaseTransport = WatchSupabaseSessionEnvironment.transport
 
     private var liveActivityPushToken: String?
     private var pushToStartToken: String?
@@ -353,14 +357,16 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         super.init()
         print("[WatchConnector] init: starting")
         let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        if let defaults {
+            WatchLegacyCredentialPurger.purge(from: defaults)
+        }
         selectedBabyId = defaults?.string(forKey: "watchSelectedBabyId")
         supabaseUrl = defaults?.string(forKey: "watchSupabaseUrl")
         supabaseAnonKey = defaults?.string(forKey: "watchSupabaseAnonKey")
-        supabaseAccessToken = defaults?.string(forKey: "watchSupabaseAccessToken")
         supabaseUserId = defaults?.string(forKey: "watchSupabaseUserId")
         liveActivityPushToken = defaults?.string(forKey: "watchLiveActivityPushToken")
         pushToStartToken = defaults?.string(forKey: "watchPushToStartToken")
-        print("[WatchConnector] init: selectedBabyId = \(selectedBabyId ?? "nil"), hasAuth = \(supabaseAccessToken != nil), hasLAPushToken = \(liveActivityPushToken != nil)")
+        print("[WatchConnector] init: selectedBabyId = \(selectedBabyId ?? "nil"), hasAuth = \(WatchSupabaseSessionEnvironment.hasSession), hasLAPushToken = \(liveActivityPushToken != nil)")
         if WCSession.isSupported() {
             print("[WatchConnector] init: WCSession is supported, activating...")
             session = WCSession.default
@@ -512,9 +518,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             for key in [
                 "watchSupabaseUrl",
                 "watchSupabaseAnonKey",
-                "watchSupabaseAccessToken",
                 "watchSupabaseUserId",
-                "watchHouseholdId"
+                "watchHouseholdId",
+                "watchSupabaseAccessToken"
             ] {
                 defaults?.removeObject(forKey: key)
             }
@@ -523,8 +529,12 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             }
             supabaseUrl = nil
             supabaseAnonKey = nil
-            supabaseAccessToken = nil
             supabaseUserId = nil
+            do {
+                try WatchSupabaseSessionEnvironment.vault.remove()
+            } catch {
+                NSLog("[WatchSupabaseSession] sign-out cleanup failed")
+            }
             isTokenStale = false
             widgetData = nil
             multiBabyData = nil
@@ -550,45 +560,86 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             print("[WatchConnector] parseApplicationContext: stored language")
         }
 
-        // Extract and persist auth credentials
-        if let url = context["supabaseUrl"] as? String,
-           let anonKey = context["supabaseAnonKey"] as? String,
-           let token = context["accessToken"] as? String,
-           let userId = context["userId"] as? String {
-            let defaults = UserDefaults(suiteName: "group.com.sofibaby.app")
-            let incomingHouseholdId = context["householdId"] as? String
-            let storedHouseholdId = defaults?.string(forKey: "watchHouseholdId")
-            let scopeChanged = (supabaseUserId != nil && supabaseUserId != userId) ||
-                (storedHouseholdId != nil && storedHouseholdId != incomingHouseholdId)
-            if scopeChanged {
-                if let defaults {
-                    WatchAccountCachePurger.purge(from: defaults)
-                }
+        // Account scope is authoritative even when the phone cannot attach a
+        // session capsule. Never retain another account's cached baby data or
+        // credential merely because capsule publication failed.
+        let authDefaults = UserDefaults(suiteName: "group.com.sofibaby.app")
+        let hasIncomingSessionCapsule = context["sessionCapsule"] is String
+        var authScopeChanged = false
+        if let userId = context["userId"] as? String,
+           let authDefaults {
+            authScopeChanged = WatchAccountScopeInstaller.install(
+                accountId: userId,
+                householdId: context["householdId"] as? String,
+                in: authDefaults
+            )
+            self.supabaseUserId = userId
+            if authScopeChanged {
                 widgetData = nil
                 multiBabyData = nil
                 selectedBabyId = nil
-                defaults?.removeObject(forKey: "watchSelectedBabyId")
+                authDefaults.removeObject(forKey: "watchSelectedBabyId")
                 localActiveTimers.removeAll()
                 locallyStoppedTimerTypes.removeAll()
                 localStoppedActivityTimes.removeAll()
                 pendingDiaperLogs.removeAll()
                 stopNetworkPolling()
+                if WatchCredentialContextPolicy.shouldRemoveStoredSession(
+                    scopeChanged: authScopeChanged,
+                    hasIncomingCapsule: hasIncomingSessionCapsule
+                ) {
+                    do {
+                        try WatchSupabaseSessionEnvironment.vault.remove()
+                    } catch {
+                        NSLog("[WatchSupabaseSession] scope-change credential cleanup failed")
+                    }
+                } else {
+                    isTokenStale = true
+                    sendAction(["action": "requestSync"])
+                }
             }
+        }
+
+        // Persist non-secret metadata in UserDefaults and the session capsule
+        // in Watch-local Keychain.
+        if let url = context["supabaseUrl"] as? String,
+           let anonKey = context["supabaseAnonKey"] as? String,
+           let sessionCapsule = context["sessionCapsule"] as? String,
+           let userId = context["userId"] as? String {
+            let incomingHouseholdId = context["householdId"] as? String
             self.supabaseUrl = url
             self.supabaseAnonKey = anonKey
-            self.supabaseAccessToken = token
             self.supabaseUserId = userId
-            self.isTokenStale = false
-            defaults?.set(url, forKey: "watchSupabaseUrl")
-            defaults?.set(anonKey, forKey: "watchSupabaseAnonKey")
-            defaults?.set(token, forKey: "watchSupabaseAccessToken")
-            defaults?.set(userId, forKey: "watchSupabaseUserId")
-            if let householdId = incomingHouseholdId {
-                defaults?.set(householdId, forKey: "watchHouseholdId")
+            let installed = authDefaults.map { defaults in
+                WatchCredentialContextInstaller.install(
+                    supabaseUrl: url,
+                    anonKey: anonKey,
+                    accountId: userId,
+                    householdId: incomingHouseholdId,
+                    in: defaults
+                ) {
+                    try WatchSupabaseSessionEnvironment.vault.install(capsuleJson: sessionCapsule)
+                }
+            } ?? false
+            if installed {
+                self.isTokenStale = false
+                print("[WatchConnector] parseApplicationContext: stored renewable auth session")
             } else {
-                defaults?.removeObject(forKey: "watchHouseholdId")
+                self.isTokenStale = true
+                NSLog("[WatchSupabaseSession] rejected invalid application-context capsule")
+                sendAction(["action": "requestSync"])
             }
-            print("[WatchConnector] parseApplicationContext: stored auth credentials")
+        } else if context["supabaseUrl"] is String,
+                  context["supabaseAnonKey"] is String,
+                  context["userId"] is String,
+                  context["sessionCapsule"] == nil,
+                  WatchCredentialContextPolicy.shouldMarkStale(
+                      hasIncomingCapsule: false,
+                      hasStoredSession: WatchSupabaseSessionEnvironment.hasSession
+                  ) {
+            isTokenStale = true
+            NSLog("[WatchSupabaseSession] phone context did not include a session capsule")
+            sendAction(["action": "requestSync"])
         }
 
         if let pushToken = context["liveActivityPushToken"] as? String, !pushToken.isEmpty {
@@ -653,9 +704,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             if session.isReachable {
                 self.refreshCompleteSummary(.reachability)
                 self.requestFreshDataFromPhone()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self.requestFreshDataFromPhone()
-                }
             } else {
                 self.refreshCompleteSummary(.reachability)
             }
@@ -1361,7 +1409,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             print("[WatchConnector] startNetworkPolling: disabled without active timers")
             return
         }
-        let interval: TimeInterval = 30
+        let interval = WatchNetworkPollingPolicy.interval(isPhoneReachable: session?.isReachable == true)
         print("[WatchConnector] startNetworkPolling: \(Int(interval))s timer fingerprint probe")
         networkPollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.refreshFromNetwork()
@@ -1375,8 +1423,39 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     // MARK: - Supabase Network Access
 
+    private var supabaseConfig: WatchSupabaseEndpointConfig? {
+        guard let supabaseUrl, let supabaseAnonKey else { return nil }
+        return WatchSupabaseEndpointConfig(supabaseUrl: supabaseUrl, anonKey: supabaseAnonKey)
+    }
+
     private var hasAuthCredentials: Bool {
-        supabaseUrl != nil && supabaseAnonKey != nil && supabaseAccessToken != nil && supabaseUserId != nil && !isTokenStale
+        WatchNetworkCredentialPolicy.canRequest(
+            hasConfig: supabaseConfig != nil,
+            hasUser: supabaseUserId != nil,
+            hasSession: WatchSupabaseSessionEnvironment.hasSession,
+            isStale: isTokenStale
+        )
+    }
+
+    private func sendSupabaseRequest(
+        config: WatchSupabaseEndpointConfig,
+        buildRequest: @escaping @Sendable (String) -> URLRequest
+    ) async throws -> (Int, Data) {
+        try await WatchAuthenticatedRequestCoordinator.send(
+            perform: {
+                try await self.supabaseTransport.send(
+                    config: config,
+                    buildRequest: buildRequest
+                )
+            },
+            recoverUnauthorized: { [weak self] in
+                guard let self else { return }
+                await MainActor.run {
+                    self.isTokenStale = true
+                }
+                self.sendAction(["action": "requestSync"])
+            }
+        )
     }
 
     func refreshFromNetwork() {
@@ -1400,41 +1479,40 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func fetchActiveTimersFromNetwork() async -> [WatchSummaryTimer]? {
-        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
+        guard let config = supabaseConfig,
               let babyId = currentBabyId, let supabaseUserId else {
             return nil
         }
 
-        let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&select=id,activity_type,started_by,started_at,timer_data"
+        let urlString = "\(config.supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&select=id,activity_type,started_by,started_at,timer_data"
         guard let url = URL(string: urlString) else { return nil }
 
-        var request = URLRequest(url: url)
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 10
-
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
-              let httpResponse = response as? HTTPURLResponse else {
+        let result: (Int, Data)
+        do {
+            result = try await sendSupabaseRequest(config: config) { token in
+                var request = URLRequest(url: url)
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.timeoutInterval = 10
+                return request
+            }
+        } catch {
             print("[WatchConnector] fetchActiveTimersFromNetwork: request failed")
             return nil
         }
 
-        if httpResponse.statusCode == 401 {
-            print("[WatchConnector] fetchActiveTimersFromNetwork: 401 — stale token")
-            await MainActor.run {
-                self.isTokenStale = true
-            }
-            sendAction(["action": "requestSync"])
+        if result.0 == 401 {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: unauthorized")
             return nil
         }
 
-        guard httpResponse.statusCode == 200 else {
-            print("[WatchConnector] fetchActiveTimersFromNetwork: status \(httpResponse.statusCode)")
+        guard result.0 == 200 else {
+            print("[WatchConnector] fetchActiveTimersFromNetwork: status \(result.0)")
             return nil
         }
 
         guard let remoteTimers = try? WatchTimerProbeDecoder.decode(
-            data,
+            result.1,
             currentUserId: supabaseUserId
         ) else {
             print("[WatchConnector] fetchActiveTimersFromNetwork: decode failed")
@@ -1452,12 +1530,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         timerInstanceId: String,
         activityId: String
     ) {
-        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
-              let supabaseAccessToken, let supabaseUserId,
+        guard hasAuthCredentials, let config = supabaseConfig, let supabaseUserId,
               let babyId = currentBabyId else { return }
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
-        let urlString = "\(supabaseUrl)/rest/v1/rpc/acquire_timer_lock"
+        let urlString = "\(config.supabaseUrl)/rest/v1/rpc/acquire_timer_lock"
         guard let url = URL(string: urlString) else { return }
 
         var timerData: [String: Any] = [
@@ -1481,20 +1558,19 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        request.timeoutInterval = 10
-
         Task {
             do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let http = response as? HTTPURLResponse {
-                    print("[WatchConnector] supabaseStartTimer: status \(http.statusCode)")
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = jsonData
+                    request.timeoutInterval = 10
+                    return request
                 }
+                print("[WatchConnector] supabaseStartTimer: status \(status)")
             } catch {
                 print("[WatchConnector] supabaseStartTimer: failed — \(error.localizedDescription)")
             }
@@ -1502,28 +1578,26 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func supabaseStopTimer(activityType: String) {
-        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
-              let supabaseAccessToken, let supabaseUserId,
+        guard hasAuthCredentials, let config = supabaseConfig, let supabaseUserId,
               let babyId = currentBabyId else { return }
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
-        let urlString = "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(supabaseUserId)"
+        let urlString = "\(config.supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(supabaseUserId)"
         guard let url = URL(string: urlString) else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 10
 
         let pushToken = self.liveActivityPushToken
 
         Task {
             do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let http = response as? HTTPURLResponse {
-                    print("[WatchConnector] supabaseStopTimer: status \(http.statusCode)")
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "DELETE"
+                    request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    request.timeoutInterval = 10
+                    return request
                 }
+                print("[WatchConnector] supabaseStopTimer: status \(status)")
             } catch {
                 print("[WatchConnector] supabaseStopTimer: failed — \(error.localizedDescription)")
             }
@@ -1536,9 +1610,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func endLiveActivityViaEdgeFunction(pushToken: String) async {
-        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken else { return }
+        guard let config = supabaseConfig else { return }
 
-        let urlString = "\(supabaseUrl)/functions/v1/end-live-activity"
+        let urlString = "\(config.supabaseUrl)/functions/v1/end-live-activity"
         guard let url = URL(string: urlString) else { return }
 
         var body: [String: Any] = ["pushToken": pushToken]
@@ -1548,19 +1622,18 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.httpBody = jsonData
-        request.timeoutInterval = 10
-
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let http = response as? HTTPURLResponse {
-                print("[WatchConnector] endLiveActivityViaEdgeFunction: status \(http.statusCode)")
+            let (status, _) = try await sendSupabaseRequest(config: config) { token in
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.httpBody = jsonData
+                request.timeoutInterval = 10
+                return request
             }
+            print("[WatchConnector] endLiveActivityViaEdgeFunction: status \(status)")
         } catch {
             print("[WatchConnector] endLiveActivityViaEdgeFunction: failed — \(error.localizedDescription)")
         }
@@ -1573,11 +1646,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func startLiveActivityViaEdgeFunction(activityType: String, startTimeUnix: Int, context: String?) {
-        guard let supabaseUrl, let supabaseAnonKey, let supabaseAccessToken,
+        guard let config = supabaseConfig,
               let ptsToken = pushToStartToken, !ptsToken.isEmpty else { return }
 
         let babyName = currentBaby?.name ?? widgetData?.babyName ?? L.baby
-        let urlString = "\(supabaseUrl)/functions/v1/start-live-activity"
+        let urlString = "\(config.supabaseUrl)/functions/v1/start-live-activity"
         guard let url = URL(string: urlString) else { return }
 
         var body: [String: Any] = [
@@ -1598,20 +1671,19 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.httpBody = jsonData
-        request.timeoutInterval = 10
-
         Task {
             do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let http = response as? HTTPURLResponse {
-                    print("[WatchConnector] startLiveActivityViaEdgeFunction: status \(http.statusCode)")
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    request.httpBody = jsonData
+                    request.timeoutInterval = 10
+                    return request
                 }
+                print("[WatchConnector] startLiveActivityViaEdgeFunction: status \(status)")
             } catch {
                 print("[WatchConnector] startLiveActivityViaEdgeFunction: failed — \(error.localizedDescription)")
             }
@@ -1625,12 +1697,11 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         timerContext: String? = nil,
         effectiveStartTime: String? = nil
     ) {
-        guard hasAuthCredentials, let supabaseUrl, let supabaseAnonKey,
-              let supabaseAccessToken, let supabaseUserId,
+        guard hasAuthCredentials, let config = supabaseConfig, let supabaseUserId,
               let babyId = currentBabyId else { return }
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
-        let urlString = "\(supabaseUrl)/functions/v1/toggle-timer-pause"
+        let urlString = "\(config.supabaseUrl)/functions/v1/toggle-timer-pause"
         guard let url = URL(string: urlString) else { return }
 
         var timerData: [String: Any] = [:]
@@ -1675,20 +1746,19 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAccessToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        request.timeoutInterval = 10
-
         Task {
             do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let http = response as? HTTPURLResponse {
-                    print("[WatchConnector] supabaseTogglePause: status \(http.statusCode)")
+                let (status, _) = try await sendSupabaseRequest(config: config) { token in
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = jsonData
+                    request.timeoutInterval = 10
+                    return request
                 }
+                print("[WatchConnector] supabaseTogglePause: status \(status)")
             } catch {
                 print("[WatchConnector] supabaseTogglePause: failed — \(error.localizedDescription)")
             }
