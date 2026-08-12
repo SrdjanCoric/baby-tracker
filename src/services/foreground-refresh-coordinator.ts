@@ -36,9 +36,6 @@ export function createForegroundRefreshCoordinator(): ForegroundRefreshCoordinat
         if (isOnline && !onlineSatisfied && !joined.online) {
           return trigger(true);
         }
-        if (isOnline && !onlineSatisfied && joined.online) {
-          return trigger(true);
-        }
       });
     }
     return runPass(isOnline);

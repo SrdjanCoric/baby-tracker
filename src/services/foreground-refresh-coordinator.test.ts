@@ -75,6 +75,24 @@ describe("foreground refresh coordinator", () => {
     expect(failing).toHaveBeenCalledTimes(2);
   });
 
+  it("deduplicates online joiners when their catch-up pass fails", async () => {
+    const coordinator = createForegroundRefreshCoordinator();
+    const offlinePass = deferred();
+    const loader = vi.fn()
+      .mockImplementationOnce(() => offlinePass.promise)
+      .mockRejectedValue(new Error("still offline"));
+    coordinator.register("feedings", loader);
+    coordinator.startWakeCycle();
+
+    const wake = coordinator.trigger(false);
+    const firstReconnect = coordinator.trigger(true);
+    const secondReconnect = coordinator.trigger(true);
+    offlinePass.resolve();
+
+    await Promise.all([wake, firstReconnect, secondReconnect]);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
   it("unregisters loaders without disturbing other providers", async () => {
     const coordinator = createForegroundRefreshCoordinator();
     const removed = vi.fn().mockResolvedValue(undefined);
