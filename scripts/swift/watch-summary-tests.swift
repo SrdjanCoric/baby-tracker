@@ -868,6 +868,14 @@ enum WatchSummaryTests {
         coalescingFetcher.resolve()
         _ = await (firstRefresh, secondRefresh)
         requireWatch(coalescingStore.writes == 1, "coalesced refresh wrote the base more than once")
+        requireWatch(
+            WatchNetworkPollingPolicy.interval(isPhoneReachable: false) == 120,
+            "unreachable-phone polling did not use the two-minute cadence"
+        )
+        requireWatch(
+            WatchNetworkPollingPolicy.interval(isPhoneReachable: true) == 600,
+            "reachable-phone polling did not use the ten-minute cadence"
+        )
         print("Watch summary tests passed")
     }
 }

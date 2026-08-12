@@ -412,6 +412,12 @@ enum WatchNetworkCredentialPolicy {
     }
 }
 
+enum WatchNetworkPollingPolicy {
+    static func interval(isPhoneReachable: Bool) -> TimeInterval {
+        isPhoneReachable ? 600 : 120
+    }
+}
+
 enum WatchAuthenticatedRequestCoordinator {
     static func send<Response>(
         perform: () async throws -> (Int, Response),

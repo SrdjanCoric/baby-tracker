@@ -26,10 +26,12 @@ describe("Watch complete-summary wiring", () => {
     expect(watchSource).not.toContain("updatedBaby.activeTimers = remoteTimers");
   });
 
-  it("polls every 30 seconds only while Watch believes a timer is active", () => {
+  it("polls active timers at the cadence for current phone reachability", () => {
     expect(watchSource).toContain("guard hasActiveTimers else");
-    expect(watchSource).toContain("let interval: TimeInterval = 30");
-    expect(watchSource).not.toContain("hasActiveTimers ? 30 : 120");
+    expect(watchSource).toContain(
+      "WatchNetworkPollingPolicy.interval(isPhoneReachable: session?.isReachable == true)"
+    );
+    expect(watchSource).toContain("self.startNetworkPolling()");
   });
 
   it("uses the selected-baby summary RPC and isolated account/baby cache", () => {

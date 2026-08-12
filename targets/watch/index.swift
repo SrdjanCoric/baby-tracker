@@ -1409,7 +1409,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             print("[WatchConnector] startNetworkPolling: disabled without active timers")
             return
         }
-        let interval: TimeInterval = 30
+        let interval = WatchNetworkPollingPolicy.interval(isPhoneReachable: session?.isReachable == true)
         print("[WatchConnector] startNetworkPolling: \(Int(interval))s timer fingerprint probe")
         networkPollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.refreshFromNetwork()
