@@ -1,6 +1,5 @@
 import {
   acquireTimerLock,
-  findActiveTimerLock,
   getActiveTimerLock,
   type ActiveTimerLock,
   type TimerActivityType,
@@ -45,7 +44,6 @@ export async function reconcileTimerLock({
   timerInstanceId,
   timerData,
   persistState,
-  timerSnapshot,
 }: ReconcileTimerLockInput): Promise<ReconcileTimerLockResult> {
   await persistState("reconciling");
 
@@ -78,9 +76,7 @@ export async function reconcileTimerLock({
       };
     }
 
-    const lock = timerSnapshot
-      ? findActiveTimerLock(await timerSnapshot, activityType)
-      : await getActiveTimerLock(babyId, activityType);
+    const lock = await getActiveTimerLock(babyId, activityType);
     const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
     const lockStartedAtMs = lock ? new Date(lock.startedAt).getTime() : Number.NaN;
     const localStartedAtMs = new Date(startedAt).getTime();
