@@ -136,7 +136,7 @@ export function ActiveTimersProvider({
     isLoading: true,
   });
 
-  const refreshLocks = useCallback(async () => {
+  const loadLocks = useCallback(async (throwOnError: boolean) => {
     if (!selectedBaby?.id) {
       dispatch({ type: "SET_LOCKS", locks: [] });
       return;
@@ -155,9 +155,14 @@ export function ActiveTimersProvider({
     } catch (error) {
       console.error("[ActiveTimersContext] Failed to load locks:", error);
       dispatch({ type: "SET_LOADING", isLoading: false });
-      throw error;
+      if (throwOnError) throw error;
     }
   }, [selectedBaby?.id, user?.id]);
+
+  const refreshLocks = useCallback(
+    () => loadLocks(false),
+    [loadLocks]
+  );
 
   useEffect(() => {
     void refreshLocks().catch(() => undefined);
@@ -170,9 +175,9 @@ export function ActiveTimersProvider({
         retryPendingLockReleases(),
         retryPendingTimerStartEdits(),
       ]);
-      await refreshLocks();
+      await loadLocks(true);
     });
-  }, [refreshLocks, registerForegroundRefreshLoader]);
+  }, [loadLocks, registerForegroundRefreshLoader]);
 
   useEffect(() => {
     const handleChange = async (change: RemoteChange) => {

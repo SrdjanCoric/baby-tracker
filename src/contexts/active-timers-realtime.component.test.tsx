@@ -5,6 +5,7 @@ import type { RemoteChange } from "@/services/sync/real-time-sync";
 
 let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null;
 let registeredRefresh: (() => Promise<void>) | null = null;
+let activeTimersContext: ReturnType<typeof useActiveTimers> | null = null;
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Baby" } }),
@@ -67,6 +68,11 @@ jest.mock("@/services/supabase", () => {
 
 import { ActiveTimersProvider, useActiveTimers } from "./active-timers-context";
 
+function ContextProbe() {
+  activeTimersContext = useActiveTimers();
+  return null;
+}
+
 function RemoteElapsed() {
   const lock = useActiveTimers().getLockForActivity("baby-1", "sleep");
   const elapsedMinutes = lock
@@ -81,6 +87,8 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     jest.setSystemTime(new Date("2026-08-06T12:00:00.000Z"));
     remoteChangeHandler = null;
     registeredRefresh = null;
+    activeTimersContext = null;
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -136,5 +144,23 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     };
     expect(activeTimerService.retryPendingLockReleases).toHaveBeenCalled();
     expect(activeTimerService.retryPendingTimerStartEdits).toHaveBeenCalled();
+  });
+
+  it("keeps public lock refresh non-throwing while loader failures remain retryable", async () => {
+    render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(registeredRefresh).not.toBeNull());
+    const activeTimerService = jest.requireMock(
+      "@/services/active-timer-service"
+    ) as { getActiveTimerSnapshotForBaby: jest.Mock };
+    activeTimerService.getActiveTimerSnapshotForBaby.mockRejectedValue(
+      new Error("network unavailable")
+    );
+
+    await expect(activeTimersContext!.refreshLocks()).resolves.toBeUndefined();
+    await expect(registeredRefresh!()).rejects.toThrow("network unavailable");
   });
 });
