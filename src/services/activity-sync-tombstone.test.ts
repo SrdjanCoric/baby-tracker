@@ -47,10 +47,23 @@ vi.mock("./supabase", () => ({ supabase: { from: () => chain() } }));
 const clock = "2026-07-04T00:00:00.000Z-0000-devRemote";
 
 function live(id: string, extra: Record<string, unknown>): Record<string, unknown> {
-  return { id, baby_id: "b1", field_clocks: {}, ...extra };
+  return {
+    id,
+    baby_id: "b1",
+    updated_at: "2026-07-04T00:00:00.000Z",
+    field_clocks: {},
+    ...extra,
+  };
 }
 function tombstoned(id: string, extra: Record<string, unknown>): Record<string, unknown> {
-  return { id, baby_id: "b1", deleted: true, field_clocks: { deleted: clock }, ...extra };
+  return {
+    id,
+    baby_id: "b1",
+    updated_at: "2026-07-04T00:00:00.000Z",
+    deleted: true,
+    field_clocks: { deleted: clock },
+    ...extra,
+  };
 }
 
 describe("activity-sync fetch excludes tombstoned rows", () => {
