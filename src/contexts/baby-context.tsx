@@ -111,7 +111,14 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
 
     case "REMOTE_UPDATE": {
       const currentBaby = state.babies.find(baby => baby.id === action.payload.id);
-      if (currentBaby && sameBabyProfile(currentBaby, action.payload)) {
+      const selectedBabyMatches =
+        state.selectedBaby?.id !== action.payload.id
+        || sameBabyProfile(state.selectedBaby, action.payload);
+      if (
+        currentBaby
+        && sameBabyProfile(currentBaby, action.payload)
+        && selectedBabyMatches
+      ) {
         return state;
       }
       const updatedSelectedBaby =

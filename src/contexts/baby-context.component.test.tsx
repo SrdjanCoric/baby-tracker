@@ -77,4 +77,22 @@ describe("babyReducer realtime updates", () => {
     expect(next.selectedBaby).toBe(renamed);
     expect(next.babies).toEqual([renamed]);
   });
+
+  it("repairs a selected baby that diverged from the matching list entry", () => {
+    const canonical = { ...baby, name: "Emmy" };
+    const staleSelected = { ...baby, name: "Emma" };
+    const state = {
+      ...initialBabyState,
+      babies: [canonical],
+      selectedBaby: staleSelected,
+    };
+
+    const next = babyReducer(state, {
+      type: "REMOTE_UPDATE",
+      payload: { ...canonical },
+    });
+
+    expect(next.selectedBaby).toEqual(canonical);
+    expect(next.selectedBaby).not.toBe(staleSelected);
+  });
 });
