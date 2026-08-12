@@ -136,16 +136,22 @@ jest.mock("@/services/active-timer-service", () => {
       if (existing) return existing;
       const request = Promise.all(
         ["feeding", "sleep", "pumping", "tummy_time"].map(activityType =>
-          getActiveTimerLock(babyId, activityType)
+          getActiveTimerLock(babyId, activityType).then(lock =>
+            lock ? { ...lock, activityType } : null
+          )
         )
-      ).then(locks => {
-        getActiveTimerLock.mockClear();
-        return locks.filter(Boolean);
-      });
+      ).then(locks => locks.filter(Boolean));
       snapshots.set(babyId, request);
-      void request.finally(() => snapshots.delete(babyId));
+      void request.then(
+        () => snapshots.delete(babyId),
+        () => snapshots.delete(babyId)
+      );
       return request;
     }),
+    findActiveTimerLock: jest.fn(
+      (snapshot: Array<{ activityType: string }>, activityType: string) =>
+        snapshot.find(lock => lock.activityType === activityType) ?? null
+    ),
     queuePendingLockRelease: jest.fn(),
   };
 });
@@ -1296,9 +1302,12 @@ describe("external timer stops through production providers", () => {
     expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe("");
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
-      getActiveTimerLock: jest.Mock;
+      findActiveTimerLock: jest.Mock;
     };
-    expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "feeding");
+    expect(activeTimers.findActiveTimerLock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      "feeding"
+    );
     const liveActivities = jest.requireMock("@/services/live-activity-service") as {
       startTimerLiveActivity: jest.Mock;
     };
@@ -1444,9 +1453,12 @@ describe("external timer stops through production providers", () => {
     expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe("");
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
-      getActiveTimerLock: jest.Mock;
+      findActiveTimerLock: jest.Mock;
     };
-    expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "sleep");
+    expect(activeTimers.findActiveTimerLock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      "sleep"
+    );
   });
 
   it("reuses one sleep completion and first stop time after cleanup failure", async () => {
@@ -1556,9 +1568,12 @@ describe("external timer stops through production providers", () => {
     expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe("");
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
-      getActiveTimerLock: jest.Mock;
+      findActiveTimerLock: jest.Mock;
     };
-    expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "pumping");
+    expect(activeTimers.findActiveTimerLock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      "pumping"
+    );
   });
 
   it("reuses one pumping completion and queues failed cleanup", async () => {
@@ -1670,9 +1685,12 @@ describe("external timer stops through production providers", () => {
     expect(mockExtensionStorageData.get("pendingWidgetStop")).toBe("");
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
-      getActiveTimerLock: jest.Mock;
+      findActiveTimerLock: jest.Mock;
     };
-    expect(activeTimers.getActiveTimerLock).not.toHaveBeenCalledWith("baby-1", "tummy_time");
+    expect(activeTimers.findActiveTimerLock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      "tummy_time"
+    );
   });
 
   it("reuses one tummy-time completion and queues failed cleanup", async () => {
@@ -1875,7 +1893,7 @@ describe("external timer stops through production providers", () => {
       async (_babyId: string, activityType: string) => {
         if (activityType !== "feeding") return null;
         feedingLockReads += 1;
-        return feedingLockReads === 1 ? staleLock : delayedLock.promise;
+        return feedingLockReads <= 2 ? staleLock : delayedLock.promise;
       }
     );
 
@@ -1888,7 +1906,7 @@ describe("external timer stops through production providers", () => {
     act(() => {
       refreshPromise = feedingState!.refreshFeedings();
     });
-    await waitFor(() => expect(feedingLockReads).toBe(2));
+    await waitFor(() => expect(feedingLockReads).toBe(3));
 
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
       activityType: "feeding",
@@ -2006,7 +2024,7 @@ describe("external timer stops through production providers", () => {
       async (_babyId: string, activityType: string) => {
         if (activityType !== "sleep") return null;
         sleepLockReads += 1;
-        return sleepLockReads === 1 ? staleLock : delayedLock.promise;
+        return sleepLockReads <= 2 ? staleLock : delayedLock.promise;
       }
     );
 
@@ -2019,7 +2037,7 @@ describe("external timer stops through production providers", () => {
     act(() => {
       refreshPromise = sleepState!.refreshSleeps();
     });
-    await waitFor(() => expect(sleepLockReads).toBe(2));
+    await waitFor(() => expect(sleepLockReads).toBe(3));
 
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
       activityType: "sleep",
@@ -2075,7 +2093,7 @@ describe("external timer stops through production providers", () => {
       async (_babyId: string, activityType: string) => {
         if (activityType !== "sleep") return null;
         sleepLockReads += 1;
-        return sleepLockReads === 1 ? staleLock : delayedLock.promise;
+        return sleepLockReads <= 2 ? staleLock : delayedLock.promise;
       }
     );
 
@@ -2086,7 +2104,7 @@ describe("external timer stops through production providers", () => {
     act(() => {
       refreshPromise = sleepState!.refreshSleeps();
     });
-    await waitFor(() => expect(sleepLockReads).toBe(2));
+    await waitFor(() => expect(sleepLockReads).toBe(3));
 
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
       activityType: "sleep",
@@ -2204,7 +2222,7 @@ describe("external timer stops through production providers", () => {
       async (_babyId: string, activityType: string) => {
         if (activityType !== "pumping") return null;
         pumpingLockReads += 1;
-        return pumpingLockReads === 1 ? staleLock : delayedLock.promise;
+        return pumpingLockReads <= 2 ? staleLock : delayedLock.promise;
       }
     );
 
@@ -2217,7 +2235,7 @@ describe("external timer stops through production providers", () => {
     act(() => {
       refreshPromise = pumpingState!.refreshPumpings();
     });
-    await waitFor(() => expect(pumpingLockReads).toBe(2));
+    await waitFor(() => expect(pumpingLockReads).toBe(3));
 
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
       activityType: "pumping",
@@ -2329,7 +2347,7 @@ describe("external timer stops through production providers", () => {
       async (_babyId: string, activityType: string) => {
         if (activityType !== "tummy_time") return null;
         tummyTimeLockReads += 1;
-        return tummyTimeLockReads === 1 ? staleLock : delayedLock.promise;
+        return tummyTimeLockReads <= 2 ? staleLock : delayedLock.promise;
       }
     );
 
@@ -2342,7 +2360,7 @@ describe("external timer stops through production providers", () => {
     act(() => {
       refreshPromise = tummyTimeState!.refreshTummyTimes();
     });
-    await waitFor(() => expect(tummyTimeLockReads).toBe(2));
+    await waitFor(() => expect(tummyTimeLockReads).toBe(3));
 
     mockExtensionStorageData.set("pendingWidgetStop", JSON.stringify({
       activityType: "tummy_time",
