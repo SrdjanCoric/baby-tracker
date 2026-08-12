@@ -80,3 +80,8 @@ automated coordinator seam even though there is no Xcode Watch unit-test target.
   `/tmp/agent-workflows/e2f8af45fd34/39f39e542a95/`.
 - Not run here: the paired Watch simulator/physical-device checkpoint above and the final canonical
   gate; those remain owned by the manual review loop and `finish-task`.
+
+## Review decisions
+
+- skipped (minor): TR-5 — `reconcileOverlays` uses the raw response rather than the installed merged data — because I don't care about those
+- skipped (minor): TR-7 — local/server freshness compares clocks that may be skewed — because I don't care about those
