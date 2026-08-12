@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const updateApplicationContext = vi.fn();
+const getApplicationContext = vi.fn(async () => null);
 const appGroupStorage = new Map<string, string>();
 const reloadWidget = vi.fn(async () => undefined);
 const setExtensionValue = vi.fn(async (key: string, value: string) => {
@@ -26,6 +27,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
+  getApplicationContext,
   sendMessage: vi.fn(),
   getReachability: vi.fn(async () => true),
   getIsWatchAppInstalled: vi.fn(async () => true),
@@ -58,6 +60,7 @@ describe("native language publishing", () => {
   beforeEach(() => {
     appGroupStorage.clear();
     updateApplicationContext.mockClear();
+    getApplicationContext.mockClear();
     reloadWidget.mockClear();
     setExtensionValue.mockClear();
   });

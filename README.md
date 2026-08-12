@@ -131,8 +131,12 @@ When the latest completed sleep is the current evening's stored `night` session,
   timer left behind by sign-out does not continue ticking.
 - **Live Activities + Dynamic Island** for active feeding and sleep timers
 - **Apple Watch** companion app using WCSession as an optional fast path and direct Supabase fallback.
-  While a timer is active, it probes that baby's timer state every 30 seconds and requests a complete
-  activity summary only after a change. Failed refreshes keep the previous summary intact.
+  The Watch reads a phone-published session capsule from its Keychain. When a direct request returns
+  401, it marks the credential stale and asks the paired phone to refresh its session and republish
+  the capsule. It waits if the phone is unavailable or force-quit. While a timer is active, the Watch
+  probes that baby's timer state every ten minutes when the phone is reachable and every two minutes
+  when it is not, then requests a complete activity summary only after a change. Failed refreshes keep
+  the previous summary intact.
 - **Deep linking** (`sofibaby://`) for widget and notification actions, with dismissible activity screens on cold launch
 
 ### Edge Functions

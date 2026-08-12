@@ -42,11 +42,12 @@ the Watch waits for the phone instead of owning an independent session.
 
 ## Human checkpoints
 
-- [ ] [verify] Physical Apple Watch with an expired access token while the paired iPhone app is
+- [x] [verify] Physical Apple Watch with an expired access token while the paired iPhone app is
       backgrounded, then trigger a Watch request. · Expected: the Watch requests phone sync; iOS
       wakes the companion app, the phone refreshes and republishes, and Watch requests resume
       without opening the app UI. · Failure: manual app opening is required, the Watch silently
-      keeps stale data, or the Watch redeems the phone refresh token.
+      keeps stale data, or the Watch redeems the phone refresh token. The user confirmed this
+      checkpoint passed on 2026-08-12.
 
 ## Acceptance criteria
 
@@ -107,7 +108,15 @@ the Watch waits for the phone instead of owning an independent session.
   tests, 18/18 Watch message-handler component tests, focused ESLint, and repository TypeScript
   typecheck. Logs are under `/tmp/agent-workflows/e2f8af45fd34/49b8e8362ee8/` with the
   `tr15-18-final-` prefix.
-- The final canonical gate remains owned by `finish-task`.
+- Final focused repair proof passed 15/15 tests across
+  `src/services/native-language-service.test.ts` and
+  `src/__tests__/security/shared-supabase-session.security.test.ts`. The WatchConnectivity mock
+  now includes the persisted-context API used by production, and the security guard matches the
+  shared authenticated-request boundary.
+- `npm run test:widget:swift` passed both production Swift typechecks, Widget snapshot and shared
+  session tests, Watch session safety tests, and Watch summary tests.
+- `npm run check:code` passed on 2026-08-12. The capped log is
+  `/tmp/agent-workflows/baby-tracker/feature-renew-watch-credentials-from-shared-session/canonical-after-test-fix.log`.
 
 ## Review decisions
 
@@ -119,3 +128,33 @@ the Watch waits for the phone instead of owning an independent session.
   I don't care about them.
 - skipped (minor): TR-14 — Planning artifacts were bundled into the implementation commit — I
   don't care about them.
+- skipped (minor): TR-19. An `unknown` lineage could collide across sessions; supported Supabase
+  access tokens include `session_id`.
+- skipped (minor): TR-20. Replaying an unchanged capsule can briefly clear stale state and waste
+  one request; the transient behavior does not justify remediation in this task.
+- skipped (minor): TR-21. Two Swift harness tests no longer exercise meaningful failure or
+  concurrency paths; skipped by user decision.
+- accepted (security risk): TR-22. The Watch retains the phone's unused refresh token in its local
+  Keychain capsule; the user directed that this risk be accepted without remediation.
+
+## Completion record
+
+- Built phone-mediated Watch credential recovery across `src/services/watch-service.ts`,
+  `src/hooks/useWatchMessageHandler.ts`, `app/_layout.tsx`, and `targets/watch/`. A Watch 401 marks
+  its credential stale and requests a phone refresh without redeeming the shared refresh token.
+- The Watch session capsule is stored in Watch-local Keychain, the deprecated UserDefaults bearer
+  is purged, and authenticated Watch requests use the shared transport and recovery boundary.
+- The Watch active-timer probe runs every ten minutes while the phone is reachable and every two
+  minutes while it is unavailable.
+- README disposition: updated `iOS Native Integrations` to describe Watch credential recovery and
+  polling cadence. The affected Apple Watch prose passed one full `write-well` audit.
+- Review outcome: three retained review passes closed. TR-1–TR-11, TR-15–TR-18, and TR-24–TR-27
+  were fixed; TR-12–TR-14 and TR-19–TR-21 were skipped for the reasons above. TR-22 and TR-23 were
+  accepted as security risks for the recorded user reasons.
+- Automated proof: the final focused Vitest batch passed 15/15, `npm run test:widget:swift`
+  passed, and `npm run check:code` passed.
+- Manual proof: the user confirmed the physical Apple Watch background-phone credential recovery
+  checkpoint passed on 2026-08-12.
+- Planning included with this PR by owner request: `plans/master-plan.md`,
+  `plans/tasks/0086-cut-redundant-client-sync-traffic.md`, and
+  `supabase/migrations/063_bound_wake_window_reminder_scans.sql` in commit `f7b1791`.

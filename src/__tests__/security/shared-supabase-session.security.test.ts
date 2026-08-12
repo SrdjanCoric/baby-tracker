@@ -111,6 +111,8 @@ describe("Watch renewable Supabase session", () => {
 
   it("routes every authenticated Watch request through the renewing transport", () => {
     expect(watchIndex).not.toContain("URLSession.shared.data(for:");
-    expect(watchIndex.match(/supabaseTransport\.send/g)).toHaveLength(7);
+    expect(watchIndex.match(/supabaseTransport\.send/g)).toHaveLength(2);
+    expect(watchIndex.match(/sendSupabaseRequest\(config: config\)/g)).toHaveLength(6);
+    expect(watchIndex.match(/forHTTPHeaderField: "Authorization"/g)).toHaveLength(7);
   });
 });
