@@ -510,6 +510,7 @@ describe("AuthContext", () => {
         "@feedings:guest-baby",
         "@babies:user-1:household-1",
         "@feedings:account-baby:user-1",
+        "@activity_sync_cursor:feedings:account-baby:user-1",
         "@sync_queue",
       ]);
       jest.spyOn(AsyncStorage, "multiRemove").mockResolvedValue(undefined);
@@ -536,6 +537,7 @@ describe("AuthContext", () => {
       expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
         "@babies:user-1:household-1",
         "@feedings:account-baby:user-1",
+        "@activity_sync_cursor:feedings:account-baby:user-1",
         "@sync_queue",
       ]);
     });
