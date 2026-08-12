@@ -471,7 +471,15 @@ async function commitPulledMilestoneResponses(
     const localData = await AsyncStorage.getItem(scope.key);
     assertActivityPullScope(scope);
     const localResponses: StoredMilestoneResponse[] = localData ? JSON.parse(localData) : [];
-    let responses = mergeWithPendingLocal(serverResponses, localResponses, pendingOperations);
+    const mergedDelta = mergeWithPendingLocal(
+      serverResponses,
+      localResponses,
+      pendingOperations
+    );
+    let responses = mergedDelta.reduce(
+      replaceLogicalMilestoneResponse,
+      localResponses
+    );
     let previousValue = localData;
     let queuedRecovery = false;
 

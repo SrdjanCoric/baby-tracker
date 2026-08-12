@@ -5,6 +5,7 @@ import {
   fetchFeedingsFromDatabase,
   fetchGrowthFromDatabase,
   fetchHealthFromDatabase,
+  fetchMilestoneResponsesFromDatabase,
   fetchPumpingFromDatabase,
   fetchSleepFromDatabase,
   fetchTummyTimeFromDatabase,
@@ -260,6 +261,40 @@ describe("activity range sync", () => {
       "or",
       `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},id.gt.feeding-1004)`,
     ]);
+  });
+
+  it("preserves milestone responses when a cursor catch-up has no new rows", async () => {
+    serverRows.push(
+      {
+        id: "response-1",
+        baby_id: "baby-1",
+        milestone_id: "milestone-1",
+        state: "yes",
+        responded_at: "2026-08-12T09:00:00.000Z",
+        created_at: "2026-08-12T09:00:00.000Z",
+        updated_at: "2026-08-12T09:00:00.000Z",
+        field_clocks: {},
+      },
+      {
+        id: "response-2",
+        baby_id: "baby-1",
+        milestone_id: "milestone-2",
+        state: "not_yet",
+        responded_at: "2026-08-12T10:00:00.000Z",
+        created_at: "2026-08-12T10:00:00.000Z",
+        updated_at: "2026-08-12T10:00:00.000Z",
+        field_clocks: {},
+      }
+    );
+
+    await expect(fetchMilestoneResponsesFromDatabase("baby-1")).resolves.toHaveLength(2);
+    const revisited = await fetchMilestoneResponsesFromDatabase("baby-1");
+
+    expect(revisited.map(response => response.id).sort()).toEqual([
+      "response-1",
+      "response-2",
+    ]);
+    expect(JSON.parse(storage.get("@milestones:baby-1:user-1")!)).toEqual(revisited);
   });
 
   it("does not install a cursor when local persistence interrupts bootstrap", async () => {
