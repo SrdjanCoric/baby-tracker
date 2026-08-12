@@ -78,6 +78,7 @@ struct WatchSummaryTimer: Codable, Equatable, Hashable {
     var isPaused: Bool?
     var accumulatedSeconds: Int?
     var lockState: String? = nil
+    var preservedLocally: Bool? = nil
 }
 
 struct WatchSummaryLocalDay: Codable, Equatable {
@@ -291,6 +292,7 @@ struct WatchTimerFingerprint: Equatable, Sendable {
         self.timers = timers.map { timer in
             var normalized = timer
             normalized.lockState = nil
+            normalized.preservedLocally = nil
             if normalized.isRemote == true {
                 normalized.context = nil
             }
@@ -591,7 +593,9 @@ actor WatchSummaryCoordinator {
         let priorBytes = store.readSummary(for: identity)
         let prior = priorBytes.flatMap { try? WatchSummaryDecoder.decodeCache($0).data }
         if let prior,
-           WatchTimerFingerprint(timers: prior.activeTimers ?? []) == fingerprint {
+           WatchTimerFingerprint(timers: (prior.activeTimers ?? []).filter {
+               $0.preservedLocally != true
+           }) == fingerprint {
             return prior
         }
 
@@ -831,13 +835,16 @@ actor WatchSummaryCoordinator {
             if priorTimer.lockState == "accountless" || priorTimer.lockState == "offline" {
                 var singleShotTimer = priorTimer
                 singleShotTimer.lockState = nil
+                singleShotTimer.preservedLocally = true
                 result.append(singleShotTimer)
                 presentTypes.insert(priorTimer.type)
                 preservedLocal = true
                 continue
             }
             if let local = priorAsOf, let server = responseAsOf, local > server {
-                result.append(priorTimer)
+                var fresherLocalTimer = priorTimer
+                fresherLocalTimer.preservedLocally = true
+                result.append(fresherLocalTimer)
                 presentTypes.insert(priorTimer.type)
                 preservedLocal = true
             }

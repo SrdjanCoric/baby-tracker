@@ -614,6 +614,27 @@ enum WatchSummaryTests {
             "merged Watch cache retained reusable offline provenance"
         )
 
+        let probeFetchesBefore = singleShotFetcher.fetches
+        let probeWritesBefore = singleShotStore.writes
+        let unchangedServerFingerprint = WatchTimerFingerprint(timers: [])
+        for probeNumber in 1...3 {
+            let unchangedProbeResult = await singleShotCoordinator.acceptTimerProbe(
+                unchangedServerFingerprint
+            )
+            requireWatch(
+                unchangedProbeResult?.activeTimers?.first?.timerInstanceId == "offline-timer",
+                "unchanged server probe \(probeNumber) discarded the preserved local timer"
+            )
+        }
+        requireWatch(
+            singleShotFetcher.fetches == probeFetchesBefore,
+            "unchanged server probes triggered full summary fetches for a preserved local timer"
+        )
+        requireWatch(
+            singleShotStore.writes == probeWritesBefore,
+            "unchanged server probes rewrote the merged Watch cache"
+        )
+
         singleShotFetcher.response = try versionedWatchFixture(
             versioned,
             timer: nil,
