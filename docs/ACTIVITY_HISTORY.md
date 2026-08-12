@@ -1,6 +1,8 @@
 # Activity History Loading
 
-SofiBaby keeps startup activity pulls bounded to 1,000 recent rows per activity table. Each pull orders rows by the activity timestamp and row ID, then merges them into the user-scoped local collection. Cached history outside that response stays in AsyncStorage and in context state.
+SofiBaby uses a per-user, per-baby composite `(updated_at, id)` cursor for startup and foreground catch-up pulls. Catch-up queries order rows by `updated_at` and ID, read 1,000 rows per page, and process at most 5,000 rows per table in one pass. The first pull without a cursor starts from the oldest server row. If more than 5,000 rows exist, it stores an exact continuation cursor and resumes the bootstrap on the next pass instead of holding the baby's entire history in memory. Cached history outside each response stays in AsyncStorage and in context state.
+
+After bootstrap, each catch-up overlaps the stored high-water mark by ten seconds. Replaying that small window keeps a row visible only after its transaction commits from being skipped when its server timestamp falls just behind a concurrently observed row. Reconciliation is idempotent, and the stored cursor never moves backward.
 
 ## Timeline ranges
 
@@ -43,7 +45,7 @@ A range result enters the same per-user, per-baby storage lock used by local mut
 - records from ranges loaded earlier; and
 - CRDT tombstones needed to prevent deleted rows from returning.
 
-The merged collection is written to AsyncStorage before the context receives it. A later startup pull adds recent server state without replacing cached historical ranges.
+The merged collection is written to AsyncStorage before its cursor advances and before the context receives it. If collection or cursor persistence fails, the next pass resumes or repeats safely. A later catch-up merges changed server rows without replacing cached historical ranges. When a tombstone cannot yet apply because that record has a queued local mutation, cursor advancement is withheld so the tombstone is delivered again after the mutation drains.
 
 ## Coverage and failures
 
