@@ -50,6 +50,25 @@ interface CursorPull {
 }
 
 const ACTIVITY_RANGE_PAGE_SIZE = 1_000;
+const ACTIVITY_CURSOR_OVERLAP_MS = 10_000;
+const MIN_CURSOR_ID = "00000000-0000-0000-0000-000000000000";
+
+function compareActivityCursors(
+  left: ActivitySyncCursor,
+  right: ActivitySyncCursor
+): number {
+  const timestampOrder = left.updatedAt.localeCompare(right.updatedAt);
+  return timestampOrder !== 0 ? timestampOrder : left.id.localeCompare(right.id);
+}
+
+function overlapActivityCursor(cursor: ActivitySyncCursor): ActivitySyncCursor {
+  return {
+    updatedAt: new Date(
+      Date.parse(cursor.updatedAt) - ACTIVITY_CURSOR_OVERLAP_MS
+    ).toISOString(),
+    id: MIN_CURSOR_ID,
+  };
+}
 
 function activityCursorKey(
   table: ActivityCursorTable,
@@ -80,7 +99,7 @@ async function fetchActivityCursorRows(
   const storedCursor = parseActivityCursor(await AsyncStorage.getItem(cursorKey));
   assertActivityPullScope(scope);
   const rows: Record<string, unknown>[] = [];
-  let pageCursor = storedCursor;
+  let pageCursor = storedCursor ? overlapActivityCursor(storedCursor) : null;
 
   while (true) {
     let query = supabase
@@ -114,7 +133,11 @@ async function fetchActivityCursorRows(
 
   return {
     rows,
-    nextCursor: rows.length > 0 ? pageCursor : null,
+    nextCursor: rows.length > 0 && pageCursor
+      ? storedCursor && compareActivityCursors(storedCursor, pageCursor) > 0
+        ? storedCursor
+        : pageCursor
+      : null,
     cursorKey,
   };
 }

@@ -259,7 +259,7 @@ describe("activity range sync", () => {
     expect(revisited).toHaveLength(1_005);
     expect(queryFilters).toContainEqual([
       "or",
-      `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},id.gt.feeding-1004)`,
+      "updated_at.gt.2026-08-12T09:59:50.000Z,and(updated_at.eq.2026-08-12T09:59:50.000Z,id.gt.00000000-0000-0000-0000-000000000000)",
     ]);
   });
 
@@ -295,6 +295,35 @@ describe("activity range sync", () => {
       "response-2",
     ]);
     expect(JSON.parse(storage.get("@milestones:baby-1:user-1")!)).toEqual(revisited);
+  });
+
+  it("replays a late-committed row whose timestamp falls just behind the cursor", async () => {
+    storage.set(
+      "@activity_sync_cursor:feedings:baby-1:user-1",
+      JSON.stringify({
+        updatedAt: "2026-08-12T10:00:02.000Z",
+        id: "feeding-visible-first",
+      })
+    );
+    serverRows.push({
+      id: "feeding-late-commit",
+      baby_id: "baby-1",
+      type: "bottle",
+      started_at: "2026-08-12T09:59:00.000Z",
+      created_at: "2026-08-12T09:59:00.000Z",
+      updated_at: "2026-08-12T10:00:00.000Z",
+      field_clocks: {},
+    });
+
+    const entries = await fetchFeedingsFromDatabase("baby-1");
+
+    expect(entries.map(entry => entry.id)).toContain("feeding-late-commit");
+    expect(storage.get("@activity_sync_cursor:feedings:baby-1:user-1")).toBe(
+      JSON.stringify({
+        updatedAt: "2026-08-12T10:00:02.000Z",
+        id: "feeding-visible-first",
+      })
+    );
   });
 
   it("does not install a cursor when local persistence interrupts bootstrap", async () => {
