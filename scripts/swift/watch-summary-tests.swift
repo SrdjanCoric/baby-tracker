@@ -924,6 +924,58 @@ enum WatchSummaryTests {
             "replayed stamped Watch envelope rewrote a fresher server summary"
         )
 
+        let freshestVersionedBase = try changedWatchFixture(
+            versionedWatchFixture(
+                versioned,
+                timer: nil,
+                serverAsOf: "2026-08-08T10:30:00.000Z"
+            ),
+            ["localAsOf": "2026-08-08T10:01:00.000Z"]
+        )
+        let staleLocalPayload = try changedWatchFixture(
+            legacyMultiBabyFixture(localStamped, babyId: identity.babyId),
+            ["localAsOf": "2026-08-08T10:02:00.000Z"]
+        )
+        let staleLocalStore = TestWatchSummaryStore()
+        staleLocalStore.bytesByScope[identity.cacheKey] = freshestVersionedBase
+        let staleLocalReader = TestWatchIdentityReader()
+        staleLocalReader.identity = identity
+        let staleLocalCoordinator = WatchSummaryCoordinator(
+            store: staleLocalStore,
+            identityReader: staleLocalReader,
+            fetcher: TestWatchSummaryFetcher(response: versioned),
+            reload: {}
+        )
+        let freshestVersionedSummary = try WatchSummaryDecoder.decodeCache(freshestVersionedBase).data
+
+        let staleLocalResult = await staleLocalCoordinator.acceptPhonePayload(staleLocalPayload)
+
+        requireWatch(
+            staleLocalResult == freshestVersionedSummary,
+            "local payload older than the freshest cached timestamp was accepted"
+        )
+        requireWatch(staleLocalStore.writes == 0, "stale local payload rewrote the Watch cache")
+
+        let invalidLocalPayload = try changedWatchFixture(
+            legacyMultiBabyFixture(localStamped, babyId: identity.babyId),
+            ["localAsOf": "not-a-timestamp"]
+        )
+        let invalidLocalStore = TestWatchSummaryStore()
+        invalidLocalStore.bytesByScope[identity.cacheKey] = versioned
+        let invalidLocalReader = TestWatchIdentityReader()
+        invalidLocalReader.identity = identity
+        let invalidLocalCoordinator = WatchSummaryCoordinator(
+            store: invalidLocalStore,
+            identityReader: invalidLocalReader,
+            fetcher: TestWatchSummaryFetcher(response: versioned),
+            reload: {}
+        )
+
+        let invalidLocalResult = await invalidLocalCoordinator.acceptPhonePayload(invalidLocalPayload)
+
+        requireWatch(invalidLocalResult == cached, "unparseable local timestamp was accepted")
+        requireWatch(invalidLocalStore.writes == 0, "unparseable local timestamp rewrote the Watch cache")
+
         let sameBabyLegacy = try changedWatchFixture(legacy, [
             "babyId": identity.babyId,
             "updatedAt": "2026-08-08T11:00:00.000Z"
