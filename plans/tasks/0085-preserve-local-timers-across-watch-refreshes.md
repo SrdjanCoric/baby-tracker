@@ -48,7 +48,7 @@ automated coordinator seam even though there is no Xcode Watch unit-test target.
 
 ## Human checkpoints
 
-- [ ] [verify] On a paired simulator or physical Watch: start a timer while offline or
+- [x] [verify] On a paired simulator or physical Watch: start a timer while offline or
       accountless, let a Watch summary refresh run. · Expected: the timer stays visible and
       ticking on the Watch; a timer stopped on the server is still removed. · Failure: the local
       timer disappears after a refresh. · Reason: no Swift test target exists; watchOS refresh
@@ -78,10 +78,34 @@ automated coordinator seam even though there is no Xcode Watch unit-test target.
 - Stable focused checks passed: `npm run test:widget:swift`, targeted ESLint for the two changed
   TypeScript files, repository TypeScript typecheck, and `git diff --check`. Logs are under
   `/tmp/agent-workflows/e2f8af45fd34/39f39e542a95/`.
-- Not run here: the paired Watch simulator/physical-device checkpoint above and the final canonical
-  gate; those remain owned by the manual review loop and `finish-task`.
+- Final canonical proof passed on 2026-08-12: `npm run check:code` completed with 117/117 component
+  suites (1,080 tests), 65/65 CI-contract tests, production Widget and Watch Swift typechecks, the
+  Watch summary harness, and the production-bundle gate. The output-only-capped log is at
+  `/tmp/agent-workflows/baby-tracker/feature-preserve-local-timers-across-watch-refreshes/canonical.log`.
+- README disposition: the Apple Watch section now describes local timer preservation and later
+  server-owned removal. The affected paragraph passed one complete `write-well` audit pass.
+- Paired Watch simulator proof passed on 2026-08-12 with the current `SofiBabyWatch` target on the
+  active `SofiBaby Owner` / Apple Watch Series 11 pair. The activation refresh retained the seeded
+  offline Sleep timer, and screenshots 13 seconds apart showed it ticking from 9:28 to 9:41. A later
+  server-stopped summary removed the timer and disabled active-timer polling. Evidence is under
+  `/tmp/agent-workflows/baby-tracker/feature-preserve-local-timers-across-watch-refreshes/` as
+  `watch-local-survives-1.png`, `watch-local-survives-2.png`, and `watch-server-stopped.png`.
 
 ## Review decisions
 
 - skipped (minor): TR-5 — `reconcileOverlays` uses the raw response rather than the installed merged data — because I don't care about those
 - skipped (minor): TR-7 — local/server freshness compares clocks that may be skewed — because I don't care about those
+
+## Completion record
+
+- Built the Watch transport stamp and summary-coordinator merge across
+  `src/services/widget-data-service.ts`, `targets/watch/WatchActivitySummary.swift`, and their
+  TypeScript and portable Swift coverage.
+- Kept server-owned summary fields authoritative, preserved eligible local timers for one refresh,
+  excluded pending stops, and normalized timer probes so preserved provenance does not create
+  redundant fetches.
+- Review outcome: TR-1, TR-2, TR-3, TR-4, and TR-6 were fixed with regression tests. TR-5 and TR-7
+  were skipped as minor at the user's direction for the reasons recorded above. No security risk was
+  accepted.
+- Documentation and final proof are recorded above. All implementation work, acceptance criteria,
+  and the paired-Watch checkpoint are complete.

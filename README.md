@@ -138,7 +138,9 @@ When the latest completed sleep is the current evening's stored `night` session,
   the capsule. It waits if the phone is unavailable or force-quit. While a timer is active, the Watch
   probes that baby's timer state every ten minutes when the phone is reachable and every two minutes
   when it is not, then requests a complete activity summary only after a change. Failed refreshes keep
-  the previous summary intact.
+  the previous summary intact. A successful refresh preserves a locally-known accountless or offline
+  timer, or an app-written timer newer than the server response. A later server response can still
+  remove a stopped server-owned timer.
 - **Deep linking** (`sofibaby://`) for widget and notification actions, with dismissible activity screens on cold launch
 
 ### Edge Functions
