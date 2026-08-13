@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
     remove: vi.fn(),
     reloadWidget: vi.fn(),
   },
+  syncToWatch: vi.fn(),
 }));
 
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
@@ -21,7 +22,7 @@ vi.mock("@react-native-async-storage/async-storage", () => ({ default: mocks.asy
 vi.mock("@/services/extension-storage", () => ({
   loadExtensionStorage: vi.fn().mockResolvedValue(mocks.extensionStorage),
 }));
-vi.mock("./watch-service", () => ({ syncToWatch: vi.fn() }));
+vi.mock("./watch-service", () => ({ syncToWatch: mocks.syncToWatch }));
 
 import {
   clearWidgetData,
@@ -132,6 +133,22 @@ describe("sleep extension data", () => {
       "group.com.sofibaby.app"
     );
     expect(mocks.extensionStorage.reloadWidget).toHaveBeenCalledOnce();
+  });
+
+  it("carries the app snapshot freshness stamp in the Watch envelope", async () => {
+    const data = {
+      ...createEmptyWidgetData("baby-1", "Sofi"),
+      localAsOf: "2026-08-08T10:01:00.000Z",
+      updatedAt: "2026-08-08T10:01:00.000Z",
+    };
+
+    await updateWidgetData(data);
+
+    expect(mocks.syncToWatch).toHaveBeenCalledWith(
+      data,
+      expect.objectContaining({ localAsOf: data.localAsOf }),
+      undefined
+    );
   });
 
   it("preserves the app-written cache while removing authenticated widget state on sign-out", async () => {
