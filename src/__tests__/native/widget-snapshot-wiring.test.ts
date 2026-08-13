@@ -130,4 +130,30 @@ describe("Widget coherent snapshot wiring", () => {
 
     expect(smallWidget).toContain("activity != .sleep");
   });
+
+  it("gives the small sleep widget a larger awake status and app-backed prediction capsule", () => {
+    const smallWidget = between(
+      widgetSource,
+      "struct SmallWidgetView",
+      "// Maps a raw data token"
+    );
+
+    expect(smallWidget).toContain("size: activity == .sleep ? 15 : 13");
+    expect(smallWidget).toContain("getSmallWidgetSleepPrediction(data: data)");
+    expect(smallWidget).toContain("Capsule()");
+  });
+
+  it("formats optional nap and bedtime predictions from app snapshot data", () => {
+    const prediction = between(
+      widgetSource,
+      "func getSmallWidgetSleepPrediction",
+      "func computeWakeWindowText"
+    );
+
+    expect(prediction).toContain("data.activities.sleep.wakeWindowMinutes");
+    expect(prediction).toContain("data.activities.sleep.lastSleepEndedAt");
+    expect(prediction).toContain('data.timeFormat == "24h"');
+    expect(prediction).toContain("L.nextNapAt");
+    expect(prediction).toContain("L.bedtimeAt");
+  });
 });

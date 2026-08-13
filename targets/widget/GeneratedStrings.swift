@@ -100,6 +100,7 @@ enum L {
     static var babyActivity: String { t("babyActivity") }
     static var babyRecentActivity: String { t("babyRecentActivity") }
     static var bedtime: String { t("bedtime") }
+    static var bedtimeAt: String { t("bedtimeAt") }
     static var both: String { t("both") }
     static var bothSides: String { t("bothSides") }
     static var bottle: String { t("bottle") }
@@ -147,6 +148,7 @@ enum L {
     static var mlTodayCountCompact: String { t("mlTodayCountCompact") }
     static var nap: String { t("nap") }
     static var napTime: String { t("napTime") }
+    static var nextNapAt: String { t("nextNapAt") }
     static var nextNapIn: String { t("nextNapIn") }
     static var nextSideText: String { t("nextSideText") }
     static var night: String { t("night") }
@@ -227,6 +229,7 @@ enum L {
             "babyActivity": "%@'s activity",
             "babyRecentActivity": "%@'s recent activity",
             "bedtime": "Bedtime",
+            "bedtimeAt": "Bedtime: %@",
             "both": "Both",
             "bothSides": "Both sides",
             "bottle": "Bottle",
@@ -274,6 +277,7 @@ enum L {
             "mlTodayCountCompact": "%dml today",
             "nap": "Nap",
             "napTime": "Nap time",
+            "nextNapAt": "Next nap: %@",
             "nextNapIn": "Next nap in %@",
             "nextSideText": "Next: %@ side",
             "night": "Night",
@@ -346,6 +350,7 @@ enum L {
             "babyActivity": "Aktivnost za %@",
             "babyRecentActivity": "Nedavna aktivnost za %@",
             "bedtime": "Vreme za spavanje",
+            "bedtimeAt": "Vreme za spavanje: %@",
             "both": "Obe",
             "bothSides": "Obe strane",
             "bottle": "Flašica",
@@ -393,6 +398,7 @@ enum L {
             "mlTodayCountCompact": "%dml danas",
             "nap": "Dremka",
             "napTime": "Vreme za dremku",
+            "nextNapAt": "Sledeća dremka: %@",
             "nextNapIn": "Sledeća dremka za %@",
             "nextSideText": "Sledeće: %@ strana",
             "night": "Noć",
@@ -465,6 +471,7 @@ enum L {
             "babyActivity": "Actividad de %@",
             "babyRecentActivity": "Actividad reciente de %@",
             "bedtime": "Hora de dormir",
+            "bedtimeAt": "Hora de dormir: %@",
             "both": "Ambos",
             "bothSides": "Ambos lados",
             "bottle": "Mamadera",
@@ -512,6 +519,7 @@ enum L {
             "mlTodayCountCompact": "%dml hoy",
             "nap": "Siesta",
             "napTime": "Hora de la siesta",
+            "nextNapAt": "Próxima siesta: %@",
             "nextNapIn": "Próxima siesta en %@",
             "nextSideText": "Siguiente: lado %@",
             "night": "Noche",
@@ -584,6 +592,7 @@ enum L {
             "babyActivity": "Actividad de %@",
             "babyRecentActivity": "Actividad reciente de %@",
             "bedtime": "Hora de dormir",
+            "bedtimeAt": "Hora de dormir: %@",
             "both": "Ambos",
             "bothSides": "Ambos lados",
             "bottle": "Biberón",
@@ -631,6 +640,7 @@ enum L {
             "mlTodayCountCompact": "%dml hoy",
             "nap": "Siesta",
             "napTime": "Hora de la siesta",
+            "nextNapAt": "Próxima siesta: %@",
             "nextNapIn": "Próxima siesta en %@",
             "nextSideText": "Siguiente: lado %@",
             "night": "Noche",
@@ -703,6 +713,7 @@ enum L {
             "babyActivity": "Activité de %@",
             "babyRecentActivity": "Activité récente de %@",
             "bedtime": "Coucher",
+            "bedtimeAt": "Coucher : %@",
             "both": "Les deux",
             "bothSides": "Les deux côtés",
             "bottle": "Biberon",
@@ -750,6 +761,7 @@ enum L {
             "mlTodayCountCompact": "%dml aujourd'hui",
             "nap": "Sieste",
             "napTime": "Heure de la sieste",
+            "nextNapAt": "Prochaine sieste : %@",
             "nextNapIn": "Prochaine sieste dans %@",
             "nextSideText": "Suivant : côté %@",
             "night": "Nuit",
@@ -822,6 +834,7 @@ enum L {
             "babyActivity": "Atividade de %@",
             "babyRecentActivity": "Atividade recente de %@",
             "bedtime": "Hora de dormir",
+            "bedtimeAt": "Hora de dormir: %@",
             "both": "Ambos",
             "bothSides": "Ambos os lados",
             "bottle": "Biberão",
@@ -869,6 +882,7 @@ enum L {
             "mlTodayCountCompact": "%dml hoje",
             "nap": "Sesta",
             "napTime": "Hora da sesta",
+            "nextNapAt": "Próxima sesta: %@",
             "nextNapIn": "Próxima sesta em %@",
             "nextSideText": "Próximo: lado %@",
             "night": "Noite",
@@ -941,6 +955,7 @@ enum L {
             "babyActivity": "Atividade de %@",
             "babyRecentActivity": "Atividade recente de %@",
             "bedtime": "Hora de dormir",
+            "bedtimeAt": "Hora de dormir: %@",
             "both": "Ambos",
             "bothSides": "Os dois lados",
             "bottle": "Mamadeira",
@@ -988,6 +1003,7 @@ enum L {
             "mlTodayCountCompact": "%dml hoje",
             "nap": "Cochilo",
             "napTime": "Hora do cochilo",
+            "nextNapAt": "Próximo cochilo: %@",
             "nextNapIn": "Próximo cochilo em %@",
             "nextSideText": "Próximo: lado %@",
             "night": "Noite",
@@ -1060,6 +1076,7 @@ enum L {
             "babyActivity": "Aktivität von %@",
             "babyRecentActivity": "Letzte Aktivität von %@",
             "bedtime": "Schlafenszeit",
+            "bedtimeAt": "Schlafenszeit: %@",
             "both": "Beide",
             "bothSides": "Beide Seiten",
             "bottle": "Flasche",
@@ -1107,6 +1124,7 @@ enum L {
             "mlTodayCountCompact": "%dml heute",
             "nap": "Nickerchen",
             "napTime": "Nickerchenzeit",
+            "nextNapAt": "Nächstes Nickerchen: %@",
             "nextNapIn": "Nächstes Nickerchen in %@",
             "nextSideText": "Nächste Seite: %@",
             "night": "Nacht",
@@ -1179,6 +1197,7 @@ enum L {
             "babyActivity": "Attività di %@",
             "babyRecentActivity": "Attività recente di %@",
             "bedtime": "Nanna",
+            "bedtimeAt": "Nanna: %@",
             "both": "Entrambi",
             "bothSides": "Entrambi i lati",
             "bottle": "Biberon",
@@ -1226,6 +1245,7 @@ enum L {
             "mlTodayCountCompact": "%dml oggi",
             "nap": "Pisolino",
             "napTime": "Ora del pisolino",
+            "nextNapAt": "Prossimo pisolino: %@",
             "nextNapIn": "Prossimo pisolino tra %@",
             "nextSideText": "Prossimo lato: %@",
             "night": "Notte",

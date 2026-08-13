@@ -1350,7 +1350,11 @@ struct SmallWidgetView: View {
                         }
                     } else {
                         Text(getSmallWidgetMainText(for: activity, data: data, now: entry.date))
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(
+                                size: activity == .sleep ? 15 : 13,
+                                weight: .semibold,
+                                design: .rounded
+                            ))
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
                             .minimumScaleFactor(0.8)
@@ -1422,6 +1426,20 @@ struct SmallWidgetView: View {
                             )
                     }
                 }
+            } else if activity == .sleep,
+                      let data = entry.widgetData,
+                      let prediction = getSmallWidgetSleepPrediction(data: data) {
+                Text(prediction)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(activity.accentColor)
+                    .minimumScaleFactor(0.75)
+                    .lineLimit(1)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(.white)
+                    )
             } else if activity != .sleep, let data = entry.widgetData {
                 if let lastTime = getLastActivityTime(for: activity, data: data) {
                     Text(formatTimeAgoLong(lastTime, now: entry.date))
@@ -2096,6 +2114,35 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
         return computeWakeWindowText(lastEnded: lastEndedBasic, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
     }
     return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
+}
+
+func getSmallWidgetSleepPrediction(data: WidgetDataModel) -> String? {
+    let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
+    guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
+          data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
+          let windowMinutes = data.activities.sleep.wakeWindowMinutes,
+          let lastEndedString = data.activities.sleep.lastSleepEndedAt,
+          !data.activities.sleep.isActive else {
+        return nil
+    }
+
+    let fractional = ISO8601DateFormatter()
+    fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    let lastEnded = fractional.date(from: lastEndedString)
+        ?? ISO8601DateFormatter().date(from: lastEndedString)
+    guard let lastEnded else { return nil }
+
+    let predictedAt = lastEnded.addingTimeInterval(Double(windowMinutes) * 60)
+    let timeFormatter = DateFormatter()
+    timeFormatter.locale = Locale(identifier: data.timeFormat == "24h" ? "en_GB" : "en_US_POSIX")
+    timeFormatter.timeZone = data.timezone.flatMap(TimeZone.init(identifier:)) ?? .current
+    timeFormatter.dateFormat = data.timeFormat == "24h" ? "H:mm" : "h:mm a"
+    let formattedTime = timeFormatter.string(from: predictedAt)
+
+    if data.activities.sleep.wakeWindowSlotLabel == "bedtime" {
+        return String(format: L.bedtimeAt, formattedTime)
+    }
+    return String(format: L.nextNapAt, formattedTime)
 }
 
 func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?, now: Date) -> String? {

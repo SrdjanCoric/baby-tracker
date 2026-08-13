@@ -9,6 +9,7 @@ import { useGrowth } from "./growth-context";
 import { useTummyTime } from "./tummyTime-context";
 import { useActiveTimers } from "./active-timers-context";
 import { useAuth } from "./auth-context";
+import { useTimeFormat } from "./time-format-context";
 import { countFeedingSessions } from "@/utils/feeding-sessions";
 import {
   updateWidgetData,
@@ -70,6 +71,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { tummyTimes, activeTimer: tummyTimeTimer, dailyGoalSeconds: tummyTimeGoalSeconds } = useTummyTime();
   const { locks } = useActiveTimers();
   const { user, session } = useAuth();
+  const { timeFormat } = useTimeFormat();
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -281,6 +283,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     return {
       babyId: selectedBaby.id,
       babyName: selectedBaby.name,
+      timeFormat,
       activities,
       activeTimer,
       activeTimers,
@@ -308,6 +311,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     tummyTimeGoalSeconds,
     locks,
     user,
+    timeFormat,
   ]);
 
   const refreshWidgetData = useCallback(async () => {

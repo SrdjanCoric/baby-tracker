@@ -93,6 +93,10 @@ jest.mock("./auth-context", () => ({
   useAuth: () => ({ user: { id: "user-1" }, session: null }),
 }));
 
+jest.mock("./time-format-context", () => ({
+  useTimeFormat: () => ({ timeFormat: "24h" }),
+}));
+
 jest.mock("@/services/widget-data-service", () => ({
   updateWidgetData: jest.fn(),
   writeAuthToAppGroup: jest.fn(),
@@ -140,7 +144,7 @@ function activeTimers() {
       isRemote?: boolean;
       lockState?: string;
     }>,
-    root: parsed as { localAsOf?: string; updatedAt?: string },
+    root: parsed as { localAsOf?: string; updatedAt?: string; timeFormat?: string },
   };
 }
 
@@ -149,6 +153,12 @@ describe("WidgetProvider running timer payload", () => {
     mockTimerState = makeTimerState(false);
     mockLocks = [];
     capturedJson = null;
+  });
+
+  it("publishes the app clock preference for native prediction labels", () => {
+    const { root } = activeTimers();
+
+    expect(root.timeFormat).toBe("24h");
   });
 
   it("keeps the real start after a pause is resumed for every timer type", () => {

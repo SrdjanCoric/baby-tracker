@@ -96,6 +96,7 @@ struct WidgetDataModel: Codable, Equatable {
     /// domain as `updatedAt`. Present (with `schemaVersion` absent) marks a
     /// `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh.
     var localAsOf: String?
+    var timeFormat: String?
     var babyId: String
     var babyName: String
     var activities: WidgetActivityData
@@ -109,6 +110,7 @@ struct WidgetDataModel: Codable, Equatable {
         case timezone
         case localDay
         case localAsOf
+        case timeFormat
         case babyId
         case babyName
         case activities
@@ -123,6 +125,7 @@ struct WidgetDataModel: Codable, Equatable {
         timezone: String? = nil,
         localDay: WidgetLocalDay? = nil,
         localAsOf: String? = nil,
+        timeFormat: String? = nil,
         babyId: String,
         babyName: String,
         activities: WidgetActivityData,
@@ -135,6 +138,7 @@ struct WidgetDataModel: Codable, Equatable {
         self.timezone = timezone
         self.localDay = localDay
         self.localAsOf = localAsOf
+        self.timeFormat = timeFormat
         self.babyId = babyId
         self.babyName = babyName
         self.activities = activities
@@ -151,6 +155,7 @@ struct WidgetDataModel: Codable, Equatable {
         timezone = try container.decodeIfPresent(String.self, forKey: .timezone)
         localDay = try container.decodeIfPresent(WidgetLocalDay.self, forKey: .localDay)
         localAsOf = try container.decodeIfPresent(String.self, forKey: .localAsOf)
+        timeFormat = try container.decodeIfPresent(String.self, forKey: .timeFormat)
         babyId = try container.decode(String.self, forKey: .babyId)
         babyName = try container.decode(String.self, forKey: .babyName)
         activities = try container.decode(WidgetActivityData.self, forKey: .activities)
@@ -181,6 +186,7 @@ struct WidgetDataModel: Codable, Equatable {
         try container.encodeIfPresent(timezone, forKey: .timezone)
         try container.encodeIfPresent(localDay, forKey: .localDay)
         try container.encodeIfPresent(localAsOf, forKey: .localAsOf)
+        try container.encodeIfPresent(timeFormat, forKey: .timeFormat)
         try container.encode(babyId, forKey: .babyId)
         try container.encode(babyName, forKey: .babyName)
         try container.encode(activities, forKey: .activities)
@@ -474,6 +480,7 @@ actor WidgetSnapshotCoordinator {
             }
 
             var merged = response
+            merged.timeFormat = prior?.timeFormat ?? response.timeFormat
             let pendingStopTypes = pendingStopReader.pendingStopActivityTypes(for: babyId)
             let mergeResult = mergeTimers(
                 prior: prior,
@@ -491,7 +498,8 @@ actor WidgetSnapshotCoordinator {
             }
 
             let mergedBytes: Data
-            if mergedTimerList == (response.activeTimers ?? []) {
+            if mergedTimerList == (response.activeTimers ?? []),
+               merged.timeFormat == response.timeFormat {
                 mergedBytes = responseBytes
             } else {
                 mergedBytes = try JSONEncoder().encode(merged)

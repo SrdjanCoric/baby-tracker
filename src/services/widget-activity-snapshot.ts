@@ -74,6 +74,8 @@ export interface WidgetData {
    * domain as `updatedAt`. Present (with `schemaVersion` absent) marks a
    * `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh. */
   localAsOf?: string;
+  /** The caregiver's explicit app preference for clock labels rendered by extensions. */
+  timeFormat?: "12h" | "24h";
   babyId: string;
   babyName: string;
   activities: WidgetActivityData;
@@ -207,6 +209,9 @@ export function decodeWidgetActivitySnapshotJson(
   if (typeof value.babyId !== "string"
     || typeof value.babyName !== "string"
     || typeof value.updatedAt !== "string"
+    || !(value.timeFormat === undefined
+      || value.timeFormat === "12h"
+      || value.timeFormat === "24h")
     || !hasValidActivities(value.activities, isLegacy || isLocal)) {
     return null;
   }
