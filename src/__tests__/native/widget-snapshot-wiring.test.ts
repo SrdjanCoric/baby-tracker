@@ -87,4 +87,47 @@ describe("Widget coherent snapshot wiring", () => {
     expect(countdown).toContain("canPresentSleepDerivedTiming");
     expect(awakeTime).toContain("canPresentSleepDerivedTiming");
   });
+
+  it("advances small-widget sleep timing with each timeline entry", () => {
+    const smallWidget = between(
+      widgetSource,
+      "struct SmallWidgetView",
+      "// Maps a raw data token"
+    );
+    const mainText = between(
+      widgetSource,
+      "func getSmallWidgetMainText",
+      "func getSmallWidgetSubtext"
+    );
+    const subtext = between(
+      widgetSource,
+      "func getSmallWidgetSubtext",
+      "func formatTimerContext"
+    );
+    const wakeWindow = between(
+      widgetSource,
+      "func getWakeWindowCountdown",
+      "func computeWakeWindowText"
+    );
+
+    expect(smallWidget).toContain(
+      "getSmallWidgetMainText(for: activity, data: data, now: entry.date)"
+    );
+    expect(smallWidget).toContain(
+      "getSmallWidgetSubtext(for: activity, data: data, now: entry.date)"
+    );
+    expect(mainText).toContain("getAwakeTimeText(data: data, now: now)");
+    expect(subtext).toContain("getWakeWindowCountdown(data: data, now: now)");
+    expect(wakeWindow).not.toContain("Date()");
+  });
+
+  it("does not repeat the sleep end age below the small sleep widget", () => {
+    const smallWidget = between(
+      widgetSource,
+      "struct SmallWidgetView",
+      "// Maps a raw data token"
+    );
+
+    expect(smallWidget).toContain("activity != .sleep");
+  });
 });

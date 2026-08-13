@@ -1349,19 +1349,21 @@ struct SmallWidgetView: View {
                             }
                         }
                     } else {
-                        Text(getSmallWidgetMainText(for: activity, data: data))
+                        Text(getSmallWidgetMainText(for: activity, data: data, now: entry.date))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
                             .minimumScaleFactor(0.8)
                             .lineLimit(1)
 
-                        Text(getSmallWidgetSubtext(for: activity, data: data))
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.8))
-                            .multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.8)
-                            .lineLimit(1)
+                        if activity != .sleep {
+                            Text(getSmallWidgetSubtext(for: activity, data: data, now: entry.date))
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.8)
+                                .lineLimit(1)
+                        }
                     }
                 } else {
                     Text(activity.label)
@@ -1420,7 +1422,7 @@ struct SmallWidgetView: View {
                             )
                     }
                 }
-            } else if let data = entry.widgetData {
+            } else if activity != .sleep, let data = entry.widgetData {
                 if let lastTime = getLastActivityTime(for: activity, data: data) {
                     Text(formatTimeAgoLong(lastTime, now: entry.date))
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -1465,7 +1467,7 @@ func localizedToken(_ token: String) -> String {
 }
 
 // Helper functions for small widget contextual text
-func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -> String {
+func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel, now: Date) -> String {
     switch activity {
     case .feeding:
         // Show next breast side if breastfeeding
@@ -1480,7 +1482,7 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
         return L.feeding
 
     case .sleep:
-        if let awakeText = getAwakeTimeText(data: data) {
+        if let awakeText = getAwakeTimeText(data: data, now: now) {
             return awakeText
         }
         let todayMins = data.activities.sleep.todayMinutes
@@ -1516,14 +1518,14 @@ func getSmallWidgetMainText(for activity: ActivityType, data: WidgetDataModel) -
     }
 }
 
-func getSmallWidgetSubtext(for activity: ActivityType, data: WidgetDataModel) -> String {
+func getSmallWidgetSubtext(for activity: ActivityType, data: WidgetDataModel, now: Date) -> String {
     switch activity {
     case .feeding:
         let count = data.activities.feeding.todayCount
         return count > 0 ? L.feedsTodayCount(count) : L.noFeedsYet
 
     case .sleep:
-        if let wakeWindowText = getWakeWindowCountdown(data: data) {
+        if let wakeWindowText = getWakeWindowCountdown(data: data, now: now) {
             return wakeWindowText
         }
         if let type = data.activities.sleep.sleepType {
@@ -2076,7 +2078,7 @@ func formatDuration(minutes: Int) -> String {
     return String(format: L.durationMinutesShort, mins)
 }
 
-func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
+func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
     let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
     guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
           data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
@@ -2091,13 +2093,12 @@ func getWakeWindowCountdown(data: WidgetDataModel) -> String? {
     guard let lastEnded = formatter.date(from: lastEndedStr) else {
         let basicFormatter = ISO8601DateFormatter()
         guard let lastEndedBasic = basicFormatter.date(from: lastEndedStr) else { return nil }
-        return computeWakeWindowText(lastEnded: lastEndedBasic, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel)
+        return computeWakeWindowText(lastEnded: lastEndedBasic, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
     }
-    return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel)
+    return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
 }
 
-func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?) -> String? {
-    let now = Date()
+func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?, now: Date) -> String? {
     let awakeSeconds = now.timeIntervalSince(lastEnded)
     let windowSeconds = Double(windowMinutes) * 60.0
     let remainingSeconds = windowSeconds - awakeSeconds
