@@ -12,9 +12,45 @@ interface SharedSupabaseSessionNativeModule {
   releaseSessionLock(handle: string): Promise<void>;
 }
 
+type SharedSupabaseSessionNativeLockModule = Pick<
+  SharedSupabaseSessionNativeModule,
+  "acquireSessionLock" | "releaseSessionLock"
+>;
+
 export interface SharedSupabaseSessionBridgeAndLock
   extends SharedSupabaseSessionBridge {
   lock: SharedSupabaseSessionLock;
+}
+
+export function createSharedSupabaseSessionLock(
+  module: SharedSupabaseSessionNativeLockModule
+): SharedSupabaseSessionLock {
+  // React Native dispatches this module's methods through one serial native
+  // queue. Queue app callers here so a waiting acquire cannot sit ahead of the
+  // current holder's release and force both calls to time out.
+  let tail: Promise<void> = Promise.resolve();
+
+  return {
+    withLock: async <T>(fn: () => Promise<T>): Promise<T> => {
+      const predecessor = tail;
+      let advanceQueue!: () => void;
+      tail = new Promise<void>((resolve) => {
+        advanceQueue = resolve;
+      });
+
+      await predecessor;
+      try {
+        const handle = await module.acquireSessionLock();
+        try {
+          return await fn();
+        } finally {
+          await module.releaseSessionLock(handle);
+        }
+      } finally {
+        advanceQueue();
+      }
+    },
+  };
 }
 
 /**
@@ -37,16 +73,7 @@ export function loadSharedSupabaseSessionBridge(): SharedSupabaseSessionBridgeAn
     removeSession: () => module.removeSession(),
   };
 
-  const lock: SharedSupabaseSessionLock = {
-    withLock: async <T>(fn: () => Promise<T>): Promise<T> => {
-      const handle = await module.acquireSessionLock();
-      try {
-        return await fn();
-      } finally {
-        await module.releaseSessionLock(handle);
-      }
-    },
-  };
+  const lock = createSharedSupabaseSessionLock(module);
 
   return { ...bridge, lock };
 }

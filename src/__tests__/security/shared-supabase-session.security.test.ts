@@ -87,6 +87,11 @@ describe("shared Supabase session credential storage", () => {
       expect(source).toContain("forSecurityApplicationGroupIdentifier");
     }
   });
+
+  it("exposes bridge teardown cleanup through an Objective-C selector", () => {
+    expect(appSupabaseModule).toContain("@objc func invalidate()");
+    expect(appSupabaseModule).not.toContain("RCTInvalidating");
+  });
 });
 
 describe("Watch renewable Supabase session", () => {

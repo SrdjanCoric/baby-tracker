@@ -14,7 +14,7 @@ import React
 /// iCloud; holding the file lock across the awaited Redeme/retry body keeps two
 /// holders from redeeming the same (rotating) refresh token at once.
 @objc(SharedSupabaseSession)
-class SharedSupabaseSession: NSObject, RCTInvalidating {
+class SharedSupabaseSession: NSObject {
 
     private static let appGroup = "group.com.sofibaby.app"
     private static let keychainService = "com.sofibaby.supabase.session"
