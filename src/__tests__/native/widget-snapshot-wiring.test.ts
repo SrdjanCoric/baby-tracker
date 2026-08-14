@@ -150,8 +150,11 @@ describe("Widget coherent snapshot wiring", () => {
       "func computeWakeWindowText"
     );
 
-    expect(prediction).toContain("data.activities.sleep.wakeWindowMinutes");
-    expect(prediction).toContain("data.activities.sleep.lastSleepEndedAt");
+    expect(prediction).toContain("data.sleepPrediction");
+    expect(prediction).toContain('prediction.state == "blank"');
+    expect(prediction).toContain('prediction.state == "nighttime"');
+    expect(prediction).toContain("L.nighttime");
+    expect(prediction).toContain("prediction.predictedAt");
     expect(prediction).toContain('data.timeFormat == "24h"');
     expect(prediction).toContain("L.nextNapAt");
     expect(prediction).toContain("L.bedtimeAt");

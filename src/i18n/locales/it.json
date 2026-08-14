@@ -278,6 +278,7 @@
     "timerRunning": "Timer attivo",
     "tapToStop": "Tocca per svegliare il bambino",
     "sleeping": "Sta dormendo",
+    "ongoing": "In corso",
     "sleepSaved": "Sonno salvato",
     "autoDetectHint": "Tipo di sonno rilevato in base all'ora del giorno",
     "pastSleepTitle": "Registra sonno precedente",

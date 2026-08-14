@@ -2117,29 +2117,26 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
 }
 
 func getSmallWidgetSleepPrediction(data: WidgetDataModel) -> String? {
-    let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
-    guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
-          data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
-          let windowMinutes = data.activities.sleep.wakeWindowMinutes,
-          let lastEndedString = data.activities.sleep.lastSleepEndedAt,
-          !data.activities.sleep.isActive else {
-        return nil
-    }
+    guard !data.activities.sleep.isActive,
+          let prediction = data.sleepPrediction else { return nil }
+    if prediction.state == "blank" { return nil }
+    if prediction.state == "nighttime" { return L.nighttime }
+    guard (prediction.state == "nextNap" || prediction.state == "bedtime"),
+          let predictedAtString = prediction.predictedAt else { return nil }
 
     let fractional = ISO8601DateFormatter()
     fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    let lastEnded = fractional.date(from: lastEndedString)
-        ?? ISO8601DateFormatter().date(from: lastEndedString)
-    guard let lastEnded else { return nil }
+    let predictedAt = fractional.date(from: predictedAtString)
+        ?? ISO8601DateFormatter().date(from: predictedAtString)
+    guard let predictedAt else { return nil }
 
-    let predictedAt = lastEnded.addingTimeInterval(Double(windowMinutes) * 60)
     let timeFormatter = DateFormatter()
     timeFormatter.locale = Locale(identifier: data.timeFormat == "24h" ? "en_GB" : "en_US_POSIX")
     timeFormatter.timeZone = data.timezone.flatMap(TimeZone.init(identifier:)) ?? .current
     timeFormatter.dateFormat = data.timeFormat == "24h" ? "H:mm" : "h:mm a"
     let formattedTime = timeFormatter.string(from: predictedAt)
 
-    if data.activities.sleep.wakeWindowSlotLabel == "bedtime" {
+    if prediction.state == "bedtime" {
         return String(format: L.bedtimeAt, formattedTime)
     }
     return String(format: L.nextNapAt, formattedTime)

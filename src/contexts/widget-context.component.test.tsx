@@ -54,9 +54,16 @@ jest.mock("./sleep-context", () => ({
     sleeps: [],
     activeTimer: mockTimerState.sleep,
     dailyGoalMinutes: 0,
+    wakeWindowConfig: null,
     getCurrentNapSlot: () => null,
     getCompletedNapsSinceNightSleep: () => 0,
     pendingMorningConfirmations: [],
+    sleepPredictionModel: null,
+    isComputingModel: false,
+    qualifyingDayCount: 0,
+    predictionBannerDismissed: false,
+    selectedNapCount: null,
+    selectedNapCountLoaded: true,
     newbornNapOptIn: false,
     babyBinding: { babyId: "baby-1", status: "ready" },
   }),
@@ -144,7 +151,12 @@ function activeTimers() {
       isRemote?: boolean;
       lockState?: string;
     }>,
-    root: parsed as { localAsOf?: string; updatedAt?: string; timeFormat?: string },
+    root: parsed as {
+      localAsOf?: string;
+      updatedAt?: string;
+      timeFormat?: string;
+      sleepPrediction?: { state: string; predictedAt?: string };
+    },
   };
 }
 
@@ -159,6 +171,7 @@ describe("WidgetProvider running timer payload", () => {
     const { root } = activeTimers();
 
     expect(root.timeFormat).toBe("24h");
+    expect(root.sleepPrediction).toEqual({ state: "blank" });
   });
 
   it("keeps the real start after a pause is resumed for every timer type", () => {

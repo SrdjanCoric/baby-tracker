@@ -10,37 +10,15 @@ import { useSleep, useBaby } from "@/contexts";
 import { useActiveTimers } from "@/contexts/active-timers-context";
 import type { ActiveSleepTimer } from "@/contexts/sleep-context";
 import type { SleepType } from "@/constants/activities";
-import {
-  predictNextSleep,
-  resolveMorningSleep,
-  getMorningThreshold,
-  BEDTIME_ZONE_MINUTES,
-} from "@/utils/sleepPredictions";
-import type { SleepPrediction, SleepPredictionModel } from "@/utils/sleepPredictions";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
+import { deriveSleepPredictionPresentation } from "@/utils/sleep-prediction-presentation";
 import { formatDurationShort, formatTime, type TranslateFn } from "@/utils/time";
 import { useTimeFormat } from "@/contexts/time-format-context";
-import { SleepStorageService } from "@/services/sleep-storage";
 import { MorningSleepConfirmation } from "./MorningSleepConfirmation";
 
 interface SleepPredictionCardProps {
   babyName?: string;
 }
-
-type CardState =
-  | "loading"
-  | "no_birthdate"
-  | "under_two_months"
-  | "setup_required"
-  | "need_more_data"
-  | "track_sleep"
-  | "morning_confirmation"
-  | "computing"
-  | "sleeping_nap"
-  | "sleeping_night"
-  | "nighttime"
-  | "overdue"
-  | "prediction";
 
 const SleepPredictionCardInner = ({
   babyName,
@@ -61,8 +39,9 @@ const SleepPredictionCardInner = ({
     wakeWindowConfig,
     qualifyingDayCount,
     predictionBannerDismissed,
+    selectedNapCount,
+    selectedNapCountLoaded,
     getCompletedNapsSinceNightSleep,
-    getLastSleep,
     dismissPredictionBanner,
     setDayNightBoundary,
     driftDetection,
@@ -100,10 +79,6 @@ const SleepPredictionCardInner = ({
   const dayEndHour = wakeWindowConfig?.dayEndHour;
   const effectiveDayStart = dayStartHour ?? 6;
   const effectiveDayEnd = dayEndHour ?? 19;
-  const hasDayBoundaries = wakeWindowConfig?.dayBoundariesConfigured === true;
-
-  const [selectedNapCount, setSelectedNapCountState] = useState<number | null>(null);
-  const [loadedPersistedNapCount, setLoadedPersistedNapCount] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [setupDayStart, setSetupDayStart] = useState(7);
   const [setupDayEnd, setSetupDayEnd] = useState(19);
@@ -117,20 +92,6 @@ const SleepPredictionCardInner = ({
   const overdueTickMinute = useTimeRefresh(60000);
 
   const [morningReferenceTime, setMorningReferenceTime] = useState(() => new Date());
-
-  const morningSleep = useMemo(() => {
-    const referenceTime = new Date(
-      Math.max(Date.now(), morningReferenceTime.getTime())
-    );
-    return resolveMorningSleep(
-      sleeps,
-      effectiveDayStart,
-      referenceTime,
-      wakeWindowConfig?.napContinuationMinutes ?? 25
-    );
-  }, [sleeps, effectiveDayStart, morningReferenceTime, wakeWindowConfig?.napContinuationMinutes]);
-  const hasNightSleepToday = morningSleep.morningWakeTime !== null
-    || morningSleep.isContinuationActive;
 
   const pendingMorningConfirmation = useMemo(() => {
     const stored = pendingMorningConfirmations?.[0] ?? null;
@@ -146,97 +107,6 @@ const SleepPredictionCardInner = ({
       ? stored
       : active;
   }, [activeTimer, pendingMorningConfirmations]);
-
-  const hasPredictionData = useMemo((): boolean => {
-    if (!hasNightSleepToday) return false;
-    const hasModel = !!(model || (wakeWindowConfig?.source === "custom" && wakeWindowConfig?.slots?.length));
-    const lastSleep = getLastSleep();
-    return hasModel && !!lastSleep?.endedAt;
-  }, [hasNightSleepToday, model, wakeWindowConfig, getLastSleep]);
-
-  const medianBedtimeHour = model?.medianBedtimeStart ?? null;
-  const nighttimeThresholdHour = medianBedtimeHour ?? effectiveDayEnd;
-  const bedtimeZoneStartHour = nighttimeThresholdHour - BEDTIME_ZONE_MINUTES / 60;
-
-  const hasCompletedCurrentEveningNightSleep = useMemo((): boolean => {
-    const now = new Date(
-      Math.max(Date.now(), morningReferenceTime.getTime())
-    );
-    const dayEnd = new Date(now);
-    dayEnd.setHours(
-      Math.floor(effectiveDayEnd),
-      Math.round((effectiveDayEnd % 1) * 60),
-      0,
-      0
-    );
-    if (now.getTime() < dayEnd.getTime()) return false;
-
-    const lastSleep = getLastSleep();
-    if (lastSleep?.type !== "night" || !lastSleep.endedAt) return false;
-
-    const endedAtMs = new Date(lastSleep.endedAt).getTime();
-    return endedAtMs >= dayEnd.getTime() && endedAtMs <= now.getTime();
-  }, [effectiveDayEnd, getLastSleep, morningReferenceTime]);
-
-  const cardState = useMemo((): CardState | null => {
-    if (!selectedBaby) {
-      return "loading";
-    }
-
-    if (pendingMorningConfirmation) {
-      return "morning_confirmation";
-    }
-
-    if (!birthDate) {
-      return "no_birthdate";
-    }
-
-    if (isUnderTwoMonths(birthDate)) {
-      if (!predictionBannerDismissed) return "under_two_months";
-      return null;
-    }
-
-    if (!hasDayBoundaries) {
-      return wakeWindowConfig === null ? "loading" : "setup_required";
-    }
-
-    if (isComputingModel) {
-      return "computing";
-    }
-
-    if (effectiveActiveTimer) {
-      return effectiveActiveTimer.sleepType === "nap" ? "sleeping_nap" : "sleeping_night";
-    }
-
-    const now = new Date();
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-
-    const morningThreshold = getMorningThreshold(effectiveDayStart);
-    if (currentHour < morningThreshold) {
-      return "nighttime";
-    }
-
-    if (hasCompletedCurrentEveningNightSleep) {
-      return "nighttime";
-    }
-
-    if (currentHour >= bedtimeZoneStartHour && !hasPredictionData) {
-      return "nighttime";
-    }
-
-    if (!hasNightSleepToday) {
-      return "track_sleep";
-    }
-
-    if (hasDayBoundaries && qualifyingDayCount < 5) {
-      return "need_more_data";
-    }
-
-    return "prediction";
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBaby, birthDate, predictionBannerDismissed, hasDayBoundaries, wakeWindowConfig, pendingMorningConfirmation, isComputingModel, effectiveActiveTimer, effectiveDayStart, bedtimeZoneStartHour, hasCompletedCurrentEveningNightSleep, hasNightSleepToday, hasPredictionData, qualifyingDayCount, morningReferenceTime]);
-
-
 
   useEffect(() => {
     if (effectiveActiveTimer) return;
@@ -266,121 +136,50 @@ const SleepPredictionCardInner = ({
     return () => clearTimeout(timer);
   }, [effectiveActiveTimer, effectiveDayStart, morningReferenceTime]);
 
-  const sleepContext = useMemo((): {
-    lastWakeTime: Date | null;
-    lastSleepDurationMinutes: number | undefined;
-    previousProperWakeTime: Date | undefined;
-  } => {
-    if (effectiveActiveTimer) return { lastWakeTime: null, lastSleepDurationMinutes: undefined, previousProperWakeTime: undefined };
-
-    const sorted = [...sleeps].sort((a, b) =>
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-    );
-
-    let lastWakeTime: Date | null = null;
-    let lastSleepDurationMinutes: number | undefined = undefined;
-    let previousProperWakeTime: Date | undefined = undefined;
-
-    for (const sleep of sorted) {
-      if (!sleep.endedAt) continue;
-
-      const durationMin = (new Date(sleep.endedAt).getTime() - new Date(sleep.startedAt).getTime()) / 60000;
-      if (durationMin < 5) continue;
-
-      const startHour = new Date(sleep.startedAt).getHours() + new Date(sleep.startedAt).getMinutes() / 60;
-      const isPastZoneStart = startHour >= bedtimeZoneStartHour;
-      if (isPastZoneStart && durationMin < 15) continue;
-
-      if (lastWakeTime === null) {
-        lastWakeTime = new Date(sleep.endedAt);
-        lastSleepDurationMinutes = durationMin;
-        if (durationMin >= 20) break;
-        continue;
-      }
-
-      if (durationMin >= 20) {
-        previousProperWakeTime = new Date(sleep.endedAt);
-        break;
-      }
-    }
-
-    return { lastWakeTime, lastSleepDurationMinutes, previousProperWakeTime };
-  }, [effectiveActiveTimer, sleeps, bedtimeZoneStartHour]);
-
-  const lastWakeTime = sleepContext.lastWakeTime;
-  const lastSleepDurationMinutes = sleepContext.lastSleepDurationMinutes;
-  const previousProperWakeTime = sleepContext.previousProperWakeTime;
-
-  const manualModel = useMemo((): SleepPredictionModel | null => {
-    if (wakeWindowConfig?.source !== "custom" || !wakeWindowConfig.slots.length) return null;
-    const slots = wakeWindowConfig.slots;
-    const napSlots = slots.filter((s) => s.label !== "bedtime");
-    const bedtimeSlot = slots.find((s) => s.label === "bedtime");
-    const napCount = napSlots.length;
-
-    const startRelativeWakeWindows: Record<string, number> = {};
-    napSlots.forEach((s, i) => {
-      startRelativeWakeWindows[String(i)] = s.durationMinutes;
+  const predictionPresentation = useMemo(() => {
+    void overdueTickMinute;
+    return deriveSleepPredictionPresentation({
+      hasSelectedBaby: Boolean(selectedBaby),
+      birthDate,
+      predictionBannerDismissed,
+      wakeWindowConfig,
+      isComputingModel,
+      activeSleepType: effectiveActiveTimer?.sleepType ?? null,
+      sleeps,
+      model,
+      qualifyingDayCount,
+      hasPendingMorningConfirmation: Boolean(pendingMorningConfirmation),
+      selectedNapCount,
+      selectedNapCountLoaded,
+      completedNapsToday: getCompletedNapsSinceNightSleep(),
+      now: new Date(Math.max(Date.now(), morningReferenceTime.getTime())),
     });
-
-    const penultimate = napCount > 1
-      ? napSlots[napCount - 1].durationMinutes
-      : napSlots[0]?.durationMinutes ?? 120;
-
-    return {
-      primaryNapCount: napCount,
-      secondaryNapCount: null,
-      startRelativeWakeWindows,
-      penultimateWakeWindow: penultimate,
-      bedtimeWakeWindow: bedtimeSlot?.durationMinutes ?? 120,
-      medianNapDuration: model?.medianNapDuration ?? 60,
-      napCountDistribution: { [napCount]: 7 },
-      medianBedtimeStart: model?.medianBedtimeStart ?? null,
-    };
-  }, [wakeWindowConfig, model?.medianNapDuration, model?.medianBedtimeStart]);
-
-  const effectiveModel = manualModel ?? model;
-
-  useEffect(() => {
-    if (!selectedBaby?.id) return;
-    SleepStorageService.getSelectedNapCount(selectedBaby.id).then((count) => {
-      if (count !== null) {
-        setSelectedNapCountState(count);
-      }
-      setLoadedPersistedNapCount(true);
-    }).catch(() => {
-      setLoadedPersistedNapCount(true);
-    });
-  }, [selectedBaby?.id]);
-
-  useEffect(() => {
-    if (!effectiveModel) return;
-    if (!loadedPersistedNapCount) return;
-    if (selectedNapCount !== null) return;
-    setSelectedNapCountState(effectiveModel.primaryNapCount);
-  }, [effectiveModel, loadedPersistedNapCount, selectedNapCount]);
-
-
-  const prediction = useMemo((): SleepPrediction | null => {
-    if (cardState !== "prediction" && cardState !== "need_more_data") return null;
-    if (!effectiveModel || !lastWakeTime || selectedNapCount === null) return null;
-    if (!hasNightSleepToday) return null;
-
-    const completedNaps = getCompletedNapsSinceNightSleep();
-    return predictNextSleep(effectiveModel, selectedNapCount, completedNaps, lastWakeTime, effectiveDayEnd, effectiveDayStart, undefined, lastSleepDurationMinutes, previousProperWakeTime);
-  }, [cardState, effectiveModel, lastWakeTime, selectedNapCount, hasNightSleepToday, getCompletedNapsSinceNightSleep, effectiveDayEnd, effectiveDayStart, lastSleepDurationMinutes, previousProperWakeTime]);
-
-  const isOverdue = useMemo((): boolean => {
-    if (!prediction) return false;
-    return prediction.predictedTime.getTime() < Date.now();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prediction, overdueTickMinute]);
-
-  const overdueMinutes = useMemo((): number => {
-    if (!prediction || !isOverdue) return 0;
-    return Math.floor((Date.now() - prediction.predictedTime.getTime()) / 60000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prediction, isOverdue, overdueTickMinute]);
+  }, [
+    birthDate,
+    effectiveActiveTimer?.sleepType,
+    getCompletedNapsSinceNightSleep,
+    isComputingModel,
+    model,
+    morningReferenceTime,
+    overdueTickMinute,
+    pendingMorningConfirmation,
+    predictionBannerDismissed,
+    qualifyingDayCount,
+    selectedBaby,
+    selectedNapCount,
+    selectedNapCountLoaded,
+    sleeps,
+    wakeWindowConfig,
+  ]);
+  const {
+    cardState,
+    effectiveCardState,
+    prediction,
+    effectiveModel,
+    selectedNapCount: effectiveSelectedNapCount,
+    isOverdue,
+    overdueMinutes,
+  } = predictionPresentation;
 
   const handleInfoPress = useCallback(() => {
     setShowInfoModal(true);
@@ -888,7 +687,7 @@ const SleepPredictionCardInner = ({
       );
     }
 
-    if (!prediction || !effectiveModel || selectedNapCount === null) return null;
+    if (!prediction || !effectiveModel || effectiveSelectedNapCount === null) return null;
 
     return renderPredictionContent();
   };
@@ -901,7 +700,7 @@ const SleepPredictionCardInner = ({
   };
 
   const renderPredictionContent = () => {
-    if (!prediction || !effectiveModel || selectedNapCount === null) return null;
+    if (!prediction || !effectiveModel || effectiveSelectedNapCount === null) return null;
 
     const predictedTimeStr = formatTime(prediction.predictedTime, timeFormat);
 
@@ -992,25 +791,6 @@ const SleepPredictionCardInner = ({
       </View>
     );
   };
-
-  const isBedtimeOverdue = isOverdue && prediction?.type === "bedtime";
-
-  const hasQualifyingSleepPastZoneStart = useMemo((): boolean => {
-    const now = new Date();
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    if (currentHour < bedtimeZoneStartHour) return false;
-    const lastSleep = getLastSleep();
-    if (!lastSleep?.endedAt) return false;
-    const durationMin = (new Date(lastSleep.endedAt).getTime() - new Date(lastSleep.startedAt).getTime()) / 60000;
-    if (durationMin < 15) return false;
-    const startedAtHour = new Date(lastSleep.startedAt).getHours() + new Date(lastSleep.startedAt).getMinutes() / 60;
-    return startedAtHour >= bedtimeZoneStartHour;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bedtimeZoneStartHour, getLastSleep, morningReferenceTime]);
-
-  const effectiveCardState = (isBedtimeOverdue || hasQualifyingSleepPastZoneStart)
-    ? "nighttime"
-    : isOverdue ? "overdue" : cardState;
 
   const overdueBg = isDark ? "#2D2723" : "#F7F1EC";
   const overdueBorder = "rgba(220,160,110,0.2)";

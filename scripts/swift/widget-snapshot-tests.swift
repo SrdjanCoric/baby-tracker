@@ -263,6 +263,29 @@ enum WidgetSnapshotTests {
         require(store.bytesByBaby["baby-versioned"] == versioned, "coordinator did not store response bytes")
         require(store.events == ["write", "reload"], "cache must be written before WidgetKit reload")
 
+        let localPrediction = try changedFixture(versioned, [
+            "sleepPrediction": [
+                "state": "nextNap",
+                "predictedAt": "2026-08-08T12:15:00.000Z"
+            ]
+        ])
+        let predictionStore = TestSnapshotStore()
+        predictionStore.bytesByBaby["baby-versioned"] = localPrediction
+        let predictionCoordinator = WidgetSnapshotCoordinator(
+            store: predictionStore,
+            identityReader: identity,
+            fetcher: TestSnapshotFetcher(bytes: versioned),
+            reload: { predictionStore.events.append("reload") }
+        )
+        let predictionSnapshot = await predictionCoordinator.refresh(for: "baby-versioned")
+        require(
+            predictionSnapshot?.sleepPrediction == WidgetSleepPrediction(
+                state: "nextNap",
+                predictedAt: "2026-08-08T12:15:00.000Z"
+            ),
+            "server refresh replaced the App Group-local sleep prediction cache"
+        )
+
         let providerStore = TestSnapshotStore()
         providerStore.bytesByBaby["baby-versioned"] = legacy
         let providerCoordinator = WidgetSnapshotCoordinator(

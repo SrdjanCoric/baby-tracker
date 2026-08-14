@@ -136,6 +136,8 @@ export interface SleepState {
   isComputingModel: boolean;
   qualifyingDayCount: number;
   predictionBannerDismissed: boolean;
+  selectedNapCount: number | null;
+  selectedNapCountLoaded: boolean;
   driftDetection: DriftDetectionResult | null;
   modelRecomputeVersion: number;
   sleepsLoadVersion: number;
@@ -184,6 +186,8 @@ export type SleepAction =
   | { type: "SET_COMPUTING_MODEL"; payload: boolean }
   | { type: "SET_QUALIFYING_DAY_COUNT"; payload: number }
   | { type: "SET_PREDICTION_BANNER_DISMISSED"; payload: boolean }
+  | { type: "SET_SELECTED_NAP_COUNT"; payload: number | null }
+  | { type: "SET_SELECTED_NAP_COUNT_LOADED"; payload: boolean }
   | { type: "SET_DRIFT_DETECTION"; payload: DriftDetectionResult | null };
 
 const DEFAULT_DAILY_GOAL_MINUTES = 14 * 60; // 14 hours
@@ -205,6 +209,8 @@ export const initialSleepState: SleepState = {
   isComputingModel: false,
   qualifyingDayCount: 0,
   predictionBannerDismissed: false,
+  selectedNapCount: null,
+  selectedNapCountLoaded: false,
   driftDetection: null,
   modelRecomputeVersion: 0,
   sleepsLoadVersion: 0,
@@ -406,6 +412,10 @@ export function sleepReducer(
 
     case "SET_PREDICTION_BANNER_DISMISSED":
       return { ...state, predictionBannerDismissed: action.payload };
+    case "SET_SELECTED_NAP_COUNT":
+      return { ...state, selectedNapCount: action.payload };
+    case "SET_SELECTED_NAP_COUNT_LOADED":
+      return { ...state, selectedNapCountLoaded: action.payload };
 
     case "SET_DRIFT_DETECTION":
       return { ...state, driftDetection: action.payload };
@@ -689,6 +699,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     const isCurrentBinding = () => isCurrentBabyBinding(bindingToken);
     if (!selectedBaby) {
       dispatch({ type: "SET_SLEEPS", payload: [] });
+      dispatch({ type: "SET_SELECTED_NAP_COUNT", payload: null });
+      dispatch({ type: "SET_SELECTED_NAP_COUNT_LOADED", payload: true });
       dispatch({ type: "SET_LOADING", payload: false });
       finishBabyBinding(bindingToken, "ready");
       return;
@@ -702,8 +714,28 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     let bindingStatus: "ready" | "error" = "ready";
 
     dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_SELECTED_NAP_COUNT", payload: null });
+    dispatch({ type: "SET_SELECTED_NAP_COUNT_LOADED", payload: false });
 
     try {
+      try {
+        const selectedNapCount = await SleepStorageService.getSelectedNapCount(
+          selectedBaby.id
+        );
+        if (!isCurrentBinding()) return;
+        dispatch({ type: "SET_SELECTED_NAP_COUNT", payload: selectedNapCount });
+      } catch (error) {
+        if (!isCurrentBinding()) return;
+        console.error(
+          "[SleepContext] Failed to load selected nap count:",
+          error
+        );
+      } finally {
+        if (isCurrentBinding()) {
+          dispatch({ type: "SET_SELECTED_NAP_COUNT_LOADED", payload: true });
+        }
+      }
+
       let sleeps: StoredSleepEntry[];
 
       if (user?.householdId) {
@@ -2304,7 +2336,11 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         source: "age_based",
       };
       dispatch({ type: "SET_WAKE_WINDOW_CONFIG", payload: config });
-      await SleepStorageService.setWakeWindowConfig(selectedBaby.id, config);
+      dispatch({ type: "SET_SELECTED_NAP_COUNT", payload: count });
+      await Promise.all([
+        SleepStorageService.setWakeWindowConfig(selectedBaby.id, config),
+        SleepStorageService.setSelectedNapCount(selectedBaby.id, count),
+      ]);
     },
     [selectedBaby, state.wakeWindowConfig]
   );

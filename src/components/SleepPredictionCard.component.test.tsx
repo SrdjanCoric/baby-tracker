@@ -136,6 +136,8 @@ const defaultSleepContext = () => ({
   wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
   qualifyingDayCount: 0,
   predictionBannerDismissed: false,
+  selectedNapCount: null,
+  selectedNapCountLoaded: true,
   getCompletedNapsSinceNightSleep: mockGetCompletedNapsSinceNightSleep,
   getLastSleep: mockGetLastSleep,
   dismissPredictionBanner: mockDismissPredictionBanner,

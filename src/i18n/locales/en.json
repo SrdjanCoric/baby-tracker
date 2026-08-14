@@ -274,6 +274,7 @@
     "timerRunning": "Timer running",
     "tapToStop": "Tap to wake baby",
     "sleeping": "Sleeping",
+    "ongoing": "Ongoing",
     "sleepSaved": "Sleep saved",
     "autoDetectHint": "Sleep type detected based on time of day",
     "pastSleepTitle": "Log Past Sleep",
