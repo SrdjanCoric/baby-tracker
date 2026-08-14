@@ -346,6 +346,7 @@ export default function TimelineScreen() {
     isOngoing = false
   ): TimelineEntry => {
     const date = new Date(sleep.startedAt);
+    const shouldRenderOngoing = isOngoing || !sleep.endedAt;
     const endDate = sleep.endedAt
       ? new Date(sleep.endedAt)
       : sleep.durationSeconds
@@ -353,7 +354,7 @@ export default function TimelineScreen() {
         : null;
     const crossesMidnight = endDate !== null
       && endDate.toDateString() !== date.toDateString();
-    const time = endDate && !isOngoing
+    const time = endDate && !shouldRenderOngoing
       ? `${formatTime(date, timeFormat)} – ${formatTime(endDate, timeFormat)}${crossesMidnight ? " +1" : ""}`
       : formatTime(date, timeFormat);
 
@@ -361,7 +362,7 @@ export default function TimelineScreen() {
     const durationLabel = sleep.durationSeconds
       ? formatDuration(sleep.durationSeconds, "short")
       : "";
-    const subtitle = isOngoing
+    const subtitle = shouldRenderOngoing
       ? durationLabel
         ? `${durationLabel} · ${t("sleep.ongoing")}`
         : t("sleep.ongoing")
