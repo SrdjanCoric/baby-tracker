@@ -76,9 +76,7 @@ const SleepPredictionCardInner = ({
 
   const birthDate = selectedBaby?.birthDate;
   const dayStartHour = wakeWindowConfig?.dayStartHour;
-  const dayEndHour = wakeWindowConfig?.dayEndHour;
   const effectiveDayStart = dayStartHour ?? 6;
-  const effectiveDayEnd = dayEndHour ?? 19;
   const [showSetup, setShowSetup] = useState(false);
   const [setupDayStart, setSetupDayStart] = useState(7);
   const [setupDayEnd, setSetupDayEnd] = useState(19);
@@ -660,17 +658,11 @@ const SleepPredictionCardInner = ({
     }
 
     if (cardState === "nighttime") {
-      const now = new Date();
-      const currentHour = now.getHours() + now.getMinutes() / 60;
-      const label = currentHour >= effectiveDayEnd && currentHour < 24
-        ? t("dashboard.bedtime")
-        : t("dashboard.nighttime");
-
       return (
         <>
           {renderHeader()}
           <Text style={{ fontSize: 15, fontWeight: "700", color: isDark ? textPrimary : "#3D3350" }}>
-            {label}
+            {t("dashboard.nighttime")}
           </Text>
         </>
       );
