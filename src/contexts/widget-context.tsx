@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import { useBaby } from "./baby-context";
 import { useFeeding } from "./feeding-context";
@@ -31,6 +31,8 @@ import {
 import { registerPushToStart } from "@/services/live-activity-service";
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
+import { deriveSleepPredictionPresentation } from "@/utils/sleep-prediction-presentation";
+import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
@@ -59,9 +61,16 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     sleeps,
     activeTimer: sleepTimer,
     dailyGoalMinutes: sleepGoal,
+    wakeWindowConfig,
     getCurrentNapSlot,
     getCompletedNapsSinceNightSleep,
     pendingMorningConfirmations,
+    sleepPredictionModel,
+    isComputingModel,
+    qualifyingDayCount,
+    predictionBannerDismissed,
+    selectedNapCount,
+    selectedNapCountLoaded,
     newbornNapOptIn,
     babyBinding: sleepBabyBinding,
   } = useSleep();
@@ -72,6 +81,65 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { locks } = useActiveTimers();
   const { user, session } = useAuth();
   const { timeFormat } = useTimeFormat();
+  const [predictionRefreshEnabled, setPredictionRefreshEnabled] = useState(false);
+  const predictionTick = useTimeRefresh(
+    predictionRefreshEnabled ? 60_000 : null
+  );
+
+  const remoteSleepLock = useMemo(() => {
+    if (sleepTimer || !selectedBaby?.id) return null;
+    return locks.find(
+      (lock) =>
+        lock.babyId === selectedBaby.id && lock.activityType === "sleep"
+    ) ?? null;
+  }, [locks, selectedBaby?.id, sleepTimer]);
+
+  const sleepPredictionPresentation = useMemo(() => {
+    void predictionTick;
+    const remoteSleepType = remoteSleepLock?.timerData?.type;
+    const activeSleepType = sleepTimer?.sleepType
+      ?? (remoteSleepType === "night" || remoteSleepType === "nap"
+        ? remoteSleepType
+        : null);
+    return deriveSleepPredictionPresentation({
+      hasSelectedBaby: Boolean(selectedBaby),
+      birthDate: selectedBaby?.birthDate,
+      predictionBannerDismissed,
+      wakeWindowConfig,
+      isComputingModel,
+      activeSleepType,
+      sleeps,
+      model: sleepPredictionModel,
+      qualifyingDayCount,
+      hasPendingMorningConfirmation:
+        pendingMorningConfirmations.length > 0
+        || sleepTimer?.morningClassification === "unresolved",
+      selectedNapCount,
+      selectedNapCountLoaded,
+      completedNapsToday: getCompletedNapsSinceNightSleep(),
+      now: new Date(),
+    });
+  }, [
+    getCompletedNapsSinceNightSleep,
+    isComputingModel,
+    pendingMorningConfirmations.length,
+    predictionBannerDismissed,
+    predictionTick,
+    qualifyingDayCount,
+    remoteSleepLock?.timerData?.type,
+    selectedBaby,
+    selectedNapCount,
+    selectedNapCountLoaded,
+    sleepPredictionModel,
+    sleepTimer?.morningClassification,
+    sleepTimer?.sleepType,
+    sleeps,
+    wakeWindowConfig,
+  ]);
+
+  useEffect(() => {
+    setPredictionRefreshEnabled(sleepPredictionPresentation.needsClockRefresh);
+  }, [sleepPredictionPresentation.needsClockRefresh]);
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -284,6 +352,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       babyId: selectedBaby.id,
       babyName: selectedBaby.name,
       timeFormat,
+      sleepPrediction: sleepPredictionPresentation.widgetState,
       activities,
       activeTimer,
       activeTimers,
@@ -312,6 +381,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     locks,
     user,
     timeFormat,
+    sleepPredictionPresentation.widgetState,
   ]);
 
   const refreshWidgetData = useCallback(async () => {

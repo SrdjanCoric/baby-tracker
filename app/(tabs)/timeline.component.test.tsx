@@ -401,6 +401,39 @@ describe("Timeline daily summary wiring", () => {
     expect(screen.getByTestId("timeline-item-subtitle").props.children).toBe("10m");
   });
 
+  it("labels a stored sleep without an end as ongoing", () => {
+    mockSleepState.sleeps = [
+      {
+        id: "remote-running-sleep",
+        babyId: "baby-1",
+        type: "nap",
+        startedAt: new Date(2026, 0, 20, 11, 0, 0).toISOString(),
+        createdAt: new Date(2026, 0, 20, 11, 0, 0).toISOString(),
+        updatedAt: new Date(2026, 0, 20, 11, 0, 0).toISOString(),
+      },
+    ];
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toBe(
+      "sleep.ongoing"
+    );
+  });
+
+  it("labels the local running timer as ongoing even though it carries an end", () => {
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 0,
+    };
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toContain(
+      "sleep.ongoing"
+    );
+  });
+
   it("keeps a legacy feeding row on its stored duration instead of its longer interval", () => {
     mockFeedings = [
       {

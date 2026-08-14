@@ -47,6 +47,25 @@ describe("widget activity snapshot decoder", () => {
     expect(decoded?.data.activities.sleep.wakeWindowRequiresNewbornOptIn).toBe(true);
   });
 
+  it("accepts valid local prediction states and rejects malformed ones", () => {
+    const base = JSON.parse(fixture("versioned")) as Record<string, unknown>;
+    expect(decodeWidgetActivitySnapshotJson(JSON.stringify({
+      ...base,
+      sleepPrediction: {
+        state: "nextNap",
+        predictedAt: "2026-08-08T12:15:00.000Z",
+      },
+    }))?.data.sleepPrediction).toEqual({
+      state: "nextNap",
+      predictedAt: "2026-08-08T12:15:00.000Z",
+    });
+
+    expect(decodeWidgetActivitySnapshotJson(JSON.stringify({
+      ...base,
+      sleepPrediction: { state: "bedtime" },
+    }))).toBeNull();
+  });
+
   it("accepts a versioned weight-only growth measurement", () => {
     const decoded = decodeWidgetActivitySnapshotJson(fixture("versioned-weight-only"));
 

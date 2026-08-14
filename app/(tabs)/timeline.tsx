@@ -21,7 +21,7 @@ import { formatDualSideDuration } from "@/utils/feeding";
 import {
   type TimelineDataByDate,
 } from "@/utils/timeline";
-import { buildOngoingSleepEntry } from "@/utils/ongoing-sleep";
+import { buildOngoingSleepEntry, type OngoingSleepEntry } from "@/utils/ongoing-sleep";
 import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -246,9 +246,9 @@ export default function TimelineScreen() {
 
   // A running sleep is reported as a sleep ending now, so the summary keeps pace with the
   // Statistics screens instead of lagging until the timer is stopped.
-  const summarySleeps = useMemo(() => {
+  const ongoingSleep = useMemo(() => {
     void summaryRefreshTick;
-    const ongoing = buildOngoingSleepEntry({
+    return buildOngoingSleepEntry({
       timer: activeSleepTimer,
       babyId: selectedBaby?.id,
       isCurrentBaby:
@@ -257,16 +257,18 @@ export default function TimelineScreen() {
       dayStartHour,
       dayEndHour,
     });
-    return ongoing ? [ongoing, ...sleeps] : sleeps;
   }, [
     activeSleepTimer,
     dayEndHour,
     dayStartHour,
     selectedBaby?.id,
     sleepBabyBinding,
-    sleeps,
     summaryRefreshTick,
   ]);
+  const summarySleeps = useMemo(
+    () => ongoingSleep ? [ongoingSleep, ...sleeps] : sleeps,
+    [ongoingSleep, sleeps]
+  );
 
   // Collect all data for summary calculations
   const allData: TimelineDataByDate = useMemo(() => ({
@@ -339,15 +341,31 @@ export default function TimelineScreen() {
     };
   }, [t, timeFormat, volumeUnit]);
 
-  const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
+  const sleepToTimelineEntry = useCallback((
+    sleep: StoredSleepEntry | OngoingSleepEntry
+  ): TimelineEntry => {
     const date = new Date(sleep.startedAt);
-    const time = formatTime(date, timeFormat);
+    const isOngoing = !sleep.endedAt || "isOngoing" in sleep;
+    const endDate = sleep.endedAt
+      ? new Date(sleep.endedAt)
+      : sleep.durationSeconds
+        ? new Date(date.getTime() + sleep.durationSeconds * 1000)
+        : null;
+    const crossesMidnight = endDate !== null
+      && endDate.toDateString() !== date.toDateString();
+    const time = endDate && !isOngoing
+      ? `${formatTime(date, timeFormat)} – ${formatTime(endDate, timeFormat)}${crossesMidnight ? " +1" : ""}`
+      : formatTime(date, timeFormat);
 
     const title = sleep.type === "nap" ? t("sleep.nap") : t("sleep.night");
     const durationLabel = sleep.durationSeconds
       ? formatDuration(sleep.durationSeconds, "short")
       : "";
-    const subtitle = durationLabel;
+    const subtitle = isOngoing
+      ? durationLabel
+        ? `${durationLabel} · ${t("sleep.ongoing")}`
+        : t("sleep.ongoing")
+      : durationLabel;
 
     return {
       id: sleep.id,
@@ -520,7 +538,10 @@ export default function TimelineScreen() {
       ? feedings.map(feedingToTimelineEntry)
       : [];
     const sleepEntries = filterActivity("sleep")
-      ? sleeps.map(sleepToTimelineEntry)
+      ? [
+          ...(ongoingSleep ? [sleepToTimelineEntry(ongoingSleep)] : []),
+          ...sleeps.map((sleep) => sleepToTimelineEntry(sleep)),
+        ]
       : [];
     const diaperEntries = filterActivity("diaper")
       ? diapers.map(diaperToTimelineEntry)
@@ -556,6 +577,7 @@ export default function TimelineScreen() {
   }, [
     feedings,
     sleeps,
+    ongoingSleep,
     diapers,
     pumpings,
     measurements,

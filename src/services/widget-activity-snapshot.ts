@@ -1,5 +1,6 @@
 import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
+import type { SleepWidgetPrediction } from "@/utils/sleep-prediction-presentation";
 
 export interface WidgetActivityData {
   feeding: {
@@ -76,6 +77,8 @@ export interface WidgetData {
   localAsOf?: string;
   /** The caregiver's explicit app preference for clock labels rendered by extensions. */
   timeFormat?: "12h" | "24h";
+  /** Latest app-calculated sleep prediction display state, stored only in the App Group cache. */
+  sleepPrediction?: SleepWidgetPrediction;
   babyId: string;
   babyName: string;
   activities: WidgetActivityData;
@@ -103,6 +106,17 @@ function isNullableString(value: unknown): value is string | null {
 
 function isNullableNumber(value: unknown): value is number | null {
   return value === null || isFiniteNumber(value);
+}
+
+function isSleepWidgetPrediction(value: unknown): value is SleepWidgetPrediction {
+  if (!isObject(value) || typeof value.state !== "string") return false;
+  if (value.state === "blank" || value.state === "nighttime") {
+    return value.predictedAt === undefined;
+  }
+  if (value.state === "nextNap" || value.state === "bedtime") {
+    return typeof value.predictedAt === "string";
+  }
+  return false;
 }
 
 function decodeTimer(value: unknown): ActiveTimerData | null | undefined {
@@ -212,6 +226,8 @@ export function decodeWidgetActivitySnapshotJson(
     || !(value.timeFormat === undefined
       || value.timeFormat === "12h"
       || value.timeFormat === "24h")
+    || !(value.sleepPrediction === undefined
+      || isSleepWidgetPrediction(value.sleepPrediction))
     || !hasValidActivities(value.activities, isLegacy || isLocal)) {
     return null;
   }

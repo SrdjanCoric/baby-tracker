@@ -136,6 +136,8 @@ const defaultSleepContext = () => ({
   wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
   qualifyingDayCount: 0,
   predictionBannerDismissed: false,
+  selectedNapCount: null,
+  selectedNapCountLoaded: true,
   getCompletedNapsSinceNightSleep: mockGetCompletedNapsSinceNightSleep,
   getLastSleep: mockGetLastSleep,
   dismissPredictionBanner: mockDismissPredictionBanner,
@@ -547,7 +549,7 @@ describe("SleepPredictionCard", () => {
   });
 
   describe("State 9: Nighttime (calm label)", () => {
-    it("shows bedtime label in evening", () => {
+    it("shows nighttime in the evening to match the widget state", () => {
       jest.setSystemTime(new Date(2026, 3, 27, 20, 0, 0));
       mockUseSleepReturn = {
         ...defaultSleepContext(),
@@ -555,7 +557,7 @@ describe("SleepPredictionCard", () => {
       };
 
       render(<SleepPredictionCard babyName="Sofija" />);
-      expect(screen.getByText("Bedtime")).toBeTruthy();
+      expect(screen.getByText("Nighttime")).toBeTruthy();
     });
 
     it("shows nighttime label in early morning", () => {
@@ -919,7 +921,7 @@ describe("SleepPredictionCard", () => {
   });
 
   describe("Nighttime edge cases", () => {
-    it("keeps a completed current-evening night sleep in the calm bedtime state", async () => {
+    it("keeps a completed current-evening night sleep in the calm nighttime state", async () => {
       jest.setSystemTime(new Date(2026, 3, 27, 23, 20, 0));
       const morningSleep = makeNightSleep(new Date(2026, 3, 27, 7, 0, 0));
       const startedAt = new Date(2026, 3, 27, 20, 30, 0);
@@ -947,7 +949,7 @@ describe("SleepPredictionCard", () => {
       render(<SleepPredictionCard babyName="Sofija" />);
       await act(async () => {});
 
-      expect(screen.getByText("Bedtime")).toBeTruthy();
+      expect(screen.getByText("Nighttime")).toBeTruthy();
       expect(screen.queryByText(/Bedtime .* ago/)).toBeNull();
     });
 
@@ -975,7 +977,7 @@ describe("SleepPredictionCard", () => {
 
       render(<SleepPredictionCard babyName="Sofija" />);
       await act(async () => {});
-      expect(screen.getByText("Bedtime")).toBeTruthy();
+      expect(screen.getByText("Nighttime")).toBeTruthy();
 
       act(() => {
         jest.advanceTimersByTime(60 * 1000);
@@ -995,7 +997,7 @@ describe("SleepPredictionCard", () => {
         wakeWindowConfig: { dayStartHour: 7, dayEndHour: 19, dayBoundariesConfigured: true },
       };
       render(<SleepPredictionCard babyName="Sofija" />);
-      expect(screen.getByText("Bedtime")).toBeTruthy();
+      expect(screen.getByText("Nighttime")).toBeTruthy();
     });
 
     it("shows prediction in bedtime zone when prediction data exists", async () => {

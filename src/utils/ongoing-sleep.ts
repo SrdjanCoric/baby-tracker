@@ -10,6 +10,11 @@ export interface OngoingSleepTimer {
   pausedAt?: Date;
 }
 
+/** A running timer rendered as a sleep entry. Never persisted; marks the row as in flight. */
+export interface OngoingSleepEntry extends StoredSleepEntry {
+  isOngoing: true;
+}
+
 export interface OngoingSleepEntryInput {
   timer: OngoingSleepTimer | null | undefined;
   babyId: string | undefined;
@@ -31,7 +36,7 @@ export function buildOngoingSleepEntry({
   now,
   dayStartHour,
   dayEndHour,
-}: OngoingSleepEntryInput): StoredSleepEntry | null {
+}: OngoingSleepEntryInput): OngoingSleepEntry | null {
   if (!timer?.isRunning || !babyId || !isCurrentBaby) return null;
 
   const endedAt = timer.isPaused && timer.pausedAt ? timer.pausedAt : now;
@@ -49,5 +54,6 @@ export function buildOngoingSleepEntry({
     durationSeconds,
     createdAt: timer.startTime.toISOString(),
     updatedAt: now.toISOString(),
+    isOngoing: true,
   };
 }

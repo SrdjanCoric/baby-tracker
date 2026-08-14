@@ -1428,7 +1428,7 @@ struct SmallWidgetView: View {
                 }
             } else if activity == .sleep,
                       let data = entry.widgetData,
-                      let prediction = getSmallWidgetSleepPrediction(data: data) {
+                      let prediction = getSmallWidgetSleepPrediction(data: data, now: entry.date) {
                 Text(prediction)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(activity.accentColor)
@@ -2085,6 +2085,20 @@ func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
     formatRelativeTime(date, now: now, long: true, includesAgo: true)
 }
 
+func formatWidgetClockTime(
+    _ date: Date,
+    timeFormat: String?,
+    timezone: String?
+) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(
+        identifier: timeFormat == "24h" ? "en_GB" : "en_US_POSIX"
+    )
+    formatter.timeZone = timezone.flatMap(TimeZone.init(identifier:)) ?? .current
+    formatter.dateFormat = timeFormat == "24h" ? "H:mm" : "h:mm a"
+    return formatter.string(from: date)
+}
+
 // SummaryCard removed - replaced by ActivityRowView for Huckleberry-style layout
 
 func formatDuration(minutes: Int) -> String {
@@ -2116,33 +2130,32 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
     return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
 }
 
-func getSmallWidgetSleepPrediction(data: WidgetDataModel) -> String? {
-    let newbornNapOptIn = UserDefaults(suiteName: appGroupId)?.string(forKey: "widgetNewbornNapOptIn.\(data.babyId)") == "true"
-    guard data.canPresentWakeWindow(newbornNapOptIn: newbornNapOptIn),
-          data.canPresentSleepDerivedTiming(pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)),
-          let windowMinutes = data.activities.sleep.wakeWindowMinutes,
-          let lastEndedString = data.activities.sleep.lastSleepEndedAt,
-          !data.activities.sleep.isActive else {
+func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? {
+    guard !data.activities.sleep.isActive,
+          data.canPresentSleepDerivedTiming(
+              pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)
+          ),
+          let prediction = data.sleepPrediction,
+          isWidgetSleepPredictionCurrent(prediction, now: now) else { return nil }
+    switch prediction.state {
+    case .blank:
         return nil
+    case .nighttime:
+        return L.nighttime
+    case .nextNap, .bedtime:
+        guard let predictedAt = prediction.predictedAt.flatMap(
+            parseWidgetSnapshotTimestamp
+        ) else { return nil }
+        let formattedTime = formatWidgetClockTime(
+            predictedAt,
+            timeFormat: data.timeFormat,
+            timezone: data.timezone
+        )
+        if prediction.state == .bedtime {
+            return String(format: L.bedtimeAt, formattedTime)
+        }
+        return String(format: L.nextNapAt, formattedTime)
     }
-
-    let fractional = ISO8601DateFormatter()
-    fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    let lastEnded = fractional.date(from: lastEndedString)
-        ?? ISO8601DateFormatter().date(from: lastEndedString)
-    guard let lastEnded else { return nil }
-
-    let predictedAt = lastEnded.addingTimeInterval(Double(windowMinutes) * 60)
-    let timeFormatter = DateFormatter()
-    timeFormatter.locale = Locale(identifier: data.timeFormat == "24h" ? "en_GB" : "en_US_POSIX")
-    timeFormatter.timeZone = data.timezone.flatMap(TimeZone.init(identifier:)) ?? .current
-    timeFormatter.dateFormat = data.timeFormat == "24h" ? "H:mm" : "h:mm a"
-    let formattedTime = timeFormatter.string(from: predictedAt)
-
-    if data.activities.sleep.wakeWindowSlotLabel == "bedtime" {
-        return String(format: L.bedtimeAt, formattedTime)
-    }
-    return String(format: L.nextNapAt, formattedTime)
 }
 
 func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?, now: Date) -> String? {

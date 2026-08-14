@@ -198,8 +198,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   locally-known timers the server cannot know about — an accountless or offline-started timer
   (no server row), or a just-written timer in the write-then-refresh race guarded by an app-stamped
   freshness value (`localAsOf`) newer than the response's `serverAsOf`. Server-owned removals still
-  apply to those timers once the server knows about them, and all non-timer fields (totals, last
-  times, wake windows) keep coming wholesale from the response. Widget fetches on its
+  apply to those timers once the server knows about them. Two explicitly App-Group-authored local
+  presentation fields are also preserved from the prior cache: the device's `timeFormat` and the
+  app-calculated `sleepPrediction`; the response supplies either field only when no local value
+  exists. All other non-timer fields (totals, last times, wake windows) keep coming wholesale from
+  the response. Widget fetches on its
   existing timer-change push, action, and scheduled timeline opportunities without short polling.
   Watch keeps its 30-second selected-baby timer probe only while a timer appears active and fetches the
   complete summary only when that fingerprint changes or another explicit full-refresh trigger occurs.

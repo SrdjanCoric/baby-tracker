@@ -153,6 +153,7 @@ enum L {
     static var nextSideText: String { t("nextSideText") }
     static var night: String { t("night") }
     static var nightSleep: String { t("nightSleep") }
+    static var nighttime: String { t("nighttime") }
     static var noDataYet: String { t("noDataYet") }
     static var noFeedsYet: String { t("noFeedsYet") }
     static var noSleepYet: String { t("noSleepYet") }
@@ -282,6 +283,7 @@ enum L {
             "nextSideText": "Next: %@ side",
             "night": "Night",
             "nightSleep": "Night sleep",
+            "nighttime": "Nighttime",
             "noDataYet": "No data yet",
             "noFeedsYet": "No feeds yet",
             "noSleepYet": "No sleep yet",
@@ -403,6 +405,7 @@ enum L {
             "nextSideText": "Sledeće: %@ strana",
             "night": "Noć",
             "nightSleep": "Noćno spavanje",
+            "nighttime": "Noćno vreme",
             "noDataYet": "Još nema podataka",
             "noFeedsYet": "Još nema hranjenja",
             "noSleepYet": "Još nema spavanja",
@@ -524,6 +527,7 @@ enum L {
             "nextSideText": "Siguiente: lado %@",
             "night": "Noche",
             "nightSleep": "Sueño nocturno",
+            "nighttime": "Noche",
             "noDataYet": "Sin datos aún",
             "noFeedsYet": "Sin tomas aún",
             "noSleepYet": "Sin sueño aún",
@@ -645,6 +649,7 @@ enum L {
             "nextSideText": "Siguiente: lado %@",
             "night": "Noche",
             "nightSleep": "Sueño nocturno",
+            "nighttime": "Noche",
             "noDataYet": "Sin datos aún",
             "noFeedsYet": "Sin tomas aún",
             "noSleepYet": "Sin sueño aún",
@@ -766,6 +771,7 @@ enum L {
             "nextSideText": "Suivant : côté %@",
             "night": "Nuit",
             "nightSleep": "Sommeil nocturne",
+            "nighttime": "Nuit",
             "noDataYet": "Pas encore de données",
             "noFeedsYet": "Pas encore de repas",
             "noSleepYet": "Pas encore de sommeil",
@@ -887,6 +893,7 @@ enum L {
             "nextSideText": "Próximo: lado %@",
             "night": "Noite",
             "nightSleep": "Sono noturno",
+            "nighttime": "Noite",
             "noDataYet": "Ainda sem dados",
             "noFeedsYet": "Ainda sem mamadas",
             "noSleepYet": "Ainda sem sono",
@@ -1008,6 +1015,7 @@ enum L {
             "nextSideText": "Próximo: lado %@",
             "night": "Noite",
             "nightSleep": "Sono noturno",
+            "nighttime": "Noite",
             "noDataYet": "Ainda sem dados",
             "noFeedsYet": "Ainda sem mamadas",
             "noSleepYet": "Ainda sem sono",
@@ -1129,6 +1137,7 @@ enum L {
             "nextSideText": "Nächste Seite: %@",
             "night": "Nacht",
             "nightSleep": "Nachtschlaf",
+            "nighttime": "Nachtzeit",
             "noDataYet": "Noch keine Daten",
             "noFeedsYet": "Noch keine Fütterungen",
             "noSleepYet": "Noch kein Schlaf",
@@ -1250,6 +1259,7 @@ enum L {
             "nextSideText": "Prossimo lato: %@",
             "night": "Notte",
             "nightSleep": "Sonno notturno",
+            "nighttime": "Notte",
             "noDataYet": "Nessun dato ancora",
             "noFeedsYet": "Nessuna poppata ancora",
             "noSleepYet": "Nessun sonno ancora",

@@ -139,7 +139,9 @@ describe("Widget coherent snapshot wiring", () => {
     );
 
     expect(smallWidget).toContain("size: activity == .sleep ? 15 : 13");
-    expect(smallWidget).toContain("getSmallWidgetSleepPrediction(data: data)");
+    expect(smallWidget).toContain(
+      "getSmallWidgetSleepPrediction(data: data, now: entry.date)"
+    );
     expect(smallWidget).toContain("Capsule()");
   });
 
@@ -150,9 +152,14 @@ describe("Widget coherent snapshot wiring", () => {
       "func computeWakeWindowText"
     );
 
-    expect(prediction).toContain("data.activities.sleep.wakeWindowMinutes");
-    expect(prediction).toContain("data.activities.sleep.lastSleepEndedAt");
-    expect(prediction).toContain('data.timeFormat == "24h"');
+    expect(prediction).toContain("data.sleepPrediction");
+    expect(prediction).toContain("canPresentSleepDerivedTiming");
+    expect(prediction).toContain("case .blank");
+    expect(prediction).toContain("case .nighttime");
+    expect(prediction).toContain("L.nighttime");
+    expect(prediction).toContain("prediction.predictedAt");
+    expect(prediction).toContain("formatWidgetClockTime");
+    expect(prediction).toContain("timeFormat: data.timeFormat");
     expect(prediction).toContain("L.nextNapAt");
     expect(prediction).toContain("L.bedtimeAt");
   });

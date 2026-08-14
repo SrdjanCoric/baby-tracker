@@ -87,6 +87,18 @@ struct WidgetLocalDay: Codable, Equatable {
     var endsAt: String
 }
 
+enum WidgetSleepPredictionState: String, Codable {
+    case blank
+    case nighttime
+    case nextNap
+    case bedtime
+}
+
+struct WidgetSleepPrediction: Codable, Equatable {
+    var state: WidgetSleepPredictionState
+    var predictedAt: String?
+}
+
 struct WidgetDataModel: Codable, Equatable {
     var schemaVersion: Int?
     var serverAsOf: String?
@@ -97,6 +109,8 @@ struct WidgetDataModel: Codable, Equatable {
     /// `.local` snapshot whose newer-than-`serverAsOf` timers survive a refresh.
     var localAsOf: String?
     var timeFormat: String?
+    /// App-calculated, App Group-local display state. Server refreshes preserve it.
+    var sleepPrediction: WidgetSleepPrediction?
     var babyId: String
     var babyName: String
     var activities: WidgetActivityData
@@ -111,6 +125,7 @@ struct WidgetDataModel: Codable, Equatable {
         case localDay
         case localAsOf
         case timeFormat
+        case sleepPrediction
         case babyId
         case babyName
         case activities
@@ -126,6 +141,7 @@ struct WidgetDataModel: Codable, Equatable {
         localDay: WidgetLocalDay? = nil,
         localAsOf: String? = nil,
         timeFormat: String? = nil,
+        sleepPrediction: WidgetSleepPrediction? = nil,
         babyId: String,
         babyName: String,
         activities: WidgetActivityData,
@@ -139,6 +155,7 @@ struct WidgetDataModel: Codable, Equatable {
         self.localDay = localDay
         self.localAsOf = localAsOf
         self.timeFormat = timeFormat
+        self.sleepPrediction = sleepPrediction
         self.babyId = babyId
         self.babyName = babyName
         self.activities = activities
@@ -156,6 +173,7 @@ struct WidgetDataModel: Codable, Equatable {
         localDay = try container.decodeIfPresent(WidgetLocalDay.self, forKey: .localDay)
         localAsOf = try container.decodeIfPresent(String.self, forKey: .localAsOf)
         timeFormat = try container.decodeIfPresent(String.self, forKey: .timeFormat)
+        sleepPrediction = try container.decodeIfPresent(WidgetSleepPrediction.self, forKey: .sleepPrediction)
         babyId = try container.decode(String.self, forKey: .babyId)
         babyName = try container.decode(String.self, forKey: .babyName)
         activities = try container.decode(WidgetActivityData.self, forKey: .activities)
@@ -187,6 +205,7 @@ struct WidgetDataModel: Codable, Equatable {
         try container.encodeIfPresent(localDay, forKey: .localDay)
         try container.encodeIfPresent(localAsOf, forKey: .localAsOf)
         try container.encodeIfPresent(timeFormat, forKey: .timeFormat)
+        try container.encodeIfPresent(sleepPrediction, forKey: .sleepPrediction)
         try container.encode(babyId, forKey: .babyId)
         try container.encode(babyName, forKey: .babyName)
         try container.encode(activities, forKey: .activities)
@@ -234,13 +253,26 @@ struct WidgetDataModel: Codable, Equatable {
     }
 }
 
-private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
+func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
     let fractionalFormatter = ISO8601DateFormatter()
     fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     if let date = fractionalFormatter.date(from: value) {
         return date
     }
     return ISO8601DateFormatter().date(from: value)
+}
+
+func isWidgetSleepPredictionCurrent(
+    _ prediction: WidgetSleepPrediction,
+    now: Date
+) -> Bool {
+    guard prediction.state == .nextNap || prediction.state == .bedtime else {
+        return true
+    }
+    guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
+        return false
+    }
+    return predictedAt > now
 }
 
 enum WidgetSnapshotKind: Equatable {
@@ -312,6 +344,19 @@ enum WidgetSnapshotDecoder {
               data.activities.sleep.morningConfirmationPending != nil,
               data.updatedAt == serverAsOf else {
             throw WidgetSnapshotError.semanticFailure
+        }
+
+        if let prediction = data.sleepPrediction {
+            switch prediction.state {
+            case .blank, .nighttime:
+                guard prediction.predictedAt == nil else {
+                    throw WidgetSnapshotError.semanticFailure
+                }
+            case .nextNap, .bedtime:
+                guard prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) != nil else {
+                    throw WidgetSnapshotError.semanticFailure
+                }
+            }
         }
 
         let timers = data.activeTimers ?? []
@@ -481,6 +526,7 @@ actor WidgetSnapshotCoordinator {
 
             var merged = response
             merged.timeFormat = prior?.timeFormat ?? response.timeFormat
+            merged.sleepPrediction = prior?.sleepPrediction ?? response.sleepPrediction
             let pendingStopTypes = pendingStopReader.pendingStopActivityTypes(for: babyId)
             let mergeResult = mergeTimers(
                 prior: prior,
@@ -499,7 +545,8 @@ actor WidgetSnapshotCoordinator {
 
             let mergedBytes: Data
             if mergedTimerList == (response.activeTimers ?? []),
-               merged.timeFormat == response.timeFormat {
+               merged.timeFormat == response.timeFormat,
+               merged.sleepPrediction == response.sleepPrediction {
                 mergedBytes = responseBytes
             } else {
                 mergedBytes = try JSONEncoder().encode(merged)
