@@ -118,6 +118,21 @@ describe("sleep prediction presentation", () => {
     expect(result.widgetState.state).toBe("bedtime");
   });
 
+  it("publishes nighttime when an app bedtime prediction becomes overdue", () => {
+    const result = derive({
+      sleeps: [
+        sleep("night", "night", "2026-08-13T22:00:00.000Z", "2026-08-14T06:30:00.000Z"),
+        sleep("late-nap", "nap", "2026-08-14T16:00:00.000Z", "2026-08-14T17:00:00.000Z"),
+      ],
+      selectedNapCount: 1,
+      completedNapsToday: 1,
+      now: new Date(2026, 7, 14, 21, 15),
+    });
+
+    expect(result.effectiveCardState).toBe("nighttime");
+    expect(result.widgetState).toEqual({ state: "nighttime" });
+  });
+
   it("publishes nighttime exactly when the app presentation resolves nighttime", () => {
     const result = derive({
       sleeps: [],

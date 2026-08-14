@@ -277,7 +277,7 @@ export function deriveSleepPredictionPresentation(
         : cardState;
 
   let widgetState: SleepWidgetPrediction = { state: "blank" };
-  if (cardState === "nighttime") {
+  if (effectiveCardState === "nighttime") {
     widgetState = { state: "nighttime" };
   } else if (prediction?.type === "nap") {
     widgetState = {
