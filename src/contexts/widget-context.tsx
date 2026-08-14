@@ -138,10 +138,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
-    const shouldRefresh =
-      sleepPredictionPresentation.widgetState.state !== "blank";
-    setPredictionRefreshEnabled(shouldRefresh);
-  }, [sleepPredictionPresentation.widgetState.state]);
+    setPredictionRefreshEnabled(sleepPredictionPresentation.needsClockRefresh);
+  }, [sleepPredictionPresentation.needsClockRefresh]);
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);

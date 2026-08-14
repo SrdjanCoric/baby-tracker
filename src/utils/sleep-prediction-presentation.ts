@@ -58,6 +58,8 @@ export interface SleepPredictionPresentation {
   isOverdue: boolean;
   overdueMinutes: number;
   widgetState: SleepWidgetPrediction;
+  /** True while time alone can still change the state — a blank payload can become nighttime. */
+  needsClockRefresh: boolean;
 }
 
 function latestSleep(sleeps: readonly StoredSleepEntry[]): StoredSleepEntry | null {
@@ -311,5 +313,9 @@ export function deriveSleepPredictionPresentation(
     isOverdue,
     overdueMinutes,
     widgetState,
+    needsClockRefresh:
+      widgetState.state !== "blank"
+      || cardState === "track_sleep"
+      || cardState === "need_more_data",
   };
 }

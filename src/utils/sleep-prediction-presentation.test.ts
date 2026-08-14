@@ -155,4 +155,21 @@ describe("sleep prediction presentation", () => {
     expect(result.cardState).toBe("track_sleep");
     expect(result.widgetState).toEqual({ state: "blank" });
   });
+
+  it("still needs a clock refresh while the payload is blank but the zone can open", () => {
+    const result = derive({
+      sleeps: [],
+      model: null,
+      qualifyingDayCount: 0,
+      now: new Date(2026, 7, 14, 18, 0),
+    });
+
+    expect(result.widgetState).toEqual({ state: "blank" });
+    expect(result.needsClockRefresh).toBe(true);
+  });
+
+  it("needs no clock refresh while the card is waiting on setup or a running sleep", () => {
+    expect(derive({ wakeWindowConfig: null }).needsClockRefresh).toBe(false);
+    expect(derive({ activeSleepType: "nap" }).needsClockRefresh).toBe(false);
+  });
 });

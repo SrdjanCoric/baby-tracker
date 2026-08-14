@@ -27,8 +27,16 @@ function makeTimerState(isPaused: boolean) {
   };
 }
 
-let mockTimerState = makeTimerState(false);
+type MockTimerState = ReturnType<typeof makeTimerState>;
+let mockTimerState: Omit<MockTimerState, "sleep"> & {
+  sleep: MockTimerState["sleep"] | null;
+} = makeTimerState(false);
 const mockUseTimeRefresh = jest.fn(() => 0);
+let mockBaby: { id: string; name: string; birthDate?: string } = {
+  id: "baby-1",
+  name: "Sofi",
+};
+let mockWakeWindowConfig: Record<string, unknown> | null = null;
 let mockLocks: Array<{
   babyId: string;
   activityType: string;
@@ -43,7 +51,7 @@ jest.mock("@/hooks/useTimeRefresh", () => ({
 }));
 
 jest.mock("./baby-context", () => ({
-  useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
+  useBaby: () => ({ selectedBaby: mockBaby }),
 }));
 
 jest.mock("./feeding-context", () => ({
@@ -59,7 +67,7 @@ jest.mock("./sleep-context", () => ({
     sleeps: [],
     activeTimer: mockTimerState.sleep,
     dailyGoalMinutes: 0,
-    wakeWindowConfig: null,
+    wakeWindowConfig: mockWakeWindowConfig,
     getCurrentNapSlot: () => null,
     getCompletedNapsSinceNightSleep: () => 0,
     pendingMorningConfirmations: [],
@@ -170,6 +178,8 @@ describe("WidgetProvider running timer payload", () => {
     mockUseTimeRefresh.mockClear();
     mockTimerState = makeTimerState(false);
     mockLocks = [];
+    mockBaby = { id: "baby-1", name: "Sofi" };
+    mockWakeWindowConfig = null;
     capturedJson = null;
   });
 
@@ -180,10 +190,33 @@ describe("WidgetProvider running timer payload", () => {
     expect(root.sleepPrediction).toEqual({ state: "blank" });
   });
 
-  it("does not run a minute refresh while no prediction is published", () => {
+  it("does not run a minute refresh for a card state time alone cannot change", () => {
     activeTimers();
 
     expect(mockUseTimeRefresh).toHaveBeenCalledWith(null);
+  });
+
+  it("runs a minute refresh while a blank payload can still reach nighttime", () => {
+    jest.useFakeTimers().setSystemTime(new Date(2026, 7, 14, 10, 0, 0));
+    mockTimerState = { ...makeTimerState(false), sleep: null };
+    mockBaby = { id: "baby-1", name: "Sofi", birthDate: "2025-12-01" };
+    mockWakeWindowConfig = {
+      enabled: true,
+      napCount: 3,
+      slots: [],
+      source: "age_based",
+      dayStartHour: 6,
+      dayEndHour: 19,
+      dayBoundariesConfigured: true,
+      napContinuationMinutes: 25,
+    };
+
+    const { root } = activeTimers();
+
+    expect(root.sleepPrediction).toEqual({ state: "blank" });
+    expect(mockUseTimeRefresh).toHaveBeenCalledWith(60_000);
+
+    jest.useRealTimers();
   });
 
   it("keeps the real start after a pause is resumed for every timer type", () => {
