@@ -67,6 +67,17 @@ function derive(overrides: Partial<Parameters<typeof deriveSleepPredictionPresen
 }
 
 describe("sleep prediction presentation", () => {
+  it("opens the nighttime zone 30 minutes before the learned bedtime", () => {
+    const result = derive({
+      sleeps: [],
+      model: { ...model, medianBedtimeStart: 19.5 },
+      qualifyingDayCount: 0,
+      now: new Date(2026, 7, 14, 18, 30),
+    });
+
+    expect(result.cardState).toBe("track_sleep");
+  });
+
   it("publishes one next-nap timestamp from the same prediction result used by the app", () => {
     const result = derive();
 

@@ -2,6 +2,7 @@ import type { SleepType } from "@/constants/activities";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import type { WakeWindowConfig } from "@/types/wake-windows";
 import {
+  BEDTIME_ZONE_MINUTES,
   getMorningThreshold,
   predictNextSleep,
   resolveMorningSleep,
@@ -139,7 +140,8 @@ export function deriveSleepPredictionPresentation(
     Boolean(lastSleep?.endedAt);
 
   const nighttimeThresholdHour = model?.medianBedtimeStart ?? effectiveDayEnd;
-  const bedtimeZoneStartHour = nighttimeThresholdHour - 90 / 60;
+  const bedtimeZoneStartHour =
+    nighttimeThresholdHour - BEDTIME_ZONE_MINUTES / 60;
 
   const dayEnd = new Date(now);
   dayEnd.setHours(
