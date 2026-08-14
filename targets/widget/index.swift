@@ -2118,6 +2118,9 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
 
 func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? {
     guard !data.activities.sleep.isActive,
+          data.canPresentSleepDerivedTiming(
+              pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)
+          ),
           let prediction = data.sleepPrediction,
           isWidgetSleepPredictionCurrent(prediction, now: now) else { return nil }
     if prediction.state == "blank" { return nil }

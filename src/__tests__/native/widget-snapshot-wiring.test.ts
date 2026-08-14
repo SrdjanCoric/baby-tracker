@@ -153,6 +153,7 @@ describe("Widget coherent snapshot wiring", () => {
     );
 
     expect(prediction).toContain("data.sleepPrediction");
+    expect(prediction).toContain("canPresentSleepDerivedTiming");
     expect(prediction).toContain('prediction.state == "blank"');
     expect(prediction).toContain('prediction.state == "nighttime"');
     expect(prediction).toContain("L.nighttime");
