@@ -28,6 +28,7 @@ function makeTimerState(isPaused: boolean) {
 }
 
 let mockTimerState = makeTimerState(false);
+const mockUseTimeRefresh = jest.fn(() => 0);
 let mockLocks: Array<{
   babyId: string;
   activityType: string;
@@ -36,6 +37,10 @@ let mockLocks: Array<{
   startedByName: string;
   timerData: Record<string, unknown>;
 }> = [];
+
+jest.mock("@/hooks/useTimeRefresh", () => ({
+  useTimeRefresh: (intervalMs: number | null) => mockUseTimeRefresh(intervalMs),
+}));
 
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Sofi" } }),
@@ -162,6 +167,7 @@ function activeTimers() {
 
 describe("WidgetProvider running timer payload", () => {
   beforeEach(() => {
+    mockUseTimeRefresh.mockClear();
     mockTimerState = makeTimerState(false);
     mockLocks = [];
     capturedJson = null;
@@ -172,6 +178,12 @@ describe("WidgetProvider running timer payload", () => {
 
     expect(root.timeFormat).toBe("24h");
     expect(root.sleepPrediction).toEqual({ state: "blank" });
+  });
+
+  it("does not run a minute refresh while no prediction is published", () => {
+    activeTimers();
+
+    expect(mockUseTimeRefresh).toHaveBeenCalledWith(null);
   });
 
   it("keeps the real start after a pause is resumed for every timer type", () => {

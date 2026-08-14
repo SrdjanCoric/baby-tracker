@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import { useBaby } from "./baby-context";
 import { useFeeding } from "./feeding-context";
@@ -81,7 +81,10 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { locks } = useActiveTimers();
   const { user, session } = useAuth();
   const { timeFormat } = useTimeFormat();
-  const predictionTick = useTimeRefresh(60_000);
+  const [predictionRefreshEnabled, setPredictionRefreshEnabled] = useState(false);
+  const predictionTick = useTimeRefresh(
+    predictionRefreshEnabled ? 60_000 : null
+  );
 
   const remoteSleepLock = useMemo(() => {
     if (sleepTimer || !selectedBaby?.id) return null;
@@ -133,6 +136,12 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     sleeps,
     wakeWindowConfig,
   ]);
+
+  useEffect(() => {
+    const shouldRefresh =
+      sleepPredictionPresentation.widgetState.state !== "blank";
+    setPredictionRefreshEnabled(shouldRefresh);
+  }, [sleepPredictionPresentation.widgetState.state]);
 
   const lastUpdateRef = useRef<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
