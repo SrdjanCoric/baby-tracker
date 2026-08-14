@@ -21,7 +21,7 @@ import { formatDualSideDuration } from "@/utils/feeding";
 import {
   type TimelineDataByDate,
 } from "@/utils/timeline";
-import { buildOngoingSleepEntry } from "@/utils/ongoing-sleep";
+import { buildOngoingSleepEntry, type OngoingSleepEntry } from "@/utils/ongoing-sleep";
 import { useTimeRefresh } from "@/hooks/useTimeRefresh";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import type { StoredSleepEntry } from "@/services/sleep-storage";
@@ -341,9 +341,11 @@ export default function TimelineScreen() {
     };
   }, [t, timeFormat, volumeUnit]);
 
-  const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
+  const sleepToTimelineEntry = useCallback((
+    sleep: StoredSleepEntry | OngoingSleepEntry
+  ): TimelineEntry => {
     const date = new Date(sleep.startedAt);
-    const isOngoing = !sleep.endedAt || sleep.id.startsWith("ongoing-");
+    const isOngoing = !sleep.endedAt || "isOngoing" in sleep;
     const endDate = sleep.endedAt
       ? new Date(sleep.endedAt)
       : sleep.durationSeconds

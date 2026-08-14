@@ -81,6 +81,10 @@ describe("buildOngoingSleepEntry", () => {
     ).toBeNull();
   });
 
+  it("marks the entry as ongoing so consumers need not parse its id", () => {
+    expect(build()!.isOngoing).toBe(true);
+  });
+
   it("returns null when the timer belongs to another baby or no baby is selected", () => {
     expect(build({ isCurrentBaby: false })).toBeNull();
     expect(build({ babyId: undefined })).toBeNull();

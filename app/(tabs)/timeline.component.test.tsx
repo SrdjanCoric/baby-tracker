@@ -420,6 +420,20 @@ describe("Timeline daily summary wiring", () => {
     );
   });
 
+  it("labels the local running timer as ongoing even though it carries an end", () => {
+    mockSleepState.activeTimer = {
+      isRunning: true,
+      startTime: new Date(2026, 0, 20, 11, 0, 0),
+      totalPausedMs: 0,
+    };
+
+    render(<TimelineScreen />);
+
+    expect(screen.getByTestId("timeline-item-subtitle").props.children).toContain(
+      "sleep.ongoing"
+    );
+  });
+
   it("keeps a legacy feeding row on its stored duration instead of its longer interval", () => {
     mockFeedings = [
       {
