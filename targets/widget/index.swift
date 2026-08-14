@@ -2085,6 +2085,20 @@ func formatTimeAgoLong(_ date: Date, now: Date = Date()) -> String {
     formatRelativeTime(date, now: now, long: true, includesAgo: true)
 }
 
+func formatWidgetClockTime(
+    _ date: Date,
+    timeFormat: String?,
+    timezone: String?
+) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(
+        identifier: timeFormat == "24h" ? "en_GB" : "en_US_POSIX"
+    )
+    formatter.timeZone = timezone.flatMap(TimeZone.init(identifier:)) ?? .current
+    formatter.dateFormat = timeFormat == "24h" ? "H:mm" : "h:mm a"
+    return formatter.string(from: date)
+}
+
 // SummaryCard removed - replaced by ActivityRowView for Huckleberry-style layout
 
 func formatDuration(minutes: Int) -> String {
@@ -2126,19 +2140,14 @@ func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? 
     if prediction.state == "blank" { return nil }
     if prediction.state == "nighttime" { return L.nighttime }
     guard (prediction.state == "nextNap" || prediction.state == "bedtime"),
-          let predictedAtString = prediction.predictedAt else { return nil }
-
-    let fractional = ISO8601DateFormatter()
-    fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    let predictedAt = fractional.date(from: predictedAtString)
-        ?? ISO8601DateFormatter().date(from: predictedAtString)
-    guard let predictedAt else { return nil }
-
-    let timeFormatter = DateFormatter()
-    timeFormatter.locale = Locale(identifier: data.timeFormat == "24h" ? "en_GB" : "en_US_POSIX")
-    timeFormatter.timeZone = data.timezone.flatMap(TimeZone.init(identifier:)) ?? .current
-    timeFormatter.dateFormat = data.timeFormat == "24h" ? "H:mm" : "h:mm a"
-    let formattedTime = timeFormatter.string(from: predictedAt)
+          let predictedAt = prediction.predictedAt.flatMap(
+              parseWidgetSnapshotTimestamp
+          ) else { return nil }
+    let formattedTime = formatWidgetClockTime(
+        predictedAt,
+        timeFormat: data.timeFormat,
+        timezone: data.timezone
+    )
 
     if prediction.state == "bedtime" {
         return String(format: L.bedtimeAt, formattedTime)

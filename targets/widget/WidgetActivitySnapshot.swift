@@ -246,7 +246,7 @@ struct WidgetDataModel: Codable, Equatable {
     }
 }
 
-private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
+func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
     let fractionalFormatter = ISO8601DateFormatter()
     fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     if let date = fractionalFormatter.date(from: value) {
