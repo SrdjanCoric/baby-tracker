@@ -57,7 +57,6 @@ export interface SleepPredictionPresentation {
   selectedNapCount: number | null;
   isOverdue: boolean;
   overdueMinutes: number;
-  bedtimeZoneStartHour: number;
   widgetState: SleepWidgetPrediction;
 }
 
@@ -299,7 +298,6 @@ export function deriveSleepPredictionPresentation(
     selectedNapCount,
     isOverdue,
     overdueMinutes,
-    bedtimeZoneStartHour,
     widgetState,
   };
 }
