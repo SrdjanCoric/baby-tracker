@@ -139,7 +139,9 @@ describe("Widget coherent snapshot wiring", () => {
     );
 
     expect(smallWidget).toContain("size: activity == .sleep ? 15 : 13");
-    expect(smallWidget).toContain("getSmallWidgetSleepPrediction(data: data)");
+    expect(smallWidget).toContain(
+      "getSmallWidgetSleepPrediction(data: data, now: entry.date)"
+    );
     expect(smallWidget).toContain("Capsule()");
   });
 

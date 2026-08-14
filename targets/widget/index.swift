@@ -1428,7 +1428,7 @@ struct SmallWidgetView: View {
                 }
             } else if activity == .sleep,
                       let data = entry.widgetData,
-                      let prediction = getSmallWidgetSleepPrediction(data: data) {
+                      let prediction = getSmallWidgetSleepPrediction(data: data, now: entry.date) {
                 Text(prediction)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(activity.accentColor)
@@ -2116,9 +2116,10 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
     return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
 }
 
-func getSmallWidgetSleepPrediction(data: WidgetDataModel) -> String? {
+func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? {
     guard !data.activities.sleep.isActive,
-          let prediction = data.sleepPrediction else { return nil }
+          let prediction = data.sleepPrediction,
+          isWidgetSleepPredictionCurrent(prediction, now: now) else { return nil }
     if prediction.state == "blank" { return nil }
     if prediction.state == "nighttime" { return L.nighttime }
     guard (prediction.state == "nextNap" || prediction.state == "bedtime"),

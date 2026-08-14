@@ -255,6 +255,19 @@ private func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
     return ISO8601DateFormatter().date(from: value)
 }
 
+func isWidgetSleepPredictionCurrent(
+    _ prediction: WidgetSleepPrediction,
+    now: Date
+) -> Bool {
+    guard prediction.state == "nextNap" || prediction.state == "bedtime" else {
+        return true
+    }
+    guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
+        return false
+    }
+    return predictedAt > now
+}
+
 enum WidgetSnapshotKind: Equatable {
     case legacy
     case local
