@@ -97,6 +97,28 @@ function buildManualModel(
   };
 }
 
+function deriveWidgetSleepPrediction(
+  effectiveCardState: SleepPredictionCardState | null,
+  prediction: SleepPrediction | null
+): SleepWidgetPrediction {
+  if (effectiveCardState === "nighttime") {
+    return { state: "nighttime" };
+  }
+  if (prediction?.type === "nap") {
+    return {
+      state: "nextNap",
+      predictedAt: prediction.predictedTime.toISOString(),
+    };
+  }
+  if (prediction?.type === "bedtime") {
+    return {
+      state: "bedtime",
+      predictedAt: prediction.predictedTime.toISOString(),
+    };
+  }
+  return { state: "blank" };
+}
+
 export function deriveSleepPredictionPresentation(
   input: DeriveSleepPredictionPresentationInput
 ): SleepPredictionPresentation {
@@ -275,20 +297,10 @@ export function deriveSleepPredictionPresentation(
         ? "overdue"
         : cardState;
 
-  let widgetState: SleepWidgetPrediction = { state: "blank" };
-  if (effectiveCardState === "nighttime") {
-    widgetState = { state: "nighttime" };
-  } else if (prediction?.type === "nap") {
-    widgetState = {
-      state: "nextNap",
-      predictedAt: prediction.predictedTime.toISOString(),
-    };
-  } else if (prediction?.type === "bedtime") {
-    widgetState = {
-      state: "bedtime",
-      predictedAt: prediction.predictedTime.toISOString(),
-    };
-  }
+  const widgetState = deriveWidgetSleepPrediction(
+    effectiveCardState,
+    prediction
+  );
 
   return {
     cardState,
