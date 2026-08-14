@@ -341,12 +341,9 @@ export default function TimelineScreen() {
     };
   }, [t, timeFormat, volumeUnit]);
 
-  const sleepToTimelineEntry = useCallback((
-    sleep: StoredSleepEntry,
-    isOngoing = false
-  ): TimelineEntry => {
+  const sleepToTimelineEntry = useCallback((sleep: StoredSleepEntry): TimelineEntry => {
     const date = new Date(sleep.startedAt);
-    const shouldRenderOngoing = isOngoing || !sleep.endedAt;
+    const isOngoing = !sleep.endedAt || sleep.id.startsWith("ongoing-");
     const endDate = sleep.endedAt
       ? new Date(sleep.endedAt)
       : sleep.durationSeconds
@@ -354,7 +351,7 @@ export default function TimelineScreen() {
         : null;
     const crossesMidnight = endDate !== null
       && endDate.toDateString() !== date.toDateString();
-    const time = endDate && !shouldRenderOngoing
+    const time = endDate && !isOngoing
       ? `${formatTime(date, timeFormat)} – ${formatTime(endDate, timeFormat)}${crossesMidnight ? " +1" : ""}`
       : formatTime(date, timeFormat);
 
@@ -362,7 +359,7 @@ export default function TimelineScreen() {
     const durationLabel = sleep.durationSeconds
       ? formatDuration(sleep.durationSeconds, "short")
       : "";
-    const subtitle = shouldRenderOngoing
+    const subtitle = isOngoing
       ? durationLabel
         ? `${durationLabel} · ${t("sleep.ongoing")}`
         : t("sleep.ongoing")
@@ -540,7 +537,7 @@ export default function TimelineScreen() {
       : [];
     const sleepEntries = filterActivity("sleep")
       ? [
-          ...(ongoingSleep ? [sleepToTimelineEntry(ongoingSleep, true)] : []),
+          ...(ongoingSleep ? [sleepToTimelineEntry(ongoingSleep)] : []),
           ...sleeps.map((sleep) => sleepToTimelineEntry(sleep)),
         ]
       : [];
