@@ -2137,22 +2137,25 @@ func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? 
           ),
           let prediction = data.sleepPrediction,
           isWidgetSleepPredictionCurrent(prediction, now: now) else { return nil }
-    if prediction.state == "blank" { return nil }
-    if prediction.state == "nighttime" { return L.nighttime }
-    guard (prediction.state == "nextNap" || prediction.state == "bedtime"),
-          let predictedAt = prediction.predictedAt.flatMap(
-              parseWidgetSnapshotTimestamp
-          ) else { return nil }
-    let formattedTime = formatWidgetClockTime(
-        predictedAt,
-        timeFormat: data.timeFormat,
-        timezone: data.timezone
-    )
-
-    if prediction.state == "bedtime" {
-        return String(format: L.bedtimeAt, formattedTime)
+    switch prediction.state {
+    case .blank:
+        return nil
+    case .nighttime:
+        return L.nighttime
+    case .nextNap, .bedtime:
+        guard let predictedAt = prediction.predictedAt.flatMap(
+            parseWidgetSnapshotTimestamp
+        ) else { return nil }
+        let formattedTime = formatWidgetClockTime(
+            predictedAt,
+            timeFormat: data.timeFormat,
+            timezone: data.timezone
+        )
+        if prediction.state == .bedtime {
+            return String(format: L.bedtimeAt, formattedTime)
+        }
+        return String(format: L.nextNapAt, formattedTime)
     }
-    return String(format: L.nextNapAt, formattedTime)
 }
 
 func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?, now: Date) -> String? {

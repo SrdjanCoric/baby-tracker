@@ -87,8 +87,15 @@ struct WidgetLocalDay: Codable, Equatable {
     var endsAt: String
 }
 
+enum WidgetSleepPredictionState: String, Codable {
+    case blank
+    case nighttime
+    case nextNap
+    case bedtime
+}
+
 struct WidgetSleepPrediction: Codable, Equatable {
-    var state: String
+    var state: WidgetSleepPredictionState
     var predictedAt: String?
 }
 
@@ -259,7 +266,7 @@ func isWidgetSleepPredictionCurrent(
     _ prediction: WidgetSleepPrediction,
     now: Date
 ) -> Bool {
-    guard prediction.state == "nextNap" || prediction.state == "bedtime" else {
+    guard prediction.state == .nextNap || prediction.state == .bedtime else {
         return true
     }
     guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
@@ -340,12 +347,15 @@ enum WidgetSnapshotDecoder {
         }
 
         if let prediction = data.sleepPrediction {
-            let isEmptyState = prediction.state == "blank" || prediction.state == "nighttime"
-            let isTimedState = prediction.state == "nextNap" || prediction.state == "bedtime"
-            guard (isEmptyState && prediction.predictedAt == nil)
-                    || (isTimedState
-                        && prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) != nil) else {
-                throw WidgetSnapshotError.semanticFailure
+            switch prediction.state {
+            case .blank, .nighttime:
+                guard prediction.predictedAt == nil else {
+                    throw WidgetSnapshotError.semanticFailure
+                }
+            case .nextNap, .bedtime:
+                guard prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) != nil else {
+                    throw WidgetSnapshotError.semanticFailure
+                }
             }
         }
 

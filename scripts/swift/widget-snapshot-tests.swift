@@ -280,7 +280,7 @@ enum WidgetSnapshotTests {
         let predictionSnapshot = await predictionCoordinator.refresh(for: "baby-versioned")
         require(
             predictionSnapshot?.sleepPrediction == WidgetSleepPrediction(
-                state: "nextNap",
+                state: .nextNap,
                 predictedAt: "2026-08-08T12:15:00.000Z"
             ),
             "server refresh replaced the App Group-local sleep prediction cache"
@@ -288,7 +288,7 @@ enum WidgetSnapshotTests {
         require(
             !isWidgetSleepPredictionCurrent(
                 WidgetSleepPrediction(
-                    state: "nextNap",
+                    state: .nextNap,
                     predictedAt: "2026-08-08T12:15:00.000Z"
                 ),
                 now: Date(timeIntervalSince1970: 1_786_191_360)
