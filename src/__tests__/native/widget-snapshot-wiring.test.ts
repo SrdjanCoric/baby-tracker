@@ -145,6 +145,34 @@ describe("Widget coherent snapshot wiring", () => {
     expect(smallWidget).toContain("Capsule()");
   });
 
+  it("keeps the sleep prediction off the medium and large widgets", () => {
+    const mediumWidget = between(
+      widgetSource,
+      "struct MediumWidgetView",
+      "struct ColorfulCircleButton"
+    );
+    const largeWidget = between(
+      widgetSource,
+      "struct LargeWidgetView",
+      "struct ActivityRowView"
+    );
+
+    expect(mediumWidget).not.toContain("getSmallWidgetSleepPrediction");
+    expect(largeWidget).not.toContain("getSmallWidgetSleepPrediction");
+  });
+
+  it("sizes every medium circle timer so its hours fit the column", () => {
+    const circleButton = between(
+      widgetSource,
+      "struct ColorfulCircleButton",
+      "// MARK: - Large Widget View"
+    );
+
+    expect(
+      circleButton.match(/size: 7, weight: \.semibold, design: \.monospaced/g)
+    ).toHaveLength(2);
+  });
+
   it("formats optional nap and bedtime predictions from app snapshot data", () => {
     const prediction = between(
       widgetSource,

@@ -1748,14 +1748,15 @@ struct ColorfulCircleButton: View {
                         .font(.system(size: 9))
                 }
             } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                // A timer runs into hours, so its h:mm:ss needs to fit the circle column.
                 if isTimerPausedForActivity(activity, data: data) {
                     Text("⏸\(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 7, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.white)
                 } else {
                     Text(startDate, style: .timer)
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 7, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.green)
                 }

@@ -443,6 +443,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       activities: widgetData.activities,
       activeTimer: widgetData.activeTimer,
       activeTimers: widgetData.activeTimers,
+      timeFormat: widgetData.timeFormat,
+      sleepPrediction: widgetData.sleepPrediction,
       accessToken: session?.access_token,
       householdId: user?.householdId,
     });

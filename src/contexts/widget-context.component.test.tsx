@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { act, render } from "@testing-library/react-native";
 
 const START = new Date("2026-08-06T10:00:00.000Z");
 const PAUSED_AT = new Date("2026-08-06T10:30:00.000Z");
@@ -31,7 +31,8 @@ type MockTimerState = ReturnType<typeof makeTimerState>;
 let mockTimerState: Omit<MockTimerState, "sleep"> & {
   sleep: MockTimerState["sleep"] | null;
 } = makeTimerState(false);
-const mockUseTimeRefresh = jest.fn(() => 0);
+let mockTick = 0;
+const mockUseTimeRefresh = jest.fn(() => mockTick);
 let mockBaby: { id: string; name: string; birthDate?: string } = {
   id: "baby-1",
   name: "Sofi",
@@ -139,7 +140,19 @@ jest.mock("@/services/live-activity-service", () => ({
   registerPushToStart: jest.fn(),
 }));
 
+import { updateWidgetData } from "@/services/widget-data-service";
 import { WidgetProvider, useWidget } from "./widget-context";
+
+const CONFIGURED_WAKE_WINDOWS = {
+  enabled: true,
+  napCount: 3,
+  slots: [],
+  source: "age_based",
+  dayStartHour: 6,
+  dayEndHour: 19,
+  dayBoundariesConfigured: true,
+  napContinuationMinutes: 25,
+};
 
 let capturedJson: string | null = null;
 
@@ -176,6 +189,8 @@ function activeTimers() {
 describe("WidgetProvider running timer payload", () => {
   beforeEach(() => {
     mockUseTimeRefresh.mockClear();
+    (updateWidgetData as jest.Mock).mockClear();
+    mockTick = 0;
     mockTimerState = makeTimerState(false);
     mockLocks = [];
     mockBaby = { id: "baby-1", name: "Sofi" };
@@ -200,21 +215,46 @@ describe("WidgetProvider running timer payload", () => {
     jest.useFakeTimers().setSystemTime(new Date(2026, 7, 14, 10, 0, 0));
     mockTimerState = { ...makeTimerState(false), sleep: null };
     mockBaby = { id: "baby-1", name: "Sofi", birthDate: "2025-12-01" };
-    mockWakeWindowConfig = {
-      enabled: true,
-      napCount: 3,
-      slots: [],
-      source: "age_based",
-      dayStartHour: 6,
-      dayEndHour: 19,
-      dayBoundariesConfigured: true,
-      napContinuationMinutes: 25,
-    };
+    mockWakeWindowConfig = { ...CONFIGURED_WAKE_WINDOWS };
 
     const { root } = activeTimers();
 
     expect(root.sleepPrediction).toEqual({ state: "blank" });
     expect(mockUseTimeRefresh).toHaveBeenCalledWith(60_000);
+
+    jest.useRealTimers();
+  });
+
+  it("writes to the App Group when only the sleep prediction changed", async () => {
+    jest.useFakeTimers().setSystemTime(new Date(2026, 7, 14, 10, 0, 0));
+    mockTimerState = { ...makeTimerState(false), sleep: null };
+    mockBaby = { id: "baby-1", name: "Sofi", birthDate: "2025-12-01" };
+    mockWakeWindowConfig = { ...CONFIGURED_WAKE_WINDOWS };
+
+    const tree = () => (
+      <WidgetProvider>
+        <CaptureWidgetData />
+      </WidgetProvider>
+    );
+    const { rerender } = render(tree());
+    await act(async () => {
+      jest.advanceTimersByTime(200);
+    });
+
+    const writes = (updateWidgetData as jest.Mock).mock.calls;
+    expect(writes).toHaveLength(1);
+    expect(writes[0][0].sleepPrediction).toEqual({ state: "blank" });
+
+    // Only the clock moves: no sleep, timer or token changes with it.
+    jest.setSystemTime(new Date(2026, 7, 14, 19, 0, 0));
+    mockTick += 1;
+    rerender(tree());
+    await act(async () => {
+      jest.advanceTimersByTime(200);
+    });
+
+    expect(writes).toHaveLength(2);
+    expect(writes[1][0].sleepPrediction).toEqual({ state: "nighttime" });
 
     jest.useRealTimers();
   });
