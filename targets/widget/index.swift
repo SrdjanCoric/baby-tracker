@@ -1333,6 +1333,9 @@ struct SmallWidgetView: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
+                                // Past ten hours h:mm:ss outgrows the 134pt content box.
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
 
                             if let context = getTimerContext(for: activity, data: data) {
                                 Text(formatTimerContext(context, for: activity))
@@ -1429,9 +1432,9 @@ struct SmallWidgetView: View {
             } else if activity == .sleep,
                       let data = entry.widgetData,
                       let prediction = getSmallWidgetSleepPrediction(data: data, now: entry.date) {
-                Text(prediction)
+                Text(prediction.text)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(activity.accentColor)
+                    .foregroundStyle(prediction.isOverdue ? Color(hex: "B4632F") : activity.accentColor)
                     .minimumScaleFactor(0.75)
                     .lineLimit(1)
                     .padding(.horizontal, 10)
@@ -1748,15 +1751,14 @@ struct ColorfulCircleButton: View {
                         .font(.system(size: 9))
                 }
             } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                // A timer runs into hours, so its h:mm:ss needs to fit the circle column.
                 if isTimerPausedForActivity(activity, data: data) {
                     Text("⏸\(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
-                        .font(.system(size: 7, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.white)
                 } else {
                     Text(startDate, style: .timer)
-                        .font(.system(size: 7, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.green)
                 }
@@ -2131,32 +2133,50 @@ func getWakeWindowCountdown(data: WidgetDataModel, now: Date) -> String? {
     return computeWakeWindowText(lastEnded: lastEnded, windowMinutes: windowMinutes, label: data.activities.sleep.wakeWindowSlotLabel, now: now)
 }
 
-func getSmallWidgetSleepPrediction(data: WidgetDataModel, now: Date) -> String? {
+struct WidgetSleepPredictionText {
+    let text: String
+    let isOverdue: Bool
+}
+
+func getSmallWidgetSleepPrediction(
+    data: WidgetDataModel,
+    now: Date
+) -> WidgetSleepPredictionText? {
     guard !data.activities.sleep.isActive,
           data.canPresentSleepDerivedTiming(
               pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)
           ),
           let prediction = data.sleepPrediction,
-          isWidgetSleepPredictionCurrent(prediction, now: now) else { return nil }
-    switch prediction.state {
-    case .blank:
-        return nil
+          let display = widgetSleepPredictionDisplay(prediction, now: now) else { return nil }
+
+    switch display {
     case .nighttime:
-        return L.nighttime
-    case .nextNap, .bedtime:
-        guard let predictedAt = prediction.predictedAt.flatMap(
-            parseWidgetSnapshotTimestamp
-        ) else { return nil }
-        let formattedTime = formatWidgetClockTime(
-            predictedAt,
-            timeFormat: data.timeFormat,
-            timezone: data.timezone
+        return WidgetSleepPredictionText(text: L.nighttime, isOverdue: false)
+    case let .upcoming(predictedAt, isBedtime):
+        return WidgetSleepPredictionText(
+            text: predictionLabel(predictedAt, isBedtime: isBedtime, data: data),
+            isOverdue: false
         )
-        if prediction.state == .bedtime {
-            return String(format: L.bedtimeAt, formattedTime)
-        }
-        return String(format: L.nextNapAt, formattedTime)
+    case let .overdue(predictedAt, isBedtime):
+        // A late prediction keeps its clock time; only the tint marks it as past due.
+        return WidgetSleepPredictionText(
+            text: predictionLabel(predictedAt, isBedtime: isBedtime, data: data),
+            isOverdue: true
+        )
     }
+}
+
+private func predictionLabel(
+    _ predictedAt: Date,
+    isBedtime: Bool,
+    data: WidgetDataModel
+) -> String {
+    let clockTime = formatWidgetClockTime(
+        predictedAt,
+        timeFormat: data.timeFormat,
+        timezone: data.timezone
+    )
+    return String(format: isBedtime ? L.bedtimeAt : L.nextNapAt, clockTime)
 }
 
 func computeWakeWindowText(lastEnded: Date, windowMinutes: Int, label: String?, now: Date) -> String? {

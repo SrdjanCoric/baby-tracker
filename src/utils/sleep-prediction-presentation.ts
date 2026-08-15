@@ -28,7 +28,8 @@ export type SleepPredictionCardState =
 
 export type SleepWidgetPrediction =
   | { state: "blank" }
-  | { state: "nighttime" }
+  /** `validUntil` is the next morning threshold, after which the widget must stop showing it. */
+  | { state: "nighttime"; validUntil: string }
   | { state: "nextNap"; predictedAt: string }
   | { state: "bedtime"; predictedAt: string };
 
@@ -99,12 +100,32 @@ function buildManualModel(
   };
 }
 
+/**
+ * The next instant local time reaches the morning threshold. The widget renders a frozen payload,
+ * so a bare "nighttime" would still be on screen the following midday. Handing it the expiry keeps
+ * the widget honest without teaching it the day boundaries.
+ */
+function nextMorningThreshold(now: Date, dayStartHour: number): Date {
+  const threshold = getMorningThreshold(dayStartHour);
+  const expiry = new Date(now);
+  expiry.setHours(Math.floor(threshold), Math.round((threshold % 1) * 60), 0, 0);
+  if (expiry.getTime() <= now.getTime()) {
+    expiry.setDate(expiry.getDate() + 1);
+  }
+  return expiry;
+}
+
 function deriveWidgetSleepPrediction(
   effectiveCardState: SleepPredictionCardState | null,
-  prediction: SleepPrediction | null
+  prediction: SleepPrediction | null,
+  now: Date,
+  effectiveDayStart: number
 ): SleepWidgetPrediction {
   if (effectiveCardState === "nighttime") {
-    return { state: "nighttime" };
+    return {
+      state: "nighttime",
+      validUntil: nextMorningThreshold(now, effectiveDayStart).toISOString(),
+    };
   }
   if (prediction?.type === "nap") {
     return {
@@ -301,7 +322,9 @@ export function deriveSleepPredictionPresentation(
 
   const widgetState = deriveWidgetSleepPrediction(
     effectiveCardState,
-    prediction
+    prediction,
+    now,
+    effectiveDayStart
   );
 
   return {

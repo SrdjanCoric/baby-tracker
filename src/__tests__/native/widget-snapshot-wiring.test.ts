@@ -161,7 +161,7 @@ describe("Widget coherent snapshot wiring", () => {
     expect(largeWidget).not.toContain("getSmallWidgetSleepPrediction");
   });
 
-  it("sizes every medium circle timer so its hours fit the column", () => {
+  it("keeps every medium circle timer at its established size", () => {
     const circleButton = between(
       widgetSource,
       "struct ColorfulCircleButton",
@@ -169,7 +169,7 @@ describe("Widget coherent snapshot wiring", () => {
     );
 
     expect(
-      circleButton.match(/size: 7, weight: \.semibold, design: \.monospaced/g)
+      circleButton.match(/size: 9, weight: \.semibold, design: \.monospaced/g)
     ).toHaveLength(2);
   });
 
@@ -182,13 +182,40 @@ describe("Widget coherent snapshot wiring", () => {
 
     expect(prediction).toContain("data.sleepPrediction");
     expect(prediction).toContain("canPresentSleepDerivedTiming");
-    expect(prediction).toContain("case .blank");
-    expect(prediction).toContain("case .nighttime");
+    expect(prediction).toContain("widgetSleepPredictionDisplay(prediction, now: now)");
     expect(prediction).toContain("L.nighttime");
-    expect(prediction).toContain("prediction.predictedAt");
     expect(prediction).toContain("formatWidgetClockTime");
     expect(prediction).toContain("timeFormat: data.timeFormat");
     expect(prediction).toContain("L.nextNapAt");
     expect(prediction).toContain("L.bedtimeAt");
+  });
+
+  it("keeps a passed prediction on its clock time and marks it only by tint", () => {
+    const prediction = between(
+      widgetSource,
+      "func getSmallWidgetSleepPrediction",
+      "func computeWakeWindowText"
+    );
+    const smallWidget = between(
+      widgetSource,
+      "struct SmallWidgetView",
+      "// Maps a raw data token"
+    );
+
+    expect(prediction).toContain("case let .overdue(predictedAt, isBedtime)");
+    expect(prediction).toContain("isOverdue: true");
+    expect(prediction).not.toContain("Ago");
+    expect(smallWidget).toContain('prediction.isOverdue ? Color(hex: "B4632F")');
+  });
+
+  it("shrinks a running small-widget timer only once it would overflow", () => {
+    const smallWidget = between(
+      widgetSource,
+      "struct SmallWidgetView",
+      "// Maps a raw data token"
+    );
+
+    expect(smallWidget).toContain("size: 32, weight: .light, design: .rounded");
+    expect(smallWidget).toContain(".minimumScaleFactor(0.75)");
   });
 });

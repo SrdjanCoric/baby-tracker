@@ -130,7 +130,7 @@ describe("sleep prediction presentation", () => {
     });
 
     expect(result.effectiveCardState).toBe("nighttime");
-    expect(result.widgetState).toEqual({ state: "nighttime" });
+    expect(result.widgetState).toMatchObject({ state: "nighttime" });
   });
 
   it("publishes nighttime exactly when the app presentation resolves nighttime", () => {
@@ -141,7 +141,35 @@ describe("sleep prediction presentation", () => {
     });
 
     expect(result.cardState).toBe("nighttime");
-    expect(result.widgetState).toEqual({ state: "nighttime" });
+    expect(result.widgetState).toMatchObject({ state: "nighttime" });
+  });
+
+  it("expires an early-morning nighttime at this morning's threshold", () => {
+    const result = derive({
+      sleeps: [],
+      model: null,
+      now: new Date(2026, 7, 14, 1, 30),
+    });
+
+    expect(result.widgetState).toEqual({
+      state: "nighttime",
+      // Day start 06:00, so the morning threshold is 02:57 the same day.
+      validUntil: new Date(2026, 7, 14, 2, 57).toISOString(),
+    });
+  });
+
+  it("expires an evening nighttime at the next morning's threshold", () => {
+    const result = derive({
+      sleeps: [],
+      model: { ...model, medianBedtimeStart: 19.5 },
+      qualifyingDayCount: 0,
+      now: new Date(2026, 7, 14, 21, 0),
+    });
+
+    expect(result.widgetState).toEqual({
+      state: "nighttime",
+      validUntil: new Date(2026, 7, 15, 2, 57).toISOString(),
+    });
   });
 
   it("publishes blank when the app cannot present a prediction", () => {

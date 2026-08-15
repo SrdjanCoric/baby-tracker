@@ -97,6 +97,8 @@ enum WidgetSleepPredictionState: String, Codable {
 struct WidgetSleepPrediction: Codable, Equatable {
     var state: WidgetSleepPredictionState
     var predictedAt: String?
+    /// Set on `nighttime` only: the next morning threshold, after which the state must not render.
+    var validUntil: String?
 }
 
 struct WidgetDataModel: Codable, Equatable {
@@ -262,17 +264,44 @@ func parseWidgetSnapshotTimestamp(_ value: String) -> Date? {
     return ISO8601DateFormatter().date(from: value)
 }
 
-func isWidgetSleepPredictionCurrent(
+/// What the widget should render for an app-published prediction at `now`. A predicted time that
+/// has already passed becomes `overdue` rather than disappearing, matching the in-app card.
+enum WidgetSleepPredictionDisplay: Equatable {
+    case nighttime
+    case upcoming(at: Date, isBedtime: Bool)
+    case overdue(at: Date, isBedtime: Bool)
+}
+
+/// How long a passed prediction stays on screen. Beyond this the elapsed time says nothing useful,
+/// and the app may simply not have run since — a widget cannot recompute one for itself.
+let widgetSleepPredictionOverdueHorizonMinutes = 5 * 60
+
+func widgetSleepPredictionDisplay(
     _ prediction: WidgetSleepPrediction,
     now: Date
-) -> Bool {
-    guard prediction.state == .nextNap || prediction.state == .bedtime else {
-        return true
+) -> WidgetSleepPredictionDisplay? {
+    switch prediction.state {
+    case .blank:
+        return nil
+    case .nighttime:
+        // Nighttime is a claim about the present, so the app stamps when it stops being true.
+        guard let validUntil = prediction.validUntil.flatMap(parseWidgetSnapshotTimestamp),
+              now < validUntil else {
+            return nil
+        }
+        return .nighttime
+    case .nextNap, .bedtime:
+        guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
+            return nil
+        }
+        let isBedtime = prediction.state == .bedtime
+        guard predictedAt <= now else {
+            return .upcoming(at: predictedAt, isBedtime: isBedtime)
+        }
+        let minutes = Int(now.timeIntervalSince(predictedAt) / 60)
+        guard minutes <= widgetSleepPredictionOverdueHorizonMinutes else { return nil }
+        return .overdue(at: predictedAt, isBedtime: isBedtime)
     }
-    guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
-        return false
-    }
-    return predictedAt > now
 }
 
 enum WidgetSnapshotKind: Equatable {
@@ -348,8 +377,13 @@ enum WidgetSnapshotDecoder {
 
         if let prediction = data.sleepPrediction {
             switch prediction.state {
-            case .blank, .nighttime:
-                guard prediction.predictedAt == nil else {
+            case .blank:
+                guard prediction.predictedAt == nil, prediction.validUntil == nil else {
+                    throw WidgetSnapshotError.semanticFailure
+                }
+            case .nighttime:
+                guard prediction.predictedAt == nil,
+                      prediction.validUntil.flatMap(parseWidgetSnapshotTimestamp) != nil else {
                     throw WidgetSnapshotError.semanticFailure
                 }
             case .nextNap, .bedtime:
