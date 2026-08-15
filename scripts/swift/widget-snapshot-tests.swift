@@ -285,15 +285,55 @@ enum WidgetSnapshotTests {
             ),
             "server refresh replaced the App Group-local sleep prediction cache"
         )
+        let passedNap = WidgetSleepPrediction(
+            state: .nextNap,
+            predictedAt: "2026-08-08T12:15:00.000Z"
+        )
         require(
-            !isWidgetSleepPredictionCurrent(
-                WidgetSleepPrediction(
-                    state: .nextNap,
-                    predictedAt: "2026-08-08T12:15:00.000Z"
-                ),
-                now: Date(timeIntervalSince1970: 1_786_191_360)
+            widgetSleepPredictionDisplay(
+                passedNap,
+                now: Date(timeIntervalSince1970: 1_786_198_260)
+            ) == .overdue(
+                at: Date(timeIntervalSince1970: 1_786_191_300),
+                isBedtime: false
             ),
-            "a passed sleep prediction remained current"
+            "a passed sleep prediction did not keep its predicted time"
+        )
+        require(
+            widgetSleepPredictionDisplay(
+                passedNap,
+                now: Date(timeIntervalSince1970: 1_786_190_400)
+            ) == .upcoming(
+                at: Date(timeIntervalSince1970: 1_786_191_300),
+                isBedtime: false
+            ),
+            "an upcoming sleep prediction was not reported as upcoming"
+        )
+        require(
+            widgetSleepPredictionDisplay(
+                passedNap,
+                now: Date(timeIntervalSince1970: 1_786_209_360)
+            ) == nil,
+            "a sleep prediction more than five hours past still rendered"
+        )
+
+        let nighttime = WidgetSleepPrediction(
+            state: .nighttime,
+            validUntil: "2026-08-09T00:57:00.000Z"
+        )
+        require(
+            widgetSleepPredictionDisplay(
+                nighttime,
+                now: Date(timeIntervalSince1970: 1_786_233_420)
+            ) == .nighttime,
+            "nighttime did not render before its morning threshold"
+        )
+        require(
+            widgetSleepPredictionDisplay(
+                nighttime,
+                now: Date(timeIntervalSince1970: 1_786_237_080)
+            ) == nil,
+            "nighttime still rendered after its morning threshold"
         )
 
         let providerStore = TestSnapshotStore()

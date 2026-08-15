@@ -110,8 +110,11 @@ function isNullableNumber(value: unknown): value is number | null {
 
 function isSleepWidgetPrediction(value: unknown): value is SleepWidgetPrediction {
   if (!isObject(value) || typeof value.state !== "string") return false;
-  if (value.state === "blank" || value.state === "nighttime") {
-    return value.predictedAt === undefined;
+  if (value.state === "blank") {
+    return value.predictedAt === undefined && value.validUntil === undefined;
+  }
+  if (value.state === "nighttime") {
+    return value.predictedAt === undefined && typeof value.validUntil === "string";
   }
   if (value.state === "nextNap" || value.state === "bedtime") {
     return typeof value.predictedAt === "string";

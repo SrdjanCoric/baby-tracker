@@ -254,7 +254,7 @@ describe("WidgetProvider running timer payload", () => {
     });
 
     expect(writes).toHaveLength(2);
-    expect(writes[1][0].sleepPrediction).toEqual({ state: "nighttime" });
+    expect(writes[1][0].sleepPrediction).toMatchObject({ state: "nighttime" });
 
     jest.useRealTimers();
   });
