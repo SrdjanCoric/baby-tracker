@@ -152,15 +152,24 @@ final class LeasePublishingLock: CrossProcessSessionLock, @unchecked Sendable {
 actor LeaseRevokingRefreshClient: SupabaseRefreshClient {
     let box: LeaseBox
     let response: String
+    let expectedRefreshToken: String
     private var callCountValue = 0
 
-    init(box: LeaseBox, response: String) {
+    init(
+        box: LeaseBox,
+        response: String,
+        expectedRefreshToken: String = "refresh-1"
+    ) {
         self.box = box
         self.response = response
+        self.expectedRefreshToken = expectedRefreshToken
     }
 
     func refresh(refreshToken: String, config: SupabaseEndpointConfig) async throws -> String {
         callCountValue += 1
+        guard callCountValue == 1, refreshToken == expectedRefreshToken else {
+            throw SharedSessionError.refreshRejected
+        }
         box.lease?.revoke()
         return response
     }
