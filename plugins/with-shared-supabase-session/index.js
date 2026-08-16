@@ -18,7 +18,11 @@ function withSharedSupabaseSessionIOS(config) {
         "ios"
       );
 
-      const filesToCopy = ["SharedSupabaseSession.swift", "SharedSupabaseSession.m"];
+      const filesToCopy = [
+        "SharedSupabaseSession.swift",
+        "SharedSupabaseSessionLockCoordinator.swift",
+        "SharedSupabaseSession.m",
+      ];
 
       for (const file of filesToCopy) {
         const sourcePath = path.join(sourceDir, file);
@@ -55,6 +59,7 @@ function withSharedSupabaseSessionIOS(config) {
 
     const filesToAdd = [
       { name: "SharedSupabaseSession.swift", type: "sourcecode.swift" },
+      { name: "SharedSupabaseSessionLockCoordinator.swift", type: "sourcecode.swift" },
       { name: "SharedSupabaseSession.m", type: "sourcecode.c.objc" },
     ];
 

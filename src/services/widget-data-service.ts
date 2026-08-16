@@ -76,7 +76,7 @@ export async function purgeStaleSharedSessionOnFirstLaunch(): Promise<void> {
     if (marker === "1") return;
     const bridge = loadSharedSupabaseSessionBridge();
     if (bridge) {
-      await bridge.removeSession();
+      await bridge.purgeSession();
     }
     await AsyncStorage.setItem(
       SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY,

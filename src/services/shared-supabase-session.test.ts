@@ -65,7 +65,7 @@ function envelopeJson(
 }
 
 function immediateLock(): SharedSupabaseSessionLock {
-  return { withLock: <T>(fn: () => Promise<T>) => fn() };
+  return { withLock: <T>(fn: (handle: string) => Promise<T>) => fn("test-handle") };
 }
 
 function deferred<T>() {
@@ -80,14 +80,14 @@ class ExclusiveTestLock implements SharedSupabaseSessionLock {
   private tail: Promise<void> = Promise.resolve();
   readonly events: string[] = [];
 
-  async withLock<T>(fn: () => Promise<T>): Promise<T> {
+  async withLock<T>(fn: (handle: string) => Promise<T>): Promise<T> {
     const predecessor = this.tail;
     const released = deferred<void>();
     this.tail = released.promise;
     await predecessor;
     this.events.push("lock:entered");
     try {
-      return await fn();
+      return await fn("test-handle");
     } finally {
       this.events.push("lock:released");
       released.resolve();
@@ -97,7 +97,7 @@ class ExclusiveTestLock implements SharedSupabaseSessionLock {
 
 function makeBridge(): SharedSupabaseSessionBridge & {
   reads: number;
-  writes: { envelope: string }[];
+  writes: { envelope: string; expectedRevision: number | null }[];
   removed: number;
   setNext(value: string | null): void;
 } {
@@ -113,9 +113,9 @@ function makeBridge(): SharedSupabaseSessionBridge & {
       this.reads += 1;
       return value;
     },
-    async writeSession(envelope) {
+    async writeSession(envelope, expectedRevision = null) {
       value = envelope;
-      this.writes.push({ envelope });
+      this.writes.push({ envelope, expectedRevision });
     },
     async removeSession() {
       this.removed += 1;
@@ -180,6 +180,7 @@ describe("SharedSupabaseAuthStorage", () => {
     const envelope = JSON.parse(bridge.writes[0].envelope);
     expect(envelope.revision).toBe(4);
     expect(envelope.session).toBe(rotated);
+    expect(bridge.writes[0].expectedRevision).toBe(3);
   });
 
   it("picks up a pair the Widget wrote back", async () => {
@@ -251,6 +252,8 @@ describe("SharedSupabaseAuthStorage", () => {
 
   it("removes the shared session without nested lock acquisition", async () => {
     const bridge = makeBridge();
+    const token = jwt({ session_id: "lineage-a", sub: "user-1" });
+    bridge.setNext(envelopeJson(1, token));
     const lockCalls: string[] = [];
     const { storage } = createSharedSupabaseClientOptions({
       isIOS: true,
@@ -268,6 +271,29 @@ describe("SharedSupabaseAuthStorage", () => {
     await storage.removeItem(SESSION_KEY);
     expect(bridge.removed).toBe(1);
     expect(lockCalls).toHaveLength(0);
+  });
+
+  it("binds session removal to the revision first read by the lock transaction", async () => {
+    const bridge = makeBridge();
+    const removeSession = vi.fn(async () => undefined);
+    bridge.removeSession = removeSession;
+    const token = jwt({ session_id: "lineage-a", sub: "user-1" });
+    bridge.setNext(envelopeJson(5, token, "refresh-5"));
+    const authOptions = createSharedSupabaseClientOptions({
+      isIOS: true,
+      bridge,
+      sessionKey: SESSION_KEY,
+      legacyStorage: asyncStorage,
+      appLock: immediateLock(),
+    });
+
+    await authOptions.lock!("supabase", 10_000, async () => {
+      await authOptions.storage.getItem(SESSION_KEY);
+      bridge.setNext(envelopeJson(6, token, "refresh-widget"));
+      await authOptions.storage.removeItem(SESSION_KEY);
+    });
+
+    expect(removeSession).toHaveBeenCalledWith(5, "lineage-a");
   });
 
   it("returns an auth-js lock on iOS that owns one native flock", async () => {

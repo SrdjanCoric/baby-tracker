@@ -81,9 +81,11 @@ actor RecordedRefreshClient: SupabaseRefreshClient {
 
 final class InspectingLock: CrossProcessSessionLock, @unchecked Sendable {
     var onAcquired: (@Sendable () -> Void)?
-    func withLock<T>(_ body: @escaping @Sendable () async throws -> T) async throws -> T {
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
         onAcquired?()
-        return try await body()
+        return try await body(CrossProcessLockLease())
     }
 }
 
@@ -107,16 +109,187 @@ final class MutexLock: CrossProcessSessionLock, @unchecked Sendable {
         }
     }
     private let state = State()
-    func withLock<T>(_ body: @escaping @Sendable () async throws -> T) async throws -> T {
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
         await state.acquire()
         do {
-            let result = try await body()
+            let result = try await body(CrossProcessLockLease())
             await state.release()
             return result
         } catch {
             await state.release()
             throw error
         }
+    }
+}
+
+final class LeaseBox: @unchecked Sendable {
+    private let mutex = NSLock()
+    private var stored: CrossProcessLockLease?
+    var lease: CrossProcessLockLease? {
+        get { mutex.lock(); defer { mutex.unlock() }; return stored }
+        set { mutex.lock(); stored = newValue; mutex.unlock() }
+    }
+}
+
+/// Lock that publishes each critical section's lease so a test can revoke it
+/// mid-body, simulating a forced release on imminent suspension.
+final class LeasePublishingLock: CrossProcessSessionLock, @unchecked Sendable {
+    let box: LeaseBox
+    init(box: LeaseBox) { self.box = box }
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        let lease = CrossProcessLockLease()
+        box.lease = lease
+        return try await body(lease)
+    }
+}
+
+final class AlwaysRevokedLock: CrossProcessSessionLock {
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        let lease = CrossProcessLockLease()
+        lease.revoke()
+        return try await body(lease)
+    }
+}
+
+/// First section is revoked by the refresh client, the immediate recovery
+/// acquire itself is revoked, and a later caller receives a healthy lease.
+final class FirstRecoveryAcquireRevokedLock: CrossProcessSessionLock, @unchecked Sendable {
+    private let mutex = NSLock()
+    private var callCount = 0
+    let box: LeaseBox
+
+    init(box: LeaseBox) { self.box = box }
+
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        let call = nextCall()
+        if call == 2 {
+            throw SharedSessionError.lockRevoked
+        }
+        let lease = CrossProcessLockLease()
+        box.lease = lease
+        return try await body(lease)
+    }
+
+    private func nextCall() -> Int {
+        mutex.lock()
+        callCount += 1
+        let call = callCount
+        mutex.unlock()
+        return call
+    }
+}
+
+/// Refresh client that revokes the published lease while the redemption is on
+/// the network — the exact moment a suspension-forced release interrupts it.
+actor LeaseRevokingRefreshClient: SupabaseRefreshClient {
+    let box: LeaseBox
+    let response: String
+    let expectedRefreshToken: String
+    private var callCountValue = 0
+
+    init(
+        box: LeaseBox,
+        response: String,
+        expectedRefreshToken: String = "refresh-1"
+    ) {
+        self.box = box
+        self.response = response
+        self.expectedRefreshToken = expectedRefreshToken
+    }
+
+    func refresh(refreshToken: String, config: SupabaseEndpointConfig) async throws -> String {
+        callCountValue += 1
+        guard callCountValue == 1, refreshToken == expectedRefreshToken else {
+            throw SharedSessionError.refreshRejected
+        }
+        box.lease?.revoke()
+        return response
+    }
+
+    func callCount() -> Int { callCountValue }
+}
+
+/// Polling async gate for deterministic cross-task ordering without timers.
+final class TestGate: @unchecked Sendable {
+    private let mutex = NSLock()
+    private var opened = false
+
+    func open() {
+        mutex.lock()
+        opened = true
+        mutex.unlock()
+    }
+
+    func isOpen() -> Bool {
+        mutex.lock()
+        defer { mutex.unlock() }
+        return opened
+    }
+
+    func wait() async {
+        while !isOpen() {
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+    }
+}
+
+/// Suspension guard the test drives by hand: records begin/end pairing and can
+/// fire every registered expiration handler, simulating the system expiring the
+/// assertion right before suspending the process.
+final class ManualSuspensionGuard: SuspensionGuarding, @unchecked Sendable {
+    private let mutex = NSLock()
+    private var handlers: [@Sendable () -> Void] = []
+    private var beginCountValue = 0
+    private var endCountValue = 0
+    private let onBegin: (@Sendable () -> Void)?
+
+    init(onBegin: (@Sendable () -> Void)? = nil) {
+        self.onBegin = onBegin
+    }
+
+    func begin(
+        reason: String,
+        onExpiration: @escaping @Sendable () -> Void
+    ) -> @Sendable () -> Void {
+        mutex.lock()
+        beginCountValue += 1
+        handlers.append(onExpiration)
+        mutex.unlock()
+        onBegin?()
+        return { [self] in
+            mutex.lock()
+            endCountValue += 1
+            mutex.unlock()
+        }
+    }
+
+    func expireAll() {
+        mutex.lock()
+        let snapshot = handlers
+        mutex.unlock()
+        for handler in snapshot {
+            handler()
+        }
+    }
+
+    func beginCount() -> Int {
+        mutex.lock()
+        defer { mutex.unlock() }
+        return beginCountValue
+    }
+
+    func endCount() -> Int {
+        mutex.lock()
+        defer { mutex.unlock() }
+        return endCountValue
     }
 }
 
@@ -144,6 +317,17 @@ enum SharedSupabaseSessionTests {
         await Self.testTransportMissingSessionLogsAndThrows()
         await Self.testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent()
         await Self.testConcurrentRedemptionRedeemsOnce()
+        await Self.testRevokedLeasePersistsRedeemedPairUnderFreshLock()
+        await Self.testRepeatedLeaseRevocationLogsLockRevoked()
+        await Self.testRedeemedPairSurvivesRevokedRecoveryAcquire()
+        Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
+        Self.testAppLockRevocationIsScopedToItsIssuedHandle()
+        Self.testAppLockExpirationWaitsForCapsuleMutation()
+        Self.testLeaseRevocationWaitsForHeldMutation()
+        await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
+        await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
+        await Self.testPosixLockCancellationDuringAcquireReleasesDescriptor()
+        await Self.testPosixLockExpirationDuringAcquireAborts()
         print("PASS: Shared Supabase session renewal core")
     }
 
@@ -449,6 +633,525 @@ enum SharedSupabaseSessionTests {
         let refreshCalls = await refreshClient.callCount()
         requireSession(refreshCalls == 1, "concurrent callers redeemed the refresh token more than once")
         requireSession(store.writeCount == 1, "concurrent callers wrote the rotated pair more than once")
+    }
+
+    // MARK: - Slice 12
+
+    static func testRevokedLeasePersistsRedeemedPairUnderFreshLock() async {
+        let store = InMemorySharedSessionStore()
+        store.bytes = Self.encodedEnvelope(revision: 1, accessToken: Self.lineageToken("lineage-a"), refreshToken: "refresh-1", lineage: "lineage-a")
+        let vault = SharedSessionVault(store: store)
+        let refreshedToken = Self.jwt(payload: ["session_id": "lineage-a", "sub": "user-1"])
+        let box = LeaseBox()
+        let refreshClient = LeaseRevokingRefreshClient(
+            box: box,
+            response: Self.refreshResponseJson(accessToken: refreshedToken, refreshToken: "refresh-2", expiresIn: 3600)
+        )
+        let http = RecordedHTTPClient(
+            statuses: [401, 200],
+            bodies: [Data(), Data("recovered".utf8)]
+        )
+        let logger = RecordingSessionLogger()
+        let transport = WidgetSupabaseTransport(
+            vault: vault,
+            lock: LeasePublishingLock(box: box),
+            refreshClient: refreshClient,
+            httpClient: http,
+            config: SupabaseEndpointConfig(supabaseUrl: "https://example.supabase.co", anonKey: "anon"),
+            logger: logger
+        )
+        let result = try! await transport.send { token in Self.bearerRequest(token: token) }
+        requireSession(result.0 == 200, "revoked-lease recovery did not retry the request")
+        requireSession(
+            String(data: result.1, encoding: .utf8) == "recovered",
+            "revoked-lease recovery did not return the retry body"
+        )
+        let revokedRefreshCalls = await refreshClient.callCount()
+        requireSession(revokedRefreshCalls == 1, "revoked-lease path did not redeem exactly once")
+        requireSession(store.writeCount == 1, "revoked-lease recovery did not persist exactly once")
+        let recovered = try! vault.read()!
+        requireSession(recovered.revision == 2, "revoked-lease recovery did not bump the revision")
+        requireSession(recovered.session.contains("refresh-2"), "revoked-lease recovery lost the redeemed refresh token")
+        requireSession(logger.events.isEmpty, "successful revoked-lease recovery logged a refresh failure")
+    }
+
+    static func testRepeatedLeaseRevocationLogsLockRevoked() async {
+        let store = InMemorySharedSessionStore()
+        store.bytes = Self.encodedEnvelope(
+            revision: 1,
+            accessToken: Self.lineageToken("lineage-a"),
+            refreshToken: "refresh-1",
+            lineage: "lineage-a"
+        )
+        let logger = RecordingSessionLogger()
+        let transport = WidgetSupabaseTransport(
+            vault: SharedSessionVault(store: store),
+            lock: AlwaysRevokedLock(),
+            refreshClient: RecordedRefreshClient(
+                response: Self.refreshResponseJson(
+                    accessToken: Self.lineageToken("lineage-a"),
+                    refreshToken: "refresh-2",
+                    expiresIn: 3600
+                )
+            ),
+            httpClient: RecordedHTTPClient(status: 401),
+            config: SupabaseEndpointConfig(
+                supabaseUrl: "https://example.supabase.co",
+                anonKey: "anon"
+            ),
+            logger: logger
+        )
+
+        do {
+            _ = try await transport.send { token in Self.bearerRequest(token: token) }
+            fatalError("repeated lease revocation unexpectedly succeeded")
+        } catch SharedSessionError.lockRevoked {
+            // expected
+        } catch {
+            fatalError("repeated lease revocation threw an unexpected error: \(error)")
+        }
+        requireSession(
+            logger.events == [SharedSessionLogEvent(kind: .lockRevoked)],
+            "abandoned persist was not logged as lockRevoked"
+        )
+    }
+
+    static func testRedeemedPairSurvivesRevokedRecoveryAcquire() async {
+        let store = InMemorySharedSessionStore()
+        store.bytes = Self.encodedEnvelope(
+            revision: 1,
+            accessToken: Self.lineageToken("lineage-a"),
+            refreshToken: "refresh-1",
+            lineage: "lineage-a"
+        )
+        let vault = SharedSessionVault(store: store)
+        let box = LeaseBox()
+        let refreshedAccessToken = Self.lineageToken("lineage-a")
+        let refreshClient = LeaseRevokingRefreshClient(
+            box: box,
+            response: Self.refreshResponseJson(
+                accessToken: refreshedAccessToken,
+                refreshToken: "refresh-2",
+                expiresIn: 3600
+            )
+        )
+        let http = RecordedHTTPClient(
+            statuses: [401, 200],
+            bodies: [Data(), Data("recovered-later".utf8)]
+        )
+        let transport = WidgetSupabaseTransport(
+            vault: vault,
+            lock: FirstRecoveryAcquireRevokedLock(box: box),
+            refreshClient: refreshClient,
+            httpClient: http,
+            config: SupabaseEndpointConfig(
+                supabaseUrl: "https://example.supabase.co",
+                anonKey: "anon"
+            ),
+            logger: RecordingSessionLogger()
+        )
+
+        do {
+            _ = try await transport.send { token in Self.bearerRequest(token: token) }
+            fatalError("revoked recovery acquire unexpectedly succeeded")
+        } catch SharedSessionError.lockRevoked {
+            // expected; the successor must remain staged for the next caller
+        } catch {
+            fatalError("revoked recovery acquire threw an unexpected error: \(error)")
+        }
+
+        let result = try! await transport.send { token in Self.bearerRequest(token: token) }
+        requireSession(result.0 == 200, "later caller did not recover the redeemed pair")
+        requireSession(
+            String(data: result.1, encoding: .utf8) == "recovered-later",
+            "later caller did not return its response"
+        )
+        let refreshCalls = await refreshClient.callCount()
+        requireSession(refreshCalls == 1, "later caller replayed the spent refresh token")
+        requireSession(store.writeCount == 1, "redeemed successor was not persisted exactly once")
+        let requests = await http.recordedRequests()
+        requireSession(requests.count == 2, "recovery issued an unexpected HTTP request")
+        requireSession(
+            requests.last?.bearer == "Bearer \(refreshedAccessToken)",
+            "later caller used the stale access token after recovery"
+        )
+    }
+
+    // MARK: - Slice 13
+
+    static func testAppLockExpirationDuringAcquireReleasesResourcesOnce() {
+        let mutex = NSLock()
+        var releasedDescriptors: [Int32] = []
+        var endedAssertions = 0
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in false },
+            releaseDescriptor: { descriptor in
+                mutex.lock()
+                releasedDescriptors.append(descriptor)
+                mutex.unlock()
+            }
+        )
+
+        coordinator.prepare(handle: "waiting")
+        requireSession(
+            coordinator.attachAssertion(handle: "waiting") {
+                mutex.lock()
+                endedAssertions += 1
+                mutex.unlock()
+            },
+            "app acquire did not attach its assertion"
+        )
+        requireSession(
+            coordinator.attachDescriptor(handle: "waiting", descriptor: 41),
+            "app acquire did not register its in-flight descriptor"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "waiting") == .busy,
+            "contended app descriptor unexpectedly acquired"
+        )
+
+        requireSession(
+            coordinator.forceRelease(handle: "waiting"),
+            "expiration did not revoke the in-flight app acquire"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "waiting") == .revoked,
+            "expired app acquire did not observe revocation"
+        )
+        requireSession(
+            releasedDescriptors == [41],
+            "expiration did not close the in-flight app descriptor exactly once"
+        )
+        requireSession(
+            endedAssertions == 1,
+            "expiration did not end the in-flight app assertion exactly once"
+        )
+        coordinator.abandon(handle: "waiting")
+        requireSession(
+            releasedDescriptors == [41] && endedAssertions == 1,
+            "acquire unwind released app resources more than once"
+        )
+    }
+
+    static func testAppLockRevocationIsScopedToItsIssuedHandle() {
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in true },
+            releaseDescriptor: { _ in }
+        )
+        for (handle, descriptor) in [("revoked", Int32(51)), ("healthy", Int32(52))] {
+            coordinator.prepare(handle: handle)
+            requireSession(
+                coordinator.attachAssertion(handle: handle, end: {}),
+                "app handle did not attach its assertion"
+            )
+            requireSession(
+                coordinator.attachDescriptor(handle: handle, descriptor: descriptor),
+                "app handle did not attach its descriptor"
+            )
+            requireSession(
+                coordinator.tryAcquire(handle: handle) == .acquired && coordinator.issue(handle: handle),
+                "app handle was not issued"
+            )
+        }
+
+        coordinator.forceRelease(handle: "revoked")
+        var healthyMutationRan = false
+        requireSession(
+            coordinator.withHeldHandle(handle: "healthy") {
+                healthyMutationRan = true
+            } == .performed && healthyMutationRan,
+            "one revoked handle rejected a different handle's mutation"
+        )
+        requireSession(
+            coordinator.withHeldHandle(handle: "revoked", {}) == .revoked,
+            "a revoked handle was allowed to mutate the capsule"
+        )
+        requireSession(
+            coordinator.release(handle: "revoked") == .revoked,
+            "releasing a revoked app handle was not a successful no-op"
+        )
+        requireSession(
+            !coordinator.forceRelease(handle: "revoked"),
+            "late expiration recreated a released app-handle tombstone"
+        )
+        requireSession(
+            coordinator.release(handle: "healthy") == .released,
+            "healthy app handle did not release normally"
+        )
+    }
+
+    static func testAppLockExpirationWaitsForCapsuleMutation() {
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in true },
+            releaseDescriptor: { _ in }
+        )
+        coordinator.prepare(handle: "mutating")
+        requireSession(
+            coordinator.attachAssertion(handle: "mutating", end: {}),
+            "mutating app handle did not attach its assertion"
+        )
+        requireSession(
+            coordinator.attachDescriptor(handle: "mutating", descriptor: 61),
+            "mutating app handle did not attach its descriptor"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "mutating") == .acquired &&
+                coordinator.issue(handle: "mutating"),
+            "mutating app handle was not issued"
+        )
+
+        let mutationEntered = DispatchSemaphore(value: 0)
+        let allowMutationToFinish = DispatchSemaphore(value: 0)
+        let mutationFinished = DispatchSemaphore(value: 0)
+        let expirationFinished = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            _ = coordinator.withHeldHandle(handle: "mutating") {
+                mutationEntered.signal()
+                allowMutationToFinish.wait()
+            }
+            mutationFinished.signal()
+        }
+        mutationEntered.wait()
+        DispatchQueue.global().async {
+            coordinator.forceRelease(handle: "mutating")
+            expirationFinished.signal()
+        }
+
+        requireSession(
+            expirationFinished.wait(timeout: .now() + 0.05) == .timedOut,
+            "expiration released the app flock during a capsule mutation"
+        )
+        allowMutationToFinish.signal()
+        requireSession(
+            mutationFinished.wait(timeout: .now() + 1) == .success,
+            "app capsule mutation did not finish"
+        )
+        requireSession(
+            expirationFinished.wait(timeout: .now() + 1) == .success,
+            "expiration did not release the app flock after mutation"
+        )
+        requireSession(
+            coordinator.release(handle: "mutating") == .revoked,
+            "revoked mutation handle did not unwind as a no-op"
+        )
+    }
+
+    static func testLeaseRevocationWaitsForHeldMutation() {
+        let lease = CrossProcessLockLease()
+        let mutationEntered = DispatchSemaphore(value: 0)
+        let allowMutationToFinish = DispatchSemaphore(value: 0)
+        let mutationFinished = DispatchSemaphore(value: 0)
+        let revocationFinished = DispatchSemaphore(value: 0)
+
+        DispatchQueue.global().async {
+            try! lease.withHeldLock {
+                mutationEntered.signal()
+                allowMutationToFinish.wait()
+            }
+            mutationFinished.signal()
+        }
+        mutationEntered.wait()
+        DispatchQueue.global().async {
+            lease.revoke()
+            revocationFinished.signal()
+        }
+
+        requireSession(
+            revocationFinished.wait(timeout: .now() + 0.05) == .timedOut,
+            "lease revocation interleaved with a held capsule mutation"
+        )
+        allowMutationToFinish.signal()
+        requireSession(
+            mutationFinished.wait(timeout: .now() + 1) == .success,
+            "held lease mutation did not finish"
+        )
+        requireSession(
+            revocationFinished.wait(timeout: .now() + 1) == .success,
+            "lease did not revoke after its mutation finished"
+        )
+        requireSession(lease.isRevoked, "lease was not revoked after mutation")
+    }
+
+    // MARK: - Slice 14
+
+    static func temporaryLockURL() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("shared-session-lock-tests-\(UUID().uuidString).lock")
+    }
+
+    static func testPosixLockNormalSectionHoldsAssertionAndReleases() async {
+        let lockURL = Self.temporaryLockURL()
+        defer { try? FileManager.default.removeItem(at: lockURL) }
+        let guardImpl = ManualSuspensionGuard()
+        let lock = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            suspensionGuard: guardImpl
+        )
+        let leaseBox = LeaseBox()
+        let value = try! await lock.withLock { lease in
+            leaseBox.lease = lease
+            return 7
+        }
+        requireSession(value == 7, "normal section did not return its body value")
+        requireSession(guardImpl.beginCount() == 1, "normal section did not begin exactly one assertion")
+        requireSession(guardImpl.endCount() == 1, "normal section did not end its assertion")
+        requireSession(leaseBox.lease?.isRevoked == false, "normal section revoked its lease")
+
+        // The descriptor must be gone: a second lock over the same file
+        // acquires immediately.
+        let second = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            acquireTimeoutMs: 500,
+            suspensionGuard: ManualSuspensionGuard()
+        )
+        let reacquired = try! await second.withLock { _ in true }
+        requireSession(reacquired, "released lock could not be reacquired")
+    }
+
+    static func testPosixLockExpirationForceReleasesAndRevokesLease() async {
+        let lockURL = Self.temporaryLockURL()
+        defer { try? FileManager.default.removeItem(at: lockURL) }
+        let guardImpl = ManualSuspensionGuard()
+        let lock = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            suspensionGuard: guardImpl
+        )
+        let bodyEntered = TestGate()
+        let bodyMayFinish = TestGate()
+        let holder = Task {
+            try await lock.withLock { lease -> Bool in
+                bodyEntered.open()
+                await bodyMayFinish.wait()
+                return lease.isRevoked
+            }
+        }
+        await bodyEntered.wait()
+
+        // System is about to suspend the process: the assertion expires while
+        // the critical section is still awaiting.
+        guardImpl.expireAll()
+
+        // The flock must already be free even though the first body has not
+        // finished: another process (here: another descriptor) can acquire it.
+        let contender = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            acquireTimeoutMs: 2000,
+            suspensionGuard: ManualSuspensionGuard()
+        )
+        let acquiredDuringExpiredSection = try! await contender.withLock { _ in true }
+        requireSession(acquiredDuringExpiredSection, "forced release did not free the flock for the next holder")
+
+        bodyMayFinish.open()
+        let revokedSeenByBody = try! await holder.value
+        requireSession(revokedSeenByBody, "forced release did not revoke the section's lease")
+        requireSession(guardImpl.endCount() == 1, "interrupted section did not end its assertion on exit")
+    }
+
+    static func testPosixLockCancellationDuringAcquireReleasesDescriptor() async {
+        let lockURL = Self.temporaryLockURL()
+        defer { try? FileManager.default.removeItem(at: lockURL) }
+        let holderLock = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            suspensionGuard: ManualSuspensionGuard()
+        )
+        let holderEntered = TestGate()
+        let holderMayFinish = TestGate()
+        let holder = Task {
+            try await holderLock.withLock { _ in
+                holderEntered.open()
+                await holderMayFinish.wait()
+                return true
+            }
+        }
+        await holderEntered.wait()
+        let baselineDescriptors = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+
+        let waiterBegan = TestGate()
+        let waiter = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            acquireTimeoutMs: 10_000,
+            suspensionGuard: ManualSuspensionGuard(onBegin: { waiterBegan.open() })
+        )
+        let waiterTask = Task {
+            try await waiter.withLock { _ in false }
+        }
+        await waiterBegan.wait()
+        let descriptorsWithWaiter = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+        requireSession(
+            descriptorsWithWaiter > baselineDescriptors,
+            "contended waiter did not open a descriptor before cancellation"
+        )
+
+        waiterTask.cancel()
+        do {
+            _ = try await waiterTask.value
+            fatalError("cancelled lock waiter unexpectedly completed")
+        } catch is CancellationError {
+            // expected
+        } catch {
+            fatalError("cancelled lock waiter threw an unexpected error: \(error)")
+        }
+        let descriptorsAfterCancellation = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+        requireSession(
+            descriptorsAfterCancellation == baselineDescriptors,
+            "cancelled lock waiter leaked its descriptor"
+        )
+
+        holderMayFinish.open()
+        _ = try! await holder.value
+    }
+
+    static func testPosixLockExpirationDuringAcquireAborts() async {
+        let lockURL = Self.temporaryLockURL()
+        defer { try? FileManager.default.removeItem(at: lockURL) }
+        let holderGuard = ManualSuspensionGuard()
+        let holderLock = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            suspensionGuard: holderGuard
+        )
+        let holderEntered = TestGate()
+        let holderMayFinish = TestGate()
+        let holder = Task {
+            try await holderLock.withLock { _ in
+                holderEntered.open()
+                await holderMayFinish.wait()
+                return true
+            }
+        }
+        await holderEntered.wait()
+
+        // A waiter still in its acquire loop gets expired: it must abort
+        // instead of spinning on a dead descriptor for the whole timeout.
+        let waiterBegan = TestGate()
+        let waiterGuard = ManualSuspensionGuard(onBegin: { waiterBegan.open() })
+        let waiter = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            acquireTimeoutMs: 10000,
+            suspensionGuard: waiterGuard
+        )
+        let waiterResult = Task { () -> SharedSessionError? in
+            do {
+                _ = try await waiter.withLock { _ in false }
+                return nil
+            } catch let error as SharedSessionError {
+                return error
+            } catch {
+                return nil
+            }
+        }
+        await waiterBegan.wait()
+        waiterGuard.expireAll()
+        let outcome = await waiterResult.value
+        requireSession(outcome == .lockRevoked, "an expired waiter did not abort its acquire with lockRevoked")
+
+        holderMayFinish.open()
+        _ = try! await holder.value
     }
 
     // MARK: - Fixtures

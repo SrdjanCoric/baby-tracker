@@ -7,9 +7,13 @@ const read = (relative: string) =>
 
 const widgetIndex = read("../../../targets/widget/index.swift");
 const widgetAdapters = read("../../../targets/widget/SharedSupabaseSessionAdapters.swift");
+const widgetSharedSession = read("../../../targets/widget/SharedSupabaseSession.swift");
 const widgetDataService = read("../../../src/services/widget-data-service.ts");
 const appSupabaseModule = read(
   "../../../plugins/with-shared-supabase-session/ios/SharedSupabaseSession.swift"
+);
+const appLockCoordinator = read(
+  "../../../plugins/with-shared-supabase-session/ios/SharedSupabaseSessionLockCoordinator.swift"
 );
 const appJson = read("../../../app.json");
 const widgetTargetConfig = read("../../../targets/widget/expo-target.config.js");
@@ -47,12 +51,12 @@ describe("shared Supabase session credential storage", () => {
   it("purges a Keychain capsule left by a previous owner on the first post-reinstall launch", () => {
     // iOS keeps `kSecClassGenericPassword` items across uninstall; without a
     // first-launch purge a reinstalled copy would silently restore the prior
-    // owner's session. The app uses the native bridge's `removeSession` and an
+    // owner's session. The app uses the native bridge's administrative purge and an
     // AsyncStorage one-shot marker so subsequent launches keep a legitimate
     // session.
     expect(widgetDataService).toContain("export async function purgeStaleSharedSessionOnFirstLaunch");
     expect(widgetDataService).toContain('SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY');
-    expect(widgetDataService).toMatch(/bridge\.removeSession\(\)/);
+    expect(widgetDataService).toMatch(/bridge\.purgeSession\(\)/);
   });
 
   it("does not publish the access token from the app into the Widget App Group", () => {
@@ -82,10 +86,47 @@ describe("shared Supabase session credential storage", () => {
   });
 
   it("serializes app and Widget refreshes through a cross-process POSIX lock", () => {
-    for (const source of [appSupabaseModule, widgetAdapters]) {
-      expect(source).toContain("flock");
-      expect(source).toContain("forSecurityApplicationGroupIdentifier");
-    }
+    // App-side native module holds the flock directly; the widget's flock
+    // lives in the shared core (`SharedSupabaseSession.swift`) and the
+    // adapters wire it to the App Group container.
+    expect(appSupabaseModule).toContain("flock");
+    expect(appSupabaseModule).toContain("forSecurityApplicationGroupIdentifier");
+    expect(widgetSharedSession).toContain("flock");
+    expect(widgetAdapters).toContain("forSecurityApplicationGroupIdentifier");
+    expect(widgetAdapters).toContain("PosixSharedSessionLock");
+  });
+
+  it("never holds the App Group flock into suspension (0xDEAD10CC)", () => {
+    // Widget core: every flock-held section runs under a suspension guard;
+    // expiry revokes the lease, force-releases the descriptor, and the
+    // redemption refuses to persist without the lock.
+    expect(widgetSharedSession).toContain("SuspensionGuarding");
+    expect(widgetSharedSession).toContain("lease.revoke()");
+    expect(widgetSharedSession).toContain("try lease.withHeldLock");
+    expect(widgetAdapters).toContain("performExpiringActivity");
+    // App module wiring: detailed acquire/revoke/release ordering is exercised
+    // by the compiled AppSharedSessionLockCoordinator Swift harness.
+    expect(appSupabaseModule).toContain("beginBackgroundTask");
+    expect(appSupabaseModule).toContain("endBackgroundTask");
+    expect(appSupabaseModule).toContain("lockCoordinator.forceRelease(handle:");
+    expect(appSupabaseModule).toContain("LOCK_REVOKED");
+    expect(appSupabaseModule).toContain("expectedRevision");
+    expect(appSupabaseModule).toContain("SESSION_CHANGED");
+    expect(appLockCoordinator).toContain("func forceRelease(handle:");
+    expect(appLockCoordinator).toContain("withHeldHandle");
+    expect(appSupabaseModule).not.toContain("didEnterBackgroundNotification");
+  });
+
+  it("rejects an app lock before opening its descriptor when no background assertion is granted", () => {
+    const assertion = appSupabaseModule.indexOf("beginBackgroundTask");
+    const invalidGuard = appSupabaseModule.indexOf(
+      "guard backgroundTask != .invalid"
+    );
+    const descriptorOpen = appSupabaseModule.indexOf("let fd = open(");
+
+    expect(assertion).toBeGreaterThan(-1);
+    expect(invalidGuard).toBeGreaterThan(assertion);
+    expect(descriptorOpen).toBeGreaterThan(invalidGuard);
   });
 
   it("exposes bridge teardown cleanup through an Objective-C selector", () => {

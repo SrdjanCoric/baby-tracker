@@ -10,6 +10,7 @@ enum SharedSessionError: Error, Equatable {
     case identityMismatch
     case storeFailure
     case refreshRejected
+    case lockRevoked
 }
 
 // MARK: - Logging
@@ -17,6 +18,7 @@ enum SharedSessionError: Error, Equatable {
 enum SharedSessionLogKind: Equatable {
     case missingSession
     case refreshRejected
+    case lockRevoked
     case retryUnauthorized
 }
 
@@ -234,15 +236,159 @@ protocol SupabaseHTTPClient: Sendable {
 
 // MARK: - Lock
 
+/// Handed to a cross-process critical section. The lock implementation revokes
+/// the lease when the system forces the lock to be released early (imminent
+/// suspension); the section must then abandon any persist it has not yet made.
+final class CrossProcessLockLease: @unchecked Sendable {
+    private let mutex = NSLock()
+    private var revoked = false
+
+    func revoke() {
+        mutex.lock()
+        revoked = true
+        mutex.unlock()
+    }
+
+    var isRevoked: Bool {
+        mutex.lock()
+        defer { mutex.unlock() }
+        return revoked
+    }
+
+    /// Call before persisting under the lock.
+    func ensureHeld() throws {
+        if isRevoked { throw SharedSessionError.lockRevoked }
+    }
+
+    /// Keeps revocation from releasing the descriptor between authorization
+    /// and one synchronous capsule mutation.
+    func withHeldLock<T>(_ body: () throws -> T) throws -> T {
+        mutex.lock()
+        defer { mutex.unlock() }
+        guard !revoked else { throw SharedSessionError.lockRevoked }
+        return try body()
+    }
+}
+
 /// Cross-process lock whose critical section may await. The production adapter
 /// holds a POSIX `flock` across the awaited body and releases it on exit.
 protocol CrossProcessSessionLock: Sendable {
-    func withLock<T>(_ body: @escaping @Sendable () async throws -> T) async throws -> T
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T
+}
+
+// MARK: - Suspension guard
+
+/// Keeps the process eligible to run while a critical section holds the
+/// cross-process file lock. `begin` starts an assertion and returns the closure
+/// that ends it. `onExpiration` fires when the system is about to suspend the
+/// process regardless; the lock force-releases its descriptor there so a
+/// suspended process never sits on an App Group flock (0xDEAD10CC).
+protocol SuspensionGuarding: Sendable {
+    func begin(
+        reason: String,
+        onExpiration: @escaping @Sendable () -> Void
+    ) -> @Sendable () -> Void
+}
+
+/// POSIX `flock` over a caller-resolved lock file, guarded against suspension.
+/// Every descriptor operation is serialized through one mutex so a forced
+/// release can never race the owning section's own acquire or release into a
+/// double close or a lock on a reused descriptor number.
+final class PosixSharedSessionLock: CrossProcessSessionLock, @unchecked Sendable {
+    private final class DescriptorState: @unchecked Sendable {
+        private let mutex = NSLock()
+        private var fd: Int32?
+
+        init(fd: Int32) {
+            self.fd = fd
+        }
+
+        /// nil = descriptor was force-released; otherwise whether `flock` won.
+        func tryAcquire() -> Bool? {
+            mutex.lock()
+            defer { mutex.unlock() }
+            guard let fd else { return nil }
+            return flock(fd, LOCK_EX | LOCK_NB) == 0
+        }
+
+        func release() {
+            mutex.lock()
+            defer { mutex.unlock() }
+            guard let fd else { return }
+            flock(fd, LOCK_UN)
+            close(fd)
+            self.fd = nil
+        }
+    }
+
+    private let lockFileURLProvider: @Sendable () -> URL?
+    private let acquireTimeoutMs: Int
+    private let suspensionGuard: SuspensionGuarding
+
+    init(
+        lockFileURLProvider: @escaping @Sendable () -> URL?,
+        acquireTimeoutMs: Int = 10000,
+        suspensionGuard: SuspensionGuarding
+    ) {
+        self.lockFileURLProvider = lockFileURLProvider
+        self.acquireTimeoutMs = acquireTimeoutMs
+        self.suspensionGuard = suspensionGuard
+    }
+
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        guard let lockURL = lockFileURLProvider() else {
+            throw SharedSessionError.storeFailure
+        }
+        let fd = open(lockURL.path, O_CREAT | O_RDWR, 0o600)
+        guard fd >= 0 else {
+            NSLog("[SharedSupabaseSession] lock open failed: errno=\(errno)")
+            throw SharedSessionError.storeFailure
+        }
+
+        let state = DescriptorState(fd: fd)
+        let lease = CrossProcessLockLease()
+        let endAssertion = suspensionGuard.begin(reason: "SharedSupabaseSessionLock") {
+            // The system is about to suspend the process regardless. Revoke
+            // first so the section refuses to persist, then drop the flock so
+            // suspension never freezes a held App Group lock (0xDEAD10CC).
+            lease.revoke()
+            state.release()
+        }
+        defer {
+            state.release()
+            endAssertion()
+        }
+
+        let deadline = Date().addingTimeInterval(Double(acquireTimeoutMs) / 1000.0)
+        var acquired = false
+        while Date() < deadline {
+            switch state.tryAcquire() {
+            case nil:
+                throw SharedSessionError.lockRevoked
+            case true?:
+                acquired = true
+            case false?:
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
+            if acquired { break }
+        }
+        guard acquired else {
+            NSLog("[SharedSupabaseSession] lock timeout")
+            throw SharedSessionError.storeFailure
+        }
+        return try await body(lease)
+    }
 }
 
 final class ImmediateLock: CrossProcessSessionLock {
-    func withLock<T>(_ body: @escaping @Sendable () async throws -> T) async throws -> T {
-        try await body()
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        try await body(CrossProcessLockLease())
     }
 }
 
@@ -256,6 +402,18 @@ struct SupabaseEndpointConfig: Sendable {
 // MARK: - Transport
 
 final class WidgetSupabaseTransport: @unchecked Sendable {
+    private struct PendingRedeemedPair {
+        let id: UUID
+        let envelope: SharedSessionEnvelopeV1
+        let expectedRevision: Int
+        let lineage: String
+    }
+
+    private enum PendingRecoveryOutcome {
+        case recovered(String)
+        case discarded
+    }
+
     private let vault: SharedSessionVaulting
     private let lock: CrossProcessSessionLock
     private let refreshClient: SupabaseRefreshClient
@@ -263,6 +421,8 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     private let config: SupabaseEndpointConfig
     private let logger: SharedSessionLogger
     private let legacyAccessTokenProvider: @Sendable () -> String?
+    private let pendingMutex = NSLock()
+    private var pendingRedeemedPairs: [PendingRedeemedPair] = []
 
     init(
         vault: SharedSessionVaulting,
@@ -296,6 +456,11 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     /// overnight update; one updated-app launch is required to migrate the full
     /// session. Once the capsule exists, the legacy path is never taken.
     func send(buildRequest: @escaping @Sendable (String) -> URLRequest) async throws -> (Int, Data) {
+        // A prior request may have redeemed a refresh token just as its
+        // suspension assertion expired. Recover that exact successor before
+        // reading or redeeming the stale capsule again.
+        _ = try await recoverPendingRedeemedPairs()
+
         guard let current = try vault.read() else {
             if let legacyAccessToken = legacyAccessTokenProvider() {
                 // Legacy App Group bearer token; no refresh token available.
@@ -312,7 +477,7 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
             return (status, body)
         }
 
-        let renewedToken = try await lock.withLock {
+        let renewedToken = try await lock.withLock { lease in
             let reread = try self.vault.read()
             guard let reread else {
                 self.logger.log(SharedSessionLogEvent(kind: .missingSession))
@@ -328,7 +493,8 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
             let refreshed = try await self.redeem(
                 refreshToken: redeemer.refreshToken,
                 expectedRevision: reread.revision,
-                lineage: reread.lineage
+                lineage: reread.lineage,
+                lease: lease
             )
             return refreshed
         }
@@ -343,7 +509,8 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     private func redeem(
         refreshToken: String,
         expectedRevision: Int,
-        lineage: String
+        lineage: String,
+        lease: CrossProcessLockLease
     ) async throws -> String {
         do {
             let responseBody = try await refreshClient.refresh(refreshToken: refreshToken, config: config)
@@ -358,8 +525,19 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
                 lineage: lineage,
                 session: built.sessionJson
             )
-            _ = try vault.replace(expectedRevision: expectedRevision, next)
-            return try ensureValidSession(next).accessToken
+            // The lock may have been force-released while the redemption was on
+            // the network (imminent suspension). Persisting without the lock
+            // would race another holder's rotation, so abandon the write; the
+            // next caller re-reads and recovers under a healthy lock.
+            return try await persistRedeemedPair(
+                next,
+                expectedRevision: expectedRevision,
+                lineage: lineage,
+                lease: lease
+            )
+        } catch SharedSessionError.lockRevoked {
+            logger.log(SharedSessionLogEvent(kind: .lockRevoked))
+            throw SharedSessionError.lockRevoked
         } catch let error as SharedSessionError {
             logger.log(SharedSessionLogEvent(kind: .refreshRejected))
             throw error
@@ -367,5 +545,105 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
             logger.log(SharedSessionLogEvent(kind: .refreshRejected))
             throw SharedSessionError.refreshRejected
         }
+    }
+
+    private func persistRedeemedPair(
+        _ next: SharedSessionEnvelopeV1,
+        expectedRevision: Int,
+        lineage: String,
+        lease: CrossProcessLockLease
+    ) async throws -> String {
+        do {
+            _ = try lease.withHeldLock {
+                try vault.replace(expectedRevision: expectedRevision, next)
+            }
+            return try ensureValidSession(next).accessToken
+        } catch SharedSessionError.lockRevoked {
+            // The network already redeemed the old refresh token. Reacquire
+            // and persist that exact response; never replay the spent token.
+            // Keep it queued until recovery succeeds, because the fresh
+            // assertion can itself expire while the extension is suspending.
+            enqueuePendingRedeemedPair(
+                next,
+                expectedRevision: expectedRevision,
+                lineage: lineage
+            )
+            if let recovered = try await recoverPendingRedeemedPairs() {
+                return recovered
+            }
+            guard let current = try vault.read(),
+                  current.revision > expectedRevision,
+                  current.lineage == lineage else {
+                throw SharedSessionError.sessionChanged
+            }
+            return try ensureValidSession(current).accessToken
+        }
+    }
+
+    private func enqueuePendingRedeemedPair(
+        _ envelope: SharedSessionEnvelopeV1,
+        expectedRevision: Int,
+        lineage: String
+    ) {
+        pendingMutex.lock()
+        pendingRedeemedPairs.append(
+            PendingRedeemedPair(
+                id: UUID(),
+                envelope: envelope,
+                expectedRevision: expectedRevision,
+                lineage: lineage
+            )
+        )
+        pendingMutex.unlock()
+    }
+
+    private func firstPendingRedeemedPair() -> PendingRedeemedPair? {
+        pendingMutex.lock()
+        defer { pendingMutex.unlock() }
+        return pendingRedeemedPairs.first
+    }
+
+    private func removePendingRedeemedPair(id: UUID) {
+        pendingMutex.lock()
+        pendingRedeemedPairs.removeAll { $0.id == id }
+        pendingMutex.unlock()
+    }
+
+    /// Drains in redemption order under one healthy lock per successor. A
+    /// failed acquire or second revocation leaves the current item untouched
+    /// so a later transport call can recover it before using the stale vault.
+    private func recoverPendingRedeemedPairs() async throws -> String? {
+        var recoveredAccessToken: String?
+        while let pending = firstPendingRedeemedPair() {
+            let outcome = try await lock.withLock { recoveryLease in
+                guard let current = try self.vault.read() else {
+                    return PendingRecoveryOutcome.discarded
+                }
+                if current.revision == pending.expectedRevision,
+                   current.lineage == pending.lineage {
+                    _ = try recoveryLease.withHeldLock {
+                        try self.vault.replace(
+                            expectedRevision: pending.expectedRevision,
+                            pending.envelope
+                        )
+                    }
+                    return PendingRecoveryOutcome.recovered(
+                        try ensureValidSession(pending.envelope).accessToken
+                    )
+                }
+                guard current.revision > pending.expectedRevision,
+                      current.lineage == pending.lineage else {
+                    return PendingRecoveryOutcome.discarded
+                }
+                return PendingRecoveryOutcome.recovered(
+                    try ensureValidSession(current).accessToken
+                )
+            }
+            removePendingRedeemedPair(id: pending.id)
+            if case let .recovered(accessToken) = outcome {
+                recoveredAccessToken = accessToken
+            }
+        }
+        return recoveredAccessToken
     }
 }

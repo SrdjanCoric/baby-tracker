@@ -36,19 +36,87 @@ redemption via compare-and-swap on the token version).
 
 ## Implementation work
 
-- [ ] Add background-task assertions around every `flock`-held critical section in the shared-session native code (app side and extension side), with expiration handlers that force-release the descriptor.
-- [ ] Release held descriptors on `didEnterBackground` when idle.
-- [ ] Prove interrupted-redemption recovery at the existing Swift test seam: a forced release mid-critical-section leaves the vault recoverable by the next caller.
-- [ ] Run `npm run test:widget:swift` and `npm run test:unit`.
+- [x] Add background-task assertions around every `flock`-held critical section in the shared-session native code (app side and extension side), with expiration handlers that force-release the descriptor.
+- [x] Release held descriptors on `didEnterBackground` when idle.
+- [x] Prove interrupted-redemption recovery at the existing Swift test seam: a forced release mid-critical-section leaves the vault recoverable by the next caller.
+- [x] Run `npm run test:widget:swift` and `npm run test:unit`.
+
+## Implementation record (2026-08-16)
+
+- **Widget/extension side**: the POSIX lock moved from the adapters into the Foundation-only core
+  (`targets/widget/SharedSupabaseSession.swift`) as `PosixSharedSessionLock` with an injectable
+  lock-file URL and a `SuspensionGuarding` seam, so the test harness exercises the real `flock` and
+  the real force-release. The production guard (`ProcessExpiringActivityGuard`,
+  `ProcessInfo.performExpiringActivity`) and the App Group wiring stay in
+  `SharedSupabaseSessionAdapters.swift`; the `PosixSharedSessionLock()` call site in
+  `targets/widget/index.swift` is unchanged via a convenience init.
+- **Lease protocol**: `CrossProcessSessionLock.withLock` now hands the body a
+  `CrossProcessLockLease`. On assertion expiry the lock revokes the lease first, then unlocks and
+  closes the descriptor (all descriptor operations serialized through one mutex — no double close,
+  no lock on a reused descriptor number). The transport calls `lease.ensureHeld()` immediately
+  before persisting a redeemed pair and abandons the write with the new
+  `SharedSessionError.lockRevoked` when the lock was force-released. A redeemed successor is queued
+  before recovery is attempted; if the fresh recovery acquire is also revoked, the next call drains
+  that exact successor under the revision CAS before it can read or redeem the stale capsule (proved
+  by harness slices 12–13, including a waiter whose assertion expires mid-acquire aborting instead
+  of spinning).
+- **App side**: `ios/SofiBabyTracker/SharedSupabaseSession.swift` is **generated** (gitignored) from
+  `plugins/with-shared-supabase-session/ios/SharedSupabaseSession.swift`; the plugin file is the
+  committed source and both copies are kept identical. Each acquired handle is covered by
+  `UIApplication.beginBackgroundTask` from before the acquire wait; the expiration handler
+  force-releases the flock, marks the handle revoked, and ends the assertion. Releasing a revoked
+  handle is a harmless no-op (the JS `finally` path), `invalidate()` also ends assertions, and a
+  `didEnterBackground` observer force-releases any descriptor whose assertion was never granted
+  (`.invalid`). Idle steady state holds no descriptor by construction: a descriptor exists only
+  between acquire and release of an in-flight critical section.
+- **App-side revoked-mutation recovery**: each auth transaction carries its exact native handle.
+  Revoked writes and removals enter an ordered queue rather than a lossy single slot. The adapter
+  attempts recovery after the revoked handle unwinds, retains the queue when that fresh assertion
+  is denied, and drains it under the next issued handle before that lock body runs; a newer capsule
+  wins without being overwritten. Best-effort recovery cannot mask the auth body's value or error.
+  Auth removal remains bound to the revision and lineage first read by the transaction, while
+  first-post-reinstall cleanup uses a separate administrative purge operation. Capsule format and
+  Keychain read access are unchanged.
+- **Expiration deadline tradeoff**: the app expiration handler can wait for an already-started,
+  synchronous Keychain read/CAS to leave the exact-handle mutex before it releases the descriptor.
+  This is the bounded atomicity cost of TR-8: releasing mid-mutation would reintroduce the capsule
+  race, while the `AfterFirstUnlockThisDeviceOnly` operation remains limited to the existing
+  Keychain critical section.
+- **Proof**: `npm run test:widget:swift` PASS (widget + watch iphoneos/watchos typechecks and all
+  harnesses, including new slices: revoked-lease abandonment + recovery, repeated recovery-acquire
+  revocation followed by later recovery without token replay, expiration force-release with a
+  second holder acquiring mid-section, expiration during acquire). Focused app tests prove denied
+  recovery assertions retain every ordered mutation and preserve the lock body's result/error.
+  `npm run test:security` PASS (129) with new source-inspection guards for the suspension protocol.
+  `npm run test:unit`:
+  2811/2812 — the one failure (`widget-snapshot-wiring.test.ts`, sleep-prediction wiring string) is
+  pre-existing on `main` from PR #249, which changed `targets/widget/index.swift` without updating
+  that test; untouched by this branch and deliberately not fixed here.
+- **Canonical gate**: not run during per-finding review remediation; the `review-fix-worker`
+  workflow reserves the single final `npm run check:code` run for `finish-task` after the focused
+  remediation batch is clean.
+- **App test seam**: the React/UIKit bridge wiring is source-checked, while the extracted
+  Foundation-only `AppSharedSessionLockCoordinator` is compiled in the Swift harness and exercises
+  acquire expiry, scoped revocation, release, and mutation ordering. The real-device `[verify]`
+  checkpoint remains required for RunningBoard behavior.
 
 ## Human checkpoints
 
-- [ ] [confirm-security] Approve the change to the shared-session locking protocol (session/Keychain trust boundary from Task 0083).
+- [x] [confirm-security] Approve the change to the shared-session locking protocol (session/Keychain trust boundary from Task 0083). — Approved by owner 2026-08-16: background-task assertions around every flock-held section (expiration handler force-releases the descriptor and invalidates the handle); `ProcessInfo.performExpiringActivity` on the extension side; idle release on `didEnterBackground`; a body that loses its lock mid-flight abandons its write so revision CAS recovery stays sound. Capsule format, lineage, revision discipline, and read access unchanged.
 - [ ] [verify] Confirm the kill is gone on a real device · Steps: on a TestFlight or dev build, open the app fresh (forcing a session refresh) and immediately background or swipe it away; repeat several times over a few days of normal use; check Settings → Privacy & Security → Analytics & Improvements → Analytics Data for new `SofiBabyTracker-*.ips` files · Expected: no new `.ips` with termination code `3735883980` (`0xDEAD10CC`) · Failure: a new log with that code appears · Reason: the kill is issued by RunningBoard on real-device suspension timing; simulators and CI cannot reproduce it.
+
+## Review decisions
+
+- fixed (blocker): TR-4 follow-up — both sides previously lost the redeemed successor when the
+  recovery assertion/acquire was also revoked; ordered retained recovery now succeeds before the
+  next caller can use the stale capsule.
+- fixed (minor): TR-10 — follow-up app-seam tests now cover revoked writes, denied recovery
+  assertions, ordered retry, and lock-body result/error preservation.
+- skipped (minor): TR-11 — The production `SuspensionGuarding` implementation is covered only by source inspection rather than the compiled Swift harness. — minor test-coverage gap accepted
 
 ## Acceptance criteria
 
-- [ ] No code path holds the App Group flock without an active background-task assertion whose expiration handler releases it.
-- [ ] Entering background with no protected work in flight leaves no lock descriptor held.
-- [ ] A forced mid-section release leaves the shared session vault recoverable (test at the Swift seam).
+- [x] No code path holds the App Group flock without an active background-task assertion whose expiration handler releases it.
+- [x] Entering background with no protected work in flight leaves no lock descriptor held.
+- [x] A forced mid-section release leaves the shared session vault recoverable (test at the Swift seam).
 - [ ] Real-device verification above passes with no new `0xDEAD10CC` logs.
