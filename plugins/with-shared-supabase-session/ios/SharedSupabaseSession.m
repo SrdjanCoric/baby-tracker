@@ -6,6 +6,7 @@ RCT_EXTERN_METHOD(readSession:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(writeSession:(NSString *)envelopeJson
+                  expectedRevision:(NSNumber * _Nullable)expectedRevision
                   handle:(NSString *)handle
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

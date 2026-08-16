@@ -97,7 +97,7 @@ class ExclusiveTestLock implements SharedSupabaseSessionLock {
 
 function makeBridge(): SharedSupabaseSessionBridge & {
   reads: number;
-  writes: { envelope: string }[];
+  writes: { envelope: string; expectedRevision: number | null }[];
   removed: number;
   setNext(value: string | null): void;
 } {
@@ -113,9 +113,9 @@ function makeBridge(): SharedSupabaseSessionBridge & {
       this.reads += 1;
       return value;
     },
-    async writeSession(envelope) {
+    async writeSession(envelope, expectedRevision = null) {
       value = envelope;
-      this.writes.push({ envelope });
+      this.writes.push({ envelope, expectedRevision });
     },
     async removeSession() {
       this.removed += 1;
@@ -180,6 +180,7 @@ describe("SharedSupabaseAuthStorage", () => {
     const envelope = JSON.parse(bridge.writes[0].envelope);
     expect(envelope.revision).toBe(4);
     expect(envelope.session).toBe(rotated);
+    expect(bridge.writes[0].expectedRevision).toBe(3);
   });
 
   it("picks up a pair the Widget wrote back", async () => {

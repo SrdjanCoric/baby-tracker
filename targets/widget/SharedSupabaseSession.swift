@@ -506,15 +506,52 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
             // the network (imminent suspension). Persisting without the lock
             // would race another holder's rotation, so abandon the write; the
             // next caller re-reads and recovers under a healthy lock.
-            try lease.ensureHeld()
-            _ = try vault.replace(expectedRevision: expectedRevision, next)
-            return try ensureValidSession(next).accessToken
+            return try await persistRedeemedPair(
+                next,
+                expectedRevision: expectedRevision,
+                lineage: lineage,
+                lease: lease
+            )
         } catch let error as SharedSessionError {
             logger.log(SharedSessionLogEvent(kind: .refreshRejected))
             throw error
         } catch {
             logger.log(SharedSessionLogEvent(kind: .refreshRejected))
             throw SharedSessionError.refreshRejected
+        }
+    }
+
+    private func persistRedeemedPair(
+        _ next: SharedSessionEnvelopeV1,
+        expectedRevision: Int,
+        lineage: String,
+        lease: CrossProcessLockLease
+    ) async throws -> String {
+        do {
+            try lease.ensureHeld()
+            _ = try vault.replace(expectedRevision: expectedRevision, next)
+            return try ensureValidSession(next).accessToken
+        } catch SharedSessionError.lockRevoked {
+            // The network already redeemed the old refresh token. Reacquire
+            // and persist that exact response; never replay the spent token.
+            return try await lock.withLock { recoveryLease in
+                guard let current = try self.vault.read() else {
+                    throw SharedSessionError.sessionChanged
+                }
+                if current.revision == expectedRevision {
+                    try recoveryLease.ensureHeld()
+                    _ = try self.vault.replace(
+                        expectedRevision: expectedRevision,
+                        next
+                    )
+                    return try ensureValidSession(next).accessToken
+                }
+                guard current.revision > expectedRevision,
+                      current.lineage == lineage else {
+                    throw SharedSessionError.sessionChanged
+                }
+                return try ensureValidSession(current).accessToken
+            }
         }
     }
 }

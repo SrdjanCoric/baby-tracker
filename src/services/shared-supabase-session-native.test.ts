@@ -5,7 +5,10 @@ vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
 }));
 
-import { createSharedSupabaseSessionLock } from "./shared-supabase-session-native";
+import {
+  createSharedSupabaseSessionLock,
+  createSharedSupabaseSessionNativeAdapter,
+} from "./shared-supabase-session-native";
 
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -16,6 +19,36 @@ function deferred<T>() {
 }
 
 describe("createSharedSupabaseSessionLock", () => {
+  it("persists a redeemed envelope under a fresh handle after revocation", async () => {
+    let nextHandle = 0;
+    const writes: { envelope: string; revision: number | null; handle: string }[] = [];
+    const nativeModule = {
+      readSession: vi.fn(async () => null),
+      writeSession: vi.fn(
+        async (envelope: string, revision: number | null, handle: string) => {
+          writes.push({ envelope, revision, handle });
+          if (handle === "handle-1") {
+            throw Object.assign(new Error("expired"), { code: "LOCK_REVOKED" });
+          }
+        }
+      ),
+      removeSession: vi.fn(async () => undefined),
+      acquireSessionLock: vi.fn(async () => `handle-${++nextHandle}`),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const adapter = createSharedSupabaseSessionNativeAdapter(nativeModule);
+
+    await adapter.lock.withLock(async () => {
+      await adapter.writeSession("redeemed-envelope", 7);
+    });
+
+    expect(writes).toEqual([
+      { envelope: "redeemed-envelope", revision: 7, handle: "handle-1" },
+      { envelope: "redeemed-envelope", revision: 7, handle: "handle-2" },
+    ]);
+    expect(nativeModule.releaseSessionLock).toHaveBeenCalledTimes(2);
+  });
+
   it("passes the issued native handle to its lock body", async () => {
     const nativeModule = {
       acquireSessionLock: vi.fn(async () => "handle-owned-by-body"),

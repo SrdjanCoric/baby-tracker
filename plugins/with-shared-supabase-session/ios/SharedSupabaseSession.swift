@@ -39,6 +39,14 @@ class SharedSupabaseSession: NSObject {
         ]
     }
 
+    private func envelopeRevision(_ data: Data) -> Int? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let revision = object["revision"] as? Int else {
+            return nil
+        }
+        return revision
+    }
+
     @objc func readSession(
         _ resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
@@ -67,6 +75,7 @@ class SharedSupabaseSession: NSObject {
 
     @objc func writeSession(
         _ envelopeJson: String,
+        expectedRevision: NSNumber?,
         handle: String,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
@@ -81,24 +90,70 @@ class SharedSupabaseSession: NSObject {
             reject("KEYCHAIN_ENCODE", "Envelope was not valid UTF-8", nil)
             return
         }
+        let expected = expectedRevision?.intValue
+        let incomingRevision = envelopeRevision(data)
         var failure: (code: String, message: String)?
         let access = SharedSupabaseSession.lockCoordinator.withHeldHandle(handle: handle) {
+            let requiredIncomingRevision = (expected ?? 0) + 1
+            guard incomingRevision == requiredIncomingRevision else {
+                failure = (
+                    "SESSION_CHANGED",
+                    "Incoming revision did not follow the expected capsule revision"
+                )
+                return
+            }
+
+            var readQuery = self.keychainQuery()
+            readQuery[kSecReturnData as String] = true
+            readQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+            var currentResult: CFTypeRef?
+            let readStatus = SecItemCopyMatching(
+                readQuery as CFDictionary,
+                &currentResult
+            )
+            if let expected {
+                guard readStatus == errSecSuccess,
+                      let currentData = currentResult as? Data,
+                      self.envelopeRevision(currentData) == expected else {
+                    failure = (
+                        "SESSION_CHANGED",
+                        "The shared session changed before this write"
+                    )
+                    return
+                }
+            } else {
+                guard readStatus == errSecItemNotFound else {
+                    failure = readStatus == errSecSuccess
+                        ? ("SESSION_CHANGED", "A shared session was installed concurrently")
+                        : ("KEYCHAIN_READ", "Keychain read failed: \(readStatus)")
+                    return
+                }
+            }
+
             let attributes: [String: Any] = [
                 kSecValueData as String: data,
                 kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             ]
-            let query = self.keychainQuery()
-            let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-            if updateStatus == errSecItemNotFound {
+            if expected == nil {
                 var addQuery = self.keychainQuery()
                 addQuery[kSecValueData as String] = data
                 addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
                 let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
                 if addStatus != errSecSuccess {
-                    failure = ("KEYCHAIN_WRITE", "Keychain add failed: \(addStatus)")
+                    failure = addStatus == errSecDuplicateItem
+                        ? ("SESSION_CHANGED", "A shared session was installed concurrently")
+                        : ("KEYCHAIN_WRITE", "Keychain add failed: \(addStatus)")
                 }
-            } else if updateStatus != errSecSuccess {
-                failure = ("KEYCHAIN_WRITE", "Keychain update failed: \(updateStatus)")
+            } else {
+                let updateStatus = SecItemUpdate(
+                    self.keychainQuery() as CFDictionary,
+                    attributes as CFDictionary
+                )
+                if updateStatus != errSecSuccess {
+                    failure = updateStatus == errSecItemNotFound
+                        ? ("SESSION_CHANGED", "The shared session disappeared before this write")
+                        : ("KEYCHAIN_WRITE", "Keychain update failed: \(updateStatus)")
+                }
             }
         }
         switch access {

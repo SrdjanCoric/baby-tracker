@@ -262,7 +262,7 @@ enum SharedSupabaseSessionTests {
         await Self.testTransportMissingSessionLogsAndThrows()
         await Self.testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent()
         await Self.testConcurrentRedemptionRedeemsOnce()
-        await Self.testRevokedLeaseAbandonsRedemptionPersistAndNextCallerRecovers()
+        await Self.testRevokedLeasePersistsRedeemedPairUnderFreshLock()
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
@@ -577,7 +577,7 @@ enum SharedSupabaseSessionTests {
 
     // MARK: - Slice 12
 
-    static func testRevokedLeaseAbandonsRedemptionPersistAndNextCallerRecovers() async {
+    static func testRevokedLeasePersistsRedeemedPairUnderFreshLock() async {
         let store = InMemorySharedSessionStore()
         store.bytes = Self.encodedEnvelope(revision: 1, accessToken: Self.lineageToken("lineage-a"), refreshToken: "refresh-1", lineage: "lineage-a")
         let vault = SharedSessionVault(store: store)
@@ -587,7 +587,10 @@ enum SharedSupabaseSessionTests {
             box: box,
             response: Self.refreshResponseJson(accessToken: refreshedToken, refreshToken: "refresh-2", expiresIn: 3600)
         )
-        let http = RecordedHTTPClient(status: 401)
+        let http = RecordedHTTPClient(
+            statuses: [401, 200],
+            bodies: [Data(), Data("recovered".utf8)]
+        )
         let logger = RecordingSessionLogger()
         let transport = WidgetSupabaseTransport(
             vault: vault,
@@ -597,41 +600,19 @@ enum SharedSupabaseSessionTests {
             config: SupabaseEndpointConfig(supabaseUrl: "https://example.supabase.co", anonKey: "anon"),
             logger: logger
         )
-        do {
-            _ = try await transport.send { token in Self.bearerRequest(token: token) }
-            fatalError("a revoked lease did not surface an error")
-        } catch SharedSessionError.lockRevoked {
-            // expected
-        } catch {
-            fatalError("a revoked lease threw an unexpected error: \(error)")
-        }
+        let result = try! await transport.send { token in Self.bearerRequest(token: token) }
+        requireSession(result.0 == 200, "revoked-lease recovery did not retry the request")
+        requireSession(
+            String(data: result.1, encoding: .utf8) == "recovered",
+            "revoked-lease recovery did not return the retry body"
+        )
         let revokedRefreshCalls = await refreshClient.callCount()
         requireSession(revokedRefreshCalls == 1, "revoked-lease path did not redeem exactly once")
-        requireSession(store.writeCount == 0, "a redemption whose lock was force-released persisted anyway")
-        let preserved = try! vault.read()!
-        requireSession(preserved.revision == 1, "a revoked lease changed the stored revision")
-        requireSession(preserved.session.contains("refresh-1"), "a revoked lease clobbered the stored pair")
-        requireSession(logger.events.count == 1 && logger.events.first?.kind == .refreshRejected, "revoked lease did not log one refreshRejected event")
-
-        // The interrupted redemption must leave the vault recoverable: a later
-        // caller under a healthy lock re-reads and redeems normally.
-        let recoveryRefresh = RecordedRefreshClient(
-            response: Self.refreshResponseJson(accessToken: refreshedToken, refreshToken: "refresh-2", expiresIn: 3600)
-        )
-        let recoveryHTTP = RecordedHTTPClient(statuses: [401, 200], bodies: [Data(), Data("recovered".utf8)])
-        let recoveryTransport = WidgetSupabaseTransport(
-            vault: vault,
-            lock: ImmediateLock(),
-            refreshClient: recoveryRefresh,
-            httpClient: recoveryHTTP,
-            config: SupabaseEndpointConfig(supabaseUrl: "https://example.supabase.co", anonKey: "anon"),
-            logger: RecordingSessionLogger()
-        )
-        let (status, body) = try! await recoveryTransport.send { token in Self.bearerRequest(token: token) }
-        requireSession(status == 200, "the next caller did not recover after an interrupted redemption")
-        requireSession(String(data: body, encoding: .utf8) == "recovered", "recovery retry did not return its body")
-        requireSession(store.writeCount == 1, "recovery did not persist the rotated pair exactly once")
-        requireSession(try! vault.read()!.revision == 2, "recovery did not bump the revision")
+        requireSession(store.writeCount == 1, "revoked-lease recovery did not persist exactly once")
+        let recovered = try! vault.read()!
+        requireSession(recovered.revision == 2, "revoked-lease recovery did not bump the revision")
+        requireSession(recovered.session.contains("refresh-2"), "revoked-lease recovery lost the redeemed refresh token")
+        requireSession(logger.events.isEmpty, "successful revoked-lease recovery logged a refresh failure")
     }
 
     // MARK: - Slice 13

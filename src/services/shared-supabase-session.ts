@@ -7,7 +7,10 @@ import type { AsyncStorageStatic } from "@react-native-async-storage/async-stora
  */
 export interface SharedSupabaseSessionBridge {
   readSession(): Promise<string | null>;
-  writeSession(envelopeJson: string): Promise<void>;
+  writeSession(
+    envelopeJson: string,
+    expectedRevision?: number | null
+  ): Promise<void>;
   removeSession(): Promise<void>;
 }
 
@@ -168,7 +171,7 @@ export function createSharedSupabaseClientOptions(
         return legacySession;
       }
       const envelope = buildSharedSessionEnvelope(1, legacySession, lineage);
-      await bridge.writeSession(JSON.stringify(envelope));
+      await bridge.writeSession(JSON.stringify(envelope), null);
       await legacy.removeItem(sessionKey);
       return legacySession;
     },
@@ -185,7 +188,10 @@ export function createSharedSupabaseClientOptions(
         value,
         current?.lineage
       );
-      await bridge.writeSession(JSON.stringify(envelope));
+      await bridge.writeSession(
+        JSON.stringify(envelope),
+        current?.revision ?? null
+      );
     },
 
     async removeItem(key: string): Promise<void> {
