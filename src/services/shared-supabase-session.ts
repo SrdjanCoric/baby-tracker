@@ -11,7 +11,7 @@ export interface SharedSupabaseSessionBridge {
     envelopeJson: string,
     expectedRevision?: number | null
   ): Promise<void>;
-  removeSession(): Promise<void>;
+  removeSession(expectedRevision: number, expectedLineage: string): Promise<void>;
 }
 
 export interface SharedSupabaseSessionLock {
@@ -140,11 +140,32 @@ export function createSharedSupabaseClientOptions(
 
   const { bridge, appLock, sessionKey, legacyStorage } = options;
   const legacy = legacyStorage as SupabaseAuthStorage;
+  let transactionObservation:
+    | { revision: number; lineage: string }
+    | null
+    | undefined;
   const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = (
     _name,
     _acquireTimeoutMillis,
     fn
-  ) => appLock.withLock(fn);
+  ) =>
+    appLock.withLock(async () => {
+      transactionObservation = undefined;
+      try {
+        return await fn();
+      } finally {
+        transactionObservation = undefined;
+      }
+    });
+
+  const recordObservation = (
+    envelope: SharedSupabaseSessionEnvelope | null
+  ): void => {
+    if (transactionObservation !== undefined) return;
+    transactionObservation = envelope
+      ? { revision: envelope.revision, lineage: envelope.lineage }
+      : null;
+  };
 
   const storage: SupabaseAuthStorage = {
     async getItem(key: string): Promise<string | null> {
@@ -154,11 +175,15 @@ export function createSharedSupabaseClientOptions(
       const raw = await bridge.readSession();
       if (raw != null) {
         const envelope = parseEnvelope(raw);
-        if (envelope) return envelope.session;
+        if (envelope) {
+          recordObservation(envelope);
+          return envelope.session;
+        }
         // A corrupt Keychain capsule cannot be trusted as a session; surface
         // a sign-out rather than serving malformed credentials.
         return null;
       }
+      recordObservation(null);
       const legacySession = await legacy.getItem(sessionKey);
       if (legacySession == null) return null;
       const accessToken = extractAccessToken(legacySession);
@@ -182,6 +207,7 @@ export function createSharedSupabaseClientOptions(
       }
       const raw = await bridge.readSession();
       const current = raw != null ? parseEnvelope(raw) : null;
+      recordObservation(current);
       const revision = (current?.revision ?? 0) + 1;
       const envelope = buildSharedSessionEnvelope(
         revision,
@@ -198,7 +224,15 @@ export function createSharedSupabaseClientOptions(
       if (key !== sessionKey) {
         return legacy.removeItem(key);
       }
-      await bridge.removeSession();
+      if (transactionObservation === undefined) {
+        const raw = await bridge.readSession();
+        recordObservation(raw != null ? parseEnvelope(raw) : null);
+      }
+      if (!transactionObservation) return;
+      await bridge.removeSession(
+        transactionObservation.revision,
+        transactionObservation.lineage
+      );
     },
   };
 

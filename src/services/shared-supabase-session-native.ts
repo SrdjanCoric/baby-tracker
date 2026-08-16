@@ -11,7 +11,12 @@ export interface SharedSupabaseSessionNativeModule {
     expectedRevision: number | null,
     handle: string
   ): Promise<void>;
-  removeSession(): Promise<void>;
+  removeSession(
+    expectedRevision: number,
+    expectedLineage: string,
+    handle: string
+  ): Promise<void>;
+  purgeSession(): Promise<void>;
   acquireSessionLock(): Promise<string>;
   releaseSessionLock(handle: string): Promise<void>;
 }
@@ -24,6 +29,7 @@ type SharedSupabaseSessionNativeLockModule = Pick<
 export interface SharedSupabaseSessionBridgeAndLock
   extends SharedSupabaseSessionBridge {
   lock: SharedSupabaseSessionLock;
+  purgeSession(): Promise<void>;
 }
 
 export function createSharedSupabaseSessionLock(
@@ -84,24 +90,41 @@ export function createSharedSupabaseSessionNativeAdapter(
   module: SharedSupabaseSessionNativeModule
 ): SharedSupabaseSessionBridgeAndLock {
   let activeHandle: string | null = null;
-  let pendingWrite:
-    | { envelopeJson: string; expectedRevision: number | null }
+  let pendingMutation:
+    | {
+        kind: "write";
+        envelopeJson: string;
+        expectedRevision: number | null;
+      }
+    | {
+        kind: "remove";
+        expectedRevision: number;
+        expectedLineage: string;
+      }
     | undefined;
 
-  const flushPendingWrite = async (): Promise<void> => {
-    const pending = pendingWrite;
-    pendingWrite = undefined;
+  const flushPendingMutation = async (): Promise<void> => {
+    const pending = pendingMutation;
+    pendingMutation = undefined;
     if (!pending) return;
 
     const recoveryHandle = await module.acquireSessionLock();
     activeHandle = recoveryHandle;
     try {
       try {
-        await module.writeSession(
-          pending.envelopeJson,
-          pending.expectedRevision,
-          recoveryHandle
-        );
+        if (pending.kind === "write") {
+          await module.writeSession(
+            pending.envelopeJson,
+            pending.expectedRevision,
+            recoveryHandle
+          );
+        } else {
+          await module.removeSession(
+            pending.expectedRevision,
+            pending.expectedLineage,
+            recoveryHandle
+          );
+        }
       } catch (error) {
         // A newer capsule won while the original handle was revoked. Its
         // unspent token is already durable, so never overwrite it.
@@ -127,10 +150,25 @@ export function createSharedSupabaseSessionNativeAdapter(
         );
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
-        pendingWrite = { envelopeJson, expectedRevision };
+        pendingMutation = { kind: "write", envelopeJson, expectedRevision };
       }
     },
-    removeSession: () => module.removeSession(),
+    removeSession: async (expectedRevision, expectedLineage) => {
+      try {
+        await module.removeSession(
+          expectedRevision,
+          expectedLineage,
+          activeHandle ?? ""
+        );
+      } catch (error) {
+        if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
+        pendingMutation = {
+          kind: "remove",
+          expectedRevision,
+          expectedLineage,
+        };
+      }
+    },
   };
 
   const lock = createSharedSupabaseSessionLock(
@@ -138,10 +176,10 @@ export function createSharedSupabaseSessionNativeAdapter(
     (handle) => {
       activeHandle = handle;
     },
-    flushPendingWrite
+    flushPendingMutation
   );
 
-  return { ...bridge, lock };
+  return { ...bridge, lock, purgeSession: () => module.purgeSession() };
 }
 
 /**

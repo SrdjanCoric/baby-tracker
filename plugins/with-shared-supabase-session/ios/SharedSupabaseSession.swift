@@ -47,6 +47,13 @@ class SharedSupabaseSession: NSObject {
         return revision
     }
 
+    private func envelopeLineage(_ data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return object["lineage"] as? String
+    }
+
     @objc func readSession(
         _ resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
@@ -175,6 +182,60 @@ class SharedSupabaseSession: NSObject {
     }
 
     @objc func removeSession(
+        _ expectedRevision: NSNumber,
+        expectedLineage: String,
+        handle: String,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        var failure: (code: String, message: String)?
+        let access = SharedSupabaseSession.lockCoordinator.withHeldHandle(handle: handle) {
+            var readQuery = self.keychainQuery()
+            readQuery[kSecReturnData as String] = true
+            readQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+            var currentResult: CFTypeRef?
+            let readStatus = SecItemCopyMatching(
+                readQuery as CFDictionary,
+                &currentResult
+            )
+            guard readStatus == errSecSuccess,
+                  let currentData = currentResult as? Data,
+                  self.envelopeRevision(currentData) == expectedRevision.intValue,
+                  self.envelopeLineage(currentData) == expectedLineage else {
+                failure = (
+                    "SESSION_CHANGED",
+                    "The shared session changed before this removal"
+                )
+                return
+            }
+            let deleteStatus = SecItemDelete(self.keychainQuery() as CFDictionary)
+            if deleteStatus != errSecSuccess {
+                failure = deleteStatus == errSecItemNotFound
+                    ? ("SESSION_CHANGED", "The shared session disappeared before removal")
+                    : ("KEYCHAIN_DELETE", "Keychain delete failed: \(deleteStatus)")
+            }
+        }
+        switch access {
+        case .performed:
+            if let failure {
+                reject(failure.code, failure.message, nil)
+            } else {
+                resolve(true)
+            }
+        case .revoked:
+            reject(
+                "LOCK_REVOKED",
+                "The shared session lock was force-released; abandoning this removal",
+                nil
+            )
+        case .missing:
+            reject("LOCK_HANDLE", "Unknown lock handle: \(handle)", nil)
+        }
+    }
+
+    /// Administrative first-launch cleanup for a capsule retained across app
+    /// reinstall. Auth storage never calls this unguarded operation.
+    @objc func purgeSession(
         _ resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {

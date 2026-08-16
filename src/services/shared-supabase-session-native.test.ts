@@ -33,6 +33,7 @@ describe("createSharedSupabaseSessionLock", () => {
         }
       ),
       removeSession: vi.fn(async () => undefined),
+      purgeSession: vi.fn(async () => undefined),
       acquireSessionLock: vi.fn(async () => `handle-${++nextHandle}`),
       releaseSessionLock: vi.fn(async () => undefined),
     };
@@ -47,6 +48,40 @@ describe("createSharedSupabaseSessionLock", () => {
       { envelope: "redeemed-envelope", revision: 7, handle: "handle-2" },
     ]);
     expect(nativeModule.releaseSessionLock).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves a newer capsule when a revoked removal is retried", async () => {
+    let nextHandle = 0;
+    const removals: { revision: number; lineage: string; handle: string }[] = [];
+    const nativeModule = {
+      readSession: vi.fn(async () => null),
+      writeSession: vi.fn(async () => undefined),
+      removeSession: vi.fn(
+        async (revision: number, lineage: string, handle: string) => {
+          removals.push({ revision, lineage, handle });
+          if (handle === "handle-1") {
+            throw Object.assign(new Error("expired"), { code: "LOCK_REVOKED" });
+          }
+          throw Object.assign(new Error("widget won"), {
+            code: "SESSION_CHANGED",
+          });
+        }
+      ),
+      purgeSession: vi.fn(async () => undefined),
+      acquireSessionLock: vi.fn(async () => `handle-${++nextHandle}`),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const adapter = createSharedSupabaseSessionNativeAdapter(nativeModule);
+
+    await adapter.lock.withLock(async () => {
+      await adapter.removeSession(5, "lineage-a");
+    });
+
+    expect(removals).toEqual([
+      { revision: 5, lineage: "lineage-a", handle: "handle-1" },
+      { revision: 5, lineage: "lineage-a", handle: "handle-2" },
+    ]);
+    expect(nativeModule.purgeSession).not.toHaveBeenCalled();
   });
 
   it("passes the issued native handle to its lock body", async () => {

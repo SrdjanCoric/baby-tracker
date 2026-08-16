@@ -252,6 +252,8 @@ describe("SharedSupabaseAuthStorage", () => {
 
   it("removes the shared session without nested lock acquisition", async () => {
     const bridge = makeBridge();
+    const token = jwt({ session_id: "lineage-a", sub: "user-1" });
+    bridge.setNext(envelopeJson(1, token));
     const lockCalls: string[] = [];
     const { storage } = createSharedSupabaseClientOptions({
       isIOS: true,
@@ -269,6 +271,29 @@ describe("SharedSupabaseAuthStorage", () => {
     await storage.removeItem(SESSION_KEY);
     expect(bridge.removed).toBe(1);
     expect(lockCalls).toHaveLength(0);
+  });
+
+  it("binds session removal to the revision first read by the lock transaction", async () => {
+    const bridge = makeBridge();
+    const removeSession = vi.fn(async () => undefined);
+    bridge.removeSession = removeSession;
+    const token = jwt({ session_id: "lineage-a", sub: "user-1" });
+    bridge.setNext(envelopeJson(5, token, "refresh-5"));
+    const authOptions = createSharedSupabaseClientOptions({
+      isIOS: true,
+      bridge,
+      sessionKey: SESSION_KEY,
+      legacyStorage: asyncStorage,
+      appLock: immediateLock(),
+    });
+
+    await authOptions.lock!("supabase", 10_000, async () => {
+      await authOptions.storage.getItem(SESSION_KEY);
+      bridge.setNext(envelopeJson(6, token, "refresh-widget"));
+      await authOptions.storage.removeItem(SESSION_KEY);
+    });
+
+    expect(removeSession).toHaveBeenCalledWith(5, "lineage-a");
   });
 
   it("returns an auth-js lock on iOS that owns one native flock", async () => {

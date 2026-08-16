@@ -51,12 +51,12 @@ describe("shared Supabase session credential storage", () => {
   it("purges a Keychain capsule left by a previous owner on the first post-reinstall launch", () => {
     // iOS keeps `kSecClassGenericPassword` items across uninstall; without a
     // first-launch purge a reinstalled copy would silently restore the prior
-    // owner's session. The app uses the native bridge's `removeSession` and an
+    // owner's session. The app uses the native bridge's administrative purge and an
     // AsyncStorage one-shot marker so subsequent launches keep a legitimate
     // session.
     expect(widgetDataService).toContain("export async function purgeStaleSharedSessionOnFirstLaunch");
     expect(widgetDataService).toContain('SHARED_SESSION_FIRST_LAUNCH_PURGE_MARKER_KEY');
-    expect(widgetDataService).toMatch(/bridge\.removeSession\(\)/);
+    expect(widgetDataService).toMatch(/bridge\.purgeSession\(\)/);
   });
 
   it("does not publish the access token from the app into the Widget App Group", () => {
