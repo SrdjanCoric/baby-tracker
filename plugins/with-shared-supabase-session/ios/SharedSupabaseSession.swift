@@ -217,6 +217,14 @@ class SharedSupabaseSession: NSObject {
             reject(code, message, nil)
         }
 
+        guard backgroundTask != .invalid else {
+            abandon(
+                "LOCK_NO_ASSERTION",
+                "A background assertion is required before acquiring the shared session lock"
+            )
+            return
+        }
+
         let fd = open(lockURL.path, O_CREAT | O_RDWR, 0o600)
         guard fd >= 0 else {
             abandon("LOCK_OPEN", "Lock file open failed: errno=\(errno)")

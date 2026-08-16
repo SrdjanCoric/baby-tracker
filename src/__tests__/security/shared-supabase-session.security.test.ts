@@ -113,6 +113,18 @@ describe("shared Supabase session credential storage", () => {
     expect(appSupabaseModule).toContain("didEnterBackgroundNotification");
   });
 
+  it("rejects an app lock before opening its descriptor when no background assertion is granted", () => {
+    const assertion = appSupabaseModule.indexOf("beginBackgroundTask");
+    const invalidGuard = appSupabaseModule.indexOf(
+      "guard backgroundTask != .invalid"
+    );
+    const descriptorOpen = appSupabaseModule.indexOf("let fd = open(");
+
+    expect(assertion).toBeGreaterThan(-1);
+    expect(invalidGuard).toBeGreaterThan(assertion);
+    expect(descriptorOpen).toBeGreaterThan(invalidGuard);
+  });
+
   it("exposes bridge teardown cleanup through an Objective-C selector", () => {
     expect(appSupabaseModule).toContain("@objc func invalidate()");
     expect(appSupabaseModule).not.toContain("RCTInvalidating");
