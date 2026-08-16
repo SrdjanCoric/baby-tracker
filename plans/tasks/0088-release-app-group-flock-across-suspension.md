@@ -89,6 +89,11 @@ redemption via compare-and-swap on the token version).
 - [x] [confirm-security] Approve the change to the shared-session locking protocol (session/Keychain trust boundary from Task 0083). — Approved by owner 2026-08-16: background-task assertions around every flock-held section (expiration handler force-releases the descriptor and invalidates the handle); `ProcessInfo.performExpiringActivity` on the extension side; idle release on `didEnterBackground`; a body that loses its lock mid-flight abandons its write so revision CAS recovery stays sound. Capsule format, lineage, revision discipline, and read access unchanged.
 - [ ] [verify] Confirm the kill is gone on a real device · Steps: on a TestFlight or dev build, open the app fresh (forcing a session refresh) and immediately background or swipe it away; repeat several times over a few days of normal use; check Settings → Privacy & Security → Analytics & Improvements → Analytics Data for new `SofiBabyTracker-*.ips` files · Expected: no new `.ips` with termination code `3735883980` (`0xDEAD10CC`) · Failure: a new log with that code appears · Reason: the kill is issued by RunningBoard on real-device suspension timing; simulators and CI cannot reproduce it.
 
+## Review decisions
+
+- skipped (minor): TR-10 — The new native failure modes have no regression test at the JS seams that own the documented recovery behaviour. — minor test-coverage gap accepted
+- skipped (minor): TR-11 — The production `SuspensionGuarding` implementation is covered only by source inspection rather than the compiled Swift harness. — minor test-coverage gap accepted
+
 ## Acceptance criteria
 
 - [ ] No code path holds the App Group flock without an active background-task assertion whose expiration handler releases it.
