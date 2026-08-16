@@ -76,61 +76,75 @@ final class KeychainSharedSessionStore: SharedSessionStore, @unchecked Sendable 
     }
 }
 
-// MARK: - POSIX cross-process lock
+// MARK: - POSIX cross-process lock (platform wiring)
 
-final class PosixSharedSessionLock: CrossProcessSessionLock, @unchecked Sendable {
-    private let appGroup: String
-    private let fileName: String
-    private let acquireTimeoutMs: Int
+/// Suspension guard backed by `ProcessInfo.performExpiringActivity`, the only
+/// assertion primitive available in an app extension (no UIKit). The system
+/// runs the non-expired invocation on its own thread; holding it on a
+/// semaphore keeps the assertion alive until the critical section ends. The
+/// expired invocation fires when the process is about to be suspended anyway
+/// and triggers the lock's force-release.
+final class ProcessExpiringActivityGuard: SuspensionGuarding, @unchecked Sendable {
+    func begin(
+        reason: String,
+        onExpiration: @escaping @Sendable () -> Void
+    ) -> @Sendable () -> Void {
+        let finished = DispatchSemaphore(value: 0)
+        let ended = OneShotFlag()
+        ProcessInfo.processInfo.performExpiringActivity(withReason: reason) { expired in
+            if expired {
+                if !ended.isSet() {
+                    onExpiration()
+                }
+                return
+            }
+            finished.wait()
+        }
+        return {
+            if ended.trySet() {
+                finished.signal()
+            }
+        }
+    }
+}
 
-    init(
+/// Minimal one-shot flag safe to touch from the expiring-activity thread.
+final class OneShotFlag: @unchecked Sendable {
+    private let mutex = NSLock()
+    private var value = false
+
+    func trySet() -> Bool {
+        mutex.lock()
+        defer { mutex.unlock() }
+        if value { return false }
+        value = true
+        return true
+    }
+
+    func isSet() -> Bool {
+        mutex.lock()
+        defer { mutex.unlock() }
+        return value
+    }
+}
+
+extension PosixSharedSessionLock {
+    /// Production wiring: lock file inside the App Group container, guarded by
+    /// an expiring-activity assertion.
+    convenience init(
         appGroup: String = "group.com.sofibaby.app",
         fileName: String = "shared-supabase-session.lock",
         acquireTimeoutMs: Int = 10000
     ) {
-        self.appGroup = appGroup
-        self.fileName = fileName
-        self.acquireTimeoutMs = acquireTimeoutMs
-    }
-
-    func withLock<T>(_ body: @escaping @Sendable () async throws -> T) async throws -> T {
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroup
-        ) else {
-            throw SharedSessionError.storeFailure
-        }
-        let lockURL = containerURL.appendingPathComponent(fileName)
-        let fd = open(lockURL.path, O_CREAT | O_RDWR, 0o600)
-        guard fd >= 0 else {
-            NSLog("[SharedSupabaseSession] lock open failed: errno=\(errno)")
-            throw SharedSessionError.storeFailure
-        }
-
-        let deadline = Date().addingTimeInterval(Double(acquireTimeoutMs) / 1000.0)
-        var acquired = false
-        while Date() < deadline {
-            if flock(fd, LOCK_EX | LOCK_NB) == 0 {
-                acquired = true
-                break
-            }
-            try await Task.sleep(nanoseconds: 20_000_000)
-        }
-        guard acquired else {
-            close(fd)
-            NSLog("[SharedSupabaseSession] lock timeout")
-            throw SharedSessionError.storeFailure
-        }
-
-        do {
-            let result = try await body()
-            flock(fd, LOCK_UN)
-            close(fd)
-            return result
-        } catch {
-            flock(fd, LOCK_UN)
-            close(fd)
-            throw error
-        }
+        self.init(
+            lockFileURLProvider: {
+                FileManager.default.containerURL(
+                    forSecurityApplicationGroupIdentifier: appGroup
+                )?.appendingPathComponent(fileName)
+            },
+            acquireTimeoutMs: acquireTimeoutMs,
+            suspensionGuard: ProcessExpiringActivityGuard()
+        )
     }
 }
 

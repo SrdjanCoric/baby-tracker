@@ -7,6 +7,7 @@ const read = (relative: string) =>
 
 const widgetIndex = read("../../../targets/widget/index.swift");
 const widgetAdapters = read("../../../targets/widget/SharedSupabaseSessionAdapters.swift");
+const widgetSharedSession = read("../../../targets/widget/SharedSupabaseSession.swift");
 const widgetDataService = read("../../../src/services/widget-data-service.ts");
 const appSupabaseModule = read(
   "../../../plugins/with-shared-supabase-session/ios/SharedSupabaseSession.swift"
@@ -82,10 +83,34 @@ describe("shared Supabase session credential storage", () => {
   });
 
   it("serializes app and Widget refreshes through a cross-process POSIX lock", () => {
-    for (const source of [appSupabaseModule, widgetAdapters]) {
-      expect(source).toContain("flock");
-      expect(source).toContain("forSecurityApplicationGroupIdentifier");
-    }
+    // App-side native module holds the flock directly; the widget's flock
+    // lives in the shared core (`SharedSupabaseSession.swift`) and the
+    // adapters wire it to the App Group container.
+    expect(appSupabaseModule).toContain("flock");
+    expect(appSupabaseModule).toContain("forSecurityApplicationGroupIdentifier");
+    expect(widgetSharedSession).toContain("flock");
+    expect(widgetAdapters).toContain("forSecurityApplicationGroupIdentifier");
+    expect(widgetAdapters).toContain("PosixSharedSessionLock");
+  });
+
+  it("never holds the App Group flock into suspension (0xDEAD10CC)", () => {
+    // Widget core: every flock-held section runs under a suspension guard;
+    // expiry revokes the lease, force-releases the descriptor, and the
+    // redemption refuses to persist without the lock.
+    expect(widgetSharedSession).toContain("SuspensionGuarding");
+    expect(widgetSharedSession).toContain("lease.revoke()");
+    expect(widgetSharedSession).toContain("try lease.ensureHeld()");
+    expect(widgetAdapters).toContain("performExpiringActivity");
+    // App module: each held descriptor is covered by a background-task
+    // assertion whose expiration force-releases the flock; a write after a
+    // forced release is abandoned, and entering background force-releases
+    // descriptors that never got an assertion.
+    expect(appSupabaseModule).toContain("beginBackgroundTask");
+    expect(appSupabaseModule).toContain("endBackgroundTask");
+    expect(appSupabaseModule).toContain("forceRelease(handle:");
+    expect(appSupabaseModule).toContain("LOCK_REVOKED");
+    expect(appSupabaseModule).toContain("hasForceReleasedLock");
+    expect(appSupabaseModule).toContain("didEnterBackgroundNotification");
   });
 
   it("exposes bridge teardown cleanup through an Objective-C selector", () => {

@@ -299,7 +299,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/done/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
-- [ ] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
 
 ## Workflow status
 
