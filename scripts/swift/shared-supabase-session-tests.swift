@@ -147,6 +147,16 @@ final class LeasePublishingLock: CrossProcessSessionLock, @unchecked Sendable {
     }
 }
 
+final class AlwaysRevokedLock: CrossProcessSessionLock {
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        let lease = CrossProcessLockLease()
+        lease.revoke()
+        return try await body(lease)
+    }
+}
+
 /// Refresh client that revokes the published lease while the redemption is on
 /// the network — the exact moment a suspension-forced release interrupts it.
 actor LeaseRevokingRefreshClient: SupabaseRefreshClient {
@@ -278,6 +288,7 @@ enum SharedSupabaseSessionTests {
         await Self.testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent()
         await Self.testConcurrentRedemptionRedeemsOnce()
         await Self.testRevokedLeasePersistsRedeemedPairUnderFreshLock()
+        await Self.testRepeatedLeaseRevocationLogsLockRevoked()
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         Self.testAppLockExpirationWaitsForCapsuleMutation()
@@ -631,6 +642,47 @@ enum SharedSupabaseSessionTests {
         requireSession(recovered.revision == 2, "revoked-lease recovery did not bump the revision")
         requireSession(recovered.session.contains("refresh-2"), "revoked-lease recovery lost the redeemed refresh token")
         requireSession(logger.events.isEmpty, "successful revoked-lease recovery logged a refresh failure")
+    }
+
+    static func testRepeatedLeaseRevocationLogsLockRevoked() async {
+        let store = InMemorySharedSessionStore()
+        store.bytes = Self.encodedEnvelope(
+            revision: 1,
+            accessToken: Self.lineageToken("lineage-a"),
+            refreshToken: "refresh-1",
+            lineage: "lineage-a"
+        )
+        let logger = RecordingSessionLogger()
+        let transport = WidgetSupabaseTransport(
+            vault: SharedSessionVault(store: store),
+            lock: AlwaysRevokedLock(),
+            refreshClient: RecordedRefreshClient(
+                response: Self.refreshResponseJson(
+                    accessToken: Self.lineageToken("lineage-a"),
+                    refreshToken: "refresh-2",
+                    expiresIn: 3600
+                )
+            ),
+            httpClient: RecordedHTTPClient(status: 401),
+            config: SupabaseEndpointConfig(
+                supabaseUrl: "https://example.supabase.co",
+                anonKey: "anon"
+            ),
+            logger: logger
+        )
+
+        do {
+            _ = try await transport.send { token in Self.bearerRequest(token: token) }
+            fatalError("repeated lease revocation unexpectedly succeeded")
+        } catch SharedSessionError.lockRevoked {
+            // expected
+        } catch {
+            fatalError("repeated lease revocation threw an unexpected error: \(error)")
+        }
+        requireSession(
+            logger.events == [SharedSessionLogEvent(kind: .lockRevoked)],
+            "abandoned persist was not logged as lockRevoked"
+        )
     }
 
     // MARK: - Slice 13

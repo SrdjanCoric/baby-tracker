@@ -197,6 +197,8 @@ final class NSLogSessionLogger: SharedSessionLogger, @unchecked Sendable {
             NSLog("[SharedSupabaseSession] no session present while refreshing")
         case .refreshRejected:
             NSLog("[SharedSupabaseSession] refresh rejected; preserving prior cache")
+        case .lockRevoked:
+            NSLog("[SharedSupabaseSession] persist abandoned after lock revocation")
         case .retryUnauthorized:
             NSLog("[SharedSupabaseSession] retry after renewal still returned 401")
         }

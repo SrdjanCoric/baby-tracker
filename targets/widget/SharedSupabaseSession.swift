@@ -18,6 +18,7 @@ enum SharedSessionError: Error, Equatable {
 enum SharedSessionLogKind: Equatable {
     case missingSession
     case refreshRejected
+    case lockRevoked
     case retryUnauthorized
 }
 
@@ -515,6 +516,9 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
                 lineage: lineage,
                 lease: lease
             )
+        } catch SharedSessionError.lockRevoked {
+            logger.log(SharedSessionLogEvent(kind: .lockRevoked))
+            throw SharedSessionError.lockRevoked
         } catch let error as SharedSessionError {
             logger.log(SharedSessionLogEvent(kind: .refreshRejected))
             throw error
