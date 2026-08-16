@@ -34,6 +34,21 @@ the decision.
 If reproduction shows the cause is the restoration path rather than queue ordering, stop and split
 the fix into its own task rather than widening this one.
 
+**Update 2026-08-16 (production evidence).** Production Supabase logs confirm a variant of cause 2:
+after account deletion, `delete_user_account` removes `public.users` but leaves `auth.users` and
+refresh tokens alive, so still-signed-in devices keep syncing as zombies. Observed repeatedly:
+
+```
+insert or update on table "feeding_reminder_preferences" violates foreign key constraint "feeding_reminder_preferences_user_id_fkey"   (23503)
+new row violates row-level security policy for table "achievements"                                                                    (42501)
+```
+
+The achievements insert flows through the sync queue and is retried indefinitely. Task 0087 kills
+the zombie sessions at the source; this task still owns the queue-side behavior. Scope additions:
+treat FK violations (`23503`) as permanently denied alongside `42501` in the terminal-state
+decision, and when reproducing, use a deleted-account (missing `public.users` row) fixture as the
+confirmed permanent-denial case.
+
 ## Software Repository Guidelines
 
 **Applicable references**: `references/02-testing.md`, `references/07-security.md`, `references/10-definition-of-done.md`
