@@ -272,6 +272,7 @@ enum SharedSupabaseSessionTests {
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         Self.testAppLockExpirationWaitsForCapsuleMutation()
+        Self.testLeaseRevocationWaitsForHeldMutation()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
         await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
         await Self.testPosixLockCancellationDuringAcquireReleasesDescriptor()
@@ -780,6 +781,42 @@ enum SharedSupabaseSessionTests {
             coordinator.release(handle: "mutating") == .revoked,
             "revoked mutation handle did not unwind as a no-op"
         )
+    }
+
+    static func testLeaseRevocationWaitsForHeldMutation() {
+        let lease = CrossProcessLockLease()
+        let mutationEntered = DispatchSemaphore(value: 0)
+        let allowMutationToFinish = DispatchSemaphore(value: 0)
+        let mutationFinished = DispatchSemaphore(value: 0)
+        let revocationFinished = DispatchSemaphore(value: 0)
+
+        DispatchQueue.global().async {
+            try! lease.withHeldLock {
+                mutationEntered.signal()
+                allowMutationToFinish.wait()
+            }
+            mutationFinished.signal()
+        }
+        mutationEntered.wait()
+        DispatchQueue.global().async {
+            lease.revoke()
+            revocationFinished.signal()
+        }
+
+        requireSession(
+            revocationFinished.wait(timeout: .now() + 0.05) == .timedOut,
+            "lease revocation interleaved with a held capsule mutation"
+        )
+        allowMutationToFinish.signal()
+        requireSession(
+            mutationFinished.wait(timeout: .now() + 1) == .success,
+            "held lease mutation did not finish"
+        )
+        requireSession(
+            revocationFinished.wait(timeout: .now() + 1) == .success,
+            "lease did not revoke after its mutation finished"
+        )
+        requireSession(lease.isRevoked, "lease was not revoked after mutation")
     }
 
     // MARK: - Slice 14

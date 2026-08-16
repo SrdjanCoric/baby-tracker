@@ -102,7 +102,7 @@ describe("shared Supabase session credential storage", () => {
     // redemption refuses to persist without the lock.
     expect(widgetSharedSession).toContain("SuspensionGuarding");
     expect(widgetSharedSession).toContain("lease.revoke()");
-    expect(widgetSharedSession).toContain("try lease.ensureHeld()");
+    expect(widgetSharedSession).toContain("try lease.withHeldLock");
     expect(widgetAdapters).toContain("performExpiringActivity");
     // App module wiring: detailed acquire/revoke/release ordering is exercised
     // by the compiled AppSharedSessionLockCoordinator Swift harness.

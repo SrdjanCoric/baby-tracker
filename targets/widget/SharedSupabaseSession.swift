@@ -258,6 +258,15 @@ final class CrossProcessLockLease: @unchecked Sendable {
     func ensureHeld() throws {
         if isRevoked { throw SharedSessionError.lockRevoked }
     }
+
+    /// Keeps revocation from releasing the descriptor between authorization
+    /// and one synchronous capsule mutation.
+    func withHeldLock<T>(_ body: () throws -> T) throws -> T {
+        mutex.lock()
+        defer { mutex.unlock() }
+        guard !revoked else { throw SharedSessionError.lockRevoked }
+        return try body()
+    }
 }
 
 /// Cross-process lock whose critical section may await. The production adapter
@@ -522,8 +531,9 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
         lease: CrossProcessLockLease
     ) async throws -> String {
         do {
-            try lease.ensureHeld()
-            _ = try vault.replace(expectedRevision: expectedRevision, next)
+            _ = try lease.withHeldLock {
+                try vault.replace(expectedRevision: expectedRevision, next)
+            }
             return try ensureValidSession(next).accessToken
         } catch SharedSessionError.lockRevoked {
             // The network already redeemed the old refresh token. Reacquire
@@ -533,11 +543,12 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
                     throw SharedSessionError.sessionChanged
                 }
                 if current.revision == expectedRevision {
-                    try recoveryLease.ensureHeld()
-                    _ = try self.vault.replace(
-                        expectedRevision: expectedRevision,
-                        next
-                    )
+                    _ = try recoveryLease.withHeldLock {
+                        try self.vault.replace(
+                            expectedRevision: expectedRevision,
+                            next
+                        )
+                    }
                     return try ensureValidSession(next).accessToken
                 }
                 guard current.revision > expectedRevision,
