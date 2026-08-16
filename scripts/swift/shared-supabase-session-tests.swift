@@ -975,15 +975,14 @@ enum SharedSupabaseSessionTests {
 
         // A waiter still in its acquire loop gets expired: it must abort
         // instead of spinning on a dead descriptor for the whole timeout.
-        let waiterGuard = ManualSuspensionGuard()
+        let waiterBegan = TestGate()
+        let waiterGuard = ManualSuspensionGuard(onBegin: { waiterBegan.open() })
         let waiter = PosixSharedSessionLock(
             lockFileURLProvider: { lockURL },
             acquireTimeoutMs: 10000,
             suspensionGuard: waiterGuard
         )
-        let waiterStarted = TestGate()
         let waiterResult = Task { () -> SharedSessionError? in
-            waiterStarted.open()
             do {
                 _ = try await waiter.withLock { _ in false }
                 return nil
@@ -993,8 +992,7 @@ enum SharedSupabaseSessionTests {
                 return nil
             }
         }
-        await waiterStarted.wait()
-        try? await Task.sleep(nanoseconds: 60_000_000)
+        await waiterBegan.wait()
         waiterGuard.expireAll()
         let outcome = await waiterResult.value
         requireSession(outcome == .lockRevoked, "an expired waiter did not abort its acquire with lockRevoked")
