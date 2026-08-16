@@ -276,9 +276,24 @@ enum WidgetSleepPredictionDisplay: Equatable {
 /// and the app may simply not have run since — a widget cannot recompute one for itself.
 let widgetSleepPredictionOverdueHorizonMinutes = 5 * 60
 
+/// A nap/bedtime prediction is void once a sleep has ended at or after its predicted time:
+/// the sleep it predicted already happened, and only the app can compute the next one.
+func widgetSleepPredictionContradicted(
+    _ prediction: WidgetSleepPrediction,
+    lastSleepEndedAt: Date?
+) -> Bool {
+    guard prediction.state == .nextNap || prediction.state == .bedtime,
+          let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp),
+          let lastSleepEndedAt else {
+        return false
+    }
+    return lastSleepEndedAt >= predictedAt
+}
+
 func widgetSleepPredictionDisplay(
     _ prediction: WidgetSleepPrediction,
-    now: Date
+    now: Date,
+    lastSleepEndedAt: Date? = nil
 ) -> WidgetSleepPredictionDisplay? {
     switch prediction.state {
     case .blank:
@@ -291,7 +306,8 @@ func widgetSleepPredictionDisplay(
         }
         return .nighttime
     case .nextNap, .bedtime:
-        guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp) else {
+        guard let predictedAt = prediction.predictedAt.flatMap(parseWidgetSnapshotTimestamp),
+              !widgetSleepPredictionContradicted(prediction, lastSleepEndedAt: lastSleepEndedAt) else {
             return nil
         }
         let isBedtime = prediction.state == .bedtime
@@ -560,7 +576,16 @@ actor WidgetSnapshotCoordinator {
 
             var merged = response
             merged.timeFormat = prior?.timeFormat ?? response.timeFormat
-            merged.sleepPrediction = prior?.sleepPrediction ?? response.sleepPrediction
+            // The carried app-local prediction dies when the server reports a sleep that
+            // ended at or after its predicted time (e.g. the timer was stopped from the
+            // widget with the app never opened) — better blank than a stale time.
+            let carriedPrediction = prior?.sleepPrediction ?? response.sleepPrediction
+            let responseSleepEndedAt = response.activities.sleep.lastSleepEndedAt
+                .flatMap(parseWidgetSnapshotTimestamp)
+            merged.sleepPrediction = carriedPrediction.flatMap {
+                widgetSleepPredictionContradicted($0, lastSleepEndedAt: responseSleepEndedAt)
+                    ? nil : $0
+            }
             let pendingStopTypes = pendingStopReader.pendingStopActivityTypes(for: babyId)
             let mergeResult = mergeTimers(
                 prior: prior,
