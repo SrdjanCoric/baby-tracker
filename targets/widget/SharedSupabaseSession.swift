@@ -348,7 +348,10 @@ final class PosixSharedSessionLock: CrossProcessSessionLock, @unchecked Sendable
             lease.revoke()
             state.release()
         }
-        defer { endAssertion() }
+        defer {
+            state.release()
+            endAssertion()
+        }
 
         let deadline = Date().addingTimeInterval(Double(acquireTimeoutMs) / 1000.0)
         var acquired = false
@@ -364,19 +367,10 @@ final class PosixSharedSessionLock: CrossProcessSessionLock, @unchecked Sendable
             if acquired { break }
         }
         guard acquired else {
-            state.release()
             NSLog("[SharedSupabaseSession] lock timeout")
             throw SharedSessionError.storeFailure
         }
-
-        do {
-            let result = try await body(lease)
-            state.release()
-            return result
-        } catch {
-            state.release()
-            throw error
-        }
+        return try await body(lease)
     }
 }
 

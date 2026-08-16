@@ -200,6 +200,11 @@ final class ManualSuspensionGuard: SuspensionGuarding, @unchecked Sendable {
     private var handlers: [@Sendable () -> Void] = []
     private var beginCountValue = 0
     private var endCountValue = 0
+    private let onBegin: (@Sendable () -> Void)?
+
+    init(onBegin: (@Sendable () -> Void)? = nil) {
+        self.onBegin = onBegin
+    }
 
     func begin(
         reason: String,
@@ -209,6 +214,7 @@ final class ManualSuspensionGuard: SuspensionGuarding, @unchecked Sendable {
         beginCountValue += 1
         handlers.append(onExpiration)
         mutex.unlock()
+        onBegin?()
         return { [self] in
             mutex.lock()
             endCountValue += 1
@@ -267,6 +273,7 @@ enum SharedSupabaseSessionTests {
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
         await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
+        await Self.testPosixLockCancellationDuringAcquireReleasesDescriptor()
         await Self.testPosixLockExpirationDuringAcquireAborts()
         print("PASS: Shared Supabase session renewal core")
     }
@@ -781,6 +788,66 @@ enum SharedSupabaseSessionTests {
         let revokedSeenByBody = try! await holder.value
         requireSession(revokedSeenByBody, "forced release did not revoke the section's lease")
         requireSession(guardImpl.endCount() == 1, "interrupted section did not end its assertion on exit")
+    }
+
+    static func testPosixLockCancellationDuringAcquireReleasesDescriptor() async {
+        let lockURL = Self.temporaryLockURL()
+        defer { try? FileManager.default.removeItem(at: lockURL) }
+        let holderLock = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            suspensionGuard: ManualSuspensionGuard()
+        )
+        let holderEntered = TestGate()
+        let holderMayFinish = TestGate()
+        let holder = Task {
+            try await holderLock.withLock { _ in
+                holderEntered.open()
+                await holderMayFinish.wait()
+                return true
+            }
+        }
+        await holderEntered.wait()
+        let baselineDescriptors = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+
+        let waiterBegan = TestGate()
+        let waiter = PosixSharedSessionLock(
+            lockFileURLProvider: { lockURL },
+            acquireTimeoutMs: 10_000,
+            suspensionGuard: ManualSuspensionGuard(onBegin: { waiterBegan.open() })
+        )
+        let waiterTask = Task {
+            try await waiter.withLock { _ in false }
+        }
+        await waiterBegan.wait()
+        let descriptorsWithWaiter = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+        requireSession(
+            descriptorsWithWaiter > baselineDescriptors,
+            "contended waiter did not open a descriptor before cancellation"
+        )
+
+        waiterTask.cancel()
+        do {
+            _ = try await waiterTask.value
+            fatalError("cancelled lock waiter unexpectedly completed")
+        } catch is CancellationError {
+            // expected
+        } catch {
+            fatalError("cancelled lock waiter threw an unexpected error: \(error)")
+        }
+        let descriptorsAfterCancellation = (try? FileManager.default.contentsOfDirectory(
+            atPath: "/dev/fd"
+        ).count) ?? -1
+        requireSession(
+            descriptorsAfterCancellation == baselineDescriptors,
+            "cancelled lock waiter leaked its descriptor"
+        )
+
+        holderMayFinish.open()
+        _ = try! await holder.value
     }
 
     static func testPosixLockExpirationDuringAcquireAborts() async {
