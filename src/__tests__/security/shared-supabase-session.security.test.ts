@@ -12,6 +12,9 @@ const widgetDataService = read("../../../src/services/widget-data-service.ts");
 const appSupabaseModule = read(
   "../../../plugins/with-shared-supabase-session/ios/SharedSupabaseSession.swift"
 );
+const appLockCoordinator = read(
+  "../../../plugins/with-shared-supabase-session/ios/SharedSupabaseSessionLockCoordinator.swift"
+);
 const appJson = read("../../../app.json");
 const widgetTargetConfig = read("../../../targets/widget/expo-target.config.js");
 const watchIndex = read("../../../targets/watch/index.swift");
@@ -107,10 +110,11 @@ describe("shared Supabase session credential storage", () => {
     // descriptors that never got an assertion.
     expect(appSupabaseModule).toContain("beginBackgroundTask");
     expect(appSupabaseModule).toContain("endBackgroundTask");
-    expect(appSupabaseModule).toContain("forceRelease(handle:");
+    expect(appSupabaseModule).toContain("lockCoordinator.forceRelease(handle:");
     expect(appSupabaseModule).toContain("LOCK_REVOKED");
-    expect(appSupabaseModule).toContain("hasForceReleasedLock");
-    expect(appSupabaseModule).toContain("didEnterBackgroundNotification");
+    expect(appLockCoordinator).toContain("func forceRelease(handle:");
+    expect(appLockCoordinator).toContain("hasRevokedHandle");
+    expect(appSupabaseModule).not.toContain("didEnterBackgroundNotification");
   });
 
   it("rejects an app lock before opening its descriptor when no background assertion is granted", () => {

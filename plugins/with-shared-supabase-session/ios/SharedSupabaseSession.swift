@@ -76,7 +76,7 @@ class SharedSupabaseSession: NSObject {
         // persisting now would race a rotation the widget performed in the
         // meantime, so the write is abandoned; auth-js retries under a fresh
         // lock and re-reads the current capsule.
-        if SharedSupabaseSession.hasForceReleasedLock() {
+        if SharedSupabaseSession.lockCoordinator.hasRevokedHandle() {
             reject(
                 "LOCK_REVOKED",
                 "The shared session lock was force-released; abandoning this write",
@@ -127,68 +127,20 @@ class SharedSupabaseSession: NSObject {
 
     // MARK: - Cross-process lock
 
-    private struct HeldLock {
-        let fd: Int32
-        let backgroundTask: UIBackgroundTaskIdentifier
-    }
-
-    private static var heldLocks: [String: HeldLock] = [:]
-    /// Handles whose flock was force-released (assertion expiry or background
-    /// with no assertion). The JS `finally` release of such a handle is a
-    /// no-op, and any capsule write while one is outstanding is abandoned.
-    private static var revokedHandles: Set<String> = []
-    private static let descriptorLock = NSLock()
-
-    /// Installed once, on first acquire: a descriptor that reached the
-    /// background without an active assertion (`beginBackgroundTask` returned
-    /// `.invalid`) has nothing keeping the process running and must not be
-    /// held into suspension (0xDEAD10CC).
-    private static let backgroundObserverInstalled: Bool = {
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
-            object: nil,
-            queue: nil
-        ) { _ in
-            SharedSupabaseSession.forceReleaseLocksWithoutAssertion()
+    private static let lockCoordinator = AppSharedSessionLockCoordinator(
+        tryDescriptorAcquire: { descriptor in
+            flock(descriptor, LOCK_EX | LOCK_NB) == 0
+        },
+        releaseDescriptor: { descriptor in
+            flock(descriptor, LOCK_UN)
+            close(descriptor)
         }
-        return true
-    }()
-
-    private static func hasForceReleasedLock() -> Bool {
-        descriptorLock.lock()
-        defer { descriptorLock.unlock() }
-        return !revokedHandles.isEmpty
-    }
-
-    /// Force-release one handle's flock: the suspension assertion is expiring
-    /// (or was never granted) and a suspended process must not hold the lock.
-    private static func forceRelease(handle: String) {
-        descriptorLock.lock()
-        let held = heldLocks.removeValue(forKey: handle)
-        revokedHandles.insert(handle)
-        descriptorLock.unlock()
-        guard let held else { return }
-        flock(held.fd, LOCK_UN)
-        close(held.fd)
-        if held.backgroundTask != .invalid {
-            UIApplication.shared.endBackgroundTask(held.backgroundTask)
-        }
-    }
-
-    private static func forceReleaseLocksWithoutAssertion() {
-        descriptorLock.lock()
-        let unprotected = heldLocks.filter { $0.value.backgroundTask == .invalid }
-        descriptorLock.unlock()
-        for handle in unprotected.keys {
-            forceRelease(handle: handle)
-        }
-    }
+    )
 
     @objc func acquireSessionLock(
         _ resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
-        _ = SharedSupabaseSession.backgroundObserverInstalled
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: SharedSupabaseSession.appGroup
         ) else {
@@ -202,18 +154,14 @@ class SharedSupabaseSession: NSObject {
         // expiration handler drops the flock first so suspension never
         // freezes a held App Group lock (0xDEAD10CC).
         let handle = UUID().uuidString
+        SharedSupabaseSession.lockCoordinator.prepare(handle: handle)
         let backgroundTask = UIApplication.shared.beginBackgroundTask(
             withName: "SharedSupabaseSessionLock"
         ) {
-            SharedSupabaseSession.forceRelease(handle: handle)
+            SharedSupabaseSession.lockCoordinator.forceRelease(handle: handle)
         }
         func abandon(_ code: String, _ message: String) {
-            if backgroundTask != .invalid {
-                UIApplication.shared.endBackgroundTask(backgroundTask)
-            }
-            SharedSupabaseSession.descriptorLock.lock()
-            SharedSupabaseSession.revokedHandles.remove(handle)
-            SharedSupabaseSession.descriptorLock.unlock()
+            SharedSupabaseSession.lockCoordinator.abandon(handle: handle)
             reject(code, message, nil)
         }
 
@@ -224,10 +172,24 @@ class SharedSupabaseSession: NSObject {
             )
             return
         }
+        guard SharedSupabaseSession.lockCoordinator.attachAssertion(
+            handle: handle,
+            end: { UIApplication.shared.endBackgroundTask(backgroundTask) }
+        ) else {
+            abandon("LOCK_REVOKED", "The suspension assertion expired before lock acquisition")
+            return
+        }
 
         let fd = open(lockURL.path, O_CREAT | O_RDWR, 0o600)
         guard fd >= 0 else {
             abandon("LOCK_OPEN", "Lock file open failed: errno=\(errno)")
+            return
+        }
+        guard SharedSupabaseSession.lockCoordinator.attachDescriptor(
+            handle: handle,
+            descriptor: fd
+        ) else {
+            abandon("LOCK_REVOKED", "The suspension assertion expired before lock acquisition")
             return
         }
 
@@ -236,30 +198,28 @@ class SharedSupabaseSession: NSObject {
         )
         var acquired = false
         while Date() < deadline {
-            if flock(fd, LOCK_EX | LOCK_NB) == 0 {
+            switch SharedSupabaseSession.lockCoordinator.tryAcquire(handle: handle) {
+            case .acquired:
                 acquired = true
-                break
+            case .busy:
+                Thread.sleep(forTimeInterval: 0.02)
+            case .revoked:
+                abandon("LOCK_REVOKED", "The suspension assertion expired while acquiring the lock")
+                return
+            case .missing:
+                abandon("LOCK_HANDLE", "Lock acquisition state disappeared")
+                return
             }
-            Thread.sleep(forTimeInterval: 0.02)
+            if acquired { break }
         }
         guard acquired else {
-            close(fd)
             abandon("LOCK_TIMEOUT", "Timed out acquiring the shared session lock")
             return
         }
-
-        SharedSupabaseSession.descriptorLock.lock()
-        // The assertion may have expired during the acquire wait; the handle
-        // is already revoked and this flock must not survive.
-        if SharedSupabaseSession.revokedHandles.contains(handle) {
-            SharedSupabaseSession.descriptorLock.unlock()
-            flock(fd, LOCK_UN)
-            close(fd)
+        guard SharedSupabaseSession.lockCoordinator.issue(handle: handle) else {
             abandon("LOCK_REVOKED", "The suspension assertion expired while acquiring the lock")
             return
         }
-        SharedSupabaseSession.heldLocks[handle] = HeldLock(fd: fd, backgroundTask: backgroundTask)
-        SharedSupabaseSession.descriptorLock.unlock()
         resolve(handle)
     }
 
@@ -268,26 +228,12 @@ class SharedSupabaseSession: NSObject {
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
-        SharedSupabaseSession.descriptorLock.lock()
-        if SharedSupabaseSession.revokedHandles.remove(handle) != nil {
-            SharedSupabaseSession.descriptorLock.unlock()
-            // Already force-released on assertion expiry; the JS `finally`
-            // release is a harmless no-op.
+        switch SharedSupabaseSession.lockCoordinator.release(handle: handle) {
+        case .released, .revoked:
             resolve(true)
-            return
-        }
-        let held = SharedSupabaseSession.heldLocks.removeValue(forKey: handle)
-        SharedSupabaseSession.descriptorLock.unlock()
-        guard let held else {
+        case .missing:
             reject("LOCK_HANDLE", "Unknown lock handle: \(handle)", nil)
-            return
         }
-        flock(held.fd, LOCK_UN)
-        close(held.fd)
-        if held.backgroundTask != .invalid {
-            UIApplication.shared.endBackgroundTask(held.backgroundTask)
-        }
-        resolve(true)
     }
 
     // MARK: - Bridge teardown
@@ -301,17 +247,6 @@ class SharedSupabaseSession: NSObject {
     /// auth read/write until force-quit. Reclaiming on `invalidate()` keeps an
     /// orphaned JS context from poisoning the next one.
     @objc func invalidate() {
-        SharedSupabaseSession.descriptorLock.lock()
-        let handles = SharedSupabaseSession.heldLocks
-        SharedSupabaseSession.heldLocks.removeAll()
-        SharedSupabaseSession.revokedHandles.removeAll()
-        SharedSupabaseSession.descriptorLock.unlock()
-        for (_, held) in handles {
-            flock(held.fd, LOCK_UN)
-            close(held.fd)
-            if held.backgroundTask != .invalid {
-                UIApplication.shared.endBackgroundTask(held.backgroundTask)
-            }
-        }
+        SharedSupabaseSession.lockCoordinator.invalidate()
     }
 }

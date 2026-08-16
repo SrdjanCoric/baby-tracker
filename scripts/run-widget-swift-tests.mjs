@@ -148,6 +148,7 @@ try {
     "swiftc",
     [
       "-parse-as-library",
+      "plugins/with-shared-supabase-session/ios/SharedSupabaseSessionLockCoordinator.swift",
       "targets/widget/SharedSupabaseSession.swift",
       "scripts/swift/shared-supabase-session-tests.swift",
       "-o",

@@ -263,6 +263,7 @@ enum SharedSupabaseSessionTests {
         await Self.testTransportFallsBackToLegacyAppGroupTokenWhenCapsuleAbsent()
         await Self.testConcurrentRedemptionRedeemsOnce()
         await Self.testRevokedLeaseAbandonsRedemptionPersistAndNextCallerRecovers()
+        Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
         await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
         await Self.testPosixLockExpirationDuringAcquireAborts()
@@ -633,6 +634,62 @@ enum SharedSupabaseSessionTests {
     }
 
     // MARK: - Slice 13
+
+    static func testAppLockExpirationDuringAcquireReleasesResourcesOnce() {
+        let mutex = NSLock()
+        var releasedDescriptors: [Int32] = []
+        var endedAssertions = 0
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in false },
+            releaseDescriptor: { descriptor in
+                mutex.lock()
+                releasedDescriptors.append(descriptor)
+                mutex.unlock()
+            }
+        )
+
+        coordinator.prepare(handle: "waiting")
+        requireSession(
+            coordinator.attachAssertion(handle: "waiting") {
+                mutex.lock()
+                endedAssertions += 1
+                mutex.unlock()
+            },
+            "app acquire did not attach its assertion"
+        )
+        requireSession(
+            coordinator.attachDescriptor(handle: "waiting", descriptor: 41),
+            "app acquire did not register its in-flight descriptor"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "waiting") == .busy,
+            "contended app descriptor unexpectedly acquired"
+        )
+
+        requireSession(
+            coordinator.forceRelease(handle: "waiting"),
+            "expiration did not revoke the in-flight app acquire"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "waiting") == .revoked,
+            "expired app acquire did not observe revocation"
+        )
+        requireSession(
+            releasedDescriptors == [41],
+            "expiration did not close the in-flight app descriptor exactly once"
+        )
+        requireSession(
+            endedAssertions == 1,
+            "expiration did not end the in-flight app assertion exactly once"
+        )
+        coordinator.abandon(handle: "waiting")
+        requireSession(
+            releasedDescriptors == [41] && endedAssertions == 1,
+            "acquire unwind released app resources more than once"
+        )
+    }
+
+    // MARK: - Slice 14
 
     static func temporaryLockURL() -> URL {
         FileManager.default.temporaryDirectory
