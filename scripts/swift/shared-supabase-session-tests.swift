@@ -157,6 +157,36 @@ final class AlwaysRevokedLock: CrossProcessSessionLock {
     }
 }
 
+/// First section is revoked by the refresh client, the immediate recovery
+/// acquire itself is revoked, and a later caller receives a healthy lease.
+final class FirstRecoveryAcquireRevokedLock: CrossProcessSessionLock, @unchecked Sendable {
+    private let mutex = NSLock()
+    private var callCount = 0
+    let box: LeaseBox
+
+    init(box: LeaseBox) { self.box = box }
+
+    func withLock<T>(
+        _ body: @escaping @Sendable (CrossProcessLockLease) async throws -> T
+    ) async throws -> T {
+        let call = nextCall()
+        if call == 2 {
+            throw SharedSessionError.lockRevoked
+        }
+        let lease = CrossProcessLockLease()
+        box.lease = lease
+        return try await body(lease)
+    }
+
+    private func nextCall() -> Int {
+        mutex.lock()
+        callCount += 1
+        let call = callCount
+        mutex.unlock()
+        return call
+    }
+}
+
 /// Refresh client that revokes the published lease while the redemption is on
 /// the network — the exact moment a suspension-forced release interrupts it.
 actor LeaseRevokingRefreshClient: SupabaseRefreshClient {
@@ -289,6 +319,7 @@ enum SharedSupabaseSessionTests {
         await Self.testConcurrentRedemptionRedeemsOnce()
         await Self.testRevokedLeasePersistsRedeemedPairUnderFreshLock()
         await Self.testRepeatedLeaseRevocationLogsLockRevoked()
+        await Self.testRedeemedPairSurvivesRevokedRecoveryAcquire()
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         Self.testAppLockExpirationWaitsForCapsuleMutation()
@@ -682,6 +713,67 @@ enum SharedSupabaseSessionTests {
         requireSession(
             logger.events == [SharedSessionLogEvent(kind: .lockRevoked)],
             "abandoned persist was not logged as lockRevoked"
+        )
+    }
+
+    static func testRedeemedPairSurvivesRevokedRecoveryAcquire() async {
+        let store = InMemorySharedSessionStore()
+        store.bytes = Self.encodedEnvelope(
+            revision: 1,
+            accessToken: Self.lineageToken("lineage-a"),
+            refreshToken: "refresh-1",
+            lineage: "lineage-a"
+        )
+        let vault = SharedSessionVault(store: store)
+        let box = LeaseBox()
+        let refreshedAccessToken = Self.lineageToken("lineage-a")
+        let refreshClient = LeaseRevokingRefreshClient(
+            box: box,
+            response: Self.refreshResponseJson(
+                accessToken: refreshedAccessToken,
+                refreshToken: "refresh-2",
+                expiresIn: 3600
+            )
+        )
+        let http = RecordedHTTPClient(
+            statuses: [401, 200],
+            bodies: [Data(), Data("recovered-later".utf8)]
+        )
+        let transport = WidgetSupabaseTransport(
+            vault: vault,
+            lock: FirstRecoveryAcquireRevokedLock(box: box),
+            refreshClient: refreshClient,
+            httpClient: http,
+            config: SupabaseEndpointConfig(
+                supabaseUrl: "https://example.supabase.co",
+                anonKey: "anon"
+            ),
+            logger: RecordingSessionLogger()
+        )
+
+        do {
+            _ = try await transport.send { token in Self.bearerRequest(token: token) }
+            fatalError("revoked recovery acquire unexpectedly succeeded")
+        } catch SharedSessionError.lockRevoked {
+            // expected; the successor must remain staged for the next caller
+        } catch {
+            fatalError("revoked recovery acquire threw an unexpected error: \(error)")
+        }
+
+        let result = try! await transport.send { token in Self.bearerRequest(token: token) }
+        requireSession(result.0 == 200, "later caller did not recover the redeemed pair")
+        requireSession(
+            String(data: result.1, encoding: .utf8) == "recovered-later",
+            "later caller did not return its response"
+        )
+        let refreshCalls = await refreshClient.callCount()
+        requireSession(refreshCalls == 1, "later caller replayed the spent refresh token")
+        requireSession(store.writeCount == 1, "redeemed successor was not persisted exactly once")
+        let requests = await http.recordedRequests()
+        requireSession(requests.count == 2, "recovery issued an unexpected HTTP request")
+        requireSession(
+            requests.last?.bearer == "Bearer \(refreshedAccessToken)",
+            "later caller used the stale access token after recovery"
         )
     }
 

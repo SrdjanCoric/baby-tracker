@@ -402,6 +402,18 @@ struct SupabaseEndpointConfig: Sendable {
 // MARK: - Transport
 
 final class WidgetSupabaseTransport: @unchecked Sendable {
+    private struct PendingRedeemedPair {
+        let id: UUID
+        let envelope: SharedSessionEnvelopeV1
+        let expectedRevision: Int
+        let lineage: String
+    }
+
+    private enum PendingRecoveryOutcome {
+        case recovered(String)
+        case discarded
+    }
+
     private let vault: SharedSessionVaulting
     private let lock: CrossProcessSessionLock
     private let refreshClient: SupabaseRefreshClient
@@ -409,6 +421,8 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     private let config: SupabaseEndpointConfig
     private let logger: SharedSessionLogger
     private let legacyAccessTokenProvider: @Sendable () -> String?
+    private let pendingMutex = NSLock()
+    private var pendingRedeemedPairs: [PendingRedeemedPair] = []
 
     init(
         vault: SharedSessionVaulting,
@@ -442,6 +456,11 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
     /// overnight update; one updated-app launch is required to migrate the full
     /// session. Once the capsule exists, the legacy path is never taken.
     func send(buildRequest: @escaping @Sendable (String) -> URLRequest) async throws -> (Int, Data) {
+        // A prior request may have redeemed a refresh token just as its
+        // suspension assertion expired. Recover that exact successor before
+        // reading or redeeming the stale capsule again.
+        _ = try await recoverPendingRedeemedPairs()
+
         guard let current = try vault.read() else {
             if let legacyAccessToken = legacyAccessTokenProvider() {
                 // Legacy App Group bearer token; no refresh token available.
@@ -542,25 +561,89 @@ final class WidgetSupabaseTransport: @unchecked Sendable {
         } catch SharedSessionError.lockRevoked {
             // The network already redeemed the old refresh token. Reacquire
             // and persist that exact response; never replay the spent token.
-            return try await lock.withLock { recoveryLease in
+            // Keep it queued until recovery succeeds, because the fresh
+            // assertion can itself expire while the extension is suspending.
+            enqueuePendingRedeemedPair(
+                next,
+                expectedRevision: expectedRevision,
+                lineage: lineage
+            )
+            if let recovered = try await recoverPendingRedeemedPairs() {
+                return recovered
+            }
+            guard let current = try vault.read(),
+                  current.revision > expectedRevision,
+                  current.lineage == lineage else {
+                throw SharedSessionError.sessionChanged
+            }
+            return try ensureValidSession(current).accessToken
+        }
+    }
+
+    private func enqueuePendingRedeemedPair(
+        _ envelope: SharedSessionEnvelopeV1,
+        expectedRevision: Int,
+        lineage: String
+    ) {
+        pendingMutex.lock()
+        pendingRedeemedPairs.append(
+            PendingRedeemedPair(
+                id: UUID(),
+                envelope: envelope,
+                expectedRevision: expectedRevision,
+                lineage: lineage
+            )
+        )
+        pendingMutex.unlock()
+    }
+
+    private func firstPendingRedeemedPair() -> PendingRedeemedPair? {
+        pendingMutex.lock()
+        defer { pendingMutex.unlock() }
+        return pendingRedeemedPairs.first
+    }
+
+    private func removePendingRedeemedPair(id: UUID) {
+        pendingMutex.lock()
+        pendingRedeemedPairs.removeAll { $0.id == id }
+        pendingMutex.unlock()
+    }
+
+    /// Drains in redemption order under one healthy lock per successor. A
+    /// failed acquire or second revocation leaves the current item untouched
+    /// so a later transport call can recover it before using the stale vault.
+    private func recoverPendingRedeemedPairs() async throws -> String? {
+        var recoveredAccessToken: String?
+        while let pending = firstPendingRedeemedPair() {
+            let outcome = try await lock.withLock { recoveryLease in
                 guard let current = try self.vault.read() else {
-                    throw SharedSessionError.sessionChanged
+                    return PendingRecoveryOutcome.discarded
                 }
-                if current.revision == expectedRevision {
+                if current.revision == pending.expectedRevision,
+                   current.lineage == pending.lineage {
                     _ = try recoveryLease.withHeldLock {
                         try self.vault.replace(
-                            expectedRevision: expectedRevision,
-                            next
+                            expectedRevision: pending.expectedRevision,
+                            pending.envelope
                         )
                     }
-                    return try ensureValidSession(next).accessToken
+                    return PendingRecoveryOutcome.recovered(
+                        try ensureValidSession(pending.envelope).accessToken
+                    )
                 }
-                guard current.revision > expectedRevision,
-                      current.lineage == lineage else {
-                    throw SharedSessionError.sessionChanged
+                guard current.revision > pending.expectedRevision,
+                      current.lineage == pending.lineage else {
+                    return PendingRecoveryOutcome.discarded
                 }
-                return try ensureValidSession(current).accessToken
+                return PendingRecoveryOutcome.recovered(
+                    try ensureValidSession(current).accessToken
+                )
+            }
+            removePendingRedeemedPair(id: pending.id)
+            if case let .recovered(accessToken) = outcome {
+                recoveredAccessToken = accessToken
             }
         }
+        return recoveredAccessToken
     }
 }
