@@ -271,6 +271,7 @@ enum SharedSupabaseSessionTests {
         await Self.testRevokedLeasePersistsRedeemedPairUnderFreshLock()
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
         Self.testAppLockRevocationIsScopedToItsIssuedHandle()
+        Self.testAppLockExpirationWaitsForCapsuleMutation()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
         await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
         await Self.testPosixLockCancellationDuringAcquireReleasesDescriptor()
@@ -722,6 +723,62 @@ enum SharedSupabaseSessionTests {
         requireSession(
             coordinator.release(handle: "healthy") == .released,
             "healthy app handle did not release normally"
+        )
+    }
+
+    static func testAppLockExpirationWaitsForCapsuleMutation() {
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in true },
+            releaseDescriptor: { _ in }
+        )
+        coordinator.prepare(handle: "mutating")
+        requireSession(
+            coordinator.attachAssertion(handle: "mutating", end: {}),
+            "mutating app handle did not attach its assertion"
+        )
+        requireSession(
+            coordinator.attachDescriptor(handle: "mutating", descriptor: 61),
+            "mutating app handle did not attach its descriptor"
+        )
+        requireSession(
+            coordinator.tryAcquire(handle: "mutating") == .acquired &&
+                coordinator.issue(handle: "mutating"),
+            "mutating app handle was not issued"
+        )
+
+        let mutationEntered = DispatchSemaphore(value: 0)
+        let allowMutationToFinish = DispatchSemaphore(value: 0)
+        let mutationFinished = DispatchSemaphore(value: 0)
+        let expirationFinished = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            _ = coordinator.withHeldHandle(handle: "mutating") {
+                mutationEntered.signal()
+                allowMutationToFinish.wait()
+            }
+            mutationFinished.signal()
+        }
+        mutationEntered.wait()
+        DispatchQueue.global().async {
+            coordinator.forceRelease(handle: "mutating")
+            expirationFinished.signal()
+        }
+
+        requireSession(
+            expirationFinished.wait(timeout: .now() + 0.05) == .timedOut,
+            "expiration released the app flock during a capsule mutation"
+        )
+        allowMutationToFinish.signal()
+        requireSession(
+            mutationFinished.wait(timeout: .now() + 1) == .success,
+            "app capsule mutation did not finish"
+        )
+        requireSession(
+            expirationFinished.wait(timeout: .now() + 1) == .success,
+            "expiration did not release the app flock after mutation"
+        )
+        requireSession(
+            coordinator.release(handle: "mutating") == .revoked,
+            "revoked mutation handle did not unwind as a no-op"
         )
     }
 
