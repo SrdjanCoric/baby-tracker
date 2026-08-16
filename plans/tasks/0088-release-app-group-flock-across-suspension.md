@@ -80,9 +80,13 @@ redemption via compare-and-swap on the token version).
   2811/2812 — the one failure (`widget-snapshot-wiring.test.ts`, sleep-prediction wiring string) is
   pre-existing on `main` from PR #249, which changed `targets/widget/index.swift` without updating
   that test; untouched by this branch and deliberately not fixed here.
-- **Limitation**: the app-target native module has no compiled test seam (imports React); its
-  changes are proved by the shared design tested at the widget seam, the security source guards,
-  and the real-device `[verify]` checkpoint.
+- **Canonical gate**: not run during per-finding review remediation; the `review-fix-worker`
+  workflow reserves the single final `npm run check:code` run for `finish-task` after the focused
+  remediation batch is clean.
+- **App test seam**: the React/UIKit bridge wiring is source-checked, while the extracted
+  Foundation-only `AppSharedSessionLockCoordinator` is compiled in the Swift harness and exercises
+  acquire expiry, scoped revocation, release, and mutation ordering. The real-device `[verify]`
+  checkpoint remains required for RunningBoard behavior.
 
 ## Human checkpoints
 
