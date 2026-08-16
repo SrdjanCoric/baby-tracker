@@ -100,7 +100,7 @@ redemption via compare-and-swap on the token version).
 
 ## Acceptance criteria
 
-- [ ] No code path holds the App Group flock without an active background-task assertion whose expiration handler releases it.
-- [ ] Entering background with no protected work in flight leaves no lock descriptor held.
-- [ ] A forced mid-section release leaves the shared session vault recoverable (test at the Swift seam).
+- [x] No code path holds the App Group flock without an active background-task assertion whose expiration handler releases it.
+- [x] Entering background with no protected work in flight leaves no lock descriptor held.
+- [x] A forced mid-section release leaves the shared session vault recoverable (test at the Swift seam).
 - [ ] Real-device verification above passes with no new `0xDEAD10CC` logs.
