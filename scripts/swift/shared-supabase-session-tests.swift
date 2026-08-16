@@ -711,8 +711,18 @@ enum SharedSupabaseSessionTests {
             coordinator.withHeldHandle(handle: "revoked", {}) == .revoked,
             "a revoked handle was allowed to mutate the capsule"
         )
-        _ = coordinator.release(handle: "revoked")
-        _ = coordinator.release(handle: "healthy")
+        requireSession(
+            coordinator.release(handle: "revoked") == .revoked,
+            "releasing a revoked app handle was not a successful no-op"
+        )
+        requireSession(
+            !coordinator.forceRelease(handle: "revoked"),
+            "late expiration recreated a released app-handle tombstone"
+        )
+        requireSession(
+            coordinator.release(handle: "healthy") == .released,
+            "healthy app handle did not release normally"
+        )
     }
 
     // MARK: - Slice 14

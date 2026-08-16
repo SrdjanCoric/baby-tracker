@@ -104,10 +104,8 @@ describe("shared Supabase session credential storage", () => {
     expect(widgetSharedSession).toContain("lease.revoke()");
     expect(widgetSharedSession).toContain("try lease.ensureHeld()");
     expect(widgetAdapters).toContain("performExpiringActivity");
-    // App module: each held descriptor is covered by a background-task
-    // assertion whose expiration force-releases the flock; a write after a
-    // forced release is abandoned, and entering background force-releases
-    // descriptors that never got an assertion.
+    // App module wiring: detailed acquire/revoke/release ordering is exercised
+    // by the compiled AppSharedSessionLockCoordinator Swift harness.
     expect(appSupabaseModule).toContain("beginBackgroundTask");
     expect(appSupabaseModule).toContain("endBackgroundTask");
     expect(appSupabaseModule).toContain("lockCoordinator.forceRelease(handle:");
