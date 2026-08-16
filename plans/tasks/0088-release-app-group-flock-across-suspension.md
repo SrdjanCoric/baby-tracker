@@ -67,12 +67,12 @@ redemption via compare-and-swap on the token version).
   `didEnterBackground` observer force-releases any descriptor whose assertion was never granted
   (`.invalid`). Idle steady state holds no descriptor by construction: a descriptor exists only
   between acquire and release of an in-flight critical section.
-- **App-side write abandonment**: the app writes the capsule only while holding the lock (auth-js
-  lock contract in `src/services/shared-supabase-session.ts`), so `writeSession` rejects with
-  `LOCK_REVOKED` while any force-released handle is outstanding — a resumed auth transaction whose
-  lock was taken away cannot clobber a rotation the widget performed meanwhile; auth-js retries
-  under a fresh lock. Capsule format, lineage, revision discipline, and Keychain access are
-  unchanged. `removeSession` is deliberately not guarded (sign-out intent is idempotent).
+- **App-side revoked-mutation recovery**: each auth transaction carries its exact native handle.
+  A revoked redeemed-session write is staged until that handle unwinds, then persisted under a
+  fresh asserted flock with expected-revision CAS; a newer capsule wins without being overwritten.
+  Auth removal is likewise bound to the revision and lineage first read by the transaction, while
+  first-post-reinstall cleanup uses a separate administrative purge operation. Capsule format and
+  Keychain read access are unchanged.
 - **Proof**: `npm run test:widget:swift` PASS (widget + watch iphoneos/watchos typechecks and all
   harnesses, including new slices: revoked-lease abandonment + recovery, expiration force-release
   with a second holder acquiring mid-section, expiration during acquire). `npm run test:security`
