@@ -2147,7 +2147,12 @@ func getSmallWidgetSleepPrediction(
               pendingSleepStopAt: pendingSleepStopAt(for: data.babyId)
           ),
           let prediction = data.sleepPrediction,
-          let display = widgetSleepPredictionDisplay(prediction, now: now) else { return nil }
+          let display = widgetSleepPredictionDisplay(
+              prediction,
+              now: now,
+              lastSleepEndedAt: data.activities.sleep.lastSleepEndedAt
+                  .flatMap(parseWidgetSnapshotTimestamp)
+          ) else { return nil }
 
     switch display {
     case .nighttime:
