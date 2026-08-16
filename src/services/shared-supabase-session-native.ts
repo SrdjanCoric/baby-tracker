@@ -6,7 +6,7 @@ import type {
 
 interface SharedSupabaseSessionNativeModule {
   readSession(): Promise<string | null>;
-  writeSession(envelopeJson: string): Promise<void>;
+  writeSession(envelopeJson: string, handle: string): Promise<void>;
   removeSession(): Promise<void>;
   acquireSessionLock(): Promise<string>;
   releaseSessionLock(handle: string): Promise<void>;
@@ -23,7 +23,8 @@ export interface SharedSupabaseSessionBridgeAndLock
 }
 
 export function createSharedSupabaseSessionLock(
-  module: SharedSupabaseSessionNativeLockModule
+  module: SharedSupabaseSessionNativeLockModule,
+  setActiveHandle: (handle: string | null) => void = () => undefined
 ): SharedSupabaseSessionLock {
   // React Native dispatches this module's methods through one serial native
   // queue. Queue app callers here so a waiting acquire cannot sit ahead of the
@@ -31,7 +32,7 @@ export function createSharedSupabaseSessionLock(
   let tail: Promise<void> = Promise.resolve();
 
   return {
-    withLock: async <T>(fn: () => Promise<T>): Promise<T> => {
+    withLock: async <T>(fn: (handle: string) => Promise<T>): Promise<T> => {
       const predecessor = tail;
       let advanceQueue!: () => void;
       tail = new Promise<void>((resolve) => {
@@ -41,10 +42,15 @@ export function createSharedSupabaseSessionLock(
       await predecessor;
       try {
         const handle = await module.acquireSessionLock();
+        setActiveHandle(handle);
         try {
-          return await fn();
+          return await fn(handle);
         } finally {
-          await module.releaseSessionLock(handle);
+          try {
+            await module.releaseSessionLock(handle);
+          } finally {
+            setActiveHandle(null);
+          }
         }
       } finally {
         advanceQueue();
@@ -67,13 +73,17 @@ export function loadSharedSupabaseSessionBridge(): SharedSupabaseSessionBridgeAn
     | undefined;
   if (!module) return null;
 
+  let activeHandle: string | null = null;
   const bridge: SharedSupabaseSessionBridge = {
     readSession: () => module.readSession(),
-    writeSession: (envelopeJson) => module.writeSession(envelopeJson),
+    writeSession: (envelopeJson) =>
+      module.writeSession(envelopeJson, activeHandle ?? ""),
     removeSession: () => module.removeSession(),
   };
 
-  const lock = createSharedSupabaseSessionLock(module);
+  const lock = createSharedSupabaseSessionLock(module, (handle) => {
+    activeHandle = handle;
+  });
 
   return { ...bridge, lock };
 }

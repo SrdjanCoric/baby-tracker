@@ -16,6 +16,18 @@ function deferred<T>() {
 }
 
 describe("createSharedSupabaseSessionLock", () => {
+  it("passes the issued native handle to its lock body", async () => {
+    const nativeModule = {
+      acquireSessionLock: vi.fn(async () => "handle-owned-by-body"),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const lock = createSharedSupabaseSessionLock(nativeModule);
+
+    await expect(
+      lock.withLock(async (handle?: string) => handle)
+    ).resolves.toBe("handle-owned-by-body");
+  });
+
   it("queues app callers before entering the serial native module queue", async () => {
     const events: string[] = [];
     let nextHandle = 0;

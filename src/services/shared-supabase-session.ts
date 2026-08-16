@@ -12,7 +12,7 @@ export interface SharedSupabaseSessionBridge {
 }
 
 export interface SharedSupabaseSessionLock {
-  withLock<T>(fn: () => Promise<T>): Promise<T>;
+  withLock<T>(fn: (handle: string) => Promise<T>): Promise<T>;
 }
 
 export interface SharedSupabaseSessionEnvelope {

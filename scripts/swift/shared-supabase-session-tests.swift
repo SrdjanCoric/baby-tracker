@@ -264,6 +264,7 @@ enum SharedSupabaseSessionTests {
         await Self.testConcurrentRedemptionRedeemsOnce()
         await Self.testRevokedLeaseAbandonsRedemptionPersistAndNextCallerRecovers()
         Self.testAppLockExpirationDuringAcquireReleasesResourcesOnce()
+        Self.testAppLockRevocationIsScopedToItsIssuedHandle()
         await Self.testPosixLockNormalSectionHoldsAssertionAndReleases()
         await Self.testPosixLockExpirationForceReleasesAndRevokesLease()
         await Self.testPosixLockExpirationDuringAcquireAborts()
@@ -687,6 +688,43 @@ enum SharedSupabaseSessionTests {
             releasedDescriptors == [41] && endedAssertions == 1,
             "acquire unwind released app resources more than once"
         )
+    }
+
+    static func testAppLockRevocationIsScopedToItsIssuedHandle() {
+        let coordinator = AppSharedSessionLockCoordinator(
+            tryDescriptorAcquire: { _ in true },
+            releaseDescriptor: { _ in }
+        )
+        for (handle, descriptor) in [("revoked", Int32(51)), ("healthy", Int32(52))] {
+            coordinator.prepare(handle: handle)
+            requireSession(
+                coordinator.attachAssertion(handle: handle, end: {}),
+                "app handle did not attach its assertion"
+            )
+            requireSession(
+                coordinator.attachDescriptor(handle: handle, descriptor: descriptor),
+                "app handle did not attach its descriptor"
+            )
+            requireSession(
+                coordinator.tryAcquire(handle: handle) == .acquired && coordinator.issue(handle: handle),
+                "app handle was not issued"
+            )
+        }
+
+        coordinator.forceRelease(handle: "revoked")
+        var healthyMutationRan = false
+        requireSession(
+            coordinator.withHeldHandle(handle: "healthy") {
+                healthyMutationRan = true
+            } == .performed && healthyMutationRan,
+            "one revoked handle rejected a different handle's mutation"
+        )
+        requireSession(
+            coordinator.withHeldHandle(handle: "revoked", {}) == .revoked,
+            "a revoked handle was allowed to mutate the capsule"
+        )
+        _ = coordinator.release(handle: "revoked")
+        _ = coordinator.release(handle: "healthy")
     }
 
     // MARK: - Slice 14

@@ -65,7 +65,7 @@ function envelopeJson(
 }
 
 function immediateLock(): SharedSupabaseSessionLock {
-  return { withLock: <T>(fn: () => Promise<T>) => fn() };
+  return { withLock: <T>(fn: (handle: string) => Promise<T>) => fn("test-handle") };
 }
 
 function deferred<T>() {
@@ -80,14 +80,14 @@ class ExclusiveTestLock implements SharedSupabaseSessionLock {
   private tail: Promise<void> = Promise.resolve();
   readonly events: string[] = [];
 
-  async withLock<T>(fn: () => Promise<T>): Promise<T> {
+  async withLock<T>(fn: (handle: string) => Promise<T>): Promise<T> {
     const predecessor = this.tail;
     const released = deferred<void>();
     this.tail = released.promise;
     await predecessor;
     this.events.push("lock:entered");
     try {
-      return await fn();
+      return await fn("test-handle");
     } finally {
       this.events.push("lock:released");
       released.resolve();

@@ -17,6 +17,12 @@ final class AppSharedSessionLockCoordinator: @unchecked Sendable {
         case missing
     }
 
+    enum HeldAccessResult: Equatable {
+        case performed
+        case revoked
+        case missing
+    }
+
     private struct Entry {
         var descriptor: Int32?
         var endAssertion: (() -> Void)?
@@ -147,10 +153,17 @@ final class AppSharedSessionLockCoordinator: @unchecked Sendable {
         return entry.revoked ? .revoked : .released
     }
 
-    func hasRevokedHandle() -> Bool {
+    /// Runs one synchronous capsule mutation while the exact issued handle is
+    /// still held. Expiration blocks on this mutex until the mutation returns.
+    func withHeldHandle(handle: String, _ body: () -> Void) -> HeldAccessResult {
         mutex.lock()
         defer { mutex.unlock() }
-        return entries.values.contains { $0.issued && $0.revoked }
+        guard let entry = entries[handle] else { return .missing }
+        guard entry.issued, !entry.revoked, entry.descriptor != nil else {
+            return .revoked
+        }
+        body()
+        return .performed
     }
 
     func invalidate() {

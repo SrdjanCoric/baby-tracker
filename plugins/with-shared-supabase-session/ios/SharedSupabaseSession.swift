@@ -67,6 +67,7 @@ class SharedSupabaseSession: NSObject {
 
     @objc func writeSession(
         _ envelopeJson: String,
+        handle: String,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
@@ -76,41 +77,46 @@ class SharedSupabaseSession: NSObject {
         // persisting now would race a rotation the widget performed in the
         // meantime, so the write is abandoned; auth-js retries under a fresh
         // lock and re-reads the current capsule.
-        if SharedSupabaseSession.lockCoordinator.hasRevokedHandle() {
+        guard let data = envelopeJson.data(using: .utf8) else {
+            reject("KEYCHAIN_ENCODE", "Envelope was not valid UTF-8", nil)
+            return
+        }
+        var failure: (code: String, message: String)?
+        let access = SharedSupabaseSession.lockCoordinator.withHeldHandle(handle: handle) {
+            let attributes: [String: Any] = [
+                kSecValueData as String: data,
+                kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            ]
+            let query = self.keychainQuery()
+            let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+            if updateStatus == errSecItemNotFound {
+                var addQuery = self.keychainQuery()
+                addQuery[kSecValueData as String] = data
+                addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+                let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+                if addStatus != errSecSuccess {
+                    failure = ("KEYCHAIN_WRITE", "Keychain add failed: \(addStatus)")
+                }
+            } else if updateStatus != errSecSuccess {
+                failure = ("KEYCHAIN_WRITE", "Keychain update failed: \(updateStatus)")
+            }
+        }
+        switch access {
+        case .performed:
+            if let failure {
+                reject(failure.code, failure.message, nil)
+            } else {
+                resolve(true)
+            }
+        case .revoked:
             reject(
                 "LOCK_REVOKED",
                 "The shared session lock was force-released; abandoning this write",
                 nil
             )
-            return
+        case .missing:
+            reject("LOCK_HANDLE", "Unknown lock handle: \(handle)", nil)
         }
-        guard let data = envelopeJson.data(using: .utf8) else {
-            reject("KEYCHAIN_ENCODE", "Envelope was not valid UTF-8", nil)
-            return
-        }
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-        ]
-        let query = keychainQuery()
-        let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-        if updateStatus == errSecSuccess {
-            resolve(true)
-            return
-        }
-        if updateStatus == errSecItemNotFound {
-            var addQuery = keychainQuery()
-            addQuery[kSecValueData as String] = data
-            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
-            if addStatus != errSecSuccess {
-                reject("KEYCHAIN_WRITE", "Keychain add failed: \(addStatus)", nil)
-                return
-            }
-            resolve(true)
-            return
-        }
-        reject("KEYCHAIN_WRITE", "Keychain update failed: \(updateStatus)", nil)
     }
 
     @objc func removeSession(

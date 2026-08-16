@@ -113,7 +113,7 @@ describe("shared Supabase session credential storage", () => {
     expect(appSupabaseModule).toContain("lockCoordinator.forceRelease(handle:");
     expect(appSupabaseModule).toContain("LOCK_REVOKED");
     expect(appLockCoordinator).toContain("func forceRelease(handle:");
-    expect(appLockCoordinator).toContain("hasRevokedHandle");
+    expect(appLockCoordinator).toContain("withHeldHandle");
     expect(appSupabaseModule).not.toContain("didEnterBackgroundNotification");
   });
 
