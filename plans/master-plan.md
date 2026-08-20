@@ -309,8 +309,8 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/done/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
-- [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
-- [>] 0089 · Wear OS app scaffold and build integration → tasks/0089-wear-os-app-scaffold.md
+- [ ] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [x] 0089 · Wear OS app scaffold and build integration → tasks/0089-wear-os-app-scaffold.md
 - [ ] 0090 · Wear session handoff and watch-side refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
 - [ ] 0091 · Wear today summary read path (after 0090) → tasks/0091-wear-today-summary-read-path.md
 - [ ] 0092 · Wear diaper quick log (after 0091) → tasks/0092-wear-diaper-quick-log.md
@@ -410,7 +410,7 @@ and reconciles. And the
 running-timer start-edit control **drops the caregiver name entirely**, reversing Task 0071's decision to
 name the starter there: only the starter may edit, so the name tells them nothing, and with no account it
 resolved to "Someone" — the app attributing a timer to a stranger on a single-user device. The
-`common.someone` key and its five other call sites, which describe a genuinely unknown *other* caregiver,
+`common.someone` key and its five other call sites, which describe a genuinely unknown _other_ caregiver,
 are unaffected.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054, 0055, 0057, and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Task 0055 depends on its predecessor only because both add migrations and would otherwise collide on the next migration ordinal. Task 0056, the remaining finding, was removed on 2026-08-05 and is superseded by Task 0070.
