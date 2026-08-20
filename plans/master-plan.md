@@ -39,6 +39,13 @@ zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner =
   (plain lexicographic compare). HLC ticks lazily on local mutations and on receipt of remote
   clocks only; persisted so it survives restarts. Per-field clocks are sync metadata only —
   user-facing timestamps (startTime, updatedAt, …) are unaffected.
+- **Wear OS companion app (2026-08-20)**: native Kotlin/Compose Wear OS 4+ module inside the Expo
+  Android build; full Apple Watch feature parity. Reads via the existing
+  `get_baby_activity_snapshot` RPC; writes go direct from watch to Supabase under RLS (no
+  phone-relay channel) and must carry valid HLC `field_clocks` with a watch device ID. Wearable
+  Data Layer carries session handoff and invalidation only, never activity data; the watch
+  refreshes its own token. No offline write queue in v1; Tizen permanently out of scope. Decision
+  record: `plans/wear-os-watch-parity.md`.
 - **Schema shape**: each synced table gets `field_clocks JSONB NOT NULL DEFAULT '{}'` (map of
   column name → HLC string) and `deleted BOOLEAN NOT NULL DEFAULT FALSE`, plus a partial index
   `WHERE deleted = false`. Empty/missing clock entries compare as epoch — legacy rows lose to any
@@ -300,6 +307,16 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
 - [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [ ] 0089 · Wear OS app scaffold and build integration → tasks/0089-wear-os-app-scaffold.md
+- [ ] 0090 · Wear session handoff and watch-side refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
+- [ ] 0091 · Wear today summary read path (after 0090) → tasks/0091-wear-today-summary-read-path.md
+- [ ] 0092 · Wear diaper quick log (after 0091) → tasks/0092-wear-diaper-quick-log.md
+- [ ] 0093 · Wear feeding timer and logging (after 0092) → tasks/0093-wear-feeding-timer-and-logging.md
+- [ ] 0094 · Wear sleep timer and logging (after 0093) → tasks/0094-wear-sleep-timer-and-logging.md
+- [ ] 0095 · Wear pumping logging (after 0094) → tasks/0095-wear-pumping-logging.md
+- [ ] 0096 · Wear tummy time logging (after 0095) → tasks/0096-wear-tummy-time-logging.md
+- [ ] 0097 · Wear launcher complication (after 0089) → tasks/0097-wear-launcher-complication.md
+- [ ] 0098 · Wear hardware verification and store listing floor (after 0093, 0094, 0095, 0096, 0097) → tasks/0098-wear-hardware-verification-and-listing.md
 
 ## Workflow status
 
