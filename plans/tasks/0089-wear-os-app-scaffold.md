@@ -35,7 +35,7 @@ Durable decisions this task must respect (from the brief):
 
 - RED→GREEN contract cycles cover idempotent clean-prebuild module wiring, the launcher placeholder
   state and native unit-test scaffold, canonical Node-suite registration, and the required Android
-  CI aggregation job. The stable `npm run test:ci` proof passes 68/68 tests.
+  CI aggregation job. The stable `npm run test:ci` proof passes 69/69 tests.
 - `EXPO_NO_DOTENV=1 npx expo prebuild --platform android --clean --no-install` regenerates
   `:wear`; `./gradlew :wear:testDebugUnitTest` passes the native placeholder-state test.
 - `./gradlew :app:assembleDebug :wear:assembleDebug` passes and produces the phone APK plus
@@ -43,13 +43,16 @@ Durable decisions this task must respect (from the brief):
   `/tmp/agent-workflows/e2f8af45fd34/042fc1a664ad/`.
 - README audit covered Wear OS Native Integration, Project Structure, and routine CI behavior.
   `write-well` passed after two audit passes.
-- The Wear OS 4 emulator launch checkpoint remains deferred to the required manual review loop.
+- `npm run check:code` passes on the final task head. Canonical output is retained at
+  `/tmp/agent-workflows/e2f8af45fd34/042fc1a664ad/canonical.log`.
 
 ## Human checkpoints
 
-- [ ] [verify] Install the built watch APK on a Wear OS 4 emulator and launch it. · Expected: app
+- [x] [verify] Install the built watch APK on a Wear OS 4 emulator and launch it. · Expected: app
       opens to the signed-out placeholder screen without crash. · Failure: install error, crash, or
-      blank screen. · Reason: no CI Wear-emulator lane exists yet; first-launch proof is manual.
+      blank screen. · Passed 2026-08-20 on the API 33 `SofiBaby_Wear_OS_4` AVD: MainActivity stayed
+      foregrounded, UI automation found "Sign in on your phone to continue.", the screenshot was
+      centered and unclipped, and the Android runtime crash log was empty.
 
 ## Review decisions
 
@@ -58,9 +61,30 @@ Durable decisions this task must respect (from the brief):
 - skipped (minor): TR-11 — The Wear app ships without its own launcher icon — User directed this pass to focus on blocker and major findings.
 - skipped (minor): TR-12 — The master-plan status flip is carried on the code branch — User directed this pass to focus on blocker and major findings.
 
+## Completion record
+
+- Built the native Kotlin/Compose `:wear` application under
+  `plugins/with-wear-os/android/wear/` and integrated it through
+  `plugins/with-wear-os/index.js`, `app.json`, and the Android CI job.
+- Kept the non-standalone Wear artifact in the phone package `com.sofibaby.app`. Its marketing
+  version follows the phone module, while its version code uses the distinct
+  `1,000,000,000 + phone versionCode` range required for Play delivery across form factors.
+- README audit covered Wear OS Native Integration, Project Structure, and routine CI behavior;
+  `write-well` passed after two audit passes. `docs/RELEASE.md` records the Wear versioning rule.
+- Review resolved TR-1 through TR-7 and the reopened TR-9. TR-8, TR-10, TR-11, and TR-12 remain
+  skipped minors because the user limited the original remediation pass to blocker and major
+  findings. The security review reported no findings or accepted risks.
+- Final automated proof: `npm run check:code` passed after correcting an unrelated stale widget
+  wiring assertion already present on `main`; the focused widget file passes 13/13 tests. Clean
+  Expo prebuild and the phone/Wear Gradle build passed, and packaged APK inspection found phone
+  version `1` / `4.9.8` and Wear version `1000000001` / `4.9.8`.
+- Final manual proof: Wear OS 4 API 33 emulator launch passed. Evidence is retained in
+  `/tmp/agent-workflows/e2f8af45fd34/042fc1a664ad/wear-launch.png`, `wear-ui.xml`, and
+  `wear-crash.log`.
+
 ## Acceptance criteria
 
-- [ ] Android CI build produces the Wear APK alongside the phone app and is green.
-- [ ] `expo prebuild` (clean) regenerates a buildable project including the Wear module.
-- [ ] Watch app launches on a Wear OS 4 emulator showing the signed-out screen.
-- [ ] Phone app behavior unchanged (existing Android build and tests pass).
+- [x] Android CI build produces the Wear APK alongside the phone app and is green.
+- [x] `expo prebuild` (clean) regenerates a buildable project including the Wear module.
+- [x] Watch app launches on a Wear OS 4 emulator showing the signed-out screen.
+- [x] Phone app behavior unchanged (existing Android build and tests pass).
