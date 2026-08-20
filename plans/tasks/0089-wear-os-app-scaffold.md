@@ -3,6 +3,7 @@
 **Branch**: `feature/wear-os-app-scaffold`
 **Depends on**: none
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a Samsung watch owner, I can install and open the app on my watch.
+**Change class**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: `true`
 
 ## What to build
 
@@ -22,13 +23,25 @@ Durable decisions this task must respect (from the brief):
 
 ## Implementation work
 
-- [ ] Create the Wear OS application module (Compose for Wear, Wear OS 4+ floor) with app id in
+- [x] Create the Wear OS application module (Compose for Wear, Wear OS 4+ floor) with app id in
       the `com.sofibaby.app` family and standalone=false manifest declaration (phone app required).
-- [ ] Integrate the module into the Expo Android Gradle build via a config plugin so prebuild
+- [x] Integrate the module into the Expo Android Gradle build via a config plugin so prebuild
       regenerates the wiring; document the plugin alongside the existing `plugins/` entries.
-- [ ] Signed-out placeholder screen in Compose stating sign-in happens on the phone.
-- [ ] CI builds the Wear module with the Android app; build failure in the Wear module fails CI.
-- [ ] Minimal instrumentation or unit test scaffold so later tasks have a test seam.
+- [x] Signed-out placeholder screen in Compose stating sign-in happens on the phone.
+- [x] CI builds the Wear module with the Android app; build failure in the Wear module fails CI.
+- [x] Minimal instrumentation or unit test scaffold so later tasks have a test seam.
+
+## Implementation evidence
+
+- RED→GREEN contract cycles cover idempotent clean-prebuild module wiring, the launcher placeholder
+  state and native unit-test scaffold, canonical Node-suite registration, and the required Android
+  CI aggregation job. The stable `npm run test:ci` proof passes 68/68 tests.
+- `EXPO_NO_DOTENV=1 npx expo prebuild --platform android --clean --no-install` regenerates
+  `:wear`; `./gradlew :wear:testDebugUnitTest` passes the native placeholder-state test.
+- `./gradlew :app:assembleDebug :wear:assembleDebug` passes and produces the phone APK plus
+  `android/wear/build/outputs/apk/debug/wear-debug.apk`. Logs are retained under
+  `/tmp/agent-workflows/e2f8af45fd34/042fc1a664ad/`.
+- The Wear OS 4 emulator launch checkpoint remains deferred to the required manual review loop.
 
 ## Human checkpoints
 

@@ -38,10 +38,33 @@ jobs:
       - run: npm ci
       - run: npm run audit:dependencies
 
+  android-native:
+    name: Android phone and Wear build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - name: Install fake Firebase configuration for native generation
+        run: cp .github/fixtures/google-services.ci.json google-services.json
+      - name: Clean-prebuild Android
+        run: npx expo prebuild --platform android --clean
+      - name: Build phone and Wear apps and run Wear unit tests
+        working-directory: android
+        run: ./gradlew :app:assembleDebug :wear:assembleDebug :wear:testDebugUnitTest
+
   required:
     name: Non-device checks required
     if: always()
-    needs: [quality, dependency-audit]
+    needs: [quality, dependency-audit, android-native]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -53,3 +76,4 @@ jobs:
           node scripts/require-successful-jobs.mjs
           quality=${{ needs.quality.result }}
           dependency-audit=${{ needs.dependency-audit.result }}
+          android-native=${{ needs.android-native.result }}

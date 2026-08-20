@@ -25,25 +25,60 @@ function runs(jobName, command) {
 }
 
 const checkJobs = ["quality", "dependency-audit"];
+const requiredJobs = [...checkJobs, "android-native"];
 
-test("pull requests and main run only fast non-test checks", () => {
+test("pull requests and main run the required non-device checks", () => {
   assert.ok(workflow.on.pull_request);
   assert.ok(workflow.on.push);
   assert.equal(workflow.on.workflow_call, undefined);
   assert.deepEqual(Object.keys(workflow.jobs), [
     "quality",
     "dependency-audit",
+    "android-native",
     "required",
   ]);
 
   assert.ok(runs("quality", "npm run lint"));
   assert.ok(runs("quality", "npm run typecheck"));
   assert.ok(runs("dependency-audit", "npm run audit:dependencies"));
-  assert.doesNotMatch(JSON.stringify(workflow), /npm run test:|supabase start|maestro/i);
+  assert.doesNotMatch(
+    JSON.stringify(workflow),
+    /npm run test:|supabase start|maestro/i
+  );
+});
+
+test("Android CI clean-prebuilds and builds both phone and Wear apps", () => {
+  const job = workflow.jobs["android-native"];
+  const javaStep = job.steps.find(
+    (step) => step.uses === "actions/setup-java@v4"
+  );
+  const gradleStep = job.steps.find((step) =>
+    step.run?.includes(":wear:testDebugUnitTest")
+  );
+
+  assert.equal(job["timeout-minutes"], 30);
+  assert.equal(javaStep.with.distribution, "temurin");
+  assert.equal(javaStep.with["java-version"], "17");
+  assert.ok(runs("android-native", "npm ci"));
+  assert.ok(
+    runs(
+      "android-native",
+      "cp .github/fixtures/google-services.ci.json google-services.json"
+    )
+  );
+  assert.ok(
+    runs("android-native", "npx expo prebuild --platform android --clean")
+  );
+  assert.equal(gradleStep["working-directory"], "android");
+  assert.match(gradleStep.run, /:app:assembleDebug/);
+  assert.match(gradleStep.run, /:wear:assembleDebug/);
 });
 
 test("dependency advisories remain a required pull-request check", () => {
-  assert.equal(packageJson.scripts["audit:dependencies"], "node scripts/audit-dependencies.mjs");
+  assert.equal(
+    packageJson.scripts["audit:dependencies"],
+    "node scripts/audit-dependencies.mjs"
+  );
   assert.ok(runs("dependency-audit", "npm ci"));
   assert.ok(workflow.jobs.required.needs.includes("dependency-audit"));
 });
@@ -68,13 +103,13 @@ test("fast jobs use locked dependencies, pinned Node, and timeouts", () => {
   assert.equal(workflow.concurrency["cancel-in-progress"], true);
 });
 
-test("the aggregate required check evaluates every fast job after failure", () => {
+test("the aggregate required check evaluates every required job after failure", () => {
   const required = workflow.jobs.required;
   const command = commands("required").join("\n");
 
   assert.equal(required.if, "always()");
-  assert.deepEqual(required.needs, checkJobs);
-  for (const jobName of checkJobs) {
+  assert.deepEqual(required.needs, requiredJobs);
+  for (const jobName of requiredJobs) {
     assert.match(
       command,
       new RegExp(`${jobName}=\\$\\{\\{ needs\\.${jobName}\\.result \\}\\}`)
