@@ -51,39 +51,60 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
   }
 });
 
-test("the generated Wear app launches into a phone sign-in placeholder", () => {
-  const moduleRoot = new URL(
-    "../plugins/with-wear-os/android/wear/",
-    import.meta.url
-  );
-  const manifest = readFileSync(
-    new URL("src/main/AndroidManifest.xml", moduleRoot),
-    "utf8"
-  );
-  const activity = readFileSync(
-    new URL("src/main/java/com/sofibaby/app/wear/MainActivity.kt", moduleRoot),
-    "utf8"
-  );
-  const state = readFileSync(
-    new URL(
-      "src/main/java/com/sofibaby/app/wear/SignedOutState.kt",
-      moduleRoot
-    ),
-    "utf8"
-  );
-  const stateTest = readFileSync(
-    new URL(
-      "src/test/java/com/sofibaby/app/wear/SignedOutStateTest.kt",
-      moduleRoot
-    ),
-    "utf8"
-  );
+test("the generated Wear module declares its launcher and phone sign-in state", () => {
+  const outputRoot = mkdtempSync(join(tmpdir(), "sofi-wear-output-"));
+  const androidRoot = join(outputRoot, "android");
+  mkdirSync(androidRoot);
+  writeFileSync(join(androidRoot, "settings.gradle"), "include ':app'\n");
 
-  assert.match(manifest, /android:value="false"/);
-  assert.match(manifest, /android:name="\.MainActivity"/);
-  assert.match(manifest, /android:name="android\.intent\.action\.MAIN"/);
-  assert.match(manifest, /android:name="android\.intent\.category\.LAUNCHER"/);
-  assert.match(activity, /text = SignedOutState\.message/);
-  assert.match(state, /Sign in on your phone to continue\./);
-  assert.match(stateTest, /Sign in on your phone to continue\./);
+  try {
+    const { syncWearOsModule } = require("../plugins/with-wear-os");
+    syncWearOsModule({ projectRoot: repositoryRoot, androidRoot });
+
+    const moduleRoot = join(androidRoot, "wear");
+    const manifest = readFileSync(
+      join(moduleRoot, "src", "main", "AndroidManifest.xml"),
+      "utf8"
+    );
+    const activity = readFileSync(
+      join(
+        moduleRoot,
+        "src",
+        "main",
+        "java",
+        "com",
+        "sofibaby",
+        "app",
+        "wear",
+        "MainActivity.kt"
+      ),
+      "utf8"
+    );
+    const state = readFileSync(
+      join(
+        moduleRoot,
+        "src",
+        "main",
+        "java",
+        "com",
+        "sofibaby",
+        "app",
+        "wear",
+        "SignedOutState.kt"
+      ),
+      "utf8"
+    );
+
+    assert.match(manifest, /android:value="false"/);
+    assert.match(manifest, /android:name="\.MainActivity"/);
+    assert.match(manifest, /android:name="android\.intent\.action\.MAIN"/);
+    assert.match(
+      manifest,
+      /android:name="android\.intent\.category\.LAUNCHER"/
+    );
+    assert.match(activity, /text = SignedOutState\.message/);
+    assert.match(state, /Sign in on your phone to continue\./);
+  } finally {
+    rmSync(outputRoot, { recursive: true, force: true });
+  }
 });
