@@ -1,3 +1,5 @@
+// Source of truth for the generated Android :wear module. Edit this plugin's
+// android/wear template, never the android/wear output produced by Expo prebuild.
 const { withDangerousMod } = require("@expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
