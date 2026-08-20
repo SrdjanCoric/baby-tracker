@@ -88,16 +88,32 @@ Alternatives considered:
 - [x] Design pass: session envelope schema (versioned, like iOS `WatchSessionEnvelopeV1`), Data
       Layer mechanism, encrypted storage primitive (EncryptedSharedPreferences or equivalent),
       refresh flow, invalidation flow. Record the decisions in this task file or an adjacent note.
-- [ ] Native Android bridge module in the Expo app: RN-callable session push on sign-in, session
+- [x] Native Android bridge module in the Expo app: RN-callable session push on sign-in, session
       update on account/baby switch, invalidation on sign-out.
-- [ ] Watch-side receiver: validate, store encrypted, expose session to an HTTP client.
-- [ ] Phone-owned refresh flow: a stale watch credential durably requests refresh; the phone
+- [x] Watch-side receiver: validate, store encrypted, expose session to an HTTP client.
+- [x] Phone-owned refresh flow: a stale watch credential durably requests refresh; the phone
       refreshes Supabase and republishes; the watch shows "reconnect from phone" until it receives
       the newer access token.
-- [ ] Signed-in state screen replacing the 0089 placeholder (account/baby name), plus the
+- [x] Signed-in state screen replacing the 0089 placeholder (account/baby name), plus the
       authenticated snapshot RPC smoke call proving end-to-end auth.
-- [ ] Tests: envelope serialization round-trip, absence of refresh-token fields, storage encryption
+- [x] Tests: envelope serialization round-trip, absence of refresh-token fields, storage encryption
       in place, phone-refresh request/success/failure paths, invalidation clears stored session.
+
+## Implementation evidence
+
+- The Expo plugin now regenerates the phone bridge, package registration, Wearable dependency, and
+  background refresh-request listener idempotently. Its two focused Node contract tests pass.
+- The Wear app accepts only versioned active/invalidation envelopes, persists the latest revision as
+  one Android-Keystore-backed AES-256-GCM ciphertext under `noBackupFilesDir`, and durably publishes
+  refresh requests through an urgent DataItem. Nine session/encryption/RPC Kotlin tests pass, plus
+  the existing scaffold test.
+- A 401 or near-expiry credential transitions to **Reconnect from phone** and emits at most one
+  request for that revision. A late 401 from an older request cannot reject a newer credential.
+- The phone reconciliation layer publishes the current access token and selected account/baby,
+  never a refresh token; successful phone refreshes flow through the existing auth session update
+  and republish path. Six focused TypeScript tests, typecheck, and changed-file lint pass.
+- `:app:assembleDebug` and `:wear:assembleDebug` both pass. Focused logs are retained under
+  `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/`.
 
 ## Human checkpoints
 
