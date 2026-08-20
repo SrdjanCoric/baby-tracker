@@ -1,6 +1,6 @@
 # Task 0089: Wear OS app scaffold and build integration
 
-**Branch**: `feature/wear-os-app-scaffold`
+**Branch**: `feature/wear-os-app-scaffold` · **Status**: merged via PR #251
 **Depends on**: none
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a Samsung watch owner, I can install and open the app on my watch.
 **Change class**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: `true`
