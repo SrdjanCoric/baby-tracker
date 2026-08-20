@@ -9,7 +9,7 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId 'com.sofibaby.app.wear'
+        applicationId 'com.sofibaby.app'
         minSdk 33
         targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
