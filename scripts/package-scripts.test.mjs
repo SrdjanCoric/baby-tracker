@@ -24,6 +24,10 @@ test("the canonical check command runs every maintained non-device suite once", 
     packageJson.scripts["test:ci"],
     /scripts\/watch-app-icon\.test\.mjs/
   );
+  assert.match(
+    packageJson.scripts["test:ci"],
+    /scripts\/wear-os-plugin\.test\.mjs/
+  );
   assert.equal(
     packageJson.scripts["check:code"],
     "npm run lint && npm run typecheck && npm run test:unit && npm run test:local-dates && npm run test:component -- --runInBand && npm run test:ci && npm run test:widget:swift && npm run test:production-gating"

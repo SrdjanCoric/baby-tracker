@@ -24,7 +24,9 @@ Limit the environment to the `main` branch and tags matching `v*`. This private 
    npm run audit:dependencies
    ```
 
-   Record the commit, date, and successful output. Any failure stops the release. Pull-request CI runs lint, type checking, and the dependency audit only; it does not replace this local gate.
+   Record the commit, date, and successful output. Any failure stops the release. Pull-request CI runs
+   lint, type checking, the dependency audit, and an Android native job that clean-prebuilds and builds
+   the phone and Wear apps and runs the Wear unit tests. It does not replace this broader local gate.
 4. For an iOS release, run:
 
    ```bash
@@ -118,6 +120,11 @@ Keep the recorded local non-device gate output with these workflow artifacts.
 The submission run provides `submission-metadata-<run-id>`, which links the build workflow run to the source, selected platform, confirmations, and submitted build IDs. Build and submission summaries repeat the IDs used by EAS.
 
 `eas.json` keeps `appVersionSource` set to `remote` and production `autoIncrement` enabled. `app.json` owns the marketing version. EAS increments the remote iOS build number and Android version code without committing them to the repository.
+
+The generated Wear module inherits the phone module's effective `versionName` and uses
+`1,000,000,000 + phone versionCode` for its `versionCode`. This keeps phone and Wear artifacts in
+the same Play listing on distinct, monotonically increasing code ranges while following EAS's
+remote Android increment.
 
 ## Recovery
 

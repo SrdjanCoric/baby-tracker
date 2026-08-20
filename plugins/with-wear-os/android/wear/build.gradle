@@ -1,0 +1,42 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.1.20'
+}
+
+evaluationDependsOn(':app')
+def phoneDefaultConfig = project(':app').extensions.getByName('android').defaultConfig
+def wearVersionCodeOffset = 1_000_000_000
+
+android {
+    namespace 'com.sofibaby.app.wear'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId 'com.sofibaby.app'
+        minSdk 33
+        targetSdk rootProject.ext.targetSdkVersion
+        // Play requires version codes to be unique across phone and Wear artifacts.
+        versionCode wearVersionCodeOffset + phoneDefaultConfig.versionCode
+        versionName phoneDefaultConfig.versionName
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity-compose:1.10.1'
+    implementation 'androidx.wear.compose:compose-material3:1.5.0'
+    testImplementation 'junit:junit:4.13.2'
+}
