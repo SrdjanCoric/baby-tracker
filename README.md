@@ -223,7 +223,14 @@ SOFIBABY_E2E_PLATFORM=android MAESTRO_DEVICE=<android-device-id> npm run e2e:onb
 
 `npm run check` requires Docker and `psql`. Its SQL stage resets the local database at `127.0.0.1:54322` and applies the committed migrations. It does not connect to a linked or production Supabase project. Run `test:sql:setup` before the SQL and timer Edge checks when using the focused commands.
 
-Pull requests and pushes to `main` run only lint, strict type checking, and the dependency audit. Test suites stay out of the routine CI path and run locally through `npm run check` before a production release. The required dependency audit blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure `Non-device checks required` as the required branch-protection check. See [`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception rules.
+Pull requests and pushes to `main` run lint, strict type checking, the dependency audit, and an Android
+native job that clean-prebuilds the project, builds the phone and Wear debug apps, and runs the Wear
+unit tests. Broader JavaScript, component, database, and device suites stay out of the routine CI path
+and run locally through `npm run check` before a production release. The required dependency audit
+blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week.
+Configure `Non-device checks required` as the required branch-protection check. See
+[`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary
+exception rules.
 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
 

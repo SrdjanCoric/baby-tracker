@@ -24,7 +24,9 @@ Limit the environment to the `main` branch and tags matching `v*`. This private 
    npm run audit:dependencies
    ```
 
-   Record the commit, date, and successful output. Any failure stops the release. Pull-request CI runs lint, type checking, and the dependency audit only; it does not replace this local gate.
+   Record the commit, date, and successful output. Any failure stops the release. Pull-request CI runs
+   lint, type checking, the dependency audit, and an Android native job that clean-prebuilds and builds
+   the phone and Wear apps and runs the Wear unit tests. It does not replace this broader local gate.
 4. For an iOS release, run:
 
    ```bash
