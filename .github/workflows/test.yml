@@ -52,6 +52,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
       - run: npm ci
       - name: Install fake Firebase configuration for native generation
         run: cp .github/fixtures/google-services.ci.json google-services.json
@@ -59,7 +60,9 @@ jobs:
         run: npx expo prebuild --platform android --clean
       - name: Build phone and Wear apps and run Wear unit tests
         working-directory: android
-        run: ./gradlew :app:assembleDebug :wear:assembleDebug :wear:testDebugUnitTest
+        run: >-
+          ./gradlew -PreactNativeArchitectures=arm64-v8a
+          :app:assembleDebug :wear:assembleDebug :wear:testDebugUnitTest
 
   required:
     name: Non-device checks required

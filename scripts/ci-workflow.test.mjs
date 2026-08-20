@@ -59,6 +59,7 @@ test("Android CI clean-prebuilds and builds both phone and Wear apps", () => {
   assert.equal(job["timeout-minutes"], 30);
   assert.equal(javaStep.with.distribution, "temurin");
   assert.equal(javaStep.with["java-version"], "17");
+  assert.equal(javaStep.with.cache, "gradle");
   assert.ok(runs("android-native", "npm ci"));
   assert.ok(
     runs(
@@ -72,6 +73,10 @@ test("Android CI clean-prebuilds and builds both phone and Wear apps", () => {
   assert.equal(gradleStep["working-directory"], "android");
   assert.match(gradleStep.run, /:app:assembleDebug/);
   assert.match(gradleStep.run, /:wear:assembleDebug/);
+  assert.match(
+    gradleStep.run,
+    /-PreactNativeArchitectures=arm64-v8a/
+  );
 });
 
 test("dependency advisories remain a required pull-request check", () => {
