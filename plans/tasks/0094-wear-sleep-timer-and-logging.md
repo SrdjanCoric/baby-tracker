@@ -15,9 +15,14 @@ machinery.
 Same durable rules as 0093: DB-persisted timer instances, no second instance for an
 already-active type, visible failure + retry, no backend changes.
 
+**Apple Watch parity boundary**: show the current awake/wake-window readout and the phone-confirmation
+notice when applicable; provide only automatic sleep start plus pause/resume/stop. Do not add manual
+sleep entry, nap/night choice, overlap handling, morning-classification answers, history, or editing.
+
 ## Implementation work
 
-- [ ] Sleep timer UI and completion flow with parity fields, on the shared timer machinery.
+- [ ] Sleep timer UI with automatic type, pause/resume/stop, current awake/wake-window readout, and
+      phone-confirmation notice, on the shared timer machinery.
 - [ ] Snapshot-driven display of a phone-started sleep timer.
 - [ ] Tests: sleep row/timer shape fixture-matches phone rows; already-active rule; summary
       reflects completed sleep.
@@ -27,3 +32,4 @@ already-active type, visible failure + retry, no backend changes.
 - [ ] Sleep timer lifecycle from watch produces phone-identical rows and appears on the phone.
 - [ ] Phone-started sleep timer visible on watch.
 - [ ] Tests green in CI; no backend changes.
+- [ ] Manual sleep entry, classification controls, overlap handling, history, and editing are absent.

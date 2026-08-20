@@ -12,10 +12,15 @@ phone-app requirement (expectation-setting decided in the brief: Samsung users s
 feature set, Tizen watches are unsupported). Any code changes here are limited to fixes for defects
 the hardware pass surfaces; substantive new behavior goes back into a new task.
 
+**Apple Watch parity boundary**: the listing and hardware checklist claim only today-summary and
+baby selection, the five Apple Watch activity flows, shared timer visibility, phone-mediated sign-in
+and refresh, sign-out invalidation, and the launcher complication. Do not advertise phone-free
+authentication, offline logging, an offline queue, history/editing, Tiles, or richer complications.
+
 ## Implementation work
 
 - [ ] Play listing copy: Wear OS 4+ (Galaxy Watch 4 and newer) floor, Android phone app required
-      for sign-in, watch feature list.
+      for sign-in and credential refresh, and only the Apple-parity watch feature list.
 - [ ] Play console device targeting/distribution set so the Wear APK reaches only Wear OS 4+.
 - [ ] Fix defects surfaced by the hardware pass (scoped to this task; larger findings become new
       tasks).
@@ -25,9 +30,9 @@ the hardware pass surfaces; substantive new behavior goes back into a new task.
 - [ ] [verify] On a physical Galaxy Watch 4+ paired with a real Android phone: (1) install both
       apps, sign in on phone, confirm watch signs in; (2) log each of the five activity types from
       the watch and confirm each on the phone; (3) run a feed timer started on the phone, confirm
-      on watch, stop on watch; (4) turn the phone off, put the watch on known WiFi, log a diaper —
-      confirm it syncs; (5) enable airplane mode on both, attempt a log — confirm visible error and
-      successful retry after reconnect; (6) sign out on phone, confirm watch clears. · Expected:
+      on watch, stop on watch; (4) force a stale access token, confirm the watch asks for phone
+      reconnection and resumes after the phone republishes; (5) sign out on phone, confirm watch
+      clears; (6) add the launcher complication and confirm it opens the app. · Expected:
       every step behaves as described. · Failure: any silent error, missing entry, stale session,
       or pairing failure. · Reason: Samsung pairing, Bluetooth network proxying, and real Data
       Layer delivery cannot be reproduced on emulators.
@@ -36,4 +41,5 @@ the hardware pass surfaces; substantive new behavior goes back into a new task.
 
 - [ ] Full hardware checklist confirmed passed by the user.
 - [ ] Store listing states device floor and phone requirement; distribution targeting matches.
+- [ ] Listing and verification make no claim for functionality absent from Apple Watch.
 - [ ] Any hardware-pass defects fixed or captured as new tasks.

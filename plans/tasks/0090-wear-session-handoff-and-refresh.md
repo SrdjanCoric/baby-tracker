@@ -85,7 +85,7 @@ Alternatives considered:
 
 ## Implementation work
 
-- [ ] Design pass: session envelope schema (versioned, like iOS `WatchSessionEnvelopeV1`), Data
+- [x] Design pass: session envelope schema (versioned, like iOS `WatchSessionEnvelopeV1`), Data
       Layer mechanism, encrypted storage primitive (EncryptedSharedPreferences or equivalent),
       refresh flow, invalidation flow. Record the decisions in this task file or an adjacent note.
 - [ ] Native Android bridge module in the Expo app: RN-callable session push on sign-in, session
@@ -101,9 +101,10 @@ Alternatives considered:
 
 ## Human checkpoints
 
-- [ ] [confirm-security] Approve the session-handoff design (transport, storage at rest, refresh,
-      invalidation) before implementation, and review the implementation before merge — this moves
-      Supabase session material across the phone↔watch trust boundary.
+- [x] [confirm-security] Session-handoff design (transport, storage at rest, phone-owned refresh,
+      invalidation) approved by the user on 2026-08-20 before implementation.
+- [ ] [confirm-security] Review the session-handoff implementation before merge — this moves
+      Supabase access-token material across the phone↔watch trust boundary.
 - [ ] [verify] Pair Wear OS 4 emulator with Android emulator; sign in on phone. · Expected: watch
       shows signed-in state with baby name; sign out on phone returns watch to signed-out screen.
       · Failure: watch stays signed out, or stays signed in after phone sign-out. · Reason:
