@@ -17,6 +17,11 @@ device grant or session-cloning API. The supported building blocks are either OA
 Authorization Code + PKCE with an enabled OAuth server and authorization UI, or a trusted backend
 that issues a one-time magic-link token for the watch to redeem.
 
+If the product instead chooses Apple Watch parity, the phone can remain the only refresh-token
+owner and hand off only its current short-lived access token. The watch requests a republished token
+from the phone when stale and visibly waits for reconnection. That narrower behavior avoids both a
+shared refresh-token family and the independent-session backend/configuration work.
+
 ## Verified findings
 
 - A Wear OS `DataItem` persists until deleted, can be written while peers are disconnected, and

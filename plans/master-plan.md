@@ -46,9 +46,12 @@ zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner =
   Android build; full Apple Watch feature parity. Reads via the existing
   `get_baby_activity_snapshot` RPC; writes go direct from watch to Supabase under RLS (no
   phone-relay channel) and must carry valid HLC `field_clocks` with a watch device ID. Wearable
-  Data Layer carries session handoff and invalidation only, never activity data; the watch
-  refreshes its own token. No offline write queue in v1; Tizen permanently out of scope. Decision
-  record: `plans/wear-os-watch-parity.md`.
+  Data Layer carries session handoff, phone-refresh requests, and invalidation only, never activity
+  data. Authentication matches the supported Apple Watch behavior: the phone owns Supabase token
+  refresh and republishes a fresh short-lived access token; the watch never receives or redeems a
+  refresh token and shows a reconnect-from-phone state when its access token is stale. No offline
+  write queue in v1; Tizen permanently out of scope. Decision record:
+  `plans/wear-os-watch-parity.md`, superseded for token ownership by Task 0090's design.
 - **Schema shape**: each synced table gets `field_clocks JSONB NOT NULL DEFAULT '{}'` (map of
   column name → HLC string) and `deleted BOOLEAN NOT NULL DEFAULT FALSE`, plus a partial index
   `WHERE deleted = false`. Empty/missing clock entries compare as epoch — legacy rows lose to any
@@ -311,7 +314,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
 - [ ] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
 - [x] 0089 · Wear OS app scaffold and build integration → tasks/done/0089-wear-os-app-scaffold.md
-- [~] 0090 · Wear session handoff and watch-side refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
+- [~] 0090 · Wear session handoff with phone-owned refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
 - [ ] 0091 · Wear today summary read path (after 0090) → tasks/0091-wear-today-summary-read-path.md
 - [ ] 0092 · Wear diaper quick log (after 0091) → tasks/0092-wear-diaper-quick-log.md
 - [ ] 0093 · Wear feeding timer and logging (after 0092) → tasks/0093-wear-feeding-timer-and-logging.md
