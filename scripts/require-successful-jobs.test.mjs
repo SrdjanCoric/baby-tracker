@@ -30,6 +30,13 @@ test("rejects an incomplete set of required job results", () => {
   assert.match(result.stderr, /dependency-audit=missing/);
 });
 
+test("rejects a failed android-native result", () => {
+  const result = run(...successfulResults, "android-native=failure");
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /android-native=failure/);
+});
+
 for (const failedResult of successfulResults) {
   const jobName = failedResult.split("=", 1)[0];
 
