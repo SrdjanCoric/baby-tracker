@@ -14,6 +14,7 @@ function run(...results) {
 const successfulResults = [
   "quality=success",
   "dependency-audit=success",
+  "android-native=success",
 ];
 
 test("accepts a successful result from every required non-device job", () => {
@@ -28,13 +29,6 @@ test("rejects an incomplete set of required job results", () => {
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /dependency-audit=missing/);
-});
-
-test("rejects a failed android-native result", () => {
-  const result = run(...successfulResults, "android-native=failure");
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /android-native=failure/);
 });
 
 for (const failedResult of successfulResults) {
