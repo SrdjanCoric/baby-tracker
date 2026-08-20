@@ -146,9 +146,9 @@ When the latest completed sleep is the current evening's stored `night` session,
 ### Wear OS Native Integration
 
 - **Wear OS companion app** for Wear OS 4+ uses native Kotlin and Compose and requires the phone app.
-  [`plugins/with-wear-os/`](plugins/with-wear-os/) is the source of truth for the `:wear` Gradle
-  module and its Expo config-plugin wiring. Expo prebuild copies that module to `android/wear`, so
-  edit the plugin source rather than the generated Android directory.
+  [`plugins/with-wear-os/`](plugins/with-wear-os/) contains the tracked `:wear` Gradle module and
+  Expo config plugin. Expo prebuild copies that module to `android/wear`, so edit the plugin source
+  rather than the generated Android directory.
 
 ### Edge Functions
 
@@ -235,12 +235,12 @@ SOFIBABY_E2E_PLATFORM=android MAESTRO_DEVICE=<android-device-id> npm run e2e:onb
 
 Pull requests and pushes to `main` run lint, strict type checking, the dependency audit, and an Android
 native job that clean-prebuilds the project, builds the phone and Wear debug apps, and runs the Wear
-unit tests. Broader JavaScript, component, database, and device suites stay out of the routine CI path
-and run locally through `npm run check` before a production release. The required dependency audit
-blocks unapproved high or critical advisories. Dependabot opens npm update pull requests each week.
-Configure `Non-device checks required` as the required branch-protection check. See
-[`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary
-exception rules.
+unit tests. `npm run check` remains the complete local non-device gate before a production release;
+device suites run separately through their documented commands. The required dependency audit blocks
+unapproved high or critical advisories. Dependabot opens npm update pull requests each week. Configure
+`Non-device checks required` as the required branch-protection check. See
+[`docs/DEPENDENCY_SECURITY.md`](docs/DEPENDENCY_SECURITY.md) for advisory triage and temporary exception
+rules.
 
 Run `npm run e2e:household-timers:clean` before each iOS release. GitHub Actions does not run iOS device tests because GitHub-hosted ARM64 macOS runners cannot run the Docker stack required by local Supabase.
 

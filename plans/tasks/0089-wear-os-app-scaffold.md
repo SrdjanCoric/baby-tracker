@@ -41,6 +41,8 @@ Durable decisions this task must respect (from the brief):
 - `./gradlew :app:assembleDebug :wear:assembleDebug` passes and produces the phone APK plus
   `android/wear/build/outputs/apk/debug/wear-debug.apk`. Logs are retained under
   `/tmp/agent-workflows/e2f8af45fd34/042fc1a664ad/`.
+- README audit covered Wear OS Native Integration, Project Structure, and routine CI behavior.
+  `write-well` passed after two audit passes.
 - The Wear OS 4 emulator launch checkpoint remains deferred to the required manual review loop.
 
 ## Human checkpoints
