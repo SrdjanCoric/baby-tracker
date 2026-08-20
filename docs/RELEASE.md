@@ -121,6 +121,11 @@ The submission run provides `submission-metadata-<run-id>`, which links the buil
 
 `eas.json` keeps `appVersionSource` set to `remote` and production `autoIncrement` enabled. `app.json` owns the marketing version. EAS increments the remote iOS build number and Android version code without committing them to the repository.
 
+The generated Wear module inherits the phone module's effective `versionName` and uses
+`1,000,000,000 + phone versionCode` for its `versionCode`. This keeps phone and Wear artifacts in
+the same Play listing on distinct, monotonically increasing code ranges while following EAS's
+remote Android increment.
+
 ## Recovery
 
 - **Metadata or local checks fail:** fix the source through a pull request, rerun the local release gate, and use a new release tag when needed. Do not move a published release tag.

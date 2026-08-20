@@ -35,10 +35,22 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
     const settings = readFileSync(join(androidRoot, "settings.gradle"), "utf8");
     assert.equal(settings.match(/include ':wear'/g)?.length, 1);
     assert.equal(appConfig.expo.android.package, "com.sofibaby.app");
-    assert.match(
-      readFileSync(join(androidRoot, "wear", "build.gradle"), "utf8"),
-      /applicationId ['"]com\.sofibaby\.app['"]/
+    const buildGradle = readFileSync(
+      join(androidRoot, "wear", "build.gradle"),
+      "utf8"
     );
+    assert.match(buildGradle, /applicationId ['"]com\.sofibaby\.app['"]/);
+    assert.match(buildGradle, /evaluationDependsOn\(['"]:app['"]\)/);
+    assert.match(
+      buildGradle,
+      /versionCode wearVersionCodeOffset \+ phoneDefaultConfig\.versionCode/
+    );
+    assert.match(
+      buildGradle,
+      /versionName phoneDefaultConfig\.versionName/
+    );
+    assert.doesNotMatch(buildGradle, /^\s*versionCode\s+1\s*$/m);
+    assert.doesNotMatch(buildGradle, /^\s*versionName\s+['"]1\.0['"]\s*$/m);
     assert.equal(
       readFileSync(
         join(androidRoot, "wear", "src", "main", "AndroidManifest.xml"),

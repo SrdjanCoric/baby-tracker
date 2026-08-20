@@ -52,7 +52,6 @@ Durable decisions this task must respect (from the brief):
 ## Review decisions
 
 - skipped (minor): TR-8 — The native test seam asserts a compile-time constant against a copy of its own literal — User directed this pass to focus on blocker and major findings.
-- skipped (minor): TR-9 — The Wear module hardcodes its version name and code — User directed this pass to focus on blocker and major findings.
 - skipped (minor): TR-10 — Non-clean prebuilds can retain files deleted from the plugin source — User directed this pass to focus on blocker and major findings.
 - skipped (minor): TR-11 — The Wear app ships without its own launcher icon — User directed this pass to focus on blocker and major findings.
 - skipped (minor): TR-12 — The master-plan status flip is carried on the code branch — User directed this pass to focus on blocker and major findings.

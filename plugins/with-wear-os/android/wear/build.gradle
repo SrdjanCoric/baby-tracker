@@ -4,6 +4,10 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose' version '2.1.20'
 }
 
+evaluationDependsOn(':app')
+def phoneDefaultConfig = project(':app').extensions.getByName('android').defaultConfig
+def wearVersionCodeOffset = 1_000_000_000
+
 android {
     namespace 'com.sofibaby.app.wear'
     compileSdk rootProject.ext.compileSdkVersion
@@ -12,8 +16,9 @@ android {
         applicationId 'com.sofibaby.app'
         minSdk 33
         targetSdk rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName '1.0'
+        // Play requires version codes to be unique across phone and Wear artifacts.
+        versionCode wearVersionCodeOffset + phoneDefaultConfig.versionCode
+        versionName phoneDefaultConfig.versionName
     }
 
     buildFeatures {
