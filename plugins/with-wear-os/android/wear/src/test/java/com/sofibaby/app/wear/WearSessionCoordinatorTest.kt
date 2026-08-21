@@ -65,6 +65,35 @@ class WearSessionCoordinatorTest {
     }
 
     @Test
+    fun newerRejectedCredentialsDoNotCreateAnUnauthorizedRefreshLoop() {
+        val requests = mutableListOf<Long>()
+        val coordinator = coordinator(requests)
+        coordinator.accept(active(revision = 4, expiresAt = 2_000))
+        coordinator.onUnauthorized(4)
+
+        coordinator.accept(active(revision = 5, expiresAt = 3_000))
+        coordinator.onUnauthorized(5)
+
+        assertEquals(listOf(4L), requests)
+        assertEquals(WearSessionUiState.ReconnectFromPhone, coordinator.state)
+        assertNull(coordinator.accessToken(nowEpochSeconds = 1_000))
+    }
+
+    @Test
+    fun successfulProbeAllowsOneLaterUnauthorizedRefresh() {
+        val requests = mutableListOf<Long>()
+        val coordinator = coordinator(requests)
+        coordinator.accept(active(revision = 4, expiresAt = 2_000))
+        coordinator.onUnauthorized(4)
+        coordinator.accept(active(revision = 5, expiresAt = 3_000))
+
+        coordinator.onProbeSucceeded(5)
+        coordinator.onUnauthorized(5)
+
+        assertEquals(listOf(4L, 5L), requests)
+    }
+
+    @Test
     fun failedSessionWriteDegradesToSignedOutWithoutThrowing() {
         val store = object : SessionBlobStore {
             override fun read(): ByteArray? = null

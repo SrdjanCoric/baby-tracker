@@ -73,10 +73,13 @@ object WearSessionRuntime {
         mutableState.value = target.state
         if (token == null) return
         executor.execute {
-            if (SnapshotProbe(UrlConnectionWearHttpTransport).run(session) == SnapshotOutcome.Unauthorized) {
-                target.onUnauthorized(session.revision)
-                mutableState.value = target.state
+            when (SnapshotProbe(UrlConnectionWearHttpTransport).run(session)) {
+                SnapshotOutcome.Success -> target.onProbeSucceeded(session.revision)
+                SnapshotOutcome.Unauthorized -> target.onUnauthorized(session.revision)
+                SnapshotOutcome.Offline,
+                SnapshotOutcome.Failed -> Unit
             }
+            mutableState.value = target.state
         }
     }
 

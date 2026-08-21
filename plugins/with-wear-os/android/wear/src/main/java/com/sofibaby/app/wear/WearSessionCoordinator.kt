@@ -22,6 +22,7 @@ class WearSessionCoordinator(
 ) {
     private var active = vault.readActive()
     private var refreshRequestedForRevision: Long? = null
+    private var unauthorizedRefreshRequests = 0
 
     @Volatile
     var state: WearSessionUiState = active?.toUiState() ?: WearSessionUiState.SignedOut
@@ -40,13 +41,19 @@ class WearSessionCoordinator(
         if (!applied) return
         when (envelope) {
             is WearSessionEnvelope.Active -> {
+                val startsNewSession = active?.let {
+                    it.phoneEpoch != envelope.phoneEpoch ||
+                        it.account.id != envelope.account.id
+                } ?: true
                 active = envelope
                 refreshRequestedForRevision = null
+                if (startsNewSession) unauthorizedRefreshRequests = 0
                 state = envelope.toUiState()
             }
             is WearSessionEnvelope.Invalidated -> {
                 active = null
                 refreshRequestedForRevision = null
+                unauthorizedRefreshRequests = 0
                 state = WearSessionUiState.SignedOut
             }
         }
@@ -67,7 +74,16 @@ class WearSessionCoordinator(
     fun onUnauthorized(requestRevision: Long) {
         val revision = active?.revision ?: return
         if (requestRevision != revision) return
+        state = WearSessionUiState.ReconnectFromPhone
+        if (unauthorizedRefreshRequests >= MAX_UNAUTHORIZED_REFRESH_REQUESTS) return
+        unauthorizedRefreshRequests += 1
         requestRefresh(revision)
+    }
+
+    @Synchronized
+    fun onProbeSucceeded(requestRevision: Long) {
+        if (active?.revision != requestRevision) return
+        unauthorizedRefreshRequests = 0
     }
 
     @Synchronized
@@ -84,4 +100,8 @@ class WearSessionCoordinator(
         accountLabel = account.label,
         babyName = baby.name,
     )
+
+    private companion object {
+        const val MAX_UNAUTHORIZED_REFRESH_REQUESTS = 1
+    }
 }
