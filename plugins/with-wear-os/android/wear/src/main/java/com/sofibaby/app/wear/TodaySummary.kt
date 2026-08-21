@@ -37,10 +37,16 @@ sealed interface TodaySummaryUiState {
         val snapshot: ActivitySnapshot,
     ) : TodaySummaryUiState
 
+    data class Stale(
+        val selectedBaby: BabyIdentity,
+        val babies: List<BabyIdentity>,
+        val snapshot: ActivitySnapshot,
+        val empty: Boolean,
+    ) : TodaySummaryUiState
+
     data class Error(
         val selectedBaby: BabyIdentity,
         val babies: List<BabyIdentity>,
-        val lastSnapshot: ActivitySnapshot?,
     ) : TodaySummaryUiState
 }
 
@@ -72,15 +78,15 @@ class TodaySummaryCoordinator(
             name = session.baby.name,
             timezone = session.baby.timezone,
         )
-        if (selectedBaby == null) selectedBaby = sessionBaby
+        if (selectedBaby == null) updateSelection(sessionBaby)
         if (reloadBabies || !directoryLoaded) {
             when (val outcome = babyDirectory.load(session)) {
                 is BabyDirectoryOutcome.Success -> {
                     babies = outcome.babies.ifEmpty { listOf(sessionBaby) }
-                    selectedBaby = babies.firstOrNull { it.id == preferredBabyId }
+                    updateSelection(babies.firstOrNull { it.id == preferredBabyId }
                         ?: babies.firstOrNull { it.id == selectedBaby?.id }
                         ?: babies.firstOrNull { it.id == sessionBaby.id }
-                        ?: babies.first()
+                        ?: babies.first())
                     directoryLoaded = true
                 }
                 BabyDirectoryOutcome.Unauthorized -> return unauthorized()
@@ -100,7 +106,7 @@ class TodaySummaryCoordinator(
     fun selectBaby(session: WearSessionEnvelope.Active, babyId: String): TodayRefreshResult {
         val selected = babies.firstOrNull { it.id == babyId } ?: return TodayRefreshResult.Failed
         preferredBabyId = babyId
-        selectedBaby = selected
+        updateSelection(selected)
         return loadSelected(session)
     }
 
@@ -133,7 +139,18 @@ class TodaySummaryCoordinator(
             SnapshotOutcome.Unauthorized -> unauthorized()
             SnapshotOutcome.Failed,
             SnapshotOutcome.Offline -> {
-                state = TodaySummaryUiState.Error(selected, babies, lastSnapshot)
+                val cached = lastSnapshot
+                state = if (cached != null) {
+                    TodaySummaryUiState.Stale(
+                        selectedBaby = selected,
+                        babies = babies,
+                        snapshot = cached,
+                        empty = state is TodaySummaryUiState.Empty ||
+                            (state as? TodaySummaryUiState.Stale)?.empty == true,
+                    )
+                } else {
+                    TodaySummaryUiState.Error(selected, babies)
+                }
                 TodayRefreshResult.Failed
             }
         }
@@ -141,8 +158,26 @@ class TodaySummaryCoordinator(
 
     private fun unauthorized(): TodayRefreshResult {
         val selected = selectedBaby
-        if (selected != null) state = TodaySummaryUiState.Error(selected, babies, lastSnapshot)
+        if (selected != null) {
+            val cached = lastSnapshot
+            state = if (cached != null) {
+                TodaySummaryUiState.Stale(
+                    selected,
+                    babies,
+                    cached,
+                    state is TodaySummaryUiState.Empty ||
+                        (state as? TodaySummaryUiState.Stale)?.empty == true,
+                )
+            } else {
+                TodaySummaryUiState.Error(selected, babies)
+            }
+        }
         return TodayRefreshResult.Unauthorized
+    }
+
+    private fun updateSelection(next: BabyIdentity) {
+        if (selectedBaby?.id != next.id) lastSnapshot = null
+        selectedBaby = next
     }
 
     private fun ActivitySnapshot.hasVisibleActivity(): Boolean {

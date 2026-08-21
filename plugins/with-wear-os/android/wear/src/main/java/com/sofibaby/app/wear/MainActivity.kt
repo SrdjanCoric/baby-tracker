@@ -91,6 +91,8 @@ private fun TodaySummaryScreen(
             babies = state.babies,
             snapshot = state.snapshot,
             empty = false,
+            refreshFailed = false,
+            onRetry = onRetry,
             onSelectBaby = onSelectBaby,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
@@ -98,6 +100,17 @@ private fun TodaySummaryScreen(
             babies = state.babies,
             snapshot = state.snapshot,
             empty = true,
+            refreshFailed = false,
+            onRetry = onRetry,
+            onSelectBaby = onSelectBaby,
+        )
+        is TodaySummaryUiState.Stale -> SummaryContent(
+            selectedBaby = state.selectedBaby,
+            babies = state.babies,
+            snapshot = state.snapshot,
+            empty = state.empty,
+            refreshFailed = true,
+            onRetry = onRetry,
             onSelectBaby = onSelectBaby,
         )
     }
@@ -109,6 +122,8 @@ private fun SummaryContent(
     babies: List<BabyIdentity>,
     snapshot: ActivitySnapshot,
     empty: Boolean,
+    refreshFailed: Boolean,
+    onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
 ) {
     val now by produceState(initialValue = Instant.now(), key1 = snapshot) {
@@ -145,6 +160,11 @@ private fun SummaryContent(
             }
         } else {
             Text(selectedBaby.name, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        }
+        if (refreshFailed) {
+            Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
+                Text("Could not refresh · Retry", textAlign = TextAlign.Center)
+            }
         }
         if (empty) {
             Text("No activity yet today", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)

@@ -112,7 +112,6 @@ class TodaySummaryRefreshDriverTest {
         val error = coordinator.state as TodaySummaryUiState.Error
         assertEquals("baby-9", error.selectedBaby.id)
         assertEquals(listOf("baby-9"), error.babies.map { it.id })
-        assertEquals(null, error.lastSnapshot)
     }
 
     @Test

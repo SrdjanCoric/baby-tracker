@@ -128,6 +128,31 @@ class TodaySummaryCoordinatorTest {
         assertTrue(coordinator.state is TodaySummaryUiState.Content)
     }
 
+    @Test
+    fun refreshFailureRetainsOnlyTheMatchingBabySnapshot() {
+        val outcomes = ArrayDeque<SnapshotOutcome>().apply {
+            add(SnapshotOutcome.Success(snapshot()))
+            add(SnapshotOutcome.Offline)
+            add(SnapshotOutcome.Offline)
+        }
+        val coordinator = TodaySummaryCoordinator(
+            babyDirectory = { BabyDirectoryOutcome.Success(babies()) },
+            snapshots = { outcomes.removeFirst() },
+        )
+        coordinator.refresh(session(), reloadBabies = true)
+
+        coordinator.refresh(session(), reloadBabies = false)
+
+        assertEquals(
+            TodaySummaryUiState.Stale(babies().first(), babies(), snapshot(), empty = false),
+            coordinator.state,
+        )
+
+        coordinator.selectBaby(session(), "baby-2")
+
+        assertEquals(TodaySummaryUiState.Error(babies()[1], babies()), coordinator.state)
+    }
+
     private fun babies() = listOf(
         BabyIdentity("baby-1", "Sofi", "Europe/Belgrade"),
         BabyIdentity("baby-2", "Leo", "Europe/Belgrade"),
