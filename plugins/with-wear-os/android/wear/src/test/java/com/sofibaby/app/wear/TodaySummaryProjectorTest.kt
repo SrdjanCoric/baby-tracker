@@ -35,4 +35,18 @@ class TodaySummaryProjectorTest {
         assertFalse(presentation.rows.any { it.detail.contains("2026-08-21T") })
         assertFalse(presentation.timers.any { it.detail.contains("2026-08-21T") })
     }
+
+    @Test
+    fun rendersRunningAndPausedTimerDurations() {
+        val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()
+
+        val presentation = TodaySummaryProjector.project(
+            ActivitySnapshotCodec.decode(fixture),
+            now = Instant.parse("2026-08-21T13:14:20.000Z"),
+        )
+
+        assertTrue(presentation.timers.first { it.title == "Feeding active" }.detail.contains("29:20"))
+        assertTrue(presentation.timers.first { it.title == "Sleep active" }.detail.contains("7:14:20"))
+        assertTrue(presentation.timers.first { it.title == "Pumping active" }.detail.contains("2:03"))
+    }
 }

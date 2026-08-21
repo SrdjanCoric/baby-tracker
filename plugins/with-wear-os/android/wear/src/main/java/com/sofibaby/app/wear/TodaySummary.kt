@@ -206,7 +206,7 @@ object TodaySummaryProjector {
                 timer.context?.let(::add)
                 if (timer.isPaused == true) add("paused")
                 if (timer.isRemote == true) add("another caregiver")
-                add("Started ${elapsedSince(timer.startTime, now)} ago")
+                add(timerDuration(timer, now))
             }
             TodaySummaryPresentation.TimerRow("$label active", details.joinToString(" · "))
         }
@@ -230,6 +230,23 @@ object TodaySummaryProjector {
             days >= 1 -> "${days}d"
             hours > 0 -> "${hours}h ${minutes}m"
             else -> "${totalMinutes}m"
+        }
+    }
+
+    private fun timerDuration(timer: ActivitySnapshot.ActiveTimer, now: Instant): String {
+        val totalSeconds = if (timer.isPaused == true && timer.accumulatedSeconds != null) {
+            timer.accumulatedSeconds.toLong()
+        } else {
+            val start = runCatching { Instant.parse(timer.startTime) }.getOrNull() ?: return "--"
+            Duration.between(start, now).seconds.coerceAtLeast(0)
+        }
+        val hours = totalSeconds / 3_600
+        val minutes = (totalSeconds % 3_600) / 60
+        val seconds = totalSeconds % 60
+        return if (hours > 0) {
+            "$hours:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+        } else {
+            "$minutes:${seconds.toString().padStart(2, '0')}"
         }
     }
 

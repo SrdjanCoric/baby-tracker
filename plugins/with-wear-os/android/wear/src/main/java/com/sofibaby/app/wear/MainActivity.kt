@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import java.time.Instant
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,7 +111,13 @@ private fun SummaryContent(
     empty: Boolean,
     onSelectBaby: (String) -> Unit,
 ) {
-    val presentation = remember(snapshot) { TodaySummaryProjector.project(snapshot) }
+    val now by produceState(initialValue = Instant.now(), key1 = snapshot) {
+        while (true) {
+            value = Instant.now()
+            delay(1_000)
+        }
+    }
+    val presentation = remember(snapshot, now) { TodaySummaryProjector.project(snapshot, now) }
     var pickerOpen by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
