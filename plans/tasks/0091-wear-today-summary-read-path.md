@@ -59,6 +59,24 @@ record editing, prediction controls, settings, or other phone-only dashboard fea
 - The plugin template remains the source of truth for generated `android/wear`; its generated copy
   was kept byte-for-byte synchronized during implementation.
 
+## Review outcome
+
+- skipped (minor): TR-9 — Wake-window rendering shows the configured window rather than derived
+  awake/next-nap state — Owner explicitly chose to finish without remediating the remaining minor
+  findings.
+- skipped (minor): TR-10 — Compose rendering branches lack executable UI coverage — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-11 — Signed-in account and baby fields are no longer presented — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-12 — Stale session envelopes can trigger duplicate summary reloads — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-13 — Runtime snapshot decoding rejects additive unknown fields — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-14 — Offline baby selection is not persisted until a successful refresh —
+  Owner explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-15 — Selected-baby preferences are read synchronously during activity
+  creation — Owner explicitly chose to finish without remediating the remaining minor findings.
+
 ## Validation boundary
 
 No paired-emulator or phone↔watch synchronization check runs in this task. Prove the RPC client,
