@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
   createWearSessionPublisher,
+  type WearSessionPendingPublicationStore,
   type WearSessionPublisher,
   type WearSessionRevisionStore,
 } from "./wear-session-handoff";
@@ -11,6 +12,7 @@ import {
 } from "./wear-session-handoff-native";
 
 const PUBLICATION_REVISION_KEY = "@wear_session_publication_revision";
+const PENDING_PUBLICATION_KEY = "@wear_session_pending_publication";
 export const HANDLED_REFRESH_REVISION_KEY =
   "@wear_session_handled_refresh_revision";
 
@@ -24,6 +26,16 @@ export function wearSessionRevisionStore(key: string): WearSessionRevisionStore 
     async write(revision) {
       await AsyncStorage.setItem(key, String(revision));
     },
+  };
+}
+
+export function wearSessionPendingPublicationStore(
+  key: string
+): WearSessionPendingPublicationStore {
+  return {
+    read: () => AsyncStorage.getItem(key),
+    write: (envelopeJson) => AsyncStorage.setItem(key, envelopeJson),
+    clear: () => AsyncStorage.removeItem(key),
   };
 }
 
@@ -44,6 +56,9 @@ export function loadWearSessionPhoneRuntime(): WearSessionPhoneRuntime | null {
           bridge: adapter,
           revisionStore: wearSessionRevisionStore(PUBLICATION_REVISION_KEY),
           epochProvider: adapter.getInstallEpoch,
+          pendingPublicationStore: wearSessionPendingPublicationStore(
+            PENDING_PUBLICATION_KEY
+          ),
         }),
       }
     : null;

@@ -17,6 +17,7 @@ export function WearSessionSync(): null {
   const publisher = runtime?.publisher ?? null;
   const lastSignature = useRef<string | null>(null);
   const lastUserId = useRef<string | null>(null);
+  const publishingSignature = useRef<string | null>(null);
 
   useEffect(() => {
     if (!adapter) return;
@@ -57,9 +58,11 @@ export function WearSessionSync(): null {
       session.access_token,
       expiresAt,
     ].join(":");
-    if (lastSignature.current === signature) return;
-    lastSignature.current = signature;
-    lastUserId.current = user.id;
+    if (
+      lastSignature.current === signature ||
+      publishingSignature.current === signature
+    ) return;
+    publishingSignature.current = signature;
 
     const publishActive = () => target.publishActive({
       account: {
@@ -79,9 +82,19 @@ export function WearSessionSync(): null {
     const publication = accountChanged
       ? target.publishInvalidated("account-switched").then(publishActive)
       : publishActive();
-    void publication.catch(() => {
-      console.warn("[WearSessionSync] Watch session publication unavailable");
-    });
+    void publication
+      .then(() => {
+        lastSignature.current = signature;
+        lastUserId.current = user.id;
+      })
+      .catch(() => {
+        console.warn("[WearSessionSync] Watch session publication unavailable");
+      })
+      .finally(() => {
+        if (publishingSignature.current === signature) {
+          publishingSignature.current = null;
+        }
+      });
   }, [
     authLoading,
     babyLoading,

@@ -5,6 +5,19 @@ import {
   createWearSessionRefreshHandler,
 } from "./wear-session-handoff";
 
+function createPendingPublicationStore() {
+  let pending: string | null = null;
+  return {
+    read: async () => pending,
+    write: async (envelopeJson: string) => {
+      pending = envelopeJson;
+    },
+    clear: async () => {
+      pending = null;
+    },
+  };
+}
+
 describe("Wear session handoff", () => {
   it("binds active and invalidated state to the current phone install", async () => {
     const published: Array<Record<string, unknown>> = [];
@@ -22,6 +35,7 @@ describe("Wear session handoff", () => {
         },
       },
       epochProvider: async () => "phone-install-2",
+      pendingPublicationStore: createPendingPublicationStore(),
     };
     const publisher = createWearSessionPublisher(options);
 
@@ -47,6 +61,7 @@ describe("Wear session handoff", () => {
     const publisher = createWearSessionPublisher({
       bridge: { publishState },
       epochProvider: async () => "phone-install-1",
+      pendingPublicationStore: createPendingPublicationStore(),
       revisionStore: {
         read: async () => revision,
         write: async (next) => {
@@ -97,6 +112,7 @@ describe("Wear session handoff", () => {
     let revision = 7;
     const publisher = createWearSessionPublisher({
       epochProvider: async () => "phone-install-1",
+      pendingPublicationStore: createPendingPublicationStore(),
       bridge: {
         publishState: async (envelopeJson) => {
           published.push(JSON.parse(envelopeJson));
@@ -128,6 +144,7 @@ describe("Wear session handoff", () => {
     let revision = 0;
     const publisher = createWearSessionPublisher({
       epochProvider: async () => "phone-install-1",
+      pendingPublicationStore: createPendingPublicationStore(),
       bridge: {
         publishState: async (envelopeJson) => {
           revisions.push(JSON.parse(envelopeJson).revision);
@@ -148,6 +165,60 @@ describe("Wear session handoff", () => {
     ]);
 
     expect(revisions).toEqual([1, 2]);
+  });
+
+  it("replays a failed durable envelope before allocating a new revision", async () => {
+    const attempts: Array<Record<string, unknown>> = [];
+    let revision = -1;
+    let pending: string | null = null;
+    let rejectNext = true;
+    const options = {
+      epochProvider: async () => "phone-install-1",
+      bridge: {
+        publishState: async (envelopeJson: string) => {
+          attempts.push(JSON.parse(envelopeJson));
+          if (rejectNext) {
+            rejectNext = false;
+            throw new Error("data layer offline");
+          }
+        },
+      },
+      revisionStore: {
+        read: async () => revision,
+        write: async (next: number) => {
+          revision = next;
+        },
+      },
+      pendingPublicationStore: {
+        read: async () => pending,
+        write: async (envelopeJson: string) => {
+          pending = envelopeJson;
+        },
+        clear: async () => {
+          pending = null;
+        },
+      },
+    };
+    const publisher = createWearSessionPublisher(options);
+
+    await expect(publisher.publishInvalidated("signed-out")).rejects.toThrow(
+      "data layer offline"
+    );
+    expect(revision).toBe(-1);
+    expect(pending).not.toBeNull();
+
+    const restartedPublisher = createWearSessionPublisher(options);
+    await restartedPublisher.publishActive({
+      account: { id: "user-1", label: "Alex" },
+      baby: { id: "baby-1", name: "Sofi", timezone: "Europe/Belgrade" },
+      supabase: { url: "https://project.supabase.co", anonKey: "anon-key" },
+      accessToken: "access-token",
+      expiresAt: 1_800_000_000,
+    });
+
+    expect(attempts.map(({ revision: value }) => value)).toEqual([0, 0, 1]);
+    expect(revision).toBe(1);
+    expect(pending).toBeNull();
   });
 
   it("asks the phone to refresh once for each newer watch request", async () => {
