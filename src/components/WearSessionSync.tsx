@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { AppState } from "react-native";
 
 import { useAuth, useBaby } from "@/contexts";
 import { supabase } from "@/services/supabase";
@@ -28,17 +29,38 @@ export function WearSessionSync(): null {
       },
       wearSessionRevisionStore(HANDLED_REFRESH_REVISION_KEY)
     );
-    const safelyHandle = (revision: number) => {
-      void handleRequest(revision).catch(() => {
+    const safelyHandle = (revision: number): Promise<void> =>
+      handleRequest(revision).catch(() => {
         // The durable request remains pending and is retried on a later event or launch.
         console.warn("[WearSessionSync] Phone session refresh unavailable");
       });
+    let pendingRead: Promise<void> | null = null;
+    const readPending = (): Promise<void> => {
+      if (pendingRead) return pendingRead;
+      pendingRead = adapter
+        .getPendingRefreshRequest()
+        .then((revision) =>
+          revision === null ? undefined : safelyHandle(revision)
+        )
+        .catch(() => {
+          console.warn("[WearSessionSync] Pending refresh request unavailable");
+        })
+        .finally(() => {
+          pendingRead = null;
+        });
+      return pendingRead;
     };
-    const unsubscribe = adapter.subscribeRefreshRequests(safelyHandle);
-    void adapter.getPendingRefreshRequest().then((revision) => {
-      if (revision !== null) safelyHandle(revision);
+    const unsubscribe = adapter.subscribeRefreshRequests((revision) => {
+      void safelyHandle(revision);
     });
-    return unsubscribe;
+    void readPending();
+    const appStateSubscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void readPending();
+    });
+    return () => {
+      unsubscribe();
+      appStateSubscription.remove();
+    };
   }, [adapter]);
 
   useEffect(() => {
