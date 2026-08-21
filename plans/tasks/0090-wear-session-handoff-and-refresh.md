@@ -155,17 +155,17 @@ Alternatives considered:
 
 - [x] [confirm-security] Session-handoff design (transport, storage at rest, phone-owned refresh,
       invalidation) approved by the user on 2026-08-20 before implementation.
-- [ ] [confirm-security] Review the session-handoff implementation before merge — this moves
-      Supabase access-token material across the phone↔watch trust boundary.
+- [x] [confirm-security] Session-handoff implementation approved for merge by the user on
+      2026-08-21 after review remediation and explicit acceptance of TR-10 and TR-11.
 
 ## Acceptance criteria
 
-- [ ] Sign-in on phone results in the watch holding a working session (authenticated snapshot RPC
+- [x] Sign-in on phone results in the watch holding a working session (authenticated snapshot RPC
       returns 200).
-- [ ] A stale access token makes the watch request a phone refresh and accept the newer token when
+- [x] A stale access token makes the watch request a phone refresh and accept the newer token when
       delivered; the watch never receives or redeems a refresh token.
-- [ ] When the phone cannot refresh or is unreachable, the watch shows "reconnect from phone"; no
+- [x] When the phone cannot refresh or is unreachable, the watch shows "reconnect from phone"; no
       silent 401 loop.
-- [ ] Phone sign-out/account-switch clears the watch session.
-- [ ] Session at rest on the watch is encrypted; no token appears in logs.
+- [x] Phone sign-out/account-switch clears the watch session.
+- [x] Session at rest on the watch is encrypted; no token appears in logs.
 - [ ] All new tests green in CI.
