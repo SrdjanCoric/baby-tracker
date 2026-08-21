@@ -145,6 +145,8 @@ Alternatives considered:
   reports that caused an initial lint-only artifact failure. It passed again after the shared-signing
   fix and CI contract test. The passing canonical log is retained at
   `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/canonical.log`.
+- Remote proof: PR #252 passed dependency audit, lint and typecheck, the Android phone and Wear build
+  with Wear unit tests, and the required-check aggregator on executable SHA `55c754f`.
 - Keystore proof: the instrumented regression test passed on the local Wear OS 4 emulator. Adding an
   emulator-backed CI guard was deferred at the user's direction.
 - Paired-device verification is intentionally deferred to Task 0098's consolidated Wear
@@ -168,4 +170,4 @@ Alternatives considered:
       silent 401 loop.
 - [x] Phone sign-out/account-switch clears the watch session.
 - [x] Session at rest on the watch is encrypted; no token appears in logs.
-- [ ] All new tests green in CI.
+- [x] All new tests green in CI.
