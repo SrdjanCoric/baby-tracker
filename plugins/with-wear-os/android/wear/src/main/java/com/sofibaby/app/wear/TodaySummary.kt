@@ -272,6 +272,7 @@ class TodaySummaryRefreshDriver(
     private val onState: (TodaySummaryUiState) -> Unit,
     private val onUnauthorized: (Long) -> Unit,
     private val onSuccess: (Long) -> Unit = {},
+    private val onSessionScopeReset: () -> Unit = {},
 ) {
     fun prepareForSessionChange(
         current: WearSessionEnvelope.Active?,
@@ -282,6 +283,7 @@ class TodaySummaryRefreshDriver(
             current.phoneEpoch != next.phoneEpoch || current.account.id != next.account.id
         if (!scopeChanged) return
         coordinator.reset()
+        onSessionScopeReset()
         onState(coordinator.state)
     }
 

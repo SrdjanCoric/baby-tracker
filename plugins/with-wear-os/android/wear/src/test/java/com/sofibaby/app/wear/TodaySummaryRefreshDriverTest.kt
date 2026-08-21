@@ -115,6 +115,29 @@ class TodaySummaryRefreshDriverTest {
         assertEquals(null, error.lastSnapshot)
     }
 
+    @Test
+    fun sessionScopeChangeClearsThePersistedBabySelection() {
+        var clears = 0
+        val coordinator = TodaySummaryCoordinator(
+            babyDirectory = { error("unexpected directory load") },
+            snapshots = { error("unexpected snapshot load") },
+        )
+        val driver = TodaySummaryRefreshDriver(
+            session = { session() },
+            coordinator = coordinator,
+            onState = {},
+            onUnauthorized = { error("unexpected unauthorized") },
+            onSessionScopeReset = { clears += 1 },
+        )
+        val secondAccount = session(phoneEpoch = "phone-install-2", accountId = "user-2")
+
+        driver.prepareForSessionChange(session(), secondAccount)
+        driver.prepareForSessionChange(secondAccount, secondAccount.copy(revision = 4))
+        driver.prepareForSessionChange(secondAccount, WearSessionEnvelope.Invalidated("phone-install-2", 5, "signed_out"))
+
+        assertEquals(2, clears)
+    }
+
     private fun session(
         phoneEpoch: String = "phone-install-1",
         accountId: String = "user-1",

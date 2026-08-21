@@ -53,6 +53,9 @@ object WearSessionRuntime {
                 mutableState.value = coordinator?.state ?: WearSessionUiState.SignedOut
             },
             onSuccess = { revision -> coordinator?.onProbeSucceeded(revision) },
+            onSessionScopeReset = {
+                selectionStore?.edit()?.remove(SELECTED_BABY_KEY)?.apply()
+            },
         )
         mutableState.value = requireNotNull(coordinator).state
         loadLatest(applicationContext)
