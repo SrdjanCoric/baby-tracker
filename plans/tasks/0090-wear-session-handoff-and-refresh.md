@@ -129,6 +129,24 @@ Alternatives considered:
 - skipped (minor): TR-17 — Signed-out cold launches repeatedly publish invalidations — user directed all minor issues to be skipped.
 - skipped (minor): TR-18 — Plugin tests assert copied source text rather than behavior — user directed all minor issues to be skipped.
 
+### Finish-task record (2026-08-21)
+
+- README disposition: updated **Wear OS Native Integration** to document the generated Wear module
+  and phone bridge, refresh service, registration, and build wiring. The `write-well` audit covered
+  the affected section and completed cleanly in two passes.
+- Review outcome: TR-1 through TR-7 fixed; TR-8, TR-9, and TR-12 through TR-18 skipped as minor
+  findings at the user's direction; TR-10 and TR-11 accepted as non-issue security risks at the
+  user's direction.
+- Automated proof: `npm run check:code` passed after removing only ignored generated Android test
+  reports that caused an initial lint-only artifact failure. The passing canonical log is retained
+  at `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/canonical.log`.
+- Keystore proof: the instrumented regression test passed on the local Wear OS 4 emulator. Adding an
+  emulator-backed CI guard was deferred at the user's direction.
+- Manual verification remains pending: pair a Wear OS 4 emulator with an Android emulator, sign in
+  on the phone, and confirm the watch shows the selected baby; sign out on the phone and confirm the
+  watch becomes signed out. This is the `[verify]` cross-device Data Layer check and is not covered
+  by the canonical non-device gate.
+
 ## Human checkpoints
 
 - [x] [confirm-security] Session-handoff design (transport, storage at rest, phone-owned refresh,

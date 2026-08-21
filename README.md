@@ -146,9 +146,10 @@ When the latest completed sleep is the current evening's stored `night` session,
 ### Wear OS Native Integration
 
 - **Wear OS companion app** for Wear OS 4+ uses native Kotlin and Compose and requires the phone app.
-  [`plugins/with-wear-os/`](plugins/with-wear-os/) contains the tracked `:wear` Gradle module and
-  Expo config plugin. Expo prebuild copies that module to `android/wear`, so edit the plugin source
-  rather than the generated Android directory.
+  [`plugins/with-wear-os/`](plugins/with-wear-os/) is the source of truth for the Wear module and
+  phone bridge. Expo prebuild copies the Wear module to `android/wear`, adds the bridge and refresh
+  service to the generated phone app, registers both integrations, and adds the Wearable dependency.
+  Edit the plugin sources rather than generated files under `android/`.
 
 ### Edge Functions
 
