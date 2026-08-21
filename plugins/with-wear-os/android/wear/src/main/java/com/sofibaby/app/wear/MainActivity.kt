@@ -147,7 +147,7 @@ private fun SummaryContent(
             SummaryCard(row.label, "${row.value}\n${row.detail}")
         }
         Text(
-            "Updated ${snapshot.updatedAt}",
+            "Updated ${presentation.updatedAgo}",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )

@@ -1,5 +1,8 @@
 package com.sofibaby.app.wear
 
+import java.time.Duration
+import java.time.Instant
+
 fun interface BabyDirectoryLoader {
     fun load(session: WearSessionEnvelope.Active): BabyDirectoryOutcome
 }
@@ -145,13 +148,17 @@ class TodaySummaryCoordinator(
 data class TodaySummaryPresentation(
     val rows: List<SummaryRow>,
     val timers: List<TimerRow>,
+    val updatedAgo: String,
 ) {
     data class SummaryRow(val label: String, val value: String, val detail: String)
     data class TimerRow(val title: String, val detail: String)
 }
 
 object TodaySummaryProjector {
-    fun project(snapshot: ActivitySnapshot): TodaySummaryPresentation {
+    fun project(
+        snapshot: ActivitySnapshot,
+        now: Instant = Instant.now(),
+    ): TodaySummaryPresentation {
         val activity = snapshot.activities
         val sleepDetails = buildList {
             add("${activity.sleep.todayMinutes} min today · ${activity.sleep.goalMinutes} min goal")
@@ -164,29 +171,29 @@ object TodaySummaryProjector {
             TodaySummaryPresentation.SummaryRow(
                 "Feeding",
                 "${activity.feeding.todayCount} today",
-                recent(activity.feeding.lastTime, listOfNotNull(activity.feeding.lastType, activity.feeding.lastSide)),
+                recent(activity.feeding.lastTime, listOfNotNull(activity.feeding.lastType, activity.feeding.lastSide), now),
             ),
             TodaySummaryPresentation.SummaryRow(
                 "Sleep",
                 activity.sleep.lastDurationMinutes?.let { "$it min last sleep" } ?: "No completed sleep",
-                listOf(sleepDetails, recent(activity.sleep.lastTime, emptyList())).filter { it.isNotBlank() }.joinToString(" · "),
+                listOf(sleepDetails, recent(activity.sleep.lastTime, emptyList(), now)).filter { it.isNotBlank() }.joinToString(" · "),
             ),
             TodaySummaryPresentation.SummaryRow(
                 "Diaper",
                 "Wet ${counts.wet} · Dirty ${counts.dirty} · Mixed ${counts.mixed} · Dry ${counts.dry}",
-                recent(activity.diaper.lastTime, listOfNotNull(activity.diaper.lastType)),
+                recent(activity.diaper.lastTime, listOfNotNull(activity.diaper.lastType), now),
             ),
             TodaySummaryPresentation.SummaryRow(
                 "Pumping",
                 "${number(activity.pumping.todayVolumeMl)} ml · ${activity.pumping.sessionCount} sessions",
-                recent(activity.pumping.lastTime, listOfNotNull(activity.pumping.lastSide)),
+                recent(activity.pumping.lastTime, listOfNotNull(activity.pumping.lastSide), now),
             ),
             TodaySummaryPresentation.SummaryRow(
                 "Tummy time",
                 "${activity.tummyTime.todayMinutes} min today",
                 listOf(
                     "${activity.tummyTime.goalMinutes} min goal",
-                    recent(activity.tummyTime.lastTime, activity.tummyTime.lastDurationMinutes?.let { listOf("$it min") } ?: emptyList()),
+                    recent(activity.tummyTime.lastTime, activity.tummyTime.lastDurationMinutes?.let { listOf("$it min") } ?: emptyList(), now),
                 ).joinToString(" · "),
             ),
         )
@@ -199,15 +206,32 @@ object TodaySummaryProjector {
                 timer.context?.let(::add)
                 if (timer.isPaused == true) add("paused")
                 if (timer.isRemote == true) add("another caregiver")
-                add("Started ${timer.startTime}")
+                add("Started ${elapsedSince(timer.startTime, now)} ago")
             }
             TodaySummaryPresentation.TimerRow("$label active", details.joinToString(" · "))
         }
-        return TodaySummaryPresentation(rows, timers)
+        return TodaySummaryPresentation(rows, timers, elapsedSince(snapshot.updatedAt, now))
     }
 
-    private fun recent(time: String?, facts: List<String>): String =
-        (facts + listOfNotNull(time?.let { "Last $it" })).ifEmpty { listOf("No entries yet") }.joinToString(" · ")
+    private fun recent(time: String?, facts: List<String>, now: Instant): String =
+        (facts + listOfNotNull(time?.let { "Last ${elapsedSince(it, now)}" }))
+            .ifEmpty { listOf("No entries yet") }
+            .joinToString(" · ")
+
+    private fun elapsedSince(value: String, now: Instant): String {
+        val instant = runCatching { Instant.parse(value) }.getOrNull() ?: return "--"
+        val totalMinutes = Duration.between(instant, now).seconds.coerceAtLeast(0) / 60
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        val days = hours / 24
+        return when {
+            days >= 365 -> "${days / 365}y"
+            days >= 60 -> "${(days / 30).coerceAtMost(11)}mo"
+            days >= 1 -> "${days}d"
+            hours > 0 -> "${hours}h ${minutes}m"
+            else -> "${totalMinutes}m"
+        }
+    }
 
     private fun number(value: Double): String =
         if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
