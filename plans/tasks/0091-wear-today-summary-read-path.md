@@ -4,6 +4,8 @@
 **Depends on**: 0090
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I glance at my watch and see today's activity for my baby.
 
+**Change class**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 The watch's read path: fetch the day's data via the existing `get_baby_activity_snapshot` Supabase
@@ -26,15 +28,36 @@ record editing, prediction controls, settings, or other phone-only dashboard fea
 
 ## Implementation work
 
-- [ ] Kotlin data models mirroring the snapshot payload (all activity types, active timers, goals),
+- [x] Kotlin data models mirroring the snapshot payload (all activity types, active timers, goals),
       with a comment pointing at the Swift models as the parity reference.
-- [ ] Fixture-based serialization tests: captured real snapshot JSON decodes into the models with
+- [x] Fixture-based serialization tests: captured real snapshot JSON decodes into the models with
       every field asserted (the drift guard).
-- [ ] Snapshot fetch client using the 0090 session; refresh on app open and on wake.
-- [ ] Today summary Compose screen with parity content; loading, error+retry, and empty states.
-- [ ] Selected-baby picker when the household has multiple babies, matching the Apple Watch's
+- [x] Snapshot fetch client using the 0090 session; refresh on app open and on wake.
+- [x] Today summary Compose screen with parity content; loading, error+retry, and empty states.
+- [x] Selected-baby picker when the household has multiple babies, matching the Apple Watch's
       baby-selection behavior and refreshing the chosen baby's snapshot.
-- [ ] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
+- [x] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
+
+## Implementation decisions
+
+- The settled 0090 session envelope remains unchanged. The watch loads the household's baby
+  identities directly from the existing RLS-scoped `babies` REST read, persists its own selection,
+  and continues to send the identity payload's timezone to the snapshot RPC.
+- The dedicated Kotlin fixture was captured from the real migration 061 RPC against the isolated
+  local Supabase vector household. The rollback-only capture populated all activity sections and
+  four timers, including context, pause, remote-owner, and accumulated-time fields. The decoder
+  rejects unknown fields, and the fixture test asserts every modeled leaf so drift is visible.
+- Growth remains decoded for drift protection but is not rendered, matching the Apple Watch parity
+  boundary. No history, charts, editing, prediction controls, or settings were added.
+
+## Implementation evidence
+
+- RED/GREEN cycles cover exhaustive fixture decoding and strict drift rejection; authenticated RPC
+  request construction and response decoding; the RLS-scoped baby directory; loading, content,
+  empty, error/retry, and selection state; parity presentation; launch/wake refresh; and 401 session
+  rejection.
+- The plugin template remains the source of truth for generated `android/wear`; its generated copy
+  was kept byte-for-byte synchronized during implementation.
 
 ## Validation boundary
 
@@ -44,9 +67,10 @@ the consolidated end-to-end device pass.
 
 ## Acceptance criteria
 
-- [ ] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
+- [x] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
       fetched and rendered correctly.
-- [ ] Serialization fixture tests cover every snapshot field and are green in CI.
-- [ ] Network failure shows error + retry; retry after connectivity returns succeeds.
-- [ ] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
-- [ ] No backend changes in the diff.
+- [ ] Serialization fixture tests cover every snapshot field and are green in CI. Local Wear unit
+      tests pass; CI proof belongs to the later PR workflow.
+- [x] Network failure shows error + retry; retry after connectivity returns succeeds.
+- [x] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
+- [x] No backend changes in the diff.

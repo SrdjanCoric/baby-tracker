@@ -161,9 +161,13 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
       manifest,
       /android:name="android\.intent\.category\.LAUNCHER"/
     );
-    assert.match(activity, /WearSessionScreen\(WearSessionRuntime\.state\.value\)/);
+    assert.match(activity, /sessionState = WearSessionRuntime\.state\.value/);
+    assert.match(activity, /todayState = WearSessionRuntime\.todayState\.value/);
+    assert.match(activity, /WearSessionRuntime\.onWake\(\)/);
     assert.match(activity, /Reconnect from phone/);
-    assert.match(activity, /state\.babyName/);
+    assert.match(activity, /Could not refresh today's activity/);
+    assert.match(activity, /No activity yet today/);
+    assert.match(activity, /onSelectBaby\(baby\.id\)/);
     assert.match(state, /Sign in on your phone to continue\./);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
