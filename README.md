@@ -149,7 +149,11 @@ When the latest completed sleep is the current evening's stored `night` session,
   [`plugins/with-wear-os/`](plugins/with-wear-os/) is the source of truth for the Wear module and
   phone bridge. Expo prebuild copies the Wear module to `android/wear`, adds the bridge and refresh
   service to the generated phone app, registers both integrations, and adds the Wearable dependency.
-  Edit the plugin sources rather than generated files under `android/`.
+  Edit the plugin sources rather than generated files under `android/`. Signed-in caregivers can
+  choose a baby and read today's feeding, sleep, diaper, pumping, tummy-time, goals, and active-timer
+  summary directly on the watch. The summary refreshes when the app opens or wakes. A failed refresh
+  keeps the last summary for that baby visible with Retry; an account change clears the cached
+  summary and baby selection before new data loads.
 
 ### Edge Functions
 

@@ -87,8 +87,27 @@ the consolidated end-to-end device pass.
 
 - [x] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
       fetched and rendered correctly.
-- [ ] Serialization fixture tests cover every snapshot field and are green in CI. Local Wear unit
+- [x] Serialization fixture tests cover every snapshot field and are green in CI. Local Wear unit
       tests pass; CI proof belongs to the later PR workflow.
 - [x] Network failure shows error + retry; retry after connectivity returns succeeds.
 - [x] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
 - [x] No backend changes in the diff.
+
+## Completion record
+
+- Built the authenticated Wear summary read path under
+  `plugins/with-wear-os/android/wear/src/main/java/com/sofibaby/app/wear/`, including the RPC and
+  directory clients, snapshot model, summary coordinator, Compose screen, baby picker, retry state,
+  elapsed-time presentation, and lifecycle-gated active-timer updates.
+- Kept the plugin template authoritative and synchronized its generated `android/wear` copy.
+- Updated the Wear OS section of `README.md` to describe the summary, wake refresh, stale-data retry,
+  and account-change isolation behavior. The affected prose passed a two-pass `write-well` audit;
+  pass 1 simplified the cache description, and pass 2 found no remaining issues.
+- Review resolved TR-1 through TR-8 as fixed. TR-9 through TR-15 were skipped as minor because the
+  owner explicitly chose to finish without remediating the remaining minor findings; the individual
+  decisions are recorded above.
+- `npm run check:code` passed on 2026-08-21 after generated Wear test output was cleaned from the
+  lint input. The canonical gate covered lint, type checking, unit and component tests, CI workflow
+  tests, native Swift checks, and the production bundle gate.
+- No manual device or simulator verification was required. Task 0098 owns the consolidated
+  phone-to-watch device pass.
