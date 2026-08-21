@@ -121,7 +121,11 @@ class EncryptedSessionVault(
 ) {
     fun apply(envelope: WearSessionEnvelope): Boolean {
         val current = readEnvelope()
-        if (current != null && envelope.revision <= current.revision) {
+        if (
+            current != null &&
+            envelope.phoneEpoch == current.phoneEpoch &&
+            envelope.revision <= current.revision
+        ) {
             return false
         }
         val plaintext = WearSessionEnvelopeCodec.encode(envelope).toByteArray(StandardCharsets.UTF_8)

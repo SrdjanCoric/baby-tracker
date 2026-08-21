@@ -27,6 +27,7 @@ export interface WearSessionActiveInput {
 
 interface WearActiveSessionEnvelopeV1 extends WearSessionActiveInput {
   version: 1;
+  phoneEpoch: string;
   revision: number;
   disposition: "active";
 }
@@ -38,6 +39,7 @@ export type WearSessionInvalidationReason =
 
 interface WearInvalidatedSessionEnvelopeV1 {
   version: 1;
+  phoneEpoch: string;
   revision: number;
   disposition: "invalidated";
   reason: WearSessionInvalidationReason;
@@ -81,6 +83,7 @@ export function createWearSessionRefreshHandler(
 export function createWearSessionPublisher(options: {
   bridge: WearSessionBridge;
   revisionStore: WearSessionRevisionStore;
+  epochProvider: () => Promise<string>;
 }): WearSessionPublisher {
   let publicationTail: Promise<void> = Promise.resolve();
 
@@ -101,6 +104,7 @@ export function createWearSessionPublisher(options: {
       return enqueue(async () => {
         const envelope: WearActiveSessionEnvelopeV1 = {
           version: 1,
+          phoneEpoch: await options.epochProvider(),
           revision: await nextRevision(),
           disposition: "active",
           ...input,
@@ -112,6 +116,7 @@ export function createWearSessionPublisher(options: {
       return enqueue(async () => {
         const envelope: WearInvalidatedSessionEnvelopeV1 = {
           version: 1,
+          phoneEpoch: await options.epochProvider(),
           revision: await nextRevision(),
           disposition: "invalidated",
           reason,

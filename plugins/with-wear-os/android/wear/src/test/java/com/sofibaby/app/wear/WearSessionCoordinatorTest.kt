@@ -44,7 +44,7 @@ class WearSessionCoordinatorTest {
         assertEquals("access-token", coordinator.accessToken(nowEpochSeconds = 1_000))
         assertEquals("Sofi", (coordinator.state as WearSessionUiState.SignedIn).babyName)
 
-        coordinator.accept(WearSessionEnvelope.Invalidated(6, "signed_out"))
+        coordinator.accept(WearSessionEnvelope.Invalidated("phone-install-1", 6, "signed_out"))
         assertEquals(WearSessionUiState.SignedOut, coordinator.state)
         assertNull(coordinator.accessToken(nowEpochSeconds = 1_000))
     }
@@ -78,6 +78,7 @@ class WearSessionCoordinatorTest {
     }
 
     private fun active(revision: Long, expiresAt: Long) = WearSessionEnvelope.Active(
+        phoneEpoch = "phone-install-1",
         revision = revision,
         account = WearSessionEnvelope.Account("user-1", "Alex"),
         baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),

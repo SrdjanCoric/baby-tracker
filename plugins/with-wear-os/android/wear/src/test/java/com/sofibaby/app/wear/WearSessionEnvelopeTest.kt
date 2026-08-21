@@ -10,6 +10,7 @@ class WearSessionEnvelopeTest {
         val json = """
             {
               "version": 1,
+              "phoneEpoch": "phone-install-1",
               "revision": 41,
               "disposition": "active",
               "account": {"id": "user-1", "label": "Alex"},
@@ -22,6 +23,7 @@ class WearSessionEnvelopeTest {
 
         val decoded = WearSessionEnvelopeCodec.decode(json) as WearSessionEnvelope.Active
 
+        assertEquals("phone-install-1", decoded.phoneEpoch)
         assertEquals(41L, decoded.revision)
         assertEquals("Alex", decoded.account.label)
         assertEquals("Sofi", decoded.baby.name)

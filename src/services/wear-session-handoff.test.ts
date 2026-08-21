@@ -6,12 +6,47 @@ import {
 } from "./wear-session-handoff";
 
 describe("Wear session handoff", () => {
+  it("binds active and invalidated state to the current phone install", async () => {
+    const published: Array<Record<string, unknown>> = [];
+    let revision = -1;
+    const options = {
+      bridge: {
+        publishState: async (envelopeJson: string) => {
+          published.push(JSON.parse(envelopeJson));
+        },
+      },
+      revisionStore: {
+        read: async () => revision,
+        write: async (next: number) => {
+          revision = next;
+        },
+      },
+      epochProvider: async () => "phone-install-2",
+    };
+    const publisher = createWearSessionPublisher(options);
+
+    await publisher.publishActive({
+      account: { id: "user-1", label: "Alex" },
+      baby: { id: "baby-1", name: "Sofi", timezone: "Europe/Belgrade" },
+      supabase: { url: "https://project.supabase.co", anonKey: "anon-key" },
+      accessToken: "access-token",
+      expiresAt: 1_800_000_000,
+    });
+    await publisher.publishInvalidated("signed-out");
+
+    expect(published.map(({ phoneEpoch }) => phoneEpoch)).toEqual([
+      "phone-install-2",
+      "phone-install-2",
+    ]);
+  });
+
   it("publishes only the current access token and selected identity", async () => {
     const publishState = vi.fn<(envelopeJson: string) => Promise<void>>()
       .mockResolvedValue(undefined);
     let revision = 40;
     const publisher = createWearSessionPublisher({
       bridge: { publishState },
+      epochProvider: async () => "phone-install-1",
       revisionStore: {
         read: async () => revision,
         write: async (next) => {
@@ -38,6 +73,7 @@ describe("Wear session handoff", () => {
     const envelope = JSON.parse(publishState.mock.calls[0][0]);
     expect(envelope).toEqual({
       version: 1,
+      phoneEpoch: "phone-install-1",
       revision: 41,
       disposition: "active",
       account: { id: "user-1", label: "Alex" },
@@ -60,6 +96,7 @@ describe("Wear session handoff", () => {
     const published: Array<Record<string, unknown>> = [];
     let revision = 7;
     const publisher = createWearSessionPublisher({
+      epochProvider: async () => "phone-install-1",
       bridge: {
         publishState: async (envelopeJson) => {
           published.push(JSON.parse(envelopeJson));
@@ -78,6 +115,7 @@ describe("Wear session handoff", () => {
     expect(published).toEqual([
       {
         version: 1,
+        phoneEpoch: "phone-install-1",
         revision: 8,
         disposition: "invalidated",
         reason: "signed-out",
@@ -89,6 +127,7 @@ describe("Wear session handoff", () => {
     const revisions: number[] = [];
     let revision = 0;
     const publisher = createWearSessionPublisher({
+      epochProvider: async () => "phone-install-1",
       bridge: {
         publishState: async (envelopeJson) => {
           revisions.push(JSON.parse(envelopeJson).revision);

@@ -6,6 +6,7 @@ const REFRESH_REQUESTED_EVENT = "WearSessionRefreshRequested";
 
 export interface WearSessionNativeModule {
   publishState(envelopeJson: string): Promise<void>;
+  getInstallEpoch(): Promise<string>;
   getPendingRefreshRequest(): Promise<number | null>;
   addListener(eventName: string): void;
   removeListeners(count: number): void;
@@ -23,6 +24,7 @@ export interface WearSessionEventSource {
 }
 
 export interface WearSessionNativeAdapter extends WearSessionBridge {
+  getInstallEpoch(): Promise<string>;
   getPendingRefreshRequest(): Promise<number | null>;
   subscribeRefreshRequests(listener: (revision: number) => void): () => void;
 }
@@ -33,6 +35,7 @@ export function createWearSessionNativeAdapter(
 ): WearSessionNativeAdapter {
   return {
     publishState: (envelopeJson) => module.publishState(envelopeJson),
+    getInstallEpoch: () => module.getInstallEpoch(),
     getPendingRefreshRequest: () => module.getPendingRefreshRequest(),
     subscribeRefreshRequests(listener) {
       const subscription = events.addListener(REFRESH_REQUESTED_EVENT, listener);

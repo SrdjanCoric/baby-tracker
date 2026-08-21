@@ -28,6 +28,7 @@ class EncryptedSessionVaultTest {
             cipher = AesGcmSessionCipher { key },
         )
         val envelope = WearSessionEnvelope.Active(
+            phoneEpoch = "phone-install-1",
             revision = 9,
             account = WearSessionEnvelope.Account("user-1", "Alex"),
             baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
@@ -60,6 +61,7 @@ class EncryptedSessionVaultTest {
         val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
         val vault = EncryptedSessionVault(store, AesGcmSessionCipher { key })
         val active = WearSessionEnvelope.Active(
+            phoneEpoch = "phone-install-1",
             revision = 9,
             account = WearSessionEnvelope.Account("user-1", "Alex"),
             baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
@@ -69,9 +71,40 @@ class EncryptedSessionVaultTest {
         )
 
         assertTrue(vault.apply(active))
-        assertTrue(vault.apply(WearSessionEnvelope.Invalidated(10, "signed_out")))
+        assertTrue(vault.apply(WearSessionEnvelope.Invalidated("phone-install-1", 10, "signed_out")))
         assertEquals(null, vault.readActive())
         assertFalse(vault.apply(active))
+        assertEquals(null, vault.readActive())
+    }
+
+    @Test
+    fun newPhoneInstallCanResetTheRevisionFloorWithInvalidation() {
+        var stored: ByteArray? = null
+        val store = object : SessionBlobStore {
+            override fun read(): ByteArray? = stored
+
+            override fun write(bytes: ByteArray) {
+                stored = bytes.copyOf()
+            }
+
+            override fun delete() {
+                stored = null
+            }
+        }
+        val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+        val vault = EncryptedSessionVault(store, AesGcmSessionCipher { key })
+        val previousInstall = WearSessionEnvelope.Active(
+            phoneEpoch = "phone-install-1",
+            revision = 12,
+            account = WearSessionEnvelope.Account("user-1", "Alex"),
+            baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
+            supabase = WearSessionEnvelope.Supabase("https://project.supabase.co", "anon-key"),
+            accessToken = "old-access-token",
+            expiresAt = 1_800_000_000,
+        )
+
+        assertTrue(vault.apply(previousInstall))
+        assertTrue(vault.apply(WearSessionEnvelope.Invalidated("phone-install-2", 0, "signed_out")))
         assertEquals(null, vault.readActive())
     }
 }

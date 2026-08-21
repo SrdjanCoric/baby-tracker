@@ -43,6 +43,7 @@ export function loadWearSessionPhoneRuntime(): WearSessionPhoneRuntime | null {
         publisher: createWearSessionPublisher({
           bridge: adapter,
           revisionStore: wearSessionRevisionStore(PUBLICATION_REVISION_KEY),
+          epochProvider: adapter.getInstallEpoch,
         }),
       }
     : null;

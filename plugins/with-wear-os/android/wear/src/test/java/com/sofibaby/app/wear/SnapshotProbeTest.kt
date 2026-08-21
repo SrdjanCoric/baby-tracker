@@ -38,6 +38,7 @@ class SnapshotProbeTest {
     }
 
     private fun active() = WearSessionEnvelope.Active(
+        phoneEpoch = "phone-install-1",
         revision = 3,
         account = WearSessionEnvelope.Account("user-1", "Alex"),
         baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
