@@ -114,6 +114,10 @@ Alternatives considered:
   and republish path. Six focused TypeScript tests, typecheck, and changed-file lint pass.
 - `:app:assembleDebug` and `:wear:assembleDebug` both pass. Focused logs are retained under
   `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/`.
+- The Wear Gradle template inherits the phone module's debug and release signing identities. The
+  plugin contract test guards both build types, and locally assembled phone and Wear APKs report
+  the same SHA-1 signer digest, preventing Google Play services from rejecting Data Layer delivery
+  with a mismatched-certificate error.
 
 ## Review decisions
 
@@ -138,14 +142,14 @@ Alternatives considered:
   findings at the user's direction; TR-10 and TR-11 accepted as non-issue security risks at the
   user's direction.
 - Automated proof: `npm run check:code` passed after removing only ignored generated Android test
-  reports that caused an initial lint-only artifact failure. The passing canonical log is retained
-  at `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/canonical.log`.
+  reports that caused an initial lint-only artifact failure. It passed again after the shared-signing
+  fix and CI contract test. The passing canonical log is retained at
+  `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/canonical.log`.
 - Keystore proof: the instrumented regression test passed on the local Wear OS 4 emulator. Adding an
   emulator-backed CI guard was deferred at the user's direction.
-- Manual verification remains pending: pair a Wear OS 4 emulator with an Android emulator, sign in
-  on the phone, and confirm the watch shows the selected baby; sign out on the phone and confirm the
-  watch becomes signed out. This is the `[verify]` cross-device Data Layer check and is not covered
-  by the canonical non-device gate.
+- Paired-device verification is intentionally deferred to Task 0098's consolidated Wear
+  integration matrix. Task 0090 closes on its automated transport, state-machine, encryption,
+  refresh, invalidation, build, and CI proofs.
 
 ## Human checkpoints
 
@@ -153,10 +157,6 @@ Alternatives considered:
       invalidation) approved by the user on 2026-08-20 before implementation.
 - [ ] [confirm-security] Review the session-handoff implementation before merge — this moves
       Supabase access-token material across the phone↔watch trust boundary.
-- [ ] [verify] Pair Wear OS 4 emulator with Android emulator; sign in on phone. · Expected: watch
-      shows signed-in state with baby name; sign out on phone returns watch to signed-out screen.
-      · Failure: watch stays signed out, or stays signed in after phone sign-out. · Reason:
-      cross-device Data Layer delivery cannot be asserted in unit tests.
 
 ## Acceptance criteria
 

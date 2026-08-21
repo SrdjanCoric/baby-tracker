@@ -36,9 +36,16 @@ record editing, prediction controls, settings, or other phone-only dashboard fea
       baby-selection behavior and refreshing the chosen baby's snapshot.
 - [ ] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
 
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove the RPC client,
+model drift guard, rendering, refresh, and error recovery at automated seams; Task 0098 performs
+the consolidated end-to-end device pass.
+
 ## Acceptance criteria
 
-- [ ] Watch shows real today data for the signed-in household's selected baby on emulator.
+- [ ] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
+      fetched and rendered correctly.
 - [ ] Serialization fixture tests cover every snapshot field and are green in CI.
 - [ ] Network failure shows error + retry; retry after connectivity returns succeeds.
 - [ ] No phone-only dashboard, history, charting, editing, or settings surface is introduced.

@@ -41,10 +41,16 @@ Durable decisions this task must respect (from the brief):
 - [ ] Tests: write payload construction matches the phone app's row shape (field-level fixture
       comparison), failure path surfaces error + retry, duplicate-tap yields one row.
 
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove write payloads,
+RLS-compatible persistence, retry behavior, and duplicate protection through automated seams;
+Task 0098 verifies watch-to-phone visibility with the completed Wear feature set.
+
 ## Acceptance criteria
 
-- [ ] Diaper logged on watch appears in the database with the same row shape a phone-written
-      diaper entry has, and appears on the phone after its refresh.
+- [ ] Automated integration proof shows a watch-built diaper payload persists with the same row
+      shape as a phone-written entry and is readable through the shared snapshot path.
 - [ ] Airplane-mode write shows visible failure + retry; retry succeeds after reconnect.
 - [ ] Rapid double-tap creates exactly one row.
 - [ ] Tests green in CI; no backend changes.

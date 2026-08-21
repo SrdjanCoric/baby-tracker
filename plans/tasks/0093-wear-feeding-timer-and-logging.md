@@ -39,18 +39,17 @@ Durable decisions this task must respect (from the brief):
 - [ ] Tests: timer row shape fixture-matches phone rows; already-active-type rule; restart
       resumes running timer from snapshot; completed feed row shape parity.
 
-## Human checkpoints
+## Validation boundary
 
-- [ ] [verify] Paired emulators: start feed timer on phone, open watch app; then start one on
-      watch, check phone. · Expected: each device shows the other's running timer with sensible
-      elapsed time; stopping on either completes it everywhere after refresh. · Failure: timer
-      missing, duplicated, or wrong elapsed time. · Reason: cross-device end-to-end timing spans
-      two emulators and the live backend; not unit-assertable.
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove timer persistence,
+snapshot restoration, row parity, and elapsed-time logic through automated seams; Task 0098 owns
+the bidirectional phone↔watch timer pass.
 
 ## Acceptance criteria
 
 - [ ] Feed timer full lifecycle from watch produces the same rows a phone-run timer produces.
-- [ ] Cross-device visibility proven both directions.
+- [ ] Automated snapshot tests cover phone-started and watch-started timer visibility in both
+      directions; manual paired-device proof is deferred to Task 0098.
 - [ ] Watch app restart during a running timer resumes display correctly.
 - [ ] Feeding logs carry parity fields; tests green in CI; no backend changes.
 - [ ] Solids, notes, manual timestamps, history, and saved-record editing are absent.

@@ -52,6 +52,11 @@ zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner =
   refresh token and shows a reconnect-from-phone state when its access token is stale. No offline
   write queue in v1; Tizen permanently out of scope. Decision record:
   `plans/wear-os-watch-parity.md`, superseded for token ownership by Task 0090's design.
+- **Wear OS integration validation (2026-08-21)**: Tasks 0090–0097 close on automated seam tests,
+  Android builds, and CI only. Do not pause those tasks for paired phone↔watch synchronization
+  checks. Task 0098 owns one consolidated end-to-end matrix covering session handoff, summaries,
+  every activity flow, shared timers, invalidation, refresh recovery, and the complication after
+  all Wear features are present.
 - **Schema shape**: each synced table gets `field_clocks JSONB NOT NULL DEFAULT '{}'` (map of
   column name → HLC string) and `deleted BOOLEAN NOT NULL DEFAULT FALSE`, plus a partial index
   `WHERE deleted = false`. Empty/missing clock entries compare as epoch — legacy rows lose to any

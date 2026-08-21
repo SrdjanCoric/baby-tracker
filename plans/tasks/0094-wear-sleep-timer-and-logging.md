@@ -27,9 +27,15 @@ sleep entry, nap/night choice, overlap handling, morning-classification answers,
 - [ ] Tests: sleep row/timer shape fixture-matches phone rows; already-active rule; summary
       reflects completed sleep.
 
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove the shared timer,
+snapshot, and row-parity behavior through automated seams; Task 0098 owns the end-to-end device
+pass.
+
 ## Acceptance criteria
 
-- [ ] Sleep timer lifecycle from watch produces phone-identical rows and appears on the phone.
-- [ ] Phone-started sleep timer visible on watch.
+- [ ] Automated integration proof shows the watch sleep lifecycle produces phone-identical rows.
+- [ ] Snapshot tests prove a phone-started sleep timer renders on the watch.
 - [ ] Tests green in CI; no backend changes.
 - [ ] Manual sleep entry, classification controls, overlap handling, history, and editing are absent.

@@ -23,8 +23,14 @@ summary. Do not add an untimed pumping form, notes, manual timestamps, history, 
       summary fields.
 - [ ] Tests: pumping row shape fixture-matches phone rows; summary reflects the entry.
 
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove pumping payload,
+timer, and summary behavior through automated seams; Task 0098 verifies end-to-end visibility.
+
 ## Acceptance criteria
 
-- [ ] Pumping logged from watch appears with phone-identical row shape and shows on the phone.
+- [ ] Automated integration proof shows pumping from the watch produces a phone-identical row that
+      is readable through the shared snapshot path.
 - [ ] Tests green in CI; no backend changes.
 - [ ] Untimed manual pumping, notes, manual timestamps, history, and editing are absent.
