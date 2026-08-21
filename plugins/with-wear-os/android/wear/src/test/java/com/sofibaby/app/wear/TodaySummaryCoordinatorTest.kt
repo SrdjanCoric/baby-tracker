@@ -109,6 +109,25 @@ class TodaySummaryCoordinatorTest {
         assertTrue(coordinator.state is TodaySummaryUiState.Empty)
     }
 
+    @Test
+    fun wakeRefreshKeepsRenderedSummaryVisibleWhileLoading() {
+        lateinit var coordinator: TodaySummaryCoordinator
+        var snapshotCalls = 0
+        coordinator = TodaySummaryCoordinator(
+            babyDirectory = { BabyDirectoryOutcome.Success(babies()) },
+            snapshots = {
+                snapshotCalls += 1
+                if (snapshotCalls > 1) assertTrue(coordinator.state is TodaySummaryUiState.Content)
+                SnapshotOutcome.Success(snapshot())
+            },
+        )
+        coordinator.refresh(session(), reloadBabies = true)
+
+        coordinator.refresh(session(), reloadBabies = false)
+
+        assertTrue(coordinator.state is TodaySummaryUiState.Content)
+    }
+
     private fun babies() = listOf(
         BabyIdentity("baby-1", "Sofi", "Europe/Belgrade"),
         BabyIdentity("baby-2", "Leo", "Europe/Belgrade"),

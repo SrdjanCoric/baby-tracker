@@ -116,7 +116,7 @@ class TodaySummaryCoordinator(
 
     private fun loadSelected(session: WearSessionEnvelope.Active): TodayRefreshResult {
         val selected = selectedBaby ?: return TodayRefreshResult.Failed
-        state = TodaySummaryUiState.Loading(selected, babies)
+        if (lastSnapshot == null) state = TodaySummaryUiState.Loading(selected, babies)
         val selectedSession = session.copy(
             baby = WearSessionEnvelope.Baby(selected.id, selected.name, selected.timezone),
         )
