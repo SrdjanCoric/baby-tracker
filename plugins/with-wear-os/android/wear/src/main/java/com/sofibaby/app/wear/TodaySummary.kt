@@ -100,7 +100,7 @@ class TodaySummaryCoordinator(
     }
 
     fun retry(session: WearSessionEnvelope.Active): TodayRefreshResult =
-        refresh(session, reloadBabies = !directoryLoaded)
+        refresh(session, reloadBabies = true)
 
     @Synchronized
     fun selectBaby(session: WearSessionEnvelope.Active, babyId: String): TodayRefreshResult {

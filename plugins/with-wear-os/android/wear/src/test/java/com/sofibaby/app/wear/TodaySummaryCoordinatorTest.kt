@@ -153,6 +153,38 @@ class TodaySummaryCoordinatorTest {
         assertEquals(TodaySummaryUiState.Error(babies()[1], babies()), coordinator.state)
     }
 
+    @Test
+    fun retryReloadsTheDirectoryAndFallsBackFromADeletedBaby() {
+        var directoryCalls = 0
+        val requested = mutableListOf<String>()
+        val coordinator = TodaySummaryCoordinator(
+            babyDirectory = {
+                directoryCalls += 1
+                if (directoryCalls == 1) {
+                    BabyDirectoryOutcome.Success(babies())
+                } else {
+                    BabyDirectoryOutcome.Success(listOf(babies().first()))
+                }
+            },
+            snapshots = { active ->
+                requested += active.baby.id
+                if (requested.size == 1) {
+                    SnapshotOutcome.Offline
+                } else {
+                    SnapshotOutcome.Success(snapshot(active.baby.id, active.baby.name))
+                }
+            },
+            preferredBabyId = "baby-2",
+        )
+
+        assertEquals(TodayRefreshResult.Failed, coordinator.refresh(session(), reloadBabies = true))
+        assertEquals(TodayRefreshResult.Success, coordinator.retry(session()))
+
+        assertEquals(2, directoryCalls)
+        assertEquals(listOf("baby-2", "baby-1"), requested)
+        assertEquals("baby-1", (coordinator.state as TodaySummaryUiState.Content).selectedBaby.id)
+    }
+
     private fun babies() = listOf(
         BabyIdentity("baby-1", "Sofi", "Europe/Belgrade"),
         BabyIdentity("baby-2", "Leo", "Europe/Belgrade"),
