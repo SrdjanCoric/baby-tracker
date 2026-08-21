@@ -16,6 +16,7 @@ android {
         applicationId 'com.sofibaby.app'
         minSdk 33
         targetSdk rootProject.ext.targetSdkVersion
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         // Play requires version codes to be unique across phone and Wear artifacts.
         versionCode wearVersionCodeOffset + phoneDefaultConfig.versionCode
         versionName phoneDefaultConfig.versionName
@@ -41,4 +42,6 @@ dependencies {
     implementation 'com.google.android.gms:play-services-wearable:19.0.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
 }

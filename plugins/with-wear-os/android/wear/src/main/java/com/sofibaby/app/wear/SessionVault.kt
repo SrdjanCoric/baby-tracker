@@ -9,7 +9,6 @@ import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
-import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -81,9 +80,11 @@ class AesGcmSessionCipher(
     private val keyProvider: SessionKeyProvider,
 ) {
     fun encrypt(plaintext: ByteArray): ByteArray {
-        val nonce = ByteArray(NONCE_SIZE).also(SecureRandom()::nextBytes)
         val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, keyProvider.getOrCreate(), GCMParameterSpec(TAG_BITS, nonce))
+        cipher.init(Cipher.ENCRYPT_MODE, keyProvider.getOrCreate())
+        val nonce = requireNotNull(cipher.iv).also {
+            require(it.size == NONCE_SIZE) { "Unexpected AES-GCM nonce size" }
+        }
         cipher.updateAAD(AAD)
         val ciphertext = cipher.doFinal(plaintext)
         return ByteBuffer.allocate(1 + nonce.size + ciphertext.size)
