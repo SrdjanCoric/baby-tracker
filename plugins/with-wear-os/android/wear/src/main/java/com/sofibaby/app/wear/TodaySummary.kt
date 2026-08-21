@@ -201,11 +201,28 @@ data class TodaySummaryPresentation(
     data class TimerRow(val title: String, val detail: String)
 }
 
+data class TodaySummaryStaticPresentation(
+    val rows: List<TodaySummaryPresentation.SummaryRow>,
+    val updatedAgo: String,
+)
+
 object TodaySummaryProjector {
     fun project(
         snapshot: ActivitySnapshot,
         now: Instant = Instant.now(),
     ): TodaySummaryPresentation {
+        val static = projectStatic(snapshot, now)
+        return TodaySummaryPresentation(
+            rows = static.rows,
+            timers = projectTimers(snapshot.activeTimers, now),
+            updatedAgo = static.updatedAgo,
+        )
+    }
+
+    fun projectStatic(
+        snapshot: ActivitySnapshot,
+        now: Instant = Instant.now(),
+    ): TodaySummaryStaticPresentation {
         val activity = snapshot.activities
         val sleepDetails = buildList {
             add("${activity.sleep.todayMinutes} min today · ${activity.sleep.goalMinutes} min goal")
@@ -244,7 +261,14 @@ object TodaySummaryProjector {
                 ).joinToString(" · "),
             ),
         )
-        val timers = snapshot.activeTimers.map { timer ->
+        return TodaySummaryStaticPresentation(rows, elapsedSince(snapshot.updatedAt, now))
+    }
+
+    fun projectTimers(
+        activeTimers: List<ActivitySnapshot.ActiveTimer>,
+        now: Instant = Instant.now(),
+    ): List<TodaySummaryPresentation.TimerRow> =
+        activeTimers.map { timer ->
             val label = when (timer.type) {
                 "tummyTime" -> "Tummy time"
                 else -> timer.type.replaceFirstChar { it.uppercase() }
@@ -257,8 +281,6 @@ object TodaySummaryProjector {
             }
             TodaySummaryPresentation.TimerRow("$label active", details.joinToString(" · "))
         }
-        return TodaySummaryPresentation(rows, timers, elapsedSince(snapshot.updatedAt, now))
-    }
 
     private fun recent(time: String?, facts: List<String>, now: Instant): String =
         (facts + listOfNotNull(time?.let { "Last ${elapsedSince(it, now)}" }))

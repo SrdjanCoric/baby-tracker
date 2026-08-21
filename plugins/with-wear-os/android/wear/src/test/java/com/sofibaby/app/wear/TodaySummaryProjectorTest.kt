@@ -1,12 +1,20 @@
 package com.sofibaby.app.wear
 
 import java.time.Instant
+import androidx.lifecycle.Lifecycle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TodaySummaryProjectorTest {
+    @Test
+    fun timerTickerRunsOnlyWithActiveTimersWhileResumed() {
+        assertFalse(TodaySummaryTicker.shouldRun(hasActiveTimers = false, Lifecycle.State.RESUMED))
+        assertFalse(TodaySummaryTicker.shouldRun(hasActiveTimers = true, Lifecycle.State.STARTED))
+        assertTrue(TodaySummaryTicker.shouldRun(hasActiveTimers = true, Lifecycle.State.RESUMED))
+    }
+
     @Test
     fun projectsOnlyAppleWatchParityFactsTimersWakeStateAndGoals() {
         val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()
@@ -48,5 +56,23 @@ class TodaySummaryProjectorTest {
         assertTrue(presentation.timers.first { it.title == "Feeding active" }.detail.contains("29:20"))
         assertTrue(presentation.timers.first { it.title == "Sleep active" }.detail.contains("7:14:20"))
         assertTrue(presentation.timers.first { it.title == "Pumping active" }.detail.contains("2:03"))
+    }
+
+    @Test
+    fun projectsDynamicTimersSeparatelyFromStaticRows() {
+        val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()
+        val snapshot = ActivitySnapshotCodec.decode(fixture)
+        val firstNow = Instant.parse("2026-08-21T13:14:20.000Z")
+
+        val static = TodaySummaryProjector.projectStatic(snapshot, firstNow)
+        val firstTimers = TodaySummaryProjector.projectTimers(snapshot.activeTimers, firstNow)
+        val laterTimers = TodaySummaryProjector.projectTimers(
+            snapshot.activeTimers,
+            Instant.parse("2026-08-21T13:15:20.000Z"),
+        )
+
+        assertEquals("Feeding", static.rows.first().label)
+        assertTrue(firstTimers.first { it.title == "Feeding active" }.detail.contains("29:20"))
+        assertTrue(laterTimers.first { it.title == "Feeding active" }.detail.contains("30:20"))
     }
 }

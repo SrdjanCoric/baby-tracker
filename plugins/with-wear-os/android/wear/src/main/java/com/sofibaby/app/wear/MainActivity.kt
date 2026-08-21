@@ -25,11 +25,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import java.time.Instant
 import kotlinx.coroutines.delay
+
+object TodaySummaryTicker {
+    fun shouldRun(hasActiveTimers: Boolean, lifecycleState: Lifecycle.State): Boolean =
+        hasActiveTimers && lifecycleState == Lifecycle.State.RESUMED
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,13 +134,7 @@ private fun SummaryContent(
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
 ) {
-    val now by produceState(initialValue = Instant.now(), key1 = snapshot) {
-        while (true) {
-            value = Instant.now()
-            delay(1_000)
-        }
-    }
-    val presentation = remember(snapshot, now) { TodaySummaryProjector.project(snapshot, now) }
+    val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
@@ -169,9 +171,7 @@ private fun SummaryContent(
         if (empty) {
             Text("No activity yet today", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
-        presentation.timers.forEach { timer ->
-            SummaryCard(timer.title, timer.detail)
-        }
+        ActiveTimerCards(snapshot.activeTimers)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
         }
@@ -181,6 +181,24 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun ActiveTimerCards(activeTimers: List<ActivitySnapshot.ActiveTimer>) {
+    if (activeTimers.isEmpty()) return
+    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    val shouldTick = TodaySummaryTicker.shouldRun(activeTimers.isNotEmpty(), lifecycleState)
+    val now by produceState(initialValue = Instant.now(), key1 = activeTimers, key2 = shouldTick) {
+        if (!shouldTick) return@produceState
+        while (true) {
+            value = Instant.now()
+            delay(1_000)
+        }
+    }
+    val timers = remember(activeTimers, now) { TodaySummaryProjector.projectTimers(activeTimers, now) }
+    timers.forEach { timer ->
+        SummaryCard(timer.title, timer.detail)
     }
 }
 
