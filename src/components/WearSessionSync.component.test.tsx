@@ -2,7 +2,7 @@ import React from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { act, render, waitFor } from "@testing-library/react-native";
 
-import { WearSessionSync } from "./WearSessionSync";
+import { WearSessionInvalidationSync, WearSessionSync } from "./WearSessionSync";
 
 const mockPublishActive = jest.fn();
 const mockPublishInvalidated = jest.fn();
@@ -15,7 +15,20 @@ const mockHandledRefreshStore = {
 };
 let mockAppStateListener: ((state: AppStateStatus) => void) | null = null;
 
-let mockAuthState = {
+interface MockAuthState {
+  isLoading: boolean;
+  user: {
+    id: string;
+    email: string;
+    displayName: string;
+  } | null;
+  session: {
+    access_token: string;
+    expires_at: number;
+  } | null;
+}
+
+let mockAuthState: MockAuthState = {
   isLoading: false,
   user: {
     id: "user-1",
@@ -146,5 +159,102 @@ describe("WearSessionSync", () => {
 
     await waitFor(() => expect(mockGetPendingRefreshRequest).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(mockRefreshSession).toHaveBeenCalledTimes(2));
+  });
+
+  it("does not publish while authentication is loading", () => {
+    mockAuthState = { ...mockAuthState, isLoading: true };
+
+    render(<WearSessionSync />);
+
+    expect(mockPublishActive).not.toHaveBeenCalled();
+    expect(mockPublishInvalidated).not.toHaveBeenCalled();
+  });
+
+  it("publishes the first settled account and baby session", async () => {
+    render(<WearSessionSync />);
+
+    await waitFor(() =>
+      expect(mockPublishActive).toHaveBeenCalledWith({
+        account: { id: "user-1", label: "Alex" },
+        baby: {
+          id: "baby-1",
+          name: "Sofi",
+          timezone: expect.any(String),
+        },
+        supabase: {
+          url: "https://project.supabase.co",
+          anonKey: "anon-key",
+        },
+        accessToken: "access-token",
+        expiresAt: 1_800_000_000,
+      })
+    );
+  });
+
+  it("invalidates the previous account before publishing the replacement", async () => {
+    const publications: string[] = [];
+    mockPublishActive.mockImplementation(async () => {
+      publications.push("active");
+    });
+    mockPublishInvalidated.mockImplementation(async () => {
+      publications.push("invalidated");
+    });
+    const view = render(<WearSessionSync />);
+    await waitFor(() => expect(publications).toEqual(["active"]));
+
+    mockAuthState = {
+      ...mockAuthState,
+      user: {
+        id: "user-2",
+        email: "sam@example.com",
+        displayName: "Sam",
+      },
+      session: {
+        access_token: "replacement-token",
+        expires_at: 1_800_003_600,
+      },
+    };
+    view.rerender(<WearSessionSync />);
+
+    await waitFor(() =>
+      expect(publications).toEqual(["active", "invalidated", "active"])
+    );
+    expect(mockPublishInvalidated).toHaveBeenCalledWith("account-switched");
+  });
+
+  it("republishes when the phone refreshes the access token", async () => {
+    const view = render(<WearSessionSync />);
+    await waitFor(() => expect(mockPublishActive).toHaveBeenCalledTimes(1));
+
+    mockAuthState = {
+      ...mockAuthState,
+      session: {
+        access_token: "refreshed-token",
+        expires_at: 1_800_003_600,
+      },
+    };
+    view.rerender(<WearSessionSync />);
+
+    await waitFor(() => expect(mockPublishActive).toHaveBeenCalledTimes(2));
+    expect(mockPublishActive).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        accessToken: "refreshed-token",
+        expiresAt: 1_800_003_600,
+      })
+    );
+  });
+
+  it("publishes a signed-out invalidation", async () => {
+    mockAuthState = {
+      isLoading: false,
+      user: null,
+      session: null,
+    };
+
+    render(<WearSessionInvalidationSync />);
+
+    await waitFor(() =>
+      expect(mockPublishInvalidated).toHaveBeenCalledWith("signed-out")
+    );
   });
 });
