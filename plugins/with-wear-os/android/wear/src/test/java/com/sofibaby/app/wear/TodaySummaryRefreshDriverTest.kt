@@ -74,11 +74,57 @@ class TodaySummaryRefreshDriverTest {
         assertEquals(3L, successfulRevision)
     }
 
-    private fun session() = WearSessionEnvelope.Active(
-        phoneEpoch = "phone-install-1",
+    @Test
+    fun accountChangePurgesThePreviousSummaryBeforeLoadingTheNewAccount() {
+        var active = session()
+        val directoryOutcomes = ArrayDeque<BabyDirectoryOutcome>().apply {
+            add(BabyDirectoryOutcome.Success(listOf(BabyIdentity("baby-1", "Sofi", "Europe/Belgrade"))))
+            add(BabyDirectoryOutcome.Offline)
+        }
+        val snapshotOutcomes = ArrayDeque<SnapshotOutcome>().apply {
+            add(SnapshotOutcome.Success(snapshot()))
+            add(SnapshotOutcome.Offline)
+        }
+        val coordinator = TodaySummaryCoordinator(
+            babyDirectory = { directoryOutcomes.removeFirst() },
+            snapshots = { snapshotOutcomes.removeFirst() },
+        )
+        val states = mutableListOf<TodaySummaryUiState>()
+        val driver = TodaySummaryRefreshDriver(
+            session = { active },
+            coordinator = coordinator,
+            onState = states::add,
+            onUnauthorized = { error("unexpected unauthorized") },
+        )
+        driver.onOpen()
+
+        val previous = active
+        active = session(
+            phoneEpoch = "phone-install-2",
+            accountId = "user-2",
+            babyId = "baby-9",
+            babyName = "Mila",
+        )
+        driver.prepareForSessionChange(previous, active)
+
+        assertEquals(TodaySummaryUiState.Unavailable, states.last())
+        assertEquals(TodayRefreshResult.Failed, driver.onOpen())
+        val error = coordinator.state as TodaySummaryUiState.Error
+        assertEquals("baby-9", error.selectedBaby.id)
+        assertEquals(listOf("baby-9"), error.babies.map { it.id })
+        assertEquals(null, error.lastSnapshot)
+    }
+
+    private fun session(
+        phoneEpoch: String = "phone-install-1",
+        accountId: String = "user-1",
+        babyId: String = "baby-1",
+        babyName: String = "Sofi",
+    ) = WearSessionEnvelope.Active(
+        phoneEpoch = phoneEpoch,
         revision = 3,
-        account = WearSessionEnvelope.Account("user-1", "Alex"),
-        baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
+        account = WearSessionEnvelope.Account(accountId, "Alex"),
+        baby = WearSessionEnvelope.Baby(babyId, babyName, "Europe/Belgrade"),
         supabase = WearSessionEnvelope.Supabase("https://project.supabase.co", "anon-key"),
         accessToken = "access-token",
         expiresAt = 2_000_000_000,

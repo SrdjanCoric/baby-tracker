@@ -62,6 +62,7 @@ class TodaySummaryCoordinator(
     private var lastSnapshot: ActivitySnapshot? = null
     private var preferredBabyId = preferredBabyId
 
+    @Synchronized
     fun refresh(
         session: WearSessionEnvelope.Active,
         reloadBabies: Boolean,
@@ -95,11 +96,22 @@ class TodaySummaryCoordinator(
     fun retry(session: WearSessionEnvelope.Active): TodayRefreshResult =
         refresh(session, reloadBabies = !directoryLoaded)
 
+    @Synchronized
     fun selectBaby(session: WearSessionEnvelope.Active, babyId: String): TodayRefreshResult {
         val selected = babies.firstOrNull { it.id == babyId } ?: return TodayRefreshResult.Failed
         preferredBabyId = babyId
         selectedBaby = selected
         return loadSelected(session)
+    }
+
+    @Synchronized
+    fun reset() {
+        babies = emptyList()
+        selectedBaby = null
+        directoryLoaded = false
+        lastSnapshot = null
+        preferredBabyId = null
+        state = TodaySummaryUiState.Unavailable
     }
 
     private fun loadSelected(session: WearSessionEnvelope.Active): TodayRefreshResult {
@@ -261,6 +273,18 @@ class TodaySummaryRefreshDriver(
     private val onUnauthorized: (Long) -> Unit,
     private val onSuccess: (Long) -> Unit = {},
 ) {
+    fun prepareForSessionChange(
+        current: WearSessionEnvelope.Active?,
+        incoming: WearSessionEnvelope,
+    ) {
+        val next = incoming as? WearSessionEnvelope.Active
+        val scopeChanged = next == null || current == null ||
+            current.phoneEpoch != next.phoneEpoch || current.account.id != next.account.id
+        if (!scopeChanged) return
+        coordinator.reset()
+        onState(coordinator.state)
+    }
+
     fun onOpen() = run { active -> coordinator.refresh(active, reloadBabies = true) }
 
     fun onWake() = run { active -> coordinator.refresh(active, reloadBabies = false) }

@@ -66,6 +66,7 @@ object WearSessionRuntime {
         } catch (_: Exception) {
             return
         }
+        summaryDriver?.prepareForSessionChange(target.currentSession(), envelope)
         target.accept(envelope)
         mutableState.value = target.state
         if (envelope is WearSessionEnvelope.Active) {
