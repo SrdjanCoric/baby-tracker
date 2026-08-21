@@ -319,7 +319,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
 - [ ] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
 - [x] 0089 · Wear OS app scaffold and build integration → tasks/done/0089-wear-os-app-scaffold.md
-- [~] 0090 · Wear session handoff with phone-owned refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
+- [>] 0090 · Wear session handoff with phone-owned refresh (after 0089) → tasks/0090-wear-session-handoff-and-refresh.md
 - [ ] 0091 · Wear today summary read path (after 0090) → tasks/0091-wear-today-summary-read-path.md
 - [ ] 0092 · Wear diaper quick log (after 0091) → tasks/0092-wear-diaper-quick-log.md
 - [ ] 0093 · Wear feeding timer and logging (after 0092) → tasks/0093-wear-feeding-timer-and-logging.md
