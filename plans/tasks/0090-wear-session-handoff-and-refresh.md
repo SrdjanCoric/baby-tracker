@@ -115,6 +115,20 @@ Alternatives considered:
 - `:app:assembleDebug` and `:wear:assembleDebug` both pass. Focused logs are retained under
   `/tmp/agent-workflows/e2f8af45fd34/14c354181b4b/`.
 
+## Review decisions
+
+- skipped (minor): TR-8 — The watch withholds a still-valid access token during the five-minute refresh window — user directed all minor issues to be skipped.
+- skipped (minor): TR-9 — The approved retryable offline state is not implemented — user directed all minor issues to be skipped.
+- accepted (security risk): TR-10 — The raw access token persists in plaintext in the Wear Data Layer — user considers this a non-issue.
+- accepted (security risk): TR-11 — Any paired Wear node running the app can receive and store the live session — user considers this a non-issue.
+- skipped (minor): TR-12 — Baby and account label changes do not trigger a new publication — user directed all minor issues to be skipped.
+- skipped (minor): TR-13 — Wear startup can issue duplicate snapshot probes and probe stale envelopes — user directed all minor issues to be skipped.
+- skipped (minor): TR-14 — The Wear credential boundary has no dedicated security-suite test — user directed all minor issues to be skipped.
+- skipped (minor): TR-15 — The native adapter platform and module gate is not tested through its public loader — user directed all minor issues to be skipped.
+- skipped (minor): TR-16 — The README omits the generated phone-side Wear integration — user directed all minor issues to be skipped.
+- skipped (minor): TR-17 — Signed-out cold launches repeatedly publish invalidations — user directed all minor issues to be skipped.
+- skipped (minor): TR-18 — Plugin tests assert copied source text rather than behavior — user directed all minor issues to be skipped.
+
 ## Human checkpoints
 
 - [x] [confirm-security] Session-handoff design (transport, storage at rest, phone-owned refresh,
