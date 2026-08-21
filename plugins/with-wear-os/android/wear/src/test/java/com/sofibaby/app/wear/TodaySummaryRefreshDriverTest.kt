@@ -54,6 +54,26 @@ class TodaySummaryRefreshDriverTest {
         assertEquals(3L, rejectedRevision)
     }
 
+    @Test
+    fun successfulRefreshReportsTheSessionRevision() {
+        var successfulRevision: Long? = null
+        val coordinator = TodaySummaryCoordinator(
+            babyDirectory = { BabyDirectoryOutcome.Success(emptyList()) },
+            snapshots = { SnapshotOutcome.Success(snapshot()) },
+        )
+        val driver = TodaySummaryRefreshDriver(
+            session = { session() },
+            coordinator = coordinator,
+            onState = {},
+            onUnauthorized = { error("unexpected unauthorized") },
+            onSuccess = { successfulRevision = it },
+        )
+
+        driver.onOpen()
+
+        assertEquals(3L, successfulRevision)
+    }
+
     private fun session() = WearSessionEnvelope.Active(
         phoneEpoch = "phone-install-1",
         revision = 3,

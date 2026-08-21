@@ -218,6 +218,7 @@ class TodaySummaryRefreshDriver(
     private val coordinator: TodaySummaryCoordinator,
     private val onState: (TodaySummaryUiState) -> Unit,
     private val onUnauthorized: (Long) -> Unit,
+    private val onSuccess: (Long) -> Unit = {},
 ) {
     fun onOpen() = run { active -> coordinator.refresh(active, reloadBabies = true) }
 
@@ -232,6 +233,7 @@ class TodaySummaryRefreshDriver(
         val result = action(active)
         onState(coordinator.state)
         if (result == TodayRefreshResult.Unauthorized) onUnauthorized(active.revision)
+        if (result == TodayRefreshResult.Success) onSuccess(active.revision)
         return result
     }
 }

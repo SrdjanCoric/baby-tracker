@@ -52,6 +52,7 @@ object WearSessionRuntime {
                 coordinator?.onUnauthorized(revision)
                 mutableState.value = coordinator?.state ?: WearSessionUiState.SignedOut
             },
+            onSuccess = { revision -> coordinator?.onProbeSucceeded(revision) },
         )
         mutableState.value = requireNotNull(coordinator).state
         loadLatest(applicationContext)
