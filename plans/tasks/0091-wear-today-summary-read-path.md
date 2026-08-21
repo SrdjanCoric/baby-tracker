@@ -20,6 +20,10 @@ or phone-side field change breaks a test instead of silently desyncing the watch
 Failure policy (from the brief): Supabase unreachable → visible error state with manual retry; no
 caching guarantees beyond last successfully rendered data.
 
+**Apple Watch parity boundary**: render only the activity facts, timers, wake-window state, goals,
+and baby-selection behavior present in `targets/watch/`. Do not add history browsing, charts,
+record editing, prediction controls, settings, or other phone-only dashboard features.
+
 ## Implementation work
 
 - [ ] Kotlin data models mirroring the snapshot payload (all activity types, active timers, goals),
@@ -28,11 +32,21 @@ caching guarantees beyond last successfully rendered data.
       every field asserted (the drift guard).
 - [ ] Snapshot fetch client using the 0090 session; refresh on app open and on wake.
 - [ ] Today summary Compose screen with parity content; loading, error+retry, and empty states.
+- [ ] Selected-baby picker when the household has multiple babies, matching the Apple Watch's
+      baby-selection behavior and refreshing the chosen baby's snapshot.
 - [ ] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
+
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove the RPC client,
+model drift guard, rendering, refresh, and error recovery at automated seams; Task 0098 performs
+the consolidated end-to-end device pass.
 
 ## Acceptance criteria
 
-- [ ] Watch shows real today data for the signed-in household's selected baby on emulator.
+- [ ] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
+      fetched and rendered correctly.
 - [ ] Serialization fixture tests cover every snapshot field and are green in CI.
 - [ ] Network failure shows error + retry; retry after connectivity returns succeeds.
+- [ ] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
 - [ ] No backend changes in the diff.

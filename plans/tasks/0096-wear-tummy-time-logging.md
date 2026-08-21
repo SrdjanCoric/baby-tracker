@@ -14,13 +14,25 @@ the iOS watch supports (feeding, sleep, diaper, pumping, tummy time) works on We
 Same durable rules as 0093–0095: direct writes, phone-identical row shapes, snapshot-driven
 cross-device timer visibility, visible failure + retry, no backend changes.
 
+**Apple Watch parity boundary**: provide only the start/pause/resume/stop timer and today's minutes
+shown by Apple Watch. Do not add manual duration entry, notes, backdating, history, or editing.
+
 ## Implementation work
 
-- [ ] Tummy time timer UI and logging flow with parity fields.
+- [ ] Tummy time start/pause/resume/stop timer UI and today's-minutes readout.
 - [ ] Tests: tummy time row/timer shape fixture-matches phone rows; summary reflects the entry.
+
+## Validation boundary
+
+No paired-emulator or phone↔watch synchronization check runs in this task. Prove tummy-time timer,
+row parity, and summary behavior through automated seams; Task 0098 verifies the complete activity
+set end to end.
 
 ## Acceptance criteria
 
-- [ ] Tummy time session from watch appears with phone-identical row shape and shows on the phone.
-- [ ] All five iOS-watch activity types now log successfully from the Wear app on emulator.
+- [ ] Automated integration proof shows tummy time from the watch produces a phone-identical row
+      readable through the shared snapshot path.
+- [ ] Automated suites cover all five iOS-watch activity payloads; paired-device proof is deferred
+      to Task 0098.
 - [ ] Tests green in CI; no backend changes.
+- [ ] Manual duration entry, notes, backdating, history, and editing are absent.

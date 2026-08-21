@@ -25,6 +25,18 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
   const androidRoot = join(projectRoot, "android");
   mkdirSync(androidRoot);
   writeFileSync(join(androidRoot, "settings.gradle"), "include ':app'\n");
+  const appRoot = join(androidRoot, "app");
+  const javaRoot = join(appRoot, "src", "main", "java", "com", "sofibaby", "app");
+  mkdirSync(javaRoot, { recursive: true });
+  writeFileSync(
+    join(javaRoot, "MainApplication.kt"),
+    "PackageList(this).packages.apply {\n  add(LiveActivityControllerPackage())\n}\n"
+  );
+  writeFileSync(join(appRoot, "build.gradle"), "dependencies {\n}\n");
+  writeFileSync(
+    join(appRoot, "src", "main", "AndroidManifest.xml"),
+    '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application></application></manifest>\n'
+  );
 
   try {
     const { syncWearOsModule } = require("../plugins/with-wear-os");
@@ -34,6 +46,33 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
 
     const settings = readFileSync(join(androidRoot, "settings.gradle"), "utf8");
     assert.equal(settings.match(/include ':wear'/g)?.length, 1);
+    const mainApplication = readFileSync(
+      join(javaRoot, "MainApplication.kt"),
+      "utf8"
+    );
+    assert.equal(
+      mainApplication.match(/add\(WearSessionBridgePackage\(\)\)/g)?.length,
+      1
+    );
+    assert.equal(
+      readFileSync(join(appRoot, "build.gradle"), "utf8").match(
+        /com\.google\.android\.gms:play-services-wearable/g
+      )?.length,
+      1
+    );
+    assert.equal(
+      readFileSync(
+        join(appRoot, "src", "main", "AndroidManifest.xml"),
+        "utf8"
+      ).match(/WearSessionRefreshRequestService/g)?.length,
+      1
+    );
+    assert.equal(
+      readFileSync(join(javaRoot, "WearSessionBridgeModule.kt"), "utf8").includes(
+        "/sofi/wear/auth/state"
+      ),
+      true
+    );
     assert.equal(appConfig.expo.android.package, "com.sofibaby.app");
     const buildGradle = readFileSync(
       join(androidRoot, "wear", "build.gradle"),
@@ -41,6 +80,14 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
     );
     assert.match(buildGradle, /applicationId ['"]com\.sofibaby\.app['"]/);
     assert.match(buildGradle, /evaluationDependsOn\(['"]:app['"]\)/);
+    assert.match(
+      buildGradle,
+      /signingConfig phoneAndroid\.buildTypes\.debug\.signingConfig/
+    );
+    assert.match(
+      buildGradle,
+      /signingConfig phoneAndroid\.buildTypes\.release\.signingConfig/
+    );
     assert.match(
       buildGradle,
       /versionCode wearVersionCodeOffset \+ phoneDefaultConfig\.versionCode/
@@ -114,7 +161,9 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
       manifest,
       /android:name="android\.intent\.category\.LAUNCHER"/
     );
-    assert.match(activity, /text = SignedOutState\.message/);
+    assert.match(activity, /WearSessionScreen\(WearSessionRuntime\.state\.value\)/);
+    assert.match(activity, /Reconnect from phone/);
+    assert.match(activity, /state\.babyName/);
     assert.match(state, /Sign in on your phone to continue\./);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });

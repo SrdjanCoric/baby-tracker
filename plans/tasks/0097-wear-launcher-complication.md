@@ -11,6 +11,9 @@ launcher-only (`ios/SofiBabyWatchComplication/`, 61 LOC). Wear equivalent: a sma
 complication data source whose tap action opens the app. Explicitly out of scope (brief non-goal):
 rich Tiles or data-bearing complications.
 
+**Apple Watch parity boundary**: the complication is launcher-only. Do not add live activity data,
+timers, progress, configurable complication content, Tiles, or watch-face actions.
+
 Depends only on the 0089 scaffold; can land in parallel with the data tasks.
 
 ## Implementation work
@@ -29,3 +32,4 @@ Depends only on the 0089 scaffold; can land in parallel with the data tasks.
 
 - [ ] Complication appears in the watch-face complication picker and launches the app on tap.
 - [ ] CI green.
+- [ ] The complication exposes no data-bearing or interactive capability beyond launching the app.
