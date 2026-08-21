@@ -5,7 +5,8 @@ plugins {
 }
 
 evaluationDependsOn(':app')
-def phoneDefaultConfig = project(':app').extensions.getByName('android').defaultConfig
+def phoneAndroid = project(':app').extensions.getByName('android')
+def phoneDefaultConfig = phoneAndroid.defaultConfig
 def wearVersionCodeOffset = 1_000_000_000
 
 android {
@@ -20,6 +21,15 @@ android {
         // Play requires version codes to be unique across phone and Wear artifacts.
         versionCode wearVersionCodeOffset + phoneDefaultConfig.versionCode
         versionName phoneDefaultConfig.versionName
+    }
+
+    buildTypes {
+        debug {
+            signingConfig phoneAndroid.buildTypes.debug.signingConfig
+        }
+        release {
+            signingConfig phoneAndroid.buildTypes.release.signingConfig
+        }
     }
 
     buildFeatures {

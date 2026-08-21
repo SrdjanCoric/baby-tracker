@@ -82,6 +82,14 @@ test("the Wear OS plugin restores the module and settings wiring idempotently", 
     assert.match(buildGradle, /evaluationDependsOn\(['"]:app['"]\)/);
     assert.match(
       buildGradle,
+      /signingConfig phoneAndroid\.buildTypes\.debug\.signingConfig/
+    );
+    assert.match(
+      buildGradle,
+      /signingConfig phoneAndroid\.buildTypes\.release\.signingConfig/
+    );
+    assert.match(
+      buildGradle,
       /versionCode wearVersionCodeOffset \+ phoneDefaultConfig\.versionCode/
     );
     assert.match(
