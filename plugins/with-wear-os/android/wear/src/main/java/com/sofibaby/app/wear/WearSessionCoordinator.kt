@@ -29,7 +29,15 @@ class WearSessionCoordinator(
 
     @Synchronized
     fun accept(envelope: WearSessionEnvelope) {
-        if (!vault.apply(envelope)) return
+        val applied = try {
+            vault.apply(envelope)
+        } catch (_: Exception) {
+            active = null
+            refreshRequestedForRevision = null
+            state = WearSessionUiState.SignedOut
+            return
+        }
+        if (!applied) return
         when (envelope) {
             is WearSessionEnvelope.Active -> {
                 active = envelope

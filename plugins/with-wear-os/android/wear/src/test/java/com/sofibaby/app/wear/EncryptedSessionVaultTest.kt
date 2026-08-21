@@ -1,9 +1,11 @@
 package com.sofibaby.app.wear
 
+import java.io.IOException
 import java.nio.charset.StandardCharsets
 import javax.crypto.KeyGenerator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -106,5 +108,20 @@ class EncryptedSessionVaultTest {
         assertTrue(vault.apply(previousInstall))
         assertTrue(vault.apply(WearSessionEnvelope.Invalidated("phone-install-2", 0, "signed_out")))
         assertEquals(null, vault.readActive())
+    }
+
+    @Test
+    fun storageReadFailureDegradesToAnEmptyVault() {
+        val store = object : SessionBlobStore {
+            override fun read(): ByteArray? = throw IOException("disk unavailable")
+
+            override fun write(bytes: ByteArray) = Unit
+
+            override fun delete() = throw IOException("cleanup unavailable")
+        }
+        val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+        val vault = EncryptedSessionVault(store, AesGcmSessionCipher { key })
+
+        assertNull(vault.readActive())
     }
 }

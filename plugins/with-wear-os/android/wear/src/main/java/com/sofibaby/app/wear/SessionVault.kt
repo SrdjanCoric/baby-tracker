@@ -137,12 +137,12 @@ class EncryptedSessionVault(
         readEnvelope() as? WearSessionEnvelope.Active
 
     private fun readEnvelope(): WearSessionEnvelope? {
-        val blob = store.read() ?: return null
         return try {
+            val blob = store.read() ?: return null
             val plaintext = cipher.decrypt(blob)
             WearSessionEnvelopeCodec.decode(String(plaintext, StandardCharsets.UTF_8))
         } catch (_: Exception) {
-            store.delete()
+            runCatching(store::delete)
             null
         }
     }

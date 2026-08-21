@@ -1,5 +1,6 @@
 package com.sofibaby.app.wear
 
+import java.io.IOException
 import javax.crypto.KeyGenerator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -61,6 +62,27 @@ class WearSessionCoordinatorTest {
         assertEquals(emptyList<Long>(), requests)
         assertEquals("access-token", coordinator.accessToken(nowEpochSeconds = 1_000))
         assertEquals("Sofi", (coordinator.state as WearSessionUiState.SignedIn).babyName)
+    }
+
+    @Test
+    fun failedSessionWriteDegradesToSignedOutWithoutThrowing() {
+        val store = object : SessionBlobStore {
+            override fun read(): ByteArray? = null
+
+            override fun write(bytes: ByteArray) = throw IOException("disk full")
+
+            override fun delete() = Unit
+        }
+        val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+        val coordinator = WearSessionCoordinator(
+            vault = EncryptedSessionVault(store, AesGcmSessionCipher { key }),
+            refreshRequests = WearRefreshRequestPublisher { },
+        )
+
+        coordinator.accept(active(revision = 4, expiresAt = 2_000))
+
+        assertEquals(WearSessionUiState.SignedOut, coordinator.state)
+        assertNull(coordinator.accessToken(nowEpochSeconds = 1_000))
     }
 
     private fun coordinator(requests: MutableList<Long>): WearSessionCoordinator {
