@@ -11,13 +11,16 @@ import java.util.concurrent.Executors
 object WearSessionRuntime {
     private val mutableState = mutableStateOf<WearSessionUiState>(WearSessionUiState.SignedOut)
     private val mutableTodayState = mutableStateOf<TodaySummaryUiState>(TodaySummaryUiState.Unavailable)
+    private val mutableDiaperState = mutableStateOf<DiaperQuickLogState>(DiaperQuickLogState.Idle)
     private val executor = Executors.newSingleThreadExecutor()
     private var coordinator: WearSessionCoordinator? = null
     private var summaryDriver: TodaySummaryRefreshDriver? = null
     private var selectionStore: android.content.SharedPreferences? = null
+    private var diaperCoordinator: DiaperQuickLogCoordinator? = null
 
     val state: State<WearSessionUiState> = mutableState
     val todayState: State<TodaySummaryUiState> = mutableTodayState
+    val diaperState: State<DiaperQuickLogState> = mutableDiaperState
 
     @Synchronized
     fun initialize(context: Context) {
@@ -38,6 +41,11 @@ object WearSessionRuntime {
             },
         )
         selectionStore = applicationContext.getSharedPreferences(SELECTION_STORE, Context.MODE_PRIVATE)
+        val writeStore = applicationContext.getSharedPreferences(WRITE_STORE, Context.MODE_PRIVATE)
+        val writeClient = SupabaseWriteClient(
+            transport = UrlConnectionWearHttpTransport,
+            clockStore = SharedPreferencesWearClockStore(writeStore),
+        )
         val summaryCoordinator = TodaySummaryCoordinator(
             babyDirectory = { BabyDirectoryClient(UrlConnectionWearHttpTransport).load(it) },
             snapshots = { SnapshotProbe(UrlConnectionWearHttpTransport).run(it) },
@@ -57,6 +65,13 @@ object WearSessionRuntime {
                 selectionStore?.edit()?.remove(SELECTED_BABY_KEY)?.apply()
             },
         )
+        diaperCoordinator = DiaperQuickLogCoordinator(
+            drafts = writeClient::newDiaperDraft,
+            writer = writeClient::writeDiaper,
+            refreshSummary = { summaryDriver?.onWake() },
+            dispatch = { work -> executor.execute { work() } },
+            onStateChanged = { mutableDiaperState.value = it },
+        )
         mutableState.value = requireNotNull(coordinator).state
         loadLatest(applicationContext)
     }
@@ -70,6 +85,11 @@ object WearSessionRuntime {
             return
         }
         summaryDriver?.prepareForSessionChange(target.currentSession(), envelope)
+        val sessionScopeChanged = target.currentSession()?.let { current ->
+            envelope !is WearSessionEnvelope.Active || current.phoneEpoch != envelope.phoneEpoch ||
+                current.account.id != envelope.account.id
+        } ?: true
+        if (sessionScopeChanged) diaperCoordinator?.reset()
         target.accept(envelope)
         mutableState.value = target.state
         if (envelope is WearSessionEnvelope.Active) {
@@ -95,6 +115,20 @@ object WearSessionRuntime {
         }
     }
 
+    fun logDiaper(type: DiaperType, stoolColor: StoolColor?) {
+        val session = selectedSession() ?: return
+        diaperCoordinator?.submit(session, type, stoolColor)
+    }
+
+    fun retryDiaper() {
+        val session = selectedSession() ?: return
+        diaperCoordinator?.retry(session)
+    }
+
+    fun resetDiaper() {
+        diaperCoordinator?.reset()
+    }
+
     private fun loadLatest(context: Context) {
         Wearable.getDataClient(context).dataItems.addOnSuccessListener { items ->
             try {
@@ -118,8 +152,22 @@ object WearSessionRuntime {
         return token?.let { session.copy(accessToken = it) }
     }
 
+    private fun selectedSession(): WearSessionEnvelope.Active? {
+        val session = usableSession() ?: return null
+        val selected = when (val state = mutableTodayState.value) {
+            is TodaySummaryUiState.Loading -> state.selectedBaby
+            is TodaySummaryUiState.Content -> state.selectedBaby
+            is TodaySummaryUiState.Empty -> state.selectedBaby
+            is TodaySummaryUiState.Stale -> state.selectedBaby
+            is TodaySummaryUiState.Error -> state.selectedBaby
+            TodaySummaryUiState.Unavailable -> null
+        } ?: return session
+        return session.copy(baby = WearSessionEnvelope.Baby(selected.id, selected.name, selected.timezone))
+    }
+
     private const val STATE_PATH = "/sofi/wear/auth/state"
     private const val REFRESH_PATH = "/sofi/wear/auth/refresh-request"
     private const val SELECTION_STORE = "wear-today-summary"
+    private const val WRITE_STORE = "wear-write-state"
     private const val SELECTED_BABY_KEY = "selected-baby-id"
 }

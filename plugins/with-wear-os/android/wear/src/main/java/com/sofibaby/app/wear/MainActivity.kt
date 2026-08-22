@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -48,8 +49,11 @@ class MainActivity : ComponentActivity() {
                 WearAppScreen(
                     sessionState = WearSessionRuntime.state.value,
                     todayState = WearSessionRuntime.todayState.value,
+                    diaperState = WearSessionRuntime.diaperState.value,
                     onRetry = WearSessionRuntime::retry,
                     onSelectBaby = WearSessionRuntime::selectBaby,
+                    onLogDiaper = WearSessionRuntime::logDiaper,
+                    onRetryDiaper = WearSessionRuntime::retryDiaper,
                 )
             }
         }
@@ -65,13 +69,23 @@ class MainActivity : ComponentActivity() {
 fun WearAppScreen(
     sessionState: WearSessionUiState,
     todayState: TodaySummaryUiState,
+    diaperState: DiaperQuickLogState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
+    onLogDiaper: (DiaperType, StoolColor?) -> Unit,
+    onRetryDiaper: () -> Unit,
 ) {
     when (sessionState) {
         WearSessionUiState.SignedOut -> SignedOutScreen()
         WearSessionUiState.ReconnectFromPhone -> CenteredMessage("Reconnect from phone")
-        is WearSessionUiState.SignedIn -> TodaySummaryScreen(todayState, onRetry, onSelectBaby)
+        is WearSessionUiState.SignedIn -> TodaySummaryScreen(
+            todayState,
+            diaperState,
+            onRetry,
+            onSelectBaby,
+            onLogDiaper,
+            onRetryDiaper,
+        )
     }
 }
 
@@ -83,8 +97,11 @@ fun SignedOutScreen() {
 @Composable
 private fun TodaySummaryScreen(
     state: TodaySummaryUiState,
+    diaperState: DiaperQuickLogState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
+    onLogDiaper: (DiaperType, StoolColor?) -> Unit,
+    onRetryDiaper: () -> Unit,
 ) {
     when (state) {
         TodaySummaryUiState.Unavailable -> CenteredMessage("Loading today's activity…")
@@ -102,6 +119,9 @@ private fun TodaySummaryScreen(
             refreshFailed = false,
             onRetry = onRetry,
             onSelectBaby = onSelectBaby,
+            diaperState = diaperState,
+            onLogDiaper = onLogDiaper,
+            onRetryDiaper = onRetryDiaper,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -111,6 +131,9 @@ private fun TodaySummaryScreen(
             refreshFailed = false,
             onRetry = onRetry,
             onSelectBaby = onSelectBaby,
+            diaperState = diaperState,
+            onLogDiaper = onLogDiaper,
+            onRetryDiaper = onRetryDiaper,
         )
         is TodaySummaryUiState.Stale -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -120,6 +143,9 @@ private fun TodaySummaryScreen(
             refreshFailed = true,
             onRetry = onRetry,
             onSelectBaby = onSelectBaby,
+            diaperState = diaperState,
+            onLogDiaper = onLogDiaper,
+            onRetryDiaper = onRetryDiaper,
         )
     }
 }
@@ -133,6 +159,9 @@ private fun SummaryContent(
     refreshFailed: Boolean,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
+    diaperState: DiaperQuickLogState,
+    onLogDiaper: (DiaperType, StoolColor?) -> Unit,
+    onRetryDiaper: () -> Unit,
 ) {
     val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -172,6 +201,7 @@ private fun SummaryContent(
             Text("No activity yet today", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
         ActiveTimerCards(snapshot.activeTimers)
+        DiaperQuickLogSection(diaperState, onLogDiaper, onRetryDiaper)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
         }
@@ -181,6 +211,62 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun DiaperQuickLogSection(
+    state: DiaperQuickLogState,
+    onLog: (DiaperType, StoolColor?) -> Unit,
+    onRetry: () -> Unit,
+) {
+    var colorFor by remember { mutableStateOf<DiaperType?>(null) }
+    LaunchedEffect(state) {
+        if (state == DiaperQuickLogState.Success) colorFor = null
+    }
+    val enabled = state != DiaperQuickLogState.Submitting
+    Text("Quick log diaper", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    if (colorFor == null) {
+        DiaperType.entries.forEach { type ->
+            Button(
+                onClick = {
+                    if (type == DiaperType.Dirty || type == DiaperType.Mixed) colorFor = type
+                    else onLog(type, null)
+                },
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(type.wireValue.replaceFirstChar { it.uppercase() })
+            }
+        }
+    } else {
+        Text("Stool color (optional)", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Button(onClick = { onLog(requireNotNull(colorFor), null) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            Text("No color")
+        }
+        StoolColor.entries.forEach { color ->
+            Button(
+                onClick = { onLog(requireNotNull(colorFor), color) },
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(color.wireValue.replaceFirstChar { it.uppercase() })
+            }
+        }
+        Button(onClick = { colorFor = null }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            Text("Back")
+        }
+    }
+    when (state) {
+        DiaperQuickLogState.Idle -> Unit
+        DiaperQuickLogState.Submitting -> Text("Logging…", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        DiaperQuickLogState.Success -> Text("Diaper logged", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        is DiaperQuickLogState.Error -> {
+            Text(state.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (state.canRetry) {
+                Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Retry") }
+            }
+        }
     }
 }
 
