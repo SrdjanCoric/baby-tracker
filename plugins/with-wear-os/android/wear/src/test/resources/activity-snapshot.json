@@ -1,0 +1,102 @@
+{
+  "babyId": "8a000000-0000-0000-0000-000000000004",
+  "babyName": "Sibling Snapshot Baby",
+  "localDay": {
+    "endsAt": "2026-08-22T01:00:00.000Z",
+    "startedAt": "2026-08-21T01:00:00.000Z"
+  },
+  "timezone": "America/Godthab",
+  "updatedAt": "2026-08-21T13:14:20.061Z",
+  "activities": {
+    "sleep": {
+      "isActive": true,
+      "lastTime": "2026-08-21T12:40:00.000Z",
+      "sleepType": "nap",
+      "goalMinutes": 123,
+      "todayMinutes": 10,
+      "napCountToday": 0,
+      "lastSleepEndedAt": "2026-08-21T12:40:00.000Z",
+      "wakeWindowMinutes": 77,
+      "lastDurationMinutes": 10,
+      "wakeWindowSlotLabel": "Sibling First",
+      "morningConfirmationPending": true,
+      "wakeWindowRequiresNewbornOptIn": true
+    },
+    "diaper": {
+      "lastTime": "2026-08-21T12:30:00.000Z",
+      "lastType": "dry",
+      "todayCounts": { "dry": 1, "wet": 0, "dirty": 0, "mixed": 0 }
+    },
+    "growth": {
+      "lastMeasurement": {
+        "date": "2026-08-21T12:30:00.000Z",
+        "heightCm": 99.00,
+        "weightKg": 9.999,
+        "headCircumferenceCm": 99.00
+      }
+    },
+    "feeding": {
+      "lastSide": null,
+      "lastTime": "2026-08-21T12:30:00.000Z",
+      "lastType": "solid",
+      "todayCount": 1
+    },
+    "pumping": {
+      "lastSide": "right",
+      "lastTime": "2026-08-21T12:30:00.000Z",
+      "sessionCount": 1,
+      "todayVolumeMl": 321.00
+    },
+    "tummyTime": {
+      "lastTime": "2026-08-21T12:30:00.000Z",
+      "goalMinutes": 7,
+      "todayMinutes": 10,
+      "lastDurationMinutes": 10
+    }
+  },
+  "serverAsOf": "2026-08-21T13:14:20.061Z",
+  "activeTimer": {
+    "type": "feeding",
+    "context": "Snapshot Member",
+    "isPaused": false,
+    "isRemote": true,
+    "startTime": "2026-08-21T12:45:00.000Z",
+    "timerInstanceId": "sibling-timer"
+  },
+  "activeTimers": [
+    {
+      "type": "feeding",
+      "context": "Snapshot Member",
+      "isPaused": false,
+      "isRemote": true,
+      "startTime": "2026-08-21T12:45:00.000Z",
+      "timerInstanceId": "sibling-timer"
+    },
+    {
+      "type": "sleep",
+      "context": "Snapshot Member",
+      "isPaused": false,
+      "isRemote": true,
+      "startTime": "2026-08-21T06:00:00.000Z",
+      "timerInstanceId": "sibling-sleep-timer"
+    },
+    {
+      "type": "pumping",
+      "context": "Snapshot Member",
+      "isPaused": true,
+      "isRemote": true,
+      "startTime": "2026-08-21T12:50:00.000Z",
+      "timerInstanceId": "sibling-pumping-timer",
+      "accumulatedSeconds": 123
+    },
+    {
+      "type": "tummyTime",
+      "context": "Snapshot Member",
+      "isPaused": false,
+      "isRemote": true,
+      "startTime": "2026-08-21T12:55:00.000Z",
+      "timerInstanceId": "sibling-tummy-timer"
+    }
+  ],
+  "schemaVersion": 1
+}

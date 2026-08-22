@@ -4,6 +4,8 @@
 **Depends on**: 0090
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I glance at my watch and see today's activity for my baby.
 
+**Change class**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 The watch's read path: fetch the day's data via the existing `get_baby_activity_snapshot` Supabase
@@ -26,15 +28,54 @@ record editing, prediction controls, settings, or other phone-only dashboard fea
 
 ## Implementation work
 
-- [ ] Kotlin data models mirroring the snapshot payload (all activity types, active timers, goals),
+- [x] Kotlin data models mirroring the snapshot payload (all activity types, active timers, goals),
       with a comment pointing at the Swift models as the parity reference.
-- [ ] Fixture-based serialization tests: captured real snapshot JSON decodes into the models with
+- [x] Fixture-based serialization tests: captured real snapshot JSON decodes into the models with
       every field asserted (the drift guard).
-- [ ] Snapshot fetch client using the 0090 session; refresh on app open and on wake.
-- [ ] Today summary Compose screen with parity content; loading, error+retry, and empty states.
-- [ ] Selected-baby picker when the household has multiple babies, matching the Apple Watch's
+- [x] Snapshot fetch client using the 0090 session; refresh on app open and on wake.
+- [x] Today summary Compose screen with parity content; loading, error+retry, and empty states.
+- [x] Selected-baby picker when the household has multiple babies, matching the Apple Watch's
       baby-selection behavior and refreshing the chosen baby's snapshot.
-- [ ] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
+- [x] Timezone handling matches iOS (RPC takes `p_timezone` from the baby identity payload).
+
+## Implementation decisions
+
+- The settled 0090 session envelope remains unchanged. The watch loads the household's baby
+  identities directly from the existing RLS-scoped `babies` REST read, persists its own selection,
+  and continues to send the identity payload's timezone to the snapshot RPC.
+- The dedicated Kotlin fixture was captured from the real migration 061 RPC against the isolated
+  local Supabase vector household. The rollback-only capture populated all activity sections and
+  four timers, including context, pause, remote-owner, and accumulated-time fields. The decoder
+  rejects unknown fields, and the fixture test asserts every modeled leaf so drift is visible.
+- Growth remains decoded for drift protection but is not rendered, matching the Apple Watch parity
+  boundary. No history, charts, editing, prediction controls, or settings were added.
+
+## Implementation evidence
+
+- RED/GREEN cycles cover exhaustive fixture decoding and strict drift rejection; authenticated RPC
+  request construction and response decoding; the RLS-scoped baby directory; loading, content,
+  empty, error/retry, and selection state; parity presentation; launch/wake refresh; and 401 session
+  rejection.
+- The plugin template remains the source of truth for generated `android/wear`; its generated copy
+  was kept byte-for-byte synchronized during implementation.
+
+## Review outcome
+
+- skipped (minor): TR-9 — Wake-window rendering shows the configured window rather than derived
+  awake/next-nap state — Owner explicitly chose to finish without remediating the remaining minor
+  findings.
+- skipped (minor): TR-10 — Compose rendering branches lack executable UI coverage — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-11 — Signed-in account and baby fields are no longer presented — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-12 — Stale session envelopes can trigger duplicate summary reloads — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-13 — Runtime snapshot decoding rejects additive unknown fields — Owner
+  explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-14 — Offline baby selection is not persisted until a successful refresh —
+  Owner explicitly chose to finish without remediating the remaining minor findings.
+- skipped (minor): TR-15 — Selected-baby preferences are read synchronously during activity
+  creation — Owner explicitly chose to finish without remediating the remaining minor findings.
 
 ## Validation boundary
 
@@ -44,9 +85,32 @@ the consolidated end-to-end device pass.
 
 ## Acceptance criteria
 
-- [ ] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
+- [x] Automated RPC-client and Compose-state tests prove the selected baby's today snapshot is
       fetched and rendered correctly.
-- [ ] Serialization fixture tests cover every snapshot field and are green in CI.
-- [ ] Network failure shows error + retry; retry after connectivity returns succeeds.
-- [ ] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
-- [ ] No backend changes in the diff.
+- [x] Serialization fixture tests cover every snapshot field and are green in CI. Local Wear unit
+      tests pass; CI proof belongs to the later PR workflow.
+- [x] Network failure shows error + retry; retry after connectivity returns succeeds.
+- [x] No phone-only dashboard, history, charting, editing, or settings surface is introduced.
+- [x] No backend changes in the diff.
+
+## Completion record
+
+- Built the authenticated Wear summary read path under
+  `plugins/with-wear-os/android/wear/src/main/java/com/sofibaby/app/wear/`, including the RPC and
+  directory clients, snapshot model, summary coordinator, Compose screen, baby picker, retry state,
+  elapsed-time presentation, and lifecycle-gated active-timer updates.
+- Kept the plugin template authoritative and synchronized its generated `android/wear` copy.
+- Updated the Wear OS section of `README.md` to describe the summary, wake refresh, stale-data retry,
+  and account-change isolation behavior. The affected prose passed a two-pass `write-well` audit;
+  pass 1 simplified the cache description, and pass 2 found no remaining issues.
+- Review resolved TR-1 through TR-8 as fixed. TR-9 through TR-15 were skipped as minor because the
+  owner explicitly chose to finish without remediating the remaining minor findings; the individual
+  decisions are recorded above.
+- `npm run check:code` passed on 2026-08-21 after generated Wear test output was cleaned from the
+  lint input. The canonical gate covered lint, type checking, unit and component tests, CI workflow
+  tests, native Swift checks, and the production bundle gate.
+- The owner accepted renewing the two existing `image-size` build-time denial-of-service exceptions
+  through 2026-09-22 after PR CI exposed their expiry. Metro remains constrained to the affected 1.x
+  line, and repository-controlled assets remain the only exposure in this exception window.
+- No manual device or simulator verification was required. Task 0098 owns the consolidated
+  phone-to-watch device pass.

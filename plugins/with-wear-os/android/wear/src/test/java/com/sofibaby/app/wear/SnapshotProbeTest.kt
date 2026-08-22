@@ -3,19 +3,24 @@ package com.sofibaby.app.wear
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.json.JSONObject
 
 class SnapshotProbeTest {
     @Test
     fun sendsTheSelectedBabySnapshotRpcWithTheAccessToken() {
         var captured: WearHttpRequest? = null
+        val fixture = JSONObject(requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText())
+            .put("babyId", "baby-1")
+            .put("babyName", "Sofi")
+            .toString()
         val probe = SnapshotProbe { request ->
             captured = request
-            WearHttpResponse(200, "{}")
+            WearHttpResponse(200, fixture)
         }
 
         val outcome = probe.run(active())
 
-        assertEquals(SnapshotOutcome.Success, outcome)
+        assertEquals("baby-1", (outcome as SnapshotOutcome.Success).snapshot.babyId)
         val request = requireNotNull(captured)
         assertEquals("https://project.supabase.co/rest/v1/rpc/get_baby_activity_snapshot", request.url)
         assertEquals("POST", request.method)
@@ -35,6 +40,13 @@ class SnapshotProbeTest {
 
         assertEquals(SnapshotOutcome.Unauthorized, probe.run(active()))
         assertEquals(1, attempts)
+    }
+
+    @Test
+    fun reportsMalformedSuccessfulPayloadAsFailed() {
+        val probe = SnapshotProbe { WearHttpResponse(200, "{}") }
+
+        assertEquals(SnapshotOutcome.Failed, probe.run(active()))
     }
 
     private fun active() = WearSessionEnvelope.Active(
