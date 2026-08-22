@@ -46,20 +46,23 @@ Durable decisions this task must respect (from the brief):
 - The existing public activity snapshot remains the restoration and display contract. Owner-only
   `active_timers` hydration supplies the activity ID, side accumulators, and pause details needed to
   complete a Wear- or phone-started timer after Watch process restart without widening the snapshot.
-- Timer acquisition uses the authorized `acquire_timer_lock` RPC, pause/resume uses
-  `toggle_timer_pause`, side changes remain owner-scoped, and stop merges an idempotent completed
-  feeding before releasing the owner lock. The existing open/wake/retry/post-write snapshot refresh
-  is the polling seam; no background poll, offline queue, or Data Layer activity payload was added.
+- The shared, activity-typed timer transport owns authorized `acquire_timer_lock`, owner hydration,
+  `toggle_timer_pause` or owner-scoped PATCH mutations, and merge-then-release completion. Feeding
+  supplies its timer-data builders/codecs on top; a non-feeding sleep contract test proves the seam
+  routes without feeding constants. The existing open/wake/retry/post-write snapshot refresh is the
+  polling seam; no background poll, offline queue, or Data Layer activity payload was added.
 - Breast completion follows the phone adapter's wall-span and side-accumulator semantics, including
   resumed pauses and the sub-minute discard rule. Bottle logs expose only formula and breast milk,
-  default to 120 ml, clamp to 0–500 ml, and support 10 ml buttons plus 5 ml crown-equivalent steps.
+  default to 120 ml, clamp to 0–500 ml, and support 10 ml buttons plus actual Wear rotary input in
+  5 ml steps.
 
 ## Implementation evidence
 
 - RED/GREEN cycles cover authenticated timer acquisition row parity, the one-active-feeding rule,
   snapshot restart and remote visibility, owner hydration, pause/resume/side switching, breast and
-  bottle row fixtures, resumed-pause completion, sub-minute discard, visible retry with immutable
-  completion/bottle drafts, and unauthorized-session handling.
+  bottle row fixtures, actual rotary adjustment, generic sleep timer transport routing,
+  resumed-pause completion, sub-minute discard, visible retry with immutable completion/bottle
+  drafts, and unauthorized-session handling.
 - The phone feeding adapter test decodes the exact Wear start fixture and restores its timer identity,
   proving that a Watch-created lock enters the existing phone timer lifecycle without a phone change.
 - Focused pre-review proof passed the complete Wear unit suite, phone timer-adapter contract, Wear

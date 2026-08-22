@@ -119,6 +119,65 @@ sealed interface WriteOutcome {
     data object Failed : WriteOutcome
 }
 
+enum class TimerActivityType(val wireValue: String) {
+    Feeding("feeding"),
+    Sleep("sleep"),
+    Pumping("pumping"),
+    TummyTime("tummy_time"),
+}
+
+data class TimerDataCodec<T>(
+    val encode: (T) -> JSONObject,
+    val decode: (startedAt: Instant, data: JSONObject) -> T,
+)
+
+data class SharedTimerDraft<T>(
+    val timerInstanceId: String,
+    val activityType: TimerActivityType,
+    val startedAt: String,
+    val timerData: T,
+    val rpcBody: String,
+)
+
+sealed interface SharedTimerAcquireOutcome<out T> {
+    data class Success<T>(val draft: SharedTimerDraft<T>, val persistedStartedAt: String) :
+        SharedTimerAcquireOutcome<T>
+    data class AlreadyActive(
+        val lockHolderId: String?,
+        val lockHolderName: String?,
+        val startedAt: String?,
+    ) : SharedTimerAcquireOutcome<Nothing>
+    data object Unauthorized : SharedTimerAcquireOutcome<Nothing>
+    data object Offline : SharedTimerAcquireOutcome<Nothing>
+    data object Failed : SharedTimerAcquireOutcome<Nothing>
+}
+
+sealed interface SharedTimerReadOutcome<out T> {
+    data class Success<T>(val timerData: T) : SharedTimerReadOutcome<T>
+    data object Missing : SharedTimerReadOutcome<Nothing>
+    data object Unauthorized : SharedTimerReadOutcome<Nothing>
+    data object Offline : SharedTimerReadOutcome<Nothing>
+    data object Failed : SharedTimerReadOutcome<Nothing>
+}
+
+sealed interface SharedTimerMutationOutcome<out T> {
+    data class Success<T>(val timerData: T) : SharedTimerMutationOutcome<T>
+    data object Unauthorized : SharedTimerMutationOutcome<Nothing>
+    data object Offline : SharedTimerMutationOutcome<Nothing>
+    data object Failed : SharedTimerMutationOutcome<Nothing>
+}
+
+enum class TimerMutationRoute {
+    TogglePause,
+    OwnerPatch,
+}
+
+data class SharedTimerCompletionDraft(
+    val recordId: String,
+    val activityType: TimerActivityType,
+    val mergeBody: String?,
+)
+
 enum class BreastSide(val wireValue: String) {
     Left("left"),
     Right("right"),
@@ -130,6 +189,25 @@ data class FeedingTimerDraft(
     val startedAt: String,
     val side: BreastSide,
     val rpcBody: String,
+)
+
+private data class FeedingTimerStartData(
+    val timerInstanceId: String,
+    val activityId: String,
+    val side: BreastSide,
+)
+
+private val FEEDING_TIMER_START_CODEC = TimerDataCodec<FeedingTimerStartData>(
+    encode = { data ->
+        JSONObject()
+            .put("timerInstanceId", data.timerInstanceId)
+            .put("activityId", data.activityId)
+            .put("side", data.side.wireValue)
+            .put("type", "breast")
+            .put("leftAccumulatedSeconds", 0)
+            .put("rightAccumulatedSeconds", 0)
+    },
+    decode = { _, _ -> error("Start-only feeding timer data is not used for hydration") },
 )
 
 data class CompletedFeedingDraft(
@@ -266,121 +344,220 @@ class SupabaseWriteClient(
         }
     }
 
-    fun newFeedingTimerDraft(
+    fun <T> newTimerDraft(
         session: WearSessionEnvelope.Active,
-        side: BreastSide,
-    ): FeedingTimerDraft {
+        activityType: TimerActivityType,
+        codec: TimerDataCodec<T>,
+        buildTimerData: (timerInstanceId: String, startedAt: String) -> T,
+    ): SharedTimerDraft<T> {
         val timerInstanceId = ids()
-        val activityId = ids()
         val startedAt = MILLISECOND_INSTANT.format(Instant.ofEpochMilli(wallClockMillis()))
-        val timerData = JSONObject()
-            .put("timerInstanceId", timerInstanceId)
-            .put("activityId", activityId)
-            .put("side", side.wireValue)
-            .put("type", "breast")
-            .put("leftAccumulatedSeconds", 0)
-            .put("rightAccumulatedSeconds", 0)
+        val timerData = buildTimerData(timerInstanceId, startedAt)
         val body = JSONObject()
             .put("p_baby_id", session.baby.id)
-            .put("p_activity_type", "feeding")
+            .put("p_activity_type", activityType.wireValue)
             .put("p_user_id", session.account.id)
-            .put("p_timer_data", timerData)
+            .put("p_timer_data", codec.encode(timerData))
             .put("p_started_at", startedAt)
             .toString()
-        return FeedingTimerDraft(timerInstanceId, activityId, startedAt, side, body)
+        return SharedTimerDraft(timerInstanceId, activityType, startedAt, timerData, body)
     }
 
-    fun startFeedingTimer(
+    fun <T> acquireTimer(
         session: WearSessionEnvelope.Active,
-        draft: FeedingTimerDraft,
-    ): TimerWriteOutcome {
-        val request = WearHttpRequest(
-            url = "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/acquire_timer_lock",
-            method = "POST",
-            headers = authenticatedHeaders(session),
-            body = draft.rpcBody,
-        )
+        draft: SharedTimerDraft<T>,
+    ): SharedTimerAcquireOutcome<T> {
         val response = try {
-            transport.execute(request)
+            transport.execute(
+                WearHttpRequest(
+                    url = "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/acquire_timer_lock",
+                    method = "POST",
+                    headers = authenticatedHeaders(session),
+                    body = draft.rpcBody,
+                ),
+            )
         } catch (_: Exception) {
-            return TimerWriteOutcome.Offline
+            return SharedTimerAcquireOutcome.Offline
         }
-        if (response.status == 401) return TimerWriteOutcome.Unauthorized
-        if (response.status !in 200..299) return TimerWriteOutcome.Failed
+        if (response.status == 401) return SharedTimerAcquireOutcome.Unauthorized
+        if (response.status !in 200..299) return SharedTimerAcquireOutcome.Failed
         return try {
             val result = org.json.JSONArray(response.body).getJSONObject(0)
             if (result.getBoolean("success")) {
-                TimerWriteOutcome.Success(draft, result.getString("started_at"))
+                SharedTimerAcquireOutcome.Success(draft, result.getString("started_at"))
             } else {
-                TimerWriteOutcome.AlreadyActive(
+                SharedTimerAcquireOutcome.AlreadyActive(
                     lockHolderId = result.optString("lock_holder_id").takeIf(String::isNotBlank),
                     lockHolderName = result.optString("lock_holder_name").takeIf(String::isNotBlank),
                     startedAt = result.optString("started_at").takeIf(String::isNotBlank),
                 )
             }
         } catch (_: Exception) {
-            TimerWriteOutcome.Failed
+            SharedTimerAcquireOutcome.Failed
+        }
+    }
+
+    fun <T> loadOwnedTimer(
+        session: WearSessionEnvelope.Active,
+        activityType: TimerActivityType,
+        codec: TimerDataCodec<T>,
+    ): SharedTimerReadOutcome<T> {
+        val response = try {
+            transport.execute(
+                WearHttpRequest(
+                    url = "${session.supabase.url.trimEnd('/')}/rest/v1/active_timers" +
+                        "?select=started_at%2Ctimer_data" +
+                        "&baby_id=eq.${session.baby.id}" +
+                        "&activity_type=eq.${activityType.wireValue}" +
+                        "&started_by=eq.${session.account.id}&limit=1",
+                    method = "GET",
+                    headers = authenticatedHeaders(session),
+                    body = "",
+                ),
+            )
+        } catch (_: Exception) {
+            return SharedTimerReadOutcome.Offline
+        }
+        if (response.status == 401) return SharedTimerReadOutcome.Unauthorized
+        if (response.status !in 200..299) return SharedTimerReadOutcome.Failed
+        return try {
+            val rows = org.json.JSONArray(response.body)
+            if (rows.length() == 0) return SharedTimerReadOutcome.Missing
+            val row = rows.getJSONObject(0)
+            SharedTimerReadOutcome.Success(
+                codec.decode(Instant.parse(row.getString("started_at")), row.getJSONObject("timer_data")),
+            )
+        } catch (_: Exception) {
+            SharedTimerReadOutcome.Failed
+        }
+    }
+
+    fun <T> mutateTimerData(
+        session: WearSessionEnvelope.Active,
+        activityType: TimerActivityType,
+        timerData: T,
+        codec: TimerDataCodec<T>,
+        route: TimerMutationRoute,
+    ): SharedTimerMutationOutcome<T> {
+        val encoded = codec.encode(timerData)
+        val (method, url, body) = when (route) {
+            TimerMutationRoute.TogglePause -> Triple(
+                "POST",
+                "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/toggle_timer_pause",
+                JSONObject()
+                    .put("p_baby_id", session.baby.id)
+                    .put("p_activity_type", activityType.wireValue)
+                    .put("p_user_id", session.account.id)
+                    .put("p_timer_data", encoded)
+                    .toString(),
+            )
+            TimerMutationRoute.OwnerPatch -> Triple(
+                "PATCH",
+                "${session.supabase.url.trimEnd('/')}/rest/v1/active_timers" +
+                    "?baby_id=eq.${session.baby.id}" +
+                    "&activity_type=eq.${activityType.wireValue}" +
+                    "&started_by=eq.${session.account.id}",
+                JSONObject().put("timer_data", encoded).toString(),
+            )
+        }
+        val response = try {
+            transport.execute(
+                WearHttpRequest(
+                    url = url,
+                    method = method,
+                    headers = authenticatedHeaders(session),
+                    body = body,
+                ),
+            )
+        } catch (_: Exception) {
+            return SharedTimerMutationOutcome.Offline
+        }
+        return when (response.status) {
+            in 200..299 -> SharedTimerMutationOutcome.Success(timerData)
+            401 -> SharedTimerMutationOutcome.Unauthorized
+            else -> SharedTimerMutationOutcome.Failed
+        }
+    }
+
+    fun completeTimer(
+        session: WearSessionEnvelope.Active,
+        draft: SharedTimerCompletionDraft,
+    ): WriteOutcome {
+        draft.mergeBody?.let { body ->
+            val merge = executeWrite(
+                session,
+                "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/merge_record",
+                body,
+            )
+            if (merge != null) return merge
+        }
+        val releaseBody = JSONObject()
+            .put("p_baby_id", session.baby.id)
+            .put("p_activity_type", draft.activityType.wireValue)
+            .put("p_user_id", session.account.id)
+            .toString()
+        val release = executeWrite(
+            session,
+            "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/release_timer_lock",
+            releaseBody,
+        )
+        return release ?: WriteOutcome.Success(draft.recordId)
+    }
+
+    fun newFeedingTimerDraft(
+        session: WearSessionEnvelope.Active,
+        side: BreastSide,
+    ): FeedingTimerDraft {
+        val shared = newTimerDraft(session, TimerActivityType.Feeding, FEEDING_TIMER_START_CODEC) {
+                timerInstanceId, _ ->
+            FeedingTimerStartData(timerInstanceId, ids(), side)
+        }
+        return FeedingTimerDraft(
+            timerInstanceId = shared.timerInstanceId,
+            activityId = shared.timerData.activityId,
+            startedAt = shared.startedAt,
+            side = shared.timerData.side,
+            rpcBody = shared.rpcBody,
+        )
+    }
+
+    fun startFeedingTimer(
+        session: WearSessionEnvelope.Active,
+        draft: FeedingTimerDraft,
+    ): TimerWriteOutcome {
+        val shared = SharedTimerDraft(
+            timerInstanceId = draft.timerInstanceId,
+            activityType = TimerActivityType.Feeding,
+            startedAt = draft.startedAt,
+            timerData = FeedingTimerStartData(draft.timerInstanceId, draft.activityId, draft.side),
+            rpcBody = draft.rpcBody,
+        )
+        return when (val outcome = acquireTimer(session, shared)) {
+            is SharedTimerAcquireOutcome.Success -> TimerWriteOutcome.Success(draft, outcome.persistedStartedAt)
+            is SharedTimerAcquireOutcome.AlreadyActive -> TimerWriteOutcome.AlreadyActive(
+                outcome.lockHolderId,
+                outcome.lockHolderName,
+                outcome.startedAt,
+            )
+            SharedTimerAcquireOutcome.Unauthorized -> TimerWriteOutcome.Unauthorized
+            SharedTimerAcquireOutcome.Offline -> TimerWriteOutcome.Offline
+            SharedTimerAcquireOutcome.Failed -> TimerWriteOutcome.Failed
         }
     }
 
     fun loadOwnedFeedingTimer(session: WearSessionEnvelope.Active): TimerReadOutcome {
-        val request = WearHttpRequest(
-            url = "${session.supabase.url.trimEnd('/')}/rest/v1/active_timers" +
-                "?select=started_at%2Ctimer_data" +
-                "&baby_id=eq.${session.baby.id}" +
-                "&activity_type=eq.feeding" +
-                "&started_by=eq.${session.account.id}&limit=1",
-            method = "GET",
-            headers = authenticatedHeaders(session),
-            body = "",
-        )
-        val response = try {
-            transport.execute(request)
-        } catch (_: Exception) {
-            return TimerReadOutcome.Offline
-        }
-        if (response.status == 401) return TimerReadOutcome.Unauthorized
-        if (response.status !in 200..299) return TimerReadOutcome.Failed
-        return try {
-            val rows = org.json.JSONArray(response.body)
-            if (rows.length() == 0) return TimerReadOutcome.Missing
-            val row = rows.getJSONObject(0)
-            val startedAt = Instant.parse(row.getString("started_at"))
-            val data = row.getJSONObject("timer_data")
-            val side = when (data.getString("side")) {
-                BreastSide.Left.wireValue -> BreastSide.Left
-                BreastSide.Right.wireValue -> BreastSide.Right
-                else -> return TimerReadOutcome.Failed
-            }
-            val pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse)
-            val isPaused = data.optBoolean("isPaused", false)
-            val accumulated = data.optInt("accumulatedSeconds")
-                .takeIf { data.has("accumulatedSeconds") && !data.isNull("accumulatedSeconds") }
-            val now = Instant.ofEpochMilli(wallClockMillis())
-            TimerReadOutcome.Success(
-                RestoredFeedingTimer(
-                    timerInstanceId = data.optString("timerInstanceId").takeIf(String::isNotBlank),
-                    activityId = data.optString("activityId").takeIf(String::isNotBlank),
-                    startedAt = startedAt,
-                    side = side,
-                    leftAccumulatedSeconds = data.optInt("leftAccumulatedSeconds", 0),
-                    rightAccumulatedSeconds = data.optInt("rightAccumulatedSeconds", 0),
-                    currentSideStartedAt = data.optString("currentSideStartedAt")
-                        .takeIf(String::isNotBlank)?.let(Instant::parse) ?: startedAt,
-                    isPaused = isPaused,
-                    accumulatedSeconds = accumulated,
-                    totalPausedMs = data.optLong("totalPausedMs", 0L),
-                    pausedAt = pausedAt,
-                    canControl = true,
-                    elapsedSeconds = if (isPaused && accumulated != null) {
-                        accumulated.toLong()
-                    } else {
-                        java.time.Duration.between(startedAt, now).seconds.coerceAtLeast(0)
-                    },
-                ),
+        return when (
+            val outcome = loadOwnedTimer(
+                session,
+                TimerActivityType.Feeding,
+                restoredFeedingTimerCodec(),
             )
-        } catch (_: Exception) {
-            TimerReadOutcome.Failed
+        ) {
+            is SharedTimerReadOutcome.Success -> TimerReadOutcome.Success(outcome.timerData)
+            SharedTimerReadOutcome.Missing -> TimerReadOutcome.Missing
+            SharedTimerReadOutcome.Unauthorized -> TimerReadOutcome.Unauthorized
+            SharedTimerReadOutcome.Offline -> TimerReadOutcome.Offline
+            SharedTimerReadOutcome.Failed -> TimerReadOutcome.Failed
         }
     }
 
@@ -398,18 +575,13 @@ class SupabaseWriteClient(
             pausedAt = now,
             elapsedSeconds = totalElapsed.toLong(),
         )
-        return mutateTimer(
-            session = session,
-            method = "POST",
-            url = "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/toggle_timer_pause",
-            body = JSONObject()
-                .put("p_baby_id", session.baby.id)
-                .put("p_activity_type", "feeding")
-                .put("p_user_id", session.account.id)
-                .put("p_timer_data", updated.timerDataJson())
-                .toString(),
-            updated = updated,
-        )
+        return mutateTimerData(
+            session,
+            TimerActivityType.Feeding,
+            updated,
+            restoredFeedingTimerCodec(),
+            TimerMutationRoute.TogglePause,
+        ).toFeedingMutationOutcome()
     }
 
     fun resumeFeedingTimer(
@@ -429,18 +601,13 @@ class SupabaseWriteClient(
             pausedAt = null,
             elapsedSeconds = totalElapsed.toLong(),
         )
-        return mutateTimer(
-            session = session,
-            method = "POST",
-            url = "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/toggle_timer_pause",
-            body = JSONObject()
-                .put("p_baby_id", session.baby.id)
-                .put("p_activity_type", "feeding")
-                .put("p_user_id", session.account.id)
-                .put("p_timer_data", updated.timerDataJson(effectiveStartTime = timer.startedAt))
-                .toString(),
-            updated = updated,
-        )
+        return mutateTimerData(
+            session,
+            TimerActivityType.Feeding,
+            updated,
+            restoredFeedingTimerCodec(effectiveStartTime = timer.startedAt),
+            TimerMutationRoute.TogglePause,
+        ).toFeedingMutationOutcome()
     }
 
     fun switchFeedingSide(
@@ -455,14 +622,13 @@ class SupabaseWriteClient(
             currentSideStartedAt = now,
             elapsedSeconds = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0),
         )
-        return mutateTimer(
-            session = session,
-            method = "PATCH",
-            url = "${session.supabase.url.trimEnd('/')}/rest/v1/active_timers" +
-                "?baby_id=eq.${session.baby.id}&activity_type=eq.feeding&started_by=eq.${session.account.id}",
-            body = JSONObject().put("timer_data", updated.timerDataJson()).toString(),
-            updated = updated,
-        )
+        return mutateTimerData(
+            session,
+            TimerActivityType.Feeding,
+            updated,
+            restoredFeedingTimerCodec(),
+            TimerMutationRoute.OwnerPatch,
+        ).toFeedingMutationOutcome()
     }
 
     fun newCompletedFeedingDraft(
@@ -550,22 +716,14 @@ class SupabaseWriteClient(
     fun completeFeedingTimer(
         session: WearSessionEnvelope.Active,
         draft: CompletedFeedingDraft,
-    ): WriteOutcome {
-        draft.mergeBody?.let { body ->
-            val merge = executeWrite(
-                session,
-                "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/merge_record",
-                body,
-            )
-            if (merge != null) return merge
-        }
-        val release = executeWrite(
-            session,
-            "${session.supabase.url.trimEnd('/')}/rest/v1/rpc/release_timer_lock",
-            draft.releaseBody,
-        )
-        return release ?: WriteOutcome.Success(draft.recordId)
-    }
+    ): WriteOutcome = completeTimer(
+        session,
+        SharedTimerCompletionDraft(
+            recordId = draft.recordId,
+            activityType = TimerActivityType.Feeding,
+            mergeBody = draft.mergeBody,
+        ),
+    )
 
     fun newBottleFeedingDraft(
         session: WearSessionEnvelope.Active,
@@ -655,31 +813,51 @@ class SupabaseWriteClient(
             effectiveStartTime?.let { put("effectiveStartTime", MILLISECOND_INSTANT.format(it)) }
         }
 
-    private fun mutateTimer(
-        session: WearSessionEnvelope.Active,
-        method: String,
-        url: String,
-        body: String,
-        updated: RestoredFeedingTimer,
-    ): TimerMutationOutcome {
-        val response = try {
-            transport.execute(
-                WearHttpRequest(
-                    url = url,
-                    method = method,
-                    headers = authenticatedHeaders(session),
-                    body = body,
-                ),
+    private fun restoredFeedingTimerCodec(
+        effectiveStartTime: Instant? = null,
+    ): TimerDataCodec<RestoredFeedingTimer> = TimerDataCodec(
+        encode = { it.timerDataJson(effectiveStartTime) },
+        decode = { startedAt, data ->
+            val side = when (data.getString("side")) {
+                BreastSide.Left.wireValue -> BreastSide.Left
+                BreastSide.Right.wireValue -> BreastSide.Right
+                else -> error("Invalid breast side")
+            }
+            val pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse)
+            val isPaused = data.optBoolean("isPaused", false)
+            val accumulated = data.optInt("accumulatedSeconds")
+                .takeIf { data.has("accumulatedSeconds") && !data.isNull("accumulatedSeconds") }
+            val now = Instant.ofEpochMilli(wallClockMillis())
+            RestoredFeedingTimer(
+                timerInstanceId = data.optString("timerInstanceId").takeIf(String::isNotBlank),
+                activityId = data.optString("activityId").takeIf(String::isNotBlank),
+                startedAt = startedAt,
+                side = side,
+                leftAccumulatedSeconds = data.optInt("leftAccumulatedSeconds", 0),
+                rightAccumulatedSeconds = data.optInt("rightAccumulatedSeconds", 0),
+                currentSideStartedAt = data.optString("currentSideStartedAt")
+                    .takeIf(String::isNotBlank)?.let(Instant::parse) ?: startedAt,
+                isPaused = isPaused,
+                accumulatedSeconds = accumulated,
+                totalPausedMs = data.optLong("totalPausedMs", 0L),
+                pausedAt = pausedAt,
+                canControl = true,
+                elapsedSeconds = if (isPaused && accumulated != null) {
+                    accumulated.toLong()
+                } else {
+                    java.time.Duration.between(startedAt, now).seconds.coerceAtLeast(0)
+                },
             )
-        } catch (_: Exception) {
-            return TimerMutationOutcome.Offline
+        },
+    )
+
+    private fun SharedTimerMutationOutcome<RestoredFeedingTimer>.toFeedingMutationOutcome():
+        TimerMutationOutcome = when (this) {
+        is SharedTimerMutationOutcome.Success -> TimerMutationOutcome.Success(timerData)
+        SharedTimerMutationOutcome.Unauthorized -> TimerMutationOutcome.Unauthorized
+        SharedTimerMutationOutcome.Offline -> TimerMutationOutcome.Offline
+        SharedTimerMutationOutcome.Failed -> TimerMutationOutcome.Failed
         }
-        return when (response.status) {
-            in 200..299 -> TimerMutationOutcome.Success(updated)
-            401 -> TimerMutationOutcome.Unauthorized
-            else -> TimerMutationOutcome.Failed
-        }
-    }
 
     private fun authenticatedHeaders(session: WearSessionEnvelope.Active): Map<String, String> = mapOf(
         "Content-Type" to "application/json",

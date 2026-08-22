@@ -8,6 +8,82 @@ import org.junit.Test
 
 class FeedingWriteClientTest {
     @Test
+    fun bottleRotaryInputAdjustsByFiveMillilitresAndClamps() {
+        assertEquals(125, BottleVolumeRotary.adjust(BottleLogSelection(), 1f).volumeMl)
+        assertEquals(115, BottleVolumeRotary.adjust(BottleLogSelection(), -1f).volumeMl)
+        assertEquals(120, BottleVolumeRotary.adjust(BottleLogSelection(), 0f).volumeMl)
+        assertEquals(500, BottleVolumeRotary.adjust(BottleLogSelection(500), 1f).volumeMl)
+        assertEquals(0, BottleVolumeRotary.adjust(BottleLogSelection(0), -1f).volumeMl)
+    }
+
+    @Test
+    fun sharedTimerTransportRoutesSleepWithoutFeedingConstants() {
+        val requests = mutableListOf<WearHttpRequest>()
+        val client = SupabaseWriteClient(
+            transport = { request ->
+                requests += request
+                when {
+                    request.url.endsWith("/rpc/acquire_timer_lock") -> WearHttpResponse(
+                        200,
+                        """[{"success":true,"started_at":"2026-08-22T10:15:30.123Z"}]""",
+                    )
+                    request.method == "GET" -> WearHttpResponse(
+                        200,
+                        """[{"started_at":"2026-08-22T10:15:30.123Z","timer_data":{"mode":"automatic"}}]""",
+                    )
+                    else -> WearHttpResponse(200, "{}")
+                }
+            },
+            ids = { "11111111-1111-4111-8111-111111111111" },
+            wallClockMillis = { 1_787_393_730_123L },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val codec = TimerDataCodec<ProbeTimer>(
+            encode = { JSONObject().put("mode", it.mode) },
+            decode = { _, data -> ProbeTimer(data.getString("mode")) },
+        )
+        val draft = client.newTimerDraft(active(), TimerActivityType.Sleep, codec) { _, _ ->
+            ProbeTimer("automatic")
+        }
+
+        val acquired = client.acquireTimer(active(), draft)
+        val restored = client.loadOwnedTimer(active(), TimerActivityType.Sleep, codec)
+        val toggled = client.mutateTimerData(
+            active(),
+            TimerActivityType.Sleep,
+            ProbeTimer("paused"),
+            codec,
+            TimerMutationRoute.TogglePause,
+        )
+        val patched = client.mutateTimerData(
+            active(),
+            TimerActivityType.Sleep,
+            ProbeTimer("automatic"),
+            codec,
+            TimerMutationRoute.OwnerPatch,
+        )
+        val completed = client.completeTimer(
+            active(),
+            SharedTimerCompletionDraft(
+                recordId = "sleep-1",
+                activityType = TimerActivityType.Sleep,
+                mergeBody = JSONObject().put("p_table", "sleep_sessions").toString(),
+            ),
+        )
+
+        assertTrue(acquired is SharedTimerAcquireOutcome.Success<*>)
+        assertEquals(ProbeTimer("automatic"), (restored as SharedTimerReadOutcome.Success).timerData)
+        assertEquals(ProbeTimer("paused"), (toggled as SharedTimerMutationOutcome.Success).timerData)
+        assertEquals(ProbeTimer("automatic"), (patched as SharedTimerMutationOutcome.Success).timerData)
+        assertTrue(completed is WriteOutcome.Success)
+        assertEquals(6, requests.size)
+        assertEquals(2, requests.count { it.url.contains("toggle_timer_pause") || it.method == "PATCH" })
+        val routedWire = requests.joinToString("\n") { "${it.url}\n${it.body}" }
+        assertTrue(routedWire.contains("sleep"))
+        assertTrue(!routedWire.contains("feeding"))
+    }
+
+    @Test
     fun breastfeedingStartMatchesPhoneTimerRowShape() {
         var captured: WearHttpRequest? = null
         val ids = ArrayDeque(
@@ -207,6 +283,8 @@ class FeedingWriteClientTest {
         accessToken = "access-token",
         expiresAt = 2_000_000_000,
     )
+
+    private data class ProbeTimer(val mode: String)
 
     private fun timer() = RestoredFeedingTimer(
         timerInstanceId = "timer-1",

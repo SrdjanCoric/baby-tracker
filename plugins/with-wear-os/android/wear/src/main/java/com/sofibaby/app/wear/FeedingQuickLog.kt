@@ -21,6 +21,14 @@ data class BottleLogSelection(
     fun crownSteps(steps: Int): BottleLogSelection = copy(volumeMl = (volumeMl + steps * 5).coerceIn(0, 500))
 }
 
+object BottleVolumeRotary {
+    fun adjust(selection: BottleLogSelection, verticalScrollPixels: Float): BottleLogSelection = when {
+        verticalScrollPixels > 0 -> selection.crownSteps(1)
+        verticalScrollPixels < 0 -> selection.crownSteps(-1)
+        else -> selection
+    }
+}
+
 sealed interface BottleLogUiState {
     data object Idle : BottleLogUiState
     data object Submitting : BottleLogUiState

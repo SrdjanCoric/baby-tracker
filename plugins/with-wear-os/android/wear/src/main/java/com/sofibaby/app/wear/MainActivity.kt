@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -353,40 +357,50 @@ private fun BottleLogSection(
     onRetry: () -> Unit,
 ) {
     var selection by remember { mutableStateOf(BottleLogSelection()) }
+    val rotaryFocus = remember { FocusRequester() }
     LaunchedEffect(state) {
         if (state == BottleLogUiState.Success) selection = BottleLogSelection()
     }
+    LaunchedEffect(Unit) { rotaryFocus.requestFocus() }
     val enabled = state != BottleLogUiState.Submitting
-    Text("Bottle · ${selection.volumeMl} ml", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        Button(onClick = { selection = selection.minusTen() }, enabled = enabled) { Text("−10") }
-        Button(onClick = { selection = selection.plusTen() }, enabled = enabled) { Text("+10") }
-    }
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        Button(onClick = { selection = selection.crownSteps(-1) }, enabled = enabled) { Text("−5") }
-        Button(onClick = { selection = selection.crownSteps(1) }, enabled = enabled) { Text("+5") }
-    }
-    Button(
-        onClick = { selection = selection.copy(contentType = BottleContentType.Formula) },
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-    ) { Text(if (selection.contentType == BottleContentType.Formula) "✓ Formula" else "Formula") }
-    Button(
-        onClick = { selection = selection.copy(contentType = BottleContentType.BreastMilk) },
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-    ) { Text(if (selection.contentType == BottleContentType.BreastMilk) "✓ Breast milk" else "Breast milk") }
-    Button(onClick = { onLog(selection) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-        Text("Log bottle")
-    }
-    when (state) {
-        BottleLogUiState.Idle -> Unit
-        BottleLogUiState.Submitting -> Text("Logging bottle…", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        BottleLogUiState.Success -> Text("Bottle logged", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        is BottleLogUiState.Error -> {
-            Text(state.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            if (state.canRetry) {
-                Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Retry bottle") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .onRotaryScrollEvent {
+                if (enabled) selection = BottleVolumeRotary.adjust(selection, it.verticalScrollPixels)
+                true
+            }
+            .focusRequester(rotaryFocus)
+            .focusable(),
+    ) {
+        Text("Bottle · ${selection.volumeMl} ml", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Button(onClick = { selection = selection.minusTen() }, enabled = enabled) { Text("−10") }
+            Button(onClick = { selection = selection.plusTen() }, enabled = enabled) { Text("+10") }
+        }
+        Text("Use crown · 5 ml steps", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Button(
+            onClick = { selection = selection.copy(contentType = BottleContentType.Formula) },
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (selection.contentType == BottleContentType.Formula) "✓ Formula" else "Formula") }
+        Button(
+            onClick = { selection = selection.copy(contentType = BottleContentType.BreastMilk) },
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (selection.contentType == BottleContentType.BreastMilk) "✓ Breast milk" else "Breast milk") }
+        Button(onClick = { onLog(selection) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            Text("Log bottle")
+        }
+        when (state) {
+            BottleLogUiState.Idle -> Unit
+            BottleLogUiState.Submitting -> Text("Logging bottle…", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            BottleLogUiState.Success -> Text("Bottle logged", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            is BottleLogUiState.Error -> {
+                Text(state.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                if (state.canRetry) {
+                    Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Retry bottle") }
+                }
             }
         }
     }
