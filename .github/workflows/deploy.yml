@@ -34,7 +34,7 @@ jobs:
       source-sha: ${{ steps.validate.outputs.source-sha }}
     steps:
       - name: Checkout triggering commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -80,7 +80,7 @@ jobs:
       build-id: ${{ steps.build.outputs.build-id }}
     steps:
       - name: Checkout validated commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-metadata.outputs.source-sha }}
 
@@ -131,7 +131,7 @@ jobs:
       build-id: ${{ steps.build.outputs.build-id }}
     steps:
       - name: Checkout validated commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-metadata.outputs.source-sha }}
 
