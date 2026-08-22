@@ -109,5 +109,8 @@ the consolidated end-to-end device pass.
 - `npm run check:code` passed on 2026-08-21 after generated Wear test output was cleaned from the
   lint input. The canonical gate covered lint, type checking, unit and component tests, CI workflow
   tests, native Swift checks, and the production bundle gate.
+- The owner accepted renewing the two existing `image-size` build-time denial-of-service exceptions
+  through 2026-09-22 after PR CI exposed their expiry. Metro remains constrained to the affected 1.x
+  line, and repository-controlled assets remain the only exposure in this exception window.
 - No manual device or simulator verification was required. Task 0098 owns the consolidated
   phone-to-watch device pass.
