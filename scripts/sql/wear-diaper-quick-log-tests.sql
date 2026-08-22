@@ -27,15 +27,21 @@ DO $$
 DECLARE
   v_changed_at timestamptz := pg_catalog.clock_timestamp();
   v_changed_text text;
-  v_clock text;
-  v_record jsonb;
-  v_clocks jsonb;
-  v_persisted jsonb;
+  v_wear_clock text;
+  v_phone_clock text;
+  v_wear_record jsonb;
+  v_phone_record jsonb;
+  v_wear_clocks jsonb;
+  v_phone_clocks jsonb;
+  v_wear_persisted jsonb;
+  v_phone_persisted jsonb;
+  v_normalized_wear jsonb;
   v_snapshot jsonb;
 BEGIN
   v_changed_text := pg_catalog.to_char(v_changed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
-  v_clock := v_changed_text || '-0000-wear-sql-device';
-  v_record := pg_catalog.jsonb_build_object(
+  v_wear_clock := v_changed_text || '-0000-wear-sql-device';
+  v_phone_clock := v_changed_text || '-0000-phone-sql-device';
+  v_wear_record := pg_catalog.jsonb_build_object(
     'id', '92333333-3333-4333-8333-333333333333',
     'baby_id', '92222222-2222-4222-8222-222222222222',
     'type', 'dirty',
@@ -44,44 +50,87 @@ BEGIN
     'logged_by', '92111111-1111-4111-8111-111111111111',
     'created_at', v_changed_text
   );
-  v_clocks := pg_catalog.jsonb_build_object(
-    'id', v_clock,
-    'baby_id', v_clock,
-    'type', v_clock,
-    'stool_color', v_clock,
-    'changed_at', v_clock,
-    'logged_by', v_clock,
-    'created_at', v_clock
+  v_phone_record := v_wear_record || pg_catalog.jsonb_build_object(
+    'id', '92444444-4444-4444-8444-444444444444'
+  );
+  v_wear_clocks := pg_catalog.jsonb_build_object(
+    'id', v_wear_clock,
+    'baby_id', v_wear_clock,
+    'type', v_wear_clock,
+    'stool_color', v_wear_clock,
+    'changed_at', v_wear_clock,
+    'logged_by', v_wear_clock,
+    'created_at', v_wear_clock
+  );
+  v_phone_clocks := pg_catalog.jsonb_build_object(
+    'id', v_phone_clock,
+    'baby_id', v_phone_clock,
+    'type', v_phone_clock,
+    'stool_color', v_phone_clock,
+    'changed_at', v_phone_clock,
+    'logged_by', v_phone_clock,
+    'created_at', v_phone_clock
   );
 
-  v_persisted := public.merge_record(
+  v_wear_persisted := public.merge_record(
     'diapers',
-    v_record,
-    v_clocks,
+    v_wear_record,
+    v_wear_clocks,
     'wear-diaper:92333333-3333-4333-8333-333333333333',
     '92111111-1111-4111-8111-111111111111'
   );
-
-  v_persisted := pg_catalog.jsonb_build_object(
-    'id', v_persisted->'id',
-    'baby_id', v_persisted->'baby_id',
-    'type', v_persisted->'type',
-    'stool_color', v_persisted->'stool_color',
-    'changed_at', pg_catalog.to_char((v_persisted->>'changed_at')::timestamptz AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-    'logged_by', v_persisted->'logged_by',
-    'created_at', pg_catalog.to_char((v_persisted->>'created_at')::timestamptz AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-    'field_clocks', v_persisted->'field_clocks'
+  v_phone_persisted := public.merge_record(
+    'diapers',
+    v_phone_record,
+    v_phone_clocks,
+    'phone-diaper:92444444-4444-4444-8444-444444444444',
+    '92111111-1111-4111-8111-111111111111'
   );
 
-  IF v_persisted IS DISTINCT FROM v_record || pg_catalog.jsonb_build_object('field_clocks', v_clocks) THEN
-    RAISE EXCEPTION 'Wear diaper row did not persist in phone shape: %', v_persisted;
+  v_normalized_wear := pg_catalog.jsonb_build_object(
+    'id', v_wear_persisted->'id',
+    'baby_id', v_wear_persisted->'baby_id',
+    'type', v_wear_persisted->'type',
+    'stool_color', v_wear_persisted->'stool_color',
+    'changed_at', pg_catalog.to_char((v_wear_persisted->>'changed_at')::timestamptz AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+    'logged_by', v_wear_persisted->'logged_by',
+    'created_at', pg_catalog.to_char((v_wear_persisted->>'created_at')::timestamptz AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+    'field_clocks', v_wear_persisted->'field_clocks'
+  );
+
+  IF v_normalized_wear IS DISTINCT FROM
+    v_wear_record || pg_catalog.jsonb_build_object('field_clocks', v_wear_clocks)
+  THEN
+    RAISE EXCEPTION 'Wear diaper row did not persist its submitted shape: %', v_normalized_wear;
+  END IF;
+
+  IF (
+    SELECT pg_catalog.jsonb_agg(key ORDER BY key)
+    FROM pg_catalog.jsonb_object_keys(v_wear_persisted) AS fields(key)
+  ) IS DISTINCT FROM (
+    SELECT pg_catalog.jsonb_agg(key ORDER BY key)
+    FROM pg_catalog.jsonb_object_keys(v_phone_persisted) AS fields(key)
+  ) THEN
+    RAISE EXCEPTION 'Wear and phone diaper column sets differ: wear %, phone %',
+      v_wear_persisted, v_phone_persisted;
+  END IF;
+
+  IF (
+    SELECT pg_catalog.jsonb_agg(key ORDER BY key)
+    FROM pg_catalog.jsonb_object_keys(v_wear_persisted->'field_clocks') AS fields(key)
+  ) IS DISTINCT FROM (
+    SELECT pg_catalog.jsonb_agg(key ORDER BY key)
+    FROM pg_catalog.jsonb_object_keys(v_phone_persisted->'field_clocks') AS fields(key)
+  ) THEN
+    RAISE EXCEPTION 'Wear and phone diaper clock-key sets differ: wear %, phone %',
+      v_wear_persisted->'field_clocks', v_phone_persisted->'field_clocks';
   END IF;
 
   v_snapshot := public.get_baby_activity_snapshot(
     '92222222-2222-4222-8222-222222222222',
     'UTC'
   );
-  IF v_snapshot->'activities'->'diaper'->'todayCounts'->>'dirty' <> '1'
+  IF v_snapshot->'activities'->'diaper'->'todayCounts'->>'dirty' <> '2'
     OR v_snapshot->'activities'->'diaper'->>'lastType' <> 'dirty'
   THEN
     RAISE EXCEPTION 'Shared snapshot did not read back Wear diaper: %', v_snapshot;
@@ -89,5 +138,5 @@ BEGIN
 END
 $$;
 
-\echo 'PASS: Wear diaper merge persists phone shape and reads through shared snapshot'
+\echo 'PASS: Wear and phone diaper merges persist the same shape and read through shared snapshot'
 ROLLBACK;
