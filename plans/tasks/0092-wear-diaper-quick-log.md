@@ -84,6 +84,31 @@ Task 0098 verifies watch-to-phone visibility with the completed Wear feature set
 - skipped (minor): TR-14 — Stool-color selection is lost across summary state transitions — user requested a major-only remediation pass.
 - skipped (minor): TR-15 — Apple Watch parity test asserts enum declarations rather than UI exposure — user requested a major-only remediation pass.
 
+## Completion record
+
+- Built the reusable authenticated Wear write client, persisted HLC clock generation, diaper quick-log
+  coordinator and Compose controls, post-write summary refresh, stale-session recovery, retry-safe
+  immutable drafts, and one-second duplicate-submit protection. The implementation decisions above
+  remain the final design.
+- Relevant implementation and proof live under `plugins/with-wear-os/android/wear/`,
+  `src/services/diaper-sync-record.ts`, `src/services/diaper-sync-record.test.ts`, and
+  `scripts/sql/wear-diaper-quick-log-tests.sql`.
+- README disposition: updated `Wear OS Native Integration` with current diaper logging, retry,
+  direct-write, summary-refresh, and reconnect behavior. The `write-well` audit completed in two
+  passes; the second pass found no additional issues.
+- Review outcome: TR-1 through TR-6 fixed. TR-7 through TR-15 were skipped as minor at the user's
+  request for a major-only remediation pass, with reasons recorded above. TR-16 remains
+  `deferred-out-of-scope` because it is a pre-existing transport concern. No security risk was
+  accepted.
+- Focused proof passed for both Wear diaper unit-test classes, the phone/Wear row fixture contract,
+  rollback-only phone/watch SQL persistence and snapshot readback, Wear plugin generation, and
+  plugin/generated-module parity.
+- Canonical proof: `npm run check:code` passed on 2026-08-22 after the authorized base-regression
+  correction updated the CI contract tests for the existing required `changes` job. The focused CI
+  contract run passed all 11 tests.
+- Manual verification: none required. This task has no `[verify]` checkpoint; Task 0098 owns paired
+  phone/watch visibility verification.
+
 ## Acceptance criteria
 
 - [x] Automated integration proof shows a watch-built diaper payload persists with the same row
