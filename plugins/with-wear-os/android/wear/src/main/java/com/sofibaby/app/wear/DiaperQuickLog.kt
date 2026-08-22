@@ -238,14 +238,18 @@ class DiaperQuickLogCoordinator(
     private val refreshSummary: () -> Unit,
     private val dispatch: ((() -> Unit) -> Unit) = { it() },
     private val onUnauthorized: (Long) -> Unit = {},
+    private val monotonicMillis: () -> Long = { System.nanoTime() / 1_000_000 },
     private val onStateChanged: (DiaperQuickLogState) -> Unit = {},
 ) {
     var state: DiaperQuickLogState = DiaperQuickLogState.Idle
         private set(value) {
             field = value
             onStateChanged(value)
-        }
+    }
     private var pendingDraft: DiaperWriteDraft? = null
+    private var lastSubmitType: DiaperType? = null
+    private var lastSubmitColor: StoolColor? = null
+    private var lastSubmitAt: Long? = null
 
     @Synchronized
     fun submit(
@@ -254,6 +258,26 @@ class DiaperQuickLogCoordinator(
         stoolColor: StoolColor?,
     ) {
         if (state == DiaperQuickLogState.Submitting) return
+        val retryableDraft = pendingDraft
+        if (
+            (state as? DiaperQuickLogState.Error)?.canRetry == true &&
+            retryableDraft?.type == type && retryableDraft.stoolColor == stoolColor
+        ) {
+            lastSubmitAt = monotonicMillis()
+            start(session) { retryableDraft }
+            return
+        }
+        val now = monotonicMillis()
+        val previousSubmitAt = lastSubmitAt
+        if (
+            type == lastSubmitType && stoolColor == lastSubmitColor && previousSubmitAt != null &&
+            now - previousSubmitAt in 0 until SUBMIT_DEBOUNCE_MILLIS
+        ) {
+            return
+        }
+        lastSubmitType = type
+        lastSubmitColor = stoolColor
+        lastSubmitAt = now
         start(session) { drafts.create(session, type, stoolColor) }
     }
 
@@ -267,6 +291,9 @@ class DiaperQuickLogCoordinator(
     @Synchronized
     fun reset() {
         pendingDraft = null
+        lastSubmitType = null
+        lastSubmitColor = null
+        lastSubmitAt = null
         state = DiaperQuickLogState.Idle
     }
 
@@ -305,5 +332,9 @@ class DiaperQuickLogCoordinator(
             if (shouldRefresh) refreshSummary()
             unauthorizedRevision?.let(onUnauthorized)
         }
+    }
+
+    private companion object {
+        const val SUBMIT_DEBOUNCE_MILLIS = 1_000L
     }
 }

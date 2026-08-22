@@ -80,6 +80,60 @@ class DiaperQuickLogCoordinatorTest {
     }
 
     @Test
+    fun identicalSubmitWithinDebounceAfterSuccessDispatchesOneWrite() {
+        val queued = ArrayDeque<() -> Unit>()
+        var now = 1_000L
+        var writes = 0
+        val coordinator = coordinator(
+            writer = { _, draft ->
+                writes += 1
+                WriteOutcome.Success(draft.recordId)
+            },
+            refresh = {},
+            dispatch = queued::add,
+            monotonicMillis = { now },
+        )
+
+        coordinator.submit(active(), DiaperType.Wet, null)
+        queued.removeFirst().invoke()
+        now += 250
+        coordinator.submit(active(), DiaperType.Wet, null)
+
+        assertTrue(queued.isEmpty())
+        assertEquals(1, writes)
+    }
+
+    @Test
+    fun retappingSameSelectionAfterRetryableErrorReusesPendingDraft() {
+        val attempts = mutableListOf<DiaperWriteDraft>()
+        val outcomes = ArrayDeque<WriteOutcome>().apply {
+            add(WriteOutcome.Offline)
+            add(WriteOutcome.Success("diaper-1"))
+        }
+        var draftCreations = 0
+        val coordinator = coordinator(
+            drafts = { _, type, color ->
+                draftCreations += 1
+                DiaperWriteDraft("diaper-$draftCreations", "operation-$draftCreations", type, color, "payload")
+            },
+            writer = { _, draft ->
+                attempts += draft
+                outcomes.removeFirst()
+            },
+            refresh = {},
+            monotonicMillis = { 1_000L },
+        )
+
+        coordinator.submit(active(), DiaperType.Mixed, StoolColor.Green)
+        coordinator.submit(active(), DiaperType.Mixed, StoolColor.Green)
+
+        assertEquals(DiaperQuickLogState.Success, coordinator.state)
+        assertEquals(1, draftCreations)
+        assertEquals(2, attempts.size)
+        assertSame(attempts[0], attempts[1])
+    }
+
+    @Test
     fun resetIsNotBlockedByPostSuccessSummaryRefresh() {
         val queued = mutableListOf<() -> Unit>()
         val refreshStarted = CountDownLatch(1)
@@ -156,12 +210,14 @@ class DiaperQuickLogCoordinatorTest {
         refresh: () -> Unit,
         dispatch: ((() -> Unit) -> Unit) = { it() },
         onUnauthorized: (Long) -> Unit = {},
+        monotonicMillis: () -> Long = { 0L },
     ) = DiaperQuickLogCoordinator(
         drafts = drafts,
         writer = writer,
         refreshSummary = refresh,
         dispatch = dispatch,
         onUnauthorized = onUnauthorized,
+        monotonicMillis = monotonicMillis,
     )
 
     private fun active() = WearSessionEnvelope.Active(
