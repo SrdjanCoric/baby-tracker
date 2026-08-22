@@ -82,18 +82,33 @@ class WearHybridLogicalClock(
 ) {
     private var state = store.load()
 
+    fun issue(): String = issueBatch(1).single()
+
     @Synchronized
-    fun issue(): String {
-        val now = wallClockMillis()
-        val previous = state
-        var millis = maxOf(now, previous?.millis ?: Long.MIN_VALUE)
-        var counter = if (previous != null && millis == previous.millis) previous.counter + 1 else 0
-        if (counter > 9_999) {
-            millis += counter / 10_000
-            counter %= 10_000
+    fun issueBatch(count: Int): List<String> {
+        require(count > 0) { "Clock batch must not be empty" }
+        var nextState = state
+        val clocks = buildList {
+            repeat(count) {
+                val now = wallClockMillis()
+                val previous = nextState
+                var millis = maxOf(now, previous?.millis ?: Long.MIN_VALUE)
+                var counter = if (previous != null && millis == previous.millis) previous.counter + 1 else 0
+                if (counter > 9_999) {
+                    millis += counter / 10_000
+                    counter %= 10_000
+                }
+                nextState = WearClockState(millis, counter)
+                add(
+                    "${MILLISECOND_INSTANT.format(Instant.ofEpochMilli(millis))}-" +
+                        "${counter.toString().padStart(4, '0')}-${store.deviceId}",
+                )
+            }
         }
-        state = WearClockState(millis, counter).also(store::save)
-        return "${MILLISECOND_INSTANT.format(Instant.ofEpochMilli(millis))}-${counter.toString().padStart(4, '0')}-${store.deviceId}"
+        val finalState = requireNotNull(nextState)
+        store.save(finalState)
+        state = finalState
+        return clocks
     }
 }
 
@@ -159,7 +174,9 @@ class SupabaseWriteClient(
             add("created_at")
         }
         val clocks = JSONObject()
-        clockedFields.forEach { field -> clocks.put(field, hlc.issue()) }
+        clockedFields.zip(hlc.issueBatch(clockedFields.size)).forEach { (field, clock) ->
+            clocks.put(field, clock)
+        }
         val operationId = "wear-diaper:$id"
         val body = JSONObject()
             .put("p_table", "diapers")
@@ -237,16 +254,14 @@ class DiaperQuickLogCoordinator(
         stoolColor: StoolColor?,
     ) {
         if (state == DiaperQuickLogState.Submitting) return
-        val draft = drafts.create(session, type, stoolColor)
-        pendingDraft = draft
-        start(session, draft)
+        start(session) { drafts.create(session, type, stoolColor) }
     }
 
     @Synchronized
     fun retry(session: WearSessionEnvelope.Active) {
         if (state == DiaperQuickLogState.Submitting) return
         val draft = pendingDraft ?: return
-        start(session, draft)
+        start(session) { draft }
     }
 
     @Synchronized
@@ -255,9 +270,20 @@ class DiaperQuickLogCoordinator(
         state = DiaperQuickLogState.Idle
     }
 
-    private fun start(session: WearSessionEnvelope.Active, draft: DiaperWriteDraft) {
+    private fun start(session: WearSessionEnvelope.Active, createDraft: () -> DiaperWriteDraft) {
         state = DiaperQuickLogState.Submitting
         dispatch {
+            val draft = try {
+                createDraft()
+            } catch (_: Exception) {
+                synchronized(this) {
+                    state = DiaperQuickLogState.Error("Could not log diaper")
+                }
+                return@dispatch
+            }
+            synchronized(this) {
+                pendingDraft = draft
+            }
             val outcome = writer.write(session, draft)
             var shouldRefresh = false
             var unauthorizedRevision: Long? = null

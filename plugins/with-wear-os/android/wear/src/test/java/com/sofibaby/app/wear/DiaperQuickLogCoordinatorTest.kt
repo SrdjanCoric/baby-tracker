@@ -112,6 +112,34 @@ class DiaperQuickLogCoordinatorTest {
     }
 
     @Test
+    fun draftCreationRunsOnDispatchAndFailureIsVisible() {
+        val queued = mutableListOf<() -> Unit>()
+        var draftAttempts = 0
+        var writes = 0
+        val coordinator = coordinator(
+            drafts = { _, _, _ ->
+                draftAttempts += 1
+                error("clock persistence failed")
+            },
+            writer = { _, _ ->
+                writes += 1
+                WriteOutcome.Failed
+            },
+            refresh = {},
+            dispatch = queued::add,
+        )
+
+        coordinator.submit(active(), DiaperType.Wet, null)
+
+        assertEquals(DiaperQuickLogState.Submitting, coordinator.state)
+        assertEquals(0, draftAttempts)
+        queued.single().invoke()
+        assertEquals(DiaperQuickLogState.Error("Could not log diaper"), coordinator.state)
+        assertEquals(1, draftAttempts)
+        assertEquals(0, writes)
+    }
+
+    @Test
     fun onlyAppleWatchParityOptionsAreExposed() {
         assertEquals(listOf("wet", "dirty", "mixed", "dry"), DiaperType.entries.map { it.wireValue })
         assertEquals(
@@ -121,12 +149,15 @@ class DiaperQuickLogCoordinatorTest {
     }
 
     private fun coordinator(
+        drafts: DiaperDraftFactory = DiaperDraftFactory { _, type, color ->
+            DiaperWriteDraft("diaper-1", "operation-1", type, color, "payload")
+        },
         writer: DiaperDraftWriter,
         refresh: () -> Unit,
         dispatch: ((() -> Unit) -> Unit) = { it() },
         onUnauthorized: (Long) -> Unit = {},
     ) = DiaperQuickLogCoordinator(
-        drafts = { _, type, color -> DiaperWriteDraft("diaper-1", "operation-1", type, color, "payload") },
+        drafts = drafts,
         writer = writer,
         refreshSummary = refresh,
         dispatch = dispatch,

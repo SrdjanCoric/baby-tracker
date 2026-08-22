@@ -20,6 +20,28 @@ class DiaperWriteClientTest {
     }
 
     @Test
+    fun diaperDraftPersistsOneFinalHlcState() {
+        var saves = 0
+        val store = object : WearClockStore {
+            override val deviceId = "wear-test-device"
+            override fun load(): WearClockState? = null
+            override fun save(state: WearClockState) {
+                saves += 1
+            }
+        }
+        val client = SupabaseWriteClient(
+            transport = { error("transport must not run while building a draft") },
+            ids = { "11111111-1111-4111-8111-111111111111" },
+            wallClockMillis = { 1_787_386_530_123L },
+            clockStore = store,
+        )
+
+        client.newDiaperDraft(active(), DiaperType.Dirty, StoolColor.Green)
+
+        assertEquals(1, saves)
+    }
+
+    @Test
     fun dirtyDraftMatchesPhoneRowShapeAndSendsAuthenticatedIdempotentMerge() {
         var captured: WearHttpRequest? = null
         val clockStore = InMemoryWearClockStore("wear-test-device")
