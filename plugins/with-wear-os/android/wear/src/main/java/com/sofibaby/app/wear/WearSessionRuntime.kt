@@ -70,6 +70,10 @@ object WearSessionRuntime {
             writer = writeClient::writeDiaper,
             refreshSummary = { summaryDriver?.onWake() },
             dispatch = { work -> executor.execute { work() } },
+            onUnauthorized = { revision ->
+                coordinator?.onUnauthorized(revision)
+                mutableState.value = coordinator?.state ?: WearSessionUiState.SignedOut
+            },
             onStateChanged = { mutableDiaperState.value = it },
         )
         mutableState.value = requireNotNull(coordinator).state

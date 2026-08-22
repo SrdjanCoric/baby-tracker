@@ -37,6 +37,21 @@ class DiaperQuickLogCoordinatorTest {
     }
 
     @Test
+    fun unauthorizedWriteRequestsFreshSessionAndCannotRetry() {
+        val unauthorizedRevisions = mutableListOf<Long>()
+        val coordinator = coordinator(
+            writer = { _, _ -> WriteOutcome.Unauthorized },
+            refresh = {},
+            onUnauthorized = unauthorizedRevisions::add,
+        )
+
+        coordinator.submit(active(), DiaperType.Wet, null)
+
+        assertEquals(listOf(3L), unauthorizedRevisions)
+        assertEquals(DiaperQuickLogState.Error("Session expired", canRetry = false), coordinator.state)
+    }
+
+    @Test
     fun rapidDoubleSubmitDispatchesOneWriteAndSuccessReloadsSummaryOnce() {
         val queued = mutableListOf<() -> Unit>()
         var writes = 0
@@ -74,11 +89,13 @@ class DiaperQuickLogCoordinatorTest {
         writer: DiaperDraftWriter,
         refresh: () -> Unit,
         dispatch: ((() -> Unit) -> Unit) = { it() },
+        onUnauthorized: (Long) -> Unit = {},
     ) = DiaperQuickLogCoordinator(
         drafts = { _, type, color -> DiaperWriteDraft("diaper-1", "operation-1", type, color, "payload") },
         writer = writer,
         refreshSummary = refresh,
         dispatch = dispatch,
+        onUnauthorized = onUnauthorized,
     )
 
     private fun active() = WearSessionEnvelope.Active(

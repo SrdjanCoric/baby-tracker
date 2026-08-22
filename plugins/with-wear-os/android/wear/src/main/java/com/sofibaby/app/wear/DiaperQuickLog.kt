@@ -220,6 +220,7 @@ class DiaperQuickLogCoordinator(
     private val writer: DiaperDraftWriter,
     private val refreshSummary: () -> Unit,
     private val dispatch: ((() -> Unit) -> Unit) = { it() },
+    private val onUnauthorized: (Long) -> Unit = {},
     private val onStateChanged: (DiaperQuickLogState) -> Unit = {},
 ) {
     var state: DiaperQuickLogState = DiaperQuickLogState.Idle
@@ -258,6 +259,7 @@ class DiaperQuickLogCoordinator(
         state = DiaperQuickLogState.Submitting
         dispatch {
             val outcome = writer.write(session, draft)
+            var unauthorizedRevision: Long? = null
             synchronized(this) {
                 state = when (outcome) {
                     is WriteOutcome.Success -> {
@@ -266,10 +268,14 @@ class DiaperQuickLogCoordinator(
                         DiaperQuickLogState.Success
                     }
                     WriteOutcome.Offline -> DiaperQuickLogState.Error("No network connection")
-                    WriteOutcome.Unauthorized -> DiaperQuickLogState.Error("Session expired")
+                    WriteOutcome.Unauthorized -> {
+                        unauthorizedRevision = session.revision
+                        DiaperQuickLogState.Error("Session expired", canRetry = false)
+                    }
                     WriteOutcome.Failed -> DiaperQuickLogState.Error("Could not log diaper")
                 }
             }
+            unauthorizedRevision?.let(onUnauthorized)
         }
     }
 }
