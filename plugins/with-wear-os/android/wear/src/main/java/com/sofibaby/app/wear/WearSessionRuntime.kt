@@ -12,15 +12,21 @@ object WearSessionRuntime {
     private val mutableState = mutableStateOf<WearSessionUiState>(WearSessionUiState.SignedOut)
     private val mutableTodayState = mutableStateOf<TodaySummaryUiState>(TodaySummaryUiState.Unavailable)
     private val mutableDiaperState = mutableStateOf<DiaperQuickLogState>(DiaperQuickLogState.Idle)
+    private val mutableFeedingState = mutableStateOf<FeedingTimerUiState>(FeedingTimerUiState.Idle)
+    private val mutableBottleState = mutableStateOf<BottleLogUiState>(BottleLogUiState.Idle)
     private val executor = Executors.newSingleThreadExecutor()
     private var coordinator: WearSessionCoordinator? = null
     private var summaryDriver: TodaySummaryRefreshDriver? = null
     private var selectionStore: android.content.SharedPreferences? = null
     private var diaperCoordinator: DiaperQuickLogCoordinator? = null
+    private var feedingCoordinator: FeedingTimerCoordinator? = null
+    private var bottleCoordinator: BottleLogCoordinator? = null
 
     val state: State<WearSessionUiState> = mutableState
     val todayState: State<TodaySummaryUiState> = mutableTodayState
     val diaperState: State<DiaperQuickLogState> = mutableDiaperState
+    val feedingState: State<FeedingTimerUiState> = mutableFeedingState
+    val bottleState: State<BottleLogUiState> = mutableBottleState
 
     @Synchronized
     fun initialize(context: Context) {
@@ -50,7 +56,7 @@ object WearSessionRuntime {
             babyDirectory = { BabyDirectoryClient(UrlConnectionWearHttpTransport).load(it) },
             snapshots = { SnapshotProbe(UrlConnectionWearHttpTransport).run(it) },
             preferredBabyId = selectionStore?.getString(SELECTED_BABY_KEY, null),
-            onStateChanged = { mutableTodayState.value = it },
+            onStateChanged = ::acceptTodayState,
         )
         summaryDriver = TodaySummaryRefreshDriver(
             session = ::usableSession,
@@ -76,6 +82,28 @@ object WearSessionRuntime {
             },
             onStateChanged = { mutableDiaperState.value = it },
         )
+        feedingCoordinator = FeedingTimerCoordinator(
+            drafts = writeClient::newFeedingTimerDraft,
+            starter = writeClient::startFeedingTimer,
+            refreshSummary = { summaryDriver?.onWake() },
+            completionDrafts = writeClient::newCompletedFeedingDraft,
+            completionWriter = writeClient::completeFeedingTimer,
+            pauser = writeClient::pauseFeedingTimer,
+            resumer = writeClient::resumeFeedingTimer,
+            sideSwitcher = writeClient::switchFeedingSide,
+            timerReader = writeClient::loadOwnedFeedingTimer,
+            dispatch = { work -> executor.execute { work() } },
+            onUnauthorized = ::handleUnauthorized,
+            onStateChanged = { mutableFeedingState.value = it },
+        )
+        bottleCoordinator = BottleLogCoordinator(
+            drafts = writeClient::newBottleFeedingDraft,
+            writer = writeClient::writeBottleFeeding,
+            refreshSummary = { summaryDriver?.onWake() },
+            dispatch = { work -> executor.execute { work() } },
+            onUnauthorized = ::handleUnauthorized,
+            onStateChanged = { mutableBottleState.value = it },
+        )
         mutableState.value = requireNotNull(coordinator).state
         loadLatest(applicationContext)
     }
@@ -93,7 +121,11 @@ object WearSessionRuntime {
             envelope !is WearSessionEnvelope.Active || current.phoneEpoch != envelope.phoneEpoch ||
                 current.account.id != envelope.account.id
         } ?: true
-        if (sessionScopeChanged) diaperCoordinator?.reset()
+        if (sessionScopeChanged) {
+            diaperCoordinator?.reset()
+            feedingCoordinator?.reset()
+            bottleCoordinator?.reset()
+        }
         target.accept(envelope)
         mutableState.value = target.state
         if (envelope is WearSessionEnvelope.Active) {
@@ -133,6 +165,38 @@ object WearSessionRuntime {
         diaperCoordinator?.reset()
     }
 
+    fun startFeeding(side: BreastSide) {
+        selectedSession()?.let { feedingCoordinator?.start(it, side) }
+    }
+
+    fun pauseFeeding() {
+        selectedSession()?.let { feedingCoordinator?.pause(it) }
+    }
+
+    fun resumeFeeding() {
+        selectedSession()?.let { feedingCoordinator?.resume(it) }
+    }
+
+    fun switchFeedingSide() {
+        selectedSession()?.let { feedingCoordinator?.switchSide(it) }
+    }
+
+    fun stopFeeding() {
+        selectedSession()?.let { feedingCoordinator?.stop(it) }
+    }
+
+    fun retryFeeding() {
+        selectedSession()?.let { feedingCoordinator?.retry(it) }
+    }
+
+    fun logBottle(selection: BottleLogSelection) {
+        selectedSession()?.let { bottleCoordinator?.submit(it, selection) }
+    }
+
+    fun retryBottle() {
+        selectedSession()?.let { bottleCoordinator?.retry(it) }
+    }
+
     private fun loadLatest(context: Context) {
         Wearable.getDataClient(context).dataItems.addOnSuccessListener { items ->
             try {
@@ -167,6 +231,26 @@ object WearSessionRuntime {
             TodaySummaryUiState.Unavailable -> null
         } ?: return session
         return session.copy(baby = WearSessionEnvelope.Baby(selected.id, selected.name, selected.timezone))
+    }
+
+    private fun acceptTodayState(state: TodaySummaryUiState) {
+        mutableTodayState.value = state
+        val snapshot = when (state) {
+            is TodaySummaryUiState.Content -> state.snapshot
+            is TodaySummaryUiState.Empty -> state.snapshot
+            is TodaySummaryUiState.Stale -> state.snapshot
+            else -> null
+        } ?: return
+        val session = selectedSession() ?: return
+        feedingCoordinator?.restoreSnapshot(
+            session,
+            snapshot.activeTimers.firstOrNull { it.type == "feeding" },
+        )
+    }
+
+    private fun handleUnauthorized(revision: Long) {
+        coordinator?.onUnauthorized(revision)
+        mutableState.value = coordinator?.state ?: WearSessionUiState.SignedOut
     }
 
     private const val STATE_PATH = "/sofi/wear/auth/state"

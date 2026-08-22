@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,17 @@ import androidx.wear.compose.material3.Text
 import java.time.Instant
 import kotlinx.coroutines.delay
 
+data class FeedingActions(
+    val start: (BreastSide) -> Unit,
+    val pause: () -> Unit,
+    val resume: () -> Unit,
+    val switchSide: () -> Unit,
+    val stop: () -> Unit,
+    val retryTimer: () -> Unit,
+    val logBottle: (BottleLogSelection) -> Unit,
+    val retryBottle: () -> Unit,
+)
+
 object TodaySummaryTicker {
     fun shouldRun(hasActiveTimers: Boolean, lifecycleState: Lifecycle.State): Boolean =
         hasActiveTimers && lifecycleState == Lifecycle.State.RESUMED
@@ -50,10 +62,22 @@ class MainActivity : ComponentActivity() {
                     sessionState = WearSessionRuntime.state.value,
                     todayState = WearSessionRuntime.todayState.value,
                     diaperState = WearSessionRuntime.diaperState.value,
+                    feedingState = WearSessionRuntime.feedingState.value,
+                    bottleState = WearSessionRuntime.bottleState.value,
                     onRetry = WearSessionRuntime::retry,
                     onSelectBaby = WearSessionRuntime::selectBaby,
                     onLogDiaper = WearSessionRuntime::logDiaper,
                     onRetryDiaper = WearSessionRuntime::retryDiaper,
+                    feedingActions = FeedingActions(
+                        start = WearSessionRuntime::startFeeding,
+                        pause = WearSessionRuntime::pauseFeeding,
+                        resume = WearSessionRuntime::resumeFeeding,
+                        switchSide = WearSessionRuntime::switchFeedingSide,
+                        stop = WearSessionRuntime::stopFeeding,
+                        retryTimer = WearSessionRuntime::retryFeeding,
+                        logBottle = WearSessionRuntime::logBottle,
+                        retryBottle = WearSessionRuntime::retryBottle,
+                    ),
                 )
             }
         }
@@ -70,10 +94,13 @@ fun WearAppScreen(
     sessionState: WearSessionUiState,
     todayState: TodaySummaryUiState,
     diaperState: DiaperQuickLogState,
+    feedingState: FeedingTimerUiState,
+    bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
+    feedingActions: FeedingActions,
 ) {
     when (sessionState) {
         WearSessionUiState.SignedOut -> SignedOutScreen()
@@ -81,10 +108,13 @@ fun WearAppScreen(
         is WearSessionUiState.SignedIn -> TodaySummaryScreen(
             todayState,
             diaperState,
+            feedingState,
+            bottleState,
             onRetry,
             onSelectBaby,
             onLogDiaper,
             onRetryDiaper,
+            feedingActions,
         )
     }
 }
@@ -98,10 +128,13 @@ fun SignedOutScreen() {
 private fun TodaySummaryScreen(
     state: TodaySummaryUiState,
     diaperState: DiaperQuickLogState,
+    feedingState: FeedingTimerUiState,
+    bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
+    feedingActions: FeedingActions,
 ) {
     when (state) {
         TodaySummaryUiState.Unavailable -> CenteredMessage("Loading today's activity…")
@@ -122,6 +155,9 @@ private fun TodaySummaryScreen(
             diaperState = diaperState,
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
+            feedingState = feedingState,
+            bottleState = bottleState,
+            feedingActions = feedingActions,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -134,6 +170,9 @@ private fun TodaySummaryScreen(
             diaperState = diaperState,
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
+            feedingState = feedingState,
+            bottleState = bottleState,
+            feedingActions = feedingActions,
         )
         is TodaySummaryUiState.Stale -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -146,6 +185,9 @@ private fun TodaySummaryScreen(
             diaperState = diaperState,
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
+            feedingState = feedingState,
+            bottleState = bottleState,
+            feedingActions = feedingActions,
         )
     }
 }
@@ -162,6 +204,9 @@ private fun SummaryContent(
     diaperState: DiaperQuickLogState,
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
+    feedingState: FeedingTimerUiState,
+    bottleState: BottleLogUiState,
+    feedingActions: FeedingActions,
 ) {
     val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -201,6 +246,7 @@ private fun SummaryContent(
             Text("No activity yet today", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
         ActiveTimerCards(snapshot.activeTimers)
+        FeedingSection(snapshot, feedingState, bottleState, feedingActions)
         DiaperQuickLogSection(diaperState, onLogDiaper, onRetryDiaper)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
@@ -211,6 +257,138 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun FeedingSection(
+    snapshot: ActivitySnapshot,
+    timerState: FeedingTimerUiState,
+    bottleState: BottleLogUiState,
+    actions: FeedingActions,
+) {
+    val snapshotTimer = snapshot.activeTimers.firstOrNull { it.type == "feeding" }
+    val activeTimer = (timerState as? FeedingTimerUiState.SnapshotActive)?.timer
+        ?: (timerState as? FeedingTimerUiState.Hydrating)?.timer
+        ?: snapshotTimer?.let(FeedingTimerRestorer::restore)
+    val busy = timerState == FeedingTimerUiState.Submitting ||
+        timerState is FeedingTimerUiState.Hydrating || timerState is FeedingTimerUiState.Error
+    Text("Feeding", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    if (activeTimer == null) {
+        val suggested = if (snapshot.activities.feeding.lastSide == BreastSide.Left.wireValue) {
+            BreastSide.Right
+        } else {
+            BreastSide.Left
+        }
+        Text(
+            "Suggested ${suggested.wireValue}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = { actions.start(BreastSide.Left) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (suggested == BreastSide.Left) "Start left · suggested" else "Start left") }
+        Button(
+            onClick = { actions.start(BreastSide.Right) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (suggested == BreastSide.Right) "Start right · suggested" else "Start right") }
+    } else {
+        Text(
+            if (activeTimer.canControl) {
+                "Breast · ${activeTimer.side.wireValue}" + if (activeTimer.isPaused) " · paused" else ""
+            } else {
+                "Breast active"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        if (activeTimer.canControl) {
+            Button(
+                onClick = actions.switchSide,
+                enabled = !busy && !activeTimer.isPaused,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Switch side") }
+            Button(
+                onClick = if (activeTimer.isPaused) actions.resume else actions.pause,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activeTimer.isPaused) "Resume" else "Pause") }
+            Button(onClick = actions.stop, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text("Stop feeding")
+            }
+        } else {
+            Text("Active on another caregiver's device", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        }
+    }
+    when (timerState) {
+        FeedingTimerUiState.Idle, is FeedingTimerUiState.SnapshotActive -> Unit
+        is FeedingTimerUiState.Hydrating -> Text(
+            "Restoring feeding…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        FeedingTimerUiState.Submitting -> Text("Saving feeding…", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        is FeedingTimerUiState.AlreadyActive -> Text(
+            "Feeding already active${timerState.caregiverName?.let { " · $it" } ?: ""}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is FeedingTimerUiState.Error -> {
+            Text(timerState.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (timerState.canRetry) {
+                Button(onClick = actions.retryTimer, modifier = Modifier.fillMaxWidth()) { Text("Retry feeding") }
+            }
+        }
+    }
+    BottleLogSection(bottleState, actions.logBottle, actions.retryBottle)
+}
+
+@Composable
+private fun BottleLogSection(
+    state: BottleLogUiState,
+    onLog: (BottleLogSelection) -> Unit,
+    onRetry: () -> Unit,
+) {
+    var selection by remember { mutableStateOf(BottleLogSelection()) }
+    LaunchedEffect(state) {
+        if (state == BottleLogUiState.Success) selection = BottleLogSelection()
+    }
+    val enabled = state != BottleLogUiState.Submitting
+    Text("Bottle · ${selection.volumeMl} ml", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Button(onClick = { selection = selection.minusTen() }, enabled = enabled) { Text("−10") }
+        Button(onClick = { selection = selection.plusTen() }, enabled = enabled) { Text("+10") }
+    }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Button(onClick = { selection = selection.crownSteps(-1) }, enabled = enabled) { Text("−5") }
+        Button(onClick = { selection = selection.crownSteps(1) }, enabled = enabled) { Text("+5") }
+    }
+    Button(
+        onClick = { selection = selection.copy(contentType = BottleContentType.Formula) },
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+    ) { Text(if (selection.contentType == BottleContentType.Formula) "✓ Formula" else "Formula") }
+    Button(
+        onClick = { selection = selection.copy(contentType = BottleContentType.BreastMilk) },
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+    ) { Text(if (selection.contentType == BottleContentType.BreastMilk) "✓ Breast milk" else "Breast milk") }
+    Button(onClick = { onLog(selection) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+        Text("Log bottle")
+    }
+    when (state) {
+        BottleLogUiState.Idle -> Unit
+        BottleLogUiState.Submitting -> Text("Logging bottle…", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        BottleLogUiState.Success -> Text("Bottle logged", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        is BottleLogUiState.Error -> {
+            Text(state.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (state.canRetry) {
+                Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Retry bottle") }
+            }
+        }
     }
 }
 

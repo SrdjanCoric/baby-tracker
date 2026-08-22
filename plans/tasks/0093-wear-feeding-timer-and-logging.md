@@ -4,6 +4,8 @@
 **Depends on**: 0092
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I run a feed timer from my watch; a feed started on the phone shows on my watch and the reverse.
 
+**Change class**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 Feeding with full iOS-watch parity: start/pause/stop a feed timer from the watch, log completed
@@ -29,15 +31,41 @@ Durable decisions this task must respect (from the brief):
 
 ## Implementation work
 
-- [ ] Shared timer machinery on the 0092 write client: create/pause/resume/complete timer-instance
+- [x] Shared timer machinery on the 0092 write client: create/pause/resume/complete timer-instance
       rows matching the phone's timer row shape, reusable per activity type.
-- [ ] Breastfeeding timer UI: suggested left/right start, pause/resume, side switch, and stop.
-- [ ] Bottle log UI: formula or breast milk with Apple-parity volume controls; no other untimed feed
+- [x] Breastfeeding timer UI: suggested left/right start, pause/resume, side switch, and stop.
+- [x] Bottle log UI: formula or breast milk with Apple-parity volume controls; no other untimed feed
       type.
-- [ ] Snapshot-driven active-timer display: phone-started feed timer appears on watch with correct
+- [x] Snapshot-driven active-timer display: phone-started feed timer appears on watch with correct
       elapsed time; watch-started timer appears on phone.
-- [ ] Tests: timer row shape fixture-matches phone rows; already-active-type rule; restart
+- [x] Tests: timer row shape fixture-matches phone rows; already-active-type rule; restart
       resumes running timer from snapshot; completed feed row shape parity.
+
+## Implementation decisions
+
+- The existing public activity snapshot remains the restoration and display contract. Owner-only
+  `active_timers` hydration supplies the activity ID, side accumulators, and pause details needed to
+  complete a Wear- or phone-started timer after Watch process restart without widening the snapshot.
+- Timer acquisition uses the authorized `acquire_timer_lock` RPC, pause/resume uses
+  `toggle_timer_pause`, side changes remain owner-scoped, and stop merges an idempotent completed
+  feeding before releasing the owner lock. The existing open/wake/retry/post-write snapshot refresh
+  is the polling seam; no background poll, offline queue, or Data Layer activity payload was added.
+- Breast completion follows the phone adapter's wall-span and side-accumulator semantics, including
+  resumed pauses and the sub-minute discard rule. Bottle logs expose only formula and breast milk,
+  default to 120 ml, clamp to 0–500 ml, and support 10 ml buttons plus 5 ml crown-equivalent steps.
+
+## Implementation evidence
+
+- RED/GREEN cycles cover authenticated timer acquisition row parity, the one-active-feeding rule,
+  snapshot restart and remote visibility, owner hydration, pause/resume/side switching, breast and
+  bottle row fixtures, resumed-pause completion, sub-minute discard, visible retry with immutable
+  completion/bottle drafts, and unauthorized-session handling.
+- The phone feeding adapter test decodes the exact Wear start fixture and restores its timer identity,
+  proving that a Watch-created lock enters the existing phone timer lifecycle without a phone change.
+- Focused pre-review proof passed the complete Wear unit suite, phone timer-adapter contract, Wear
+  debug assembly, plugin generation checks, template/generated-module parity, focused lint,
+  repository TypeScript typecheck, and `git diff --check`. Logs are retained in the task workflow
+  directory.
 
 ## Validation boundary
 
@@ -47,9 +75,9 @@ the bidirectional phone↔watch timer pass.
 
 ## Acceptance criteria
 
-- [ ] Feed timer full lifecycle from watch produces the same rows a phone-run timer produces.
-- [ ] Automated snapshot tests cover phone-started and watch-started timer visibility in both
+- [x] Feed timer full lifecycle from watch produces the same rows a phone-run timer produces.
+- [x] Automated snapshot tests cover phone-started and watch-started timer visibility in both
       directions; manual paired-device proof is deferred to Task 0098.
-- [ ] Watch app restart during a running timer resumes display correctly.
+- [x] Watch app restart during a running timer resumes display correctly.
 - [ ] Feeding logs carry parity fields; tests green in CI; no backend changes.
-- [ ] Solids, notes, manual timestamps, history, and saved-record editing are absent.
+- [x] Solids, notes, manual timestamps, history, and saved-record editing are absent.
