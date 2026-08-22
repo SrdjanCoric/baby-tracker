@@ -72,6 +72,18 @@ No paired-emulator or phone↔watch synchronization check runs in this task. Pro
 RLS-compatible persistence, retry behavior, and duplicate protection through automated seams;
 Task 0098 verifies watch-to-phone visibility with the completed Wear feature set.
 
+## Review decisions
+
+- skipped (minor): TR-7 — Watch omits field clocks for optional columns the phone always stamps — user requested a major-only remediation pass.
+- skipped (minor): TR-8 — Wear color step exposes a No color option absent from Apple Watch — user requested a major-only remediation pass.
+- skipped (minor): TR-9 — SharedPreferencesWearClockStore has no persistence test — user requested a major-only remediation pass.
+- skipped (minor): TR-10 — The notes-omission assertion cannot exercise a production branch — user requested a major-only remediation pass.
+- skipped (minor): TR-11 — Success state is never cleared — user requested a major-only remediation pass.
+- skipped (minor): TR-12 — The diff introduces unreachable production API — user requested a major-only remediation pass.
+- skipped (minor): TR-13 — Reset does not fence an in-flight write — user requested a major-only remediation pass.
+- skipped (minor): TR-14 — Stool-color selection is lost across summary state transitions — user requested a major-only remediation pass.
+- skipped (minor): TR-15 — Apple Watch parity test asserts enum declarations rather than UI exposure — user requested a major-only remediation pass.
+
 ## Acceptance criteria
 
 - [x] Automated integration proof shows a watch-built diaper payload persists with the same row
