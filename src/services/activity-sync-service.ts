@@ -22,6 +22,7 @@ import type { StoredHealthEntry, CreateHealthInput, UpdateHealthInput } from "./
 import type { AchievementId } from "./achievement-detection";
 import type { SyncEngine } from "./sync/sync-engine";
 import type { UtcActivityRange } from "./activity-range-loader";
+import { buildDiaperCreateRecord } from "./diaper-sync-record";
 
 export type { UtcActivityRange } from "./activity-range-loader";
 
@@ -1016,16 +1017,16 @@ export async function createDiaperInDatabase(
       type: 'CREATE',
       table: 'diapers',
       entityId: id,
-      data: {
+      data: buildDiaperCreateRecord({
         id,
-        baby_id: input.babyId,
+        babyId: input.babyId,
         type: input.type,
-        stool_color: input.stoolColor,
-        changed_at: input.changedAt.toISOString(),
+        stoolColor: input.stoolColor,
+        changedAt: input.changedAt.toISOString(),
         notes: input.notes,
-        logged_by: userId,
-        created_at: now,
-      },
+        loggedBy: userId,
+        createdAt: now,
+      }),
     })
   );
 
