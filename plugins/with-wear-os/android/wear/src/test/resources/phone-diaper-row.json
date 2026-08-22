@@ -1,0 +1,18 @@
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "baby_id": "22222222-2222-4222-8222-222222222222",
+  "type": "dirty",
+  "stool_color": "green",
+  "changed_at": "2026-08-22T08:15:30.123Z",
+  "logged_by": "33333333-3333-4333-8333-333333333333",
+  "created_at": "2026-08-22T08:15:30.123Z",
+  "field_clocks": {
+    "id": "2026-08-22T08:15:30.123Z-0000-wear-test-device",
+    "baby_id": "2026-08-22T08:15:30.123Z-0001-wear-test-device",
+    "type": "2026-08-22T08:15:30.123Z-0002-wear-test-device",
+    "stool_color": "2026-08-22T08:15:30.123Z-0003-wear-test-device",
+    "changed_at": "2026-08-22T08:15:30.123Z-0004-wear-test-device",
+    "logged_by": "2026-08-22T08:15:30.123Z-0005-wear-test-device",
+    "created_at": "2026-08-22T08:15:30.123Z-0006-wear-test-device"
+  }
+}

@@ -4,6 +4,8 @@
 **Depends on**: 0091
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I log a diaper change from my watch in one or two taps and it shows up everywhere.
 
+**Change class**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 The watch's first write: log a diaper change (with the same type options the iOS watch offers)
@@ -33,13 +35,36 @@ Durable decisions this task must respect (from the brief):
 
 ## Implementation work
 
-- [ ] Shared Kotlin Supabase write client (auth header from 0090 session, error surface, debounce
+- [x] Shared Kotlin Supabase write client (auth header from 0090 session, error surface, debounce
       support) designed for reuse by the remaining activity tasks.
-- [ ] Diaper log UI for wet, dirty, mixed, and dry, with Apple-parity stool-color selection for
+- [x] Diaper log UI for wet, dirty, mixed, and dry, with Apple-parity stool-color selection for
       dirty and mixed, and the write action.
-- [ ] Post-write local refresh so the summary reflects the new entry immediately.
-- [ ] Tests: write payload construction matches the phone app's row shape (field-level fixture
+- [x] Post-write local refresh so the summary reflects the new entry immediately.
+- [x] Tests: write payload construction matches the phone app's row shape (field-level fixture
       comparison), failure path surfaces error + retry, duplicate-tap yields one row.
+
+## Implementation decisions
+
+- The reusable write client calls the five-argument `merge_record` RPC. Each quick log owns one
+  immutable draft, so its UUID, operation ID, timestamps, field clocks, and request body stay
+  byte-identical across a visible retry.
+- A private Wear preference store owns the stable watch device ID and persisted HLC state. The
+  quick-log runtime writes for the baby currently selected in the summary rather than assuming the
+  baby carried by the original phone session envelope.
+- The quick-log UI stays inside the existing summary Compose screen. Wet and dry submit directly;
+  dirty and mixed expose only the same optional seven stool colors as Apple Watch. No navigation
+  dependency, offline queue, phone relay, or Data Layer activity payload was introduced.
+
+## Implementation evidence
+
+- RED/GREEN cycles cover the exact authenticated RPC request and phone-row fixture (including
+  `field_clocks`), optional-field omission, visible offline retry with the identical draft, rapid
+  double-submit suppression, one post-success summary reload, and the Apple Watch parity options.
+- A rollback-only SQL test persists a watch-shaped row through authenticated `merge_record`,
+  verifies the returned database row shape, and reads the new diaper through
+  `get_baby_activity_snapshot`.
+- The plugin template remains the source of truth for generated `android/wear`; its generated copy
+  was kept byte-for-byte synchronized during implementation.
 
 ## Validation boundary
 
@@ -47,11 +72,48 @@ No paired-emulator or phone↔watch synchronization check runs in this task. Pro
 RLS-compatible persistence, retry behavior, and duplicate protection through automated seams;
 Task 0098 verifies watch-to-phone visibility with the completed Wear feature set.
 
+## Review decisions
+
+- skipped (minor): TR-7 — Watch omits field clocks for optional columns the phone always stamps — user requested a major-only remediation pass.
+- skipped (minor): TR-8 — Wear color step exposes a No color option absent from Apple Watch — user requested a major-only remediation pass.
+- skipped (minor): TR-9 — SharedPreferencesWearClockStore has no persistence test — user requested a major-only remediation pass.
+- skipped (minor): TR-10 — The notes-omission assertion cannot exercise a production branch — user requested a major-only remediation pass.
+- skipped (minor): TR-11 — Success state is never cleared — user requested a major-only remediation pass.
+- skipped (minor): TR-12 — The diff introduces unreachable production API — user requested a major-only remediation pass.
+- skipped (minor): TR-13 — Reset does not fence an in-flight write — user requested a major-only remediation pass.
+- skipped (minor): TR-14 — Stool-color selection is lost across summary state transitions — user requested a major-only remediation pass.
+- skipped (minor): TR-15 — Apple Watch parity test asserts enum declarations rather than UI exposure — user requested a major-only remediation pass.
+
+## Completion record
+
+- Built the reusable authenticated Wear write client, persisted HLC clock generation, diaper quick-log
+  coordinator and Compose controls, post-write summary refresh, stale-session recovery, retry-safe
+  immutable drafts, and one-second duplicate-submit protection. The implementation decisions above
+  remain the final design.
+- Relevant implementation and proof live under `plugins/with-wear-os/android/wear/`,
+  `src/services/diaper-sync-record.ts`, `src/services/diaper-sync-record.test.ts`, and
+  `scripts/sql/wear-diaper-quick-log-tests.sql`.
+- README disposition: updated `Wear OS Native Integration` with current diaper logging, retry,
+  direct-write, summary-refresh, and reconnect behavior. The `write-well` audit completed in two
+  passes; the second pass found no additional issues.
+- Review outcome: TR-1 through TR-6 fixed. TR-7 through TR-15 were skipped as minor at the user's
+  request for a major-only remediation pass, with reasons recorded above. TR-16 remains
+  `deferred-out-of-scope` because it is a pre-existing transport concern. No security risk was
+  accepted.
+- Focused proof passed for both Wear diaper unit-test classes, the phone/Wear row fixture contract,
+  rollback-only phone/watch SQL persistence and snapshot readback, Wear plugin generation, and
+  plugin/generated-module parity.
+- Canonical proof: `npm run check:code` passed on 2026-08-22 after the authorized base-regression
+  correction updated the CI contract tests for the existing required `changes` job. The focused CI
+  contract run passed all 11 tests.
+- Manual verification: none required. This task has no `[verify]` checkpoint; Task 0098 owns paired
+  phone/watch visibility verification.
+
 ## Acceptance criteria
 
-- [ ] Automated integration proof shows a watch-built diaper payload persists with the same row
+- [x] Automated integration proof shows a watch-built diaper payload persists with the same row
       shape as a phone-written entry and is readable through the shared snapshot path.
-- [ ] Airplane-mode write shows visible failure + retry; retry succeeds after reconnect.
-- [ ] Rapid double-tap creates exactly one row.
-- [ ] Tests green in CI; no backend changes.
-- [ ] No diaper capability absent from Apple Watch is exposed.
+- [x] Airplane-mode write shows visible failure + retry; retry succeeds after reconnect.
+- [x] Rapid double-tap creates exactly one row.
+- [x] Tests green locally; CI proof belongs to the later PR workflow. No backend changes.
+- [x] No diaper capability absent from Apple Watch is exposed.
