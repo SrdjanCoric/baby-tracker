@@ -259,12 +259,13 @@ class DiaperQuickLogCoordinator(
         state = DiaperQuickLogState.Submitting
         dispatch {
             val outcome = writer.write(session, draft)
+            var shouldRefresh = false
             var unauthorizedRevision: Long? = null
             synchronized(this) {
                 state = when (outcome) {
                     is WriteOutcome.Success -> {
                         pendingDraft = null
-                        refreshSummary()
+                        shouldRefresh = true
                         DiaperQuickLogState.Success
                     }
                     WriteOutcome.Offline -> DiaperQuickLogState.Error("No network connection")
@@ -275,6 +276,7 @@ class DiaperQuickLogCoordinator(
                     WriteOutcome.Failed -> DiaperQuickLogState.Error("Could not log diaper")
                 }
             }
+            if (shouldRefresh) refreshSummary()
             unauthorizedRevision?.let(onUnauthorized)
         }
     }

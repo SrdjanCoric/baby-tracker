@@ -1,5 +1,8 @@
 package com.sofibaby.app.wear
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -74,6 +77,38 @@ class DiaperQuickLogCoordinatorTest {
         assertEquals(1, writes)
         assertEquals(1, refreshes)
         assertEquals(DiaperQuickLogState.Success, coordinator.state)
+    }
+
+    @Test
+    fun resetIsNotBlockedByPostSuccessSummaryRefresh() {
+        val queued = mutableListOf<() -> Unit>()
+        val refreshStarted = CountDownLatch(1)
+        val releaseRefresh = CountDownLatch(1)
+        val coordinator = coordinator(
+            writer = { _, draft -> WriteOutcome.Success(draft.recordId) },
+            refresh = {
+                refreshStarted.countDown()
+                releaseRefresh.await(2, TimeUnit.SECONDS)
+            },
+            dispatch = queued::add,
+        )
+        coordinator.submit(active(), DiaperType.Wet, null)
+        val completion = thread { queued.single().invoke() }
+
+        assertTrue(refreshStarted.await(1, TimeUnit.SECONDS))
+        val resetFinished = CountDownLatch(1)
+        val reset = thread {
+            coordinator.reset()
+            resetFinished.countDown()
+        }
+
+        try {
+            assertTrue("reset waited for summary network work", resetFinished.await(250, TimeUnit.MILLISECONDS))
+        } finally {
+            releaseRefresh.countDown()
+            reset.join(1_000)
+            completion.join(1_000)
+        }
     }
 
     @Test
