@@ -12,6 +12,7 @@ function run(...results) {
 }
 
 const successfulResults = [
+  "changes=success",
   "quality=success",
   "dependency-audit=success",
   "android-native=success",

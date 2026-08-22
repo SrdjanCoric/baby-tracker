@@ -25,13 +25,14 @@ function runs(jobName, command) {
 }
 
 const checkJobs = ["quality", "dependency-audit"];
-const requiredJobs = [...checkJobs, "android-native"];
+const requiredJobs = ["changes", ...checkJobs, "android-native"];
 
 test("pull requests and main run the required non-device checks", () => {
   assert.ok(workflow.on.pull_request);
   assert.ok(workflow.on.push);
   assert.equal(workflow.on.workflow_call, undefined);
   assert.deepEqual(Object.keys(workflow.jobs), [
+    "changes",
     "quality",
     "dependency-audit",
     "android-native",
