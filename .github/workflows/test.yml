@@ -11,6 +11,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      native: ${{ steps.filter.outputs.native }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # On push to main there is no base to diff against a PR, so every
+          # filter reports true and the native build always runs.
+          filters: |
+            native:
+              - 'android/**'
+              - 'ios/**'
+              - 'plugins/**'
+              - 'src/**'
+              - 'scripts/**'
+              - 'app.json'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/test.yml'
+              - '.github/fixtures/**'
+
   quality:
     name: Lint and typecheck
     runs-on: ubuntu-latest
@@ -40,6 +66,8 @@ jobs:
 
   android-native:
     name: Android phone and Wear build
+    needs: changes
+    if: needs.changes.outputs.native == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -67,7 +95,7 @@ jobs:
   required:
     name: Non-device checks required
     if: always()
-    needs: [quality, dependency-audit, android-native]
+    needs: [changes, quality, dependency-audit, android-native]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -77,6 +105,7 @@ jobs:
           node-version: "20.19.4"
       - run: >-
           node scripts/require-successful-jobs.mjs
+          changes=${{ needs.changes.result }}
           quality=${{ needs.quality.result }}
           dependency-audit=${{ needs.dependency-audit.result }}
           android-native=${{ needs.android-native.result }}
