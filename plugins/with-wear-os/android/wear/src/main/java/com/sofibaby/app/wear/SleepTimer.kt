@@ -493,16 +493,30 @@ class SleepTimerCoordinator(
             state = SleepTimerUiState.Submitting
         }
         dispatch {
-            if (!isCurrent(requestGeneration)) return@dispatch
-            applyMutationOutcome(
-                session,
-                timer,
-                failureMessage,
-                mutator,
-                mutator.mutate(session, timer),
-                requestGeneration,
-            )
+            performMutation(session, timer, failureMessage, mutator, requestGeneration)
         }
+    }
+
+    private fun performMutation(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredSleepTimer,
+        failureMessage: String,
+        mutator: SleepTimerMutator,
+        expectedGeneration: Long,
+    ) {
+        if (!isCurrent(expectedGeneration)) return
+        val outcome = try {
+            mutator.mutate(session, timer)
+        } catch (_: Exception) {
+            synchronized(this) {
+                if (generation == expectedGeneration) {
+                    pendingRetry = null
+                    state = SleepTimerUiState.Error(failureMessage, canRetry = false)
+                }
+            }
+            return
+        }
+        applyMutationOutcome(session, timer, failureMessage, mutator, outcome, expectedGeneration)
     }
 
     private fun applyMutationOutcome(
@@ -522,14 +536,7 @@ class SleepTimerCoordinator(
             }
             SleepTimerMutationOutcome.Offline -> {
                 pendingRetry = { retrySession ->
-                    applyMutationOutcome(
-                        retrySession,
-                        timer,
-                        failureMessage,
-                        mutator,
-                        mutator.mutate(retrySession, timer),
-                        expectedGeneration,
-                    )
+                    performMutation(retrySession, timer, failureMessage, mutator, expectedGeneration)
                 }
                 state = SleepTimerUiState.Error("No network connection")
             }
@@ -540,14 +547,7 @@ class SleepTimerCoordinator(
             }
             SleepTimerMutationOutcome.Failed -> {
                 pendingRetry = { retrySession ->
-                    applyMutationOutcome(
-                        retrySession,
-                        timer,
-                        failureMessage,
-                        mutator,
-                        mutator.mutate(retrySession, timer),
-                        expectedGeneration,
-                    )
+                    performMutation(retrySession, timer, failureMessage, mutator, expectedGeneration)
                 }
                 state = SleepTimerUiState.Error(failureMessage)
             }

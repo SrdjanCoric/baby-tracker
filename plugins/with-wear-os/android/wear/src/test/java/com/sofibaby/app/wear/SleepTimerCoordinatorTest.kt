@@ -119,6 +119,24 @@ class SleepTimerCoordinatorTest {
     }
 
     @Test
+    fun pausePreparationFailureIsVisibleAndDoesNotLeaveSubmitting() {
+        val coordinator = SleepTimerCoordinator(
+            drafts = { draft() },
+            starter = { _, _ -> SleepTimerWriteOutcome.Failed },
+            refreshSummary = {},
+            pauser = { _, _ -> error("missing hydrated activity identity") },
+        )
+        coordinator.restoreHydrated(timer().copy(activityId = null))
+
+        coordinator.pause(active())
+
+        assertEquals(
+            SleepTimerUiState.Error("Could not pause sleep", canRetry = false),
+            coordinator.state,
+        )
+    }
+
+    @Test
     fun failedStopIsVisibleAndRetryReusesTheCompletedSleepDraft() {
         val attempts = mutableListOf<CompletedSleepDraft>()
         val outcomes = ArrayDeque<WriteOutcome>().apply {
