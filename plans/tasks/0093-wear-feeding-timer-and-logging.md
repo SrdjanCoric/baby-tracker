@@ -70,6 +70,16 @@ Durable decisions this task must respect (from the brief):
   repository TypeScript typecheck, and `git diff --check`. Logs are retained in the task workflow
   directory.
 
+## Review decisions
+
+- skipped (minor): TR-6 — Every summary refresh re-runs owner hydration — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-7 — Shared-timer and feeding write-client code remains in `DiaperQuickLog.kt` — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-8 — Completed breast and bottle parity fixtures remain hand-authored — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-9 — Phone-side identity assertions still use values passed into restore — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-10 — Suggested-side logic remains inline and untested — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-11 — Older unauthorized handlers remain inline — user chose to finish without further minor/nit remediation.
+- skipped (minor): TR-12 — Owner hydration remains a second Wear read path — user chose to finish without further minor/nit remediation.
+
 ## Validation boundary
 
 No paired-emulator or phone↔watch synchronization check runs in this task. Prove timer persistence,
