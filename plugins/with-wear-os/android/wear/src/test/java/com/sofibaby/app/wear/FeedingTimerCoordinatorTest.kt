@@ -87,6 +87,24 @@ class FeedingTimerCoordinatorTest {
     }
 
     @Test
+    fun phoneStartedBothSideSnapshotIsNotDisplayedAsLeft() {
+        val restored = FeedingTimerRestorer.restore(
+            ActivitySnapshot.ActiveTimer(
+                type = "feeding",
+                startTime = "2026-08-22T10:00:00.000Z",
+                timerInstanceId = "phone-timer",
+                context = "both",
+                isRemote = false,
+                isPaused = false,
+                accumulatedSeconds = null,
+            ),
+            now = Instant.parse("2026-08-22T10:05:00.000Z"),
+        )
+
+        assertEquals(BreastSide.Both, requireNotNull(restored).side)
+    }
+
+    @Test
     fun phoneStartedSnapshotIsVisibleWithoutOfferingRemoteControls() {
         val coordinator = FeedingTimerCoordinator(
             drafts = { _, side -> draft(side) },

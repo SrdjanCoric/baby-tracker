@@ -178,7 +178,9 @@ object FeedingTimerRestorer {
         if (snapshot.type != "feeding") return null
         val startedAt = parseServerInstant(snapshot.startTime) ?: return null
         val side = when (snapshot.context) {
+            BreastSide.Left.wireValue -> BreastSide.Left
             BreastSide.Right.wireValue -> BreastSide.Right
+            BreastSide.Both.wireValue -> BreastSide.Both
             else -> BreastSide.Left
         }
         val paused = snapshot.isPaused == true
