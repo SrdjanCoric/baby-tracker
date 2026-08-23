@@ -274,10 +274,12 @@ class SleepTimerCoordinator(
         now: Instant = Instant.now(),
     ) {
         restoreSnapshot(timer, now)
-        val publicTimer = (state as? SleepTimerUiState.SnapshotActive)?.timer ?: return
-        if (!publicTimer.canControl) return
-        val requestGeneration = synchronized(this) { generation }
-        state = SleepTimerUiState.Hydrating(publicTimer)
+        val (publicTimer, requestGeneration) = synchronized(this) {
+            val currentTimer = (state as? SleepTimerUiState.SnapshotActive)?.timer ?: return
+            if (!currentTimer.canControl) return
+            state = SleepTimerUiState.Hydrating(currentTimer)
+            currentTimer to generation
+        }
         dispatch {
             if (!isCurrent(requestGeneration)) return@dispatch
             applyHydrationOutcome(session, publicTimer, timerReader.read(session), requestGeneration)
