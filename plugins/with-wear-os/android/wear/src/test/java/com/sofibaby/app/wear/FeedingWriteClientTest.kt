@@ -3,6 +3,7 @@ package com.sofibaby.app.wear
 import java.time.Instant
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -14,6 +15,35 @@ class FeedingWriteClientTest {
         assertEquals(120, BottleVolumeRotary.adjust(BottleLogSelection(), 0f).volumeMl)
         assertEquals(500, BottleVolumeRotary.adjust(BottleLogSelection(500), 1f).volumeMl)
         assertEquals(0, BottleVolumeRotary.adjust(BottleLogSelection(0), -1f).volumeMl)
+    }
+
+    @Test
+    fun bottleRotaryConsumesInputOnlyInEnabledAdjustmentMode() {
+        val inactive = BottleVolumeRotary.handle(
+            BottleLogSelection(),
+            verticalScrollPixels = 1f,
+            adjustmentModeActive = false,
+            enabled = true,
+        )
+        val disabled = BottleVolumeRotary.handle(
+            BottleLogSelection(),
+            verticalScrollPixels = 1f,
+            adjustmentModeActive = true,
+            enabled = false,
+        )
+        val active = BottleVolumeRotary.handle(
+            BottleLogSelection(),
+            verticalScrollPixels = 1f,
+            adjustmentModeActive = true,
+            enabled = true,
+        )
+
+        assertFalse(inactive.consumed)
+        assertEquals(120, inactive.selection.volumeMl)
+        assertFalse(disabled.consumed)
+        assertEquals(120, disabled.selection.volumeMl)
+        assertTrue(active.consumed)
+        assertEquals(125, active.selection.volumeMl)
     }
 
     @Test

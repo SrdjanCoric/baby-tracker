@@ -22,10 +22,27 @@ data class BottleLogSelection(
 }
 
 object BottleVolumeRotary {
+    data class Outcome(
+        val selection: BottleLogSelection,
+        val consumed: Boolean,
+    )
+
     fun adjust(selection: BottleLogSelection, verticalScrollPixels: Float): BottleLogSelection = when {
         verticalScrollPixels > 0 -> selection.crownSteps(1)
         verticalScrollPixels < 0 -> selection.crownSteps(-1)
         else -> selection
+    }
+
+    fun handle(
+        selection: BottleLogSelection,
+        verticalScrollPixels: Float,
+        adjustmentModeActive: Boolean,
+        enabled: Boolean,
+    ): Outcome {
+        if (!adjustmentModeActive || !enabled || verticalScrollPixels == 0f) {
+            return Outcome(selection, consumed = false)
+        }
+        return Outcome(adjust(selection, verticalScrollPixels), consumed = true)
     }
 }
 

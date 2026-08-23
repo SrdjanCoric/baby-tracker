@@ -357,18 +357,28 @@ private fun BottleLogSection(
     onRetry: () -> Unit,
 ) {
     var selection by remember { mutableStateOf(BottleLogSelection()) }
+    var rotaryAdjustmentActive by remember { mutableStateOf(false) }
     val rotaryFocus = remember { FocusRequester() }
     LaunchedEffect(state) {
         if (state == BottleLogUiState.Success) selection = BottleLogSelection()
+        if (state == BottleLogUiState.Submitting) rotaryAdjustmentActive = false
     }
-    LaunchedEffect(Unit) { rotaryFocus.requestFocus() }
+    LaunchedEffect(rotaryAdjustmentActive) {
+        if (rotaryAdjustmentActive) rotaryFocus.requestFocus()
+    }
     val enabled = state != BottleLogUiState.Submitting
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .onRotaryScrollEvent {
-                if (enabled) selection = BottleVolumeRotary.adjust(selection, it.verticalScrollPixels)
-                true
+                val outcome = BottleVolumeRotary.handle(
+                    selection,
+                    it.verticalScrollPixels,
+                    rotaryAdjustmentActive,
+                    enabled,
+                )
+                selection = outcome.selection
+                outcome.consumed
             }
             .focusRequester(rotaryFocus)
             .focusable(),
@@ -378,7 +388,13 @@ private fun BottleLogSection(
             Button(onClick = { selection = selection.minusTen() }, enabled = enabled) { Text("−10") }
             Button(onClick = { selection = selection.plusTen() }, enabled = enabled) { Text("+10") }
         }
-        Text("Use crown · 5 ml steps", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Button(
+            onClick = { rotaryAdjustmentActive = !rotaryAdjustmentActive },
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (rotaryAdjustmentActive) "Done adjusting" else "Adjust with crown · 5 ml steps")
+        }
         Button(
             onClick = { selection = selection.copy(contentType = BottleContentType.Formula) },
             enabled = enabled,
