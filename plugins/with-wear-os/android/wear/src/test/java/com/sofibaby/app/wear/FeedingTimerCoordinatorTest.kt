@@ -147,6 +147,37 @@ class FeedingTimerCoordinatorTest {
     }
 
     @Test
+    fun completionDraftFailureIsNonRetryableAndFreshSnapshotRecovers() {
+        val coordinator = FeedingTimerCoordinator(
+            drafts = { _, side -> draft(side) },
+            starter = { _, draft -> TimerWriteOutcome.Success(draft, draft.startedAt) },
+            refreshSummary = {},
+            completionDrafts = { _, _ -> error("stale snapshot cannot be completed") },
+        )
+        coordinator.restoreHydrated(hydratedTimer())
+
+        coordinator.stop(active())
+
+        assertEquals(
+            FeedingTimerUiState.Error("Could not stop feeding", canRetry = false),
+            coordinator.state,
+        )
+        coordinator.restoreSnapshot(
+            ActivitySnapshot.ActiveTimer(
+                type = "feeding",
+                startTime = "2026-08-22T10:00:00.000Z",
+                timerInstanceId = "timer-2",
+                context = "right",
+                isRemote = true,
+                isPaused = false,
+                accumulatedSeconds = null,
+            ),
+        )
+        val recovered = coordinator.state as FeedingTimerUiState.SnapshotActive
+        assertEquals("timer-2", recovered.timer.timerInstanceId)
+    }
+
+    @Test
     fun snapshotRefreshDoesNotReplaceAFailedStopRetry() {
         val outcomes = ArrayDeque<WriteOutcome>().apply {
             add(WriteOutcome.Offline)

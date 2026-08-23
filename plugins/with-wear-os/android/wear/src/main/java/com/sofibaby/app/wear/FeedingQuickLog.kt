@@ -247,7 +247,10 @@ class FeedingTimerCoordinator(
 
     @Synchronized
     fun restoreSnapshot(timer: ActivitySnapshot.ActiveTimer?, now: Instant = Instant.now()) {
-        if (state == FeedingTimerUiState.Submitting || state is FeedingTimerUiState.Error) return
+        if (
+            state == FeedingTimerUiState.Submitting ||
+            (state is FeedingTimerUiState.Error && pendingRetry != null)
+        ) return
         state = timer?.let { FeedingTimerRestorer.restore(it, now) }
             ?.let(FeedingTimerUiState::SnapshotActive)
             ?: FeedingTimerUiState.Idle
@@ -326,7 +329,8 @@ class FeedingTimerCoordinator(
             } catch (_: Exception) {
                 synchronized(this) {
                     if (generation == requestGeneration) {
-                        state = FeedingTimerUiState.Error("Could not stop feeding")
+                        pendingRetry = null
+                        state = FeedingTimerUiState.Error("Could not stop feeding", canRetry = false)
                     }
                 }
                 return@dispatch
