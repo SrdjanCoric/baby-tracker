@@ -12,30 +12,41 @@ enum class SleepType(val wireValue: String) {
 }
 
 object SleepTypeClassifier {
-    private const val DAY_START_HOUR = 6
-    private const val DAY_END_HOUR = 19
     private const val RECLASSIFY_THRESHOLD_SECONDS = 30 * 60L
 
-    fun at(instant: Instant, timezone: String): SleepType {
+    fun at(
+        instant: Instant,
+        timezone: String,
+        dayStartHour: Int = 6,
+        dayEndHour: Int = 19,
+    ): SleepType {
         val hour = instant.atZone(ZoneId.of(timezone)).hour
-        return if (hour in DAY_START_HOUR until DAY_END_HOUR) SleepType.Nap else SleepType.Night
+        val isDay = if (dayStartHour <= dayEndHour) {
+            hour >= dayStartHour && hour < dayEndHour
+        } else {
+            hour >= dayStartHour || hour < dayEndHour
+        }
+        return if (isDay) SleepType.Nap else SleepType.Night
     }
 
-    fun classify(startedAt: Instant, endedAt: Instant, timezone: String): SleepType {
-        if (!endedAt.isAfter(startedAt)) return at(startedAt, timezone)
+    fun classify(
+        startedAt: Instant,
+        endedAt: Instant,
+        timezone: String,
+        dayStartHour: Int = 6,
+        dayEndHour: Int = 19,
+    ): SleepType {
+        if (!endedAt.isAfter(startedAt)) return at(startedAt, timezone, dayStartHour, dayEndHour)
         val zone = ZoneId.of(timezone)
-        val startType = at(startedAt, timezone)
+        val startType = at(startedAt, timezone, dayStartHour, dayEndHour)
         var cursor = startedAt
         var napSeconds = 0L
         var nightSeconds = 0L
         while (cursor.isBefore(endedAt)) {
             val local = cursor.atZone(zone)
-            val type = at(cursor, timezone)
-            val boundaryHour = if (type == SleepType.Nap) DAY_END_HOUR else DAY_START_HOUR
-            var boundaryDate = local.toLocalDate()
-            if (type == SleepType.Night && local.hour >= DAY_END_HOUR) {
-                boundaryDate = boundaryDate.plusDays(1)
-            }
+            val type = at(cursor, timezone, dayStartHour, dayEndHour)
+            val boundaryHour = if (type == SleepType.Nap) dayEndHour else dayStartHour
+            val boundaryDate = local.toLocalDate()
             var boundary = boundaryDate.atTime(LocalTime.of(boundaryHour, 0)).atZone(zone).toInstant()
             if (!boundary.isAfter(cursor)) boundary = boundaryDate.plusDays(1)
                 .atTime(LocalTime.of(boundaryHour, 0)).atZone(zone).toInstant()

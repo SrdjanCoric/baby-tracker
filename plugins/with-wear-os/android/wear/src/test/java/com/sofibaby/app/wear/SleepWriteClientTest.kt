@@ -19,6 +19,42 @@ class SleepWriteClientTest {
     }
 
     @Test
+    fun completedSleepUsesTheSelectedBabysCustomDayHours() {
+        val requests = mutableListOf<WearHttpRequest>()
+        val client = SupabaseWriteClient(
+            transport = {
+                requests += it
+                WearHttpResponse(200, """[{"day_start_hour":7,"day_end_hour":19}]""")
+            },
+            wallClockMillis = { Instant.parse("2026-08-22T04:40:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val earlyMorning = timer().copy(
+            startedAt = Instant.parse("2026-08-22T04:30:00.000Z"),
+            morningClassification = "automatic",
+        )
+
+        val draft = client.newCompletedSleepDraft(active(), earlyMorning)
+
+        val record = JSONObject(requireNotNull(draft.mergeBody)).getJSONObject("p_record")
+        assertEquals("night", record.getString("type"))
+        assertEquals(1, requests.size)
+        assertTrue(requests.single().url.contains("wake_window_preferences"))
+    }
+
+    @Test
+    fun customDayHoursCanCrossMidnightLikeThePhoneClassifier() {
+        val type = SleepTypeClassifier.at(
+            instant = Instant.parse("2026-08-22T20:00:00.000Z"),
+            timezone = "UTC",
+            dayStartHour = 19,
+            dayEndHour = 6,
+        )
+
+        assertEquals(SleepType.Nap, type)
+    }
+
+    @Test
     fun ownerSleepTimerHydrationRestoresCompletionAndPauseFields() {
         val client = SupabaseWriteClient(
             transport = {
@@ -85,7 +121,7 @@ class SleepWriteClientTest {
         val client = SupabaseWriteClient(
             transport = {
                 requests += it
-                WearHttpResponse(200, "{}")
+                WearHttpResponse(200, if (it.method == "GET") "[]" else "{}")
             },
             wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
             clockStore = InMemoryWearClockStore("wear-test-device"),
@@ -95,13 +131,14 @@ class SleepWriteClientTest {
         val result = client.completeSleepTimer(active(), draft)
 
         assertTrue(result is WriteOutcome.Success)
-        assertEquals(2, requests.size)
-        assertEquals("https://project.supabase.co/rest/v1/rpc/merge_record", requests[0].url)
-        val rpc = JSONObject(requests[0].body)
+        assertEquals(3, requests.size)
+        assertTrue(requests[0].url.contains("wake_window_preferences"))
+        assertEquals("https://project.supabase.co/rest/v1/rpc/merge_record", requests[1].url)
+        val rpc = JSONObject(requests[1].body)
         val actualRow = rpc.getJSONObject("p_record").put("field_clocks", rpc.getJSONObject("p_field_clocks"))
         val phoneFixture = JSONObject(requireNotNull(javaClass.getResource("/phone-completed-sleep-row.json")).readText())
         assertEquals(phoneFixture.toString(), actualRow.toString())
-        assertEquals("https://project.supabase.co/rest/v1/rpc/release_timer_lock", requests[1].url)
+        assertEquals("https://project.supabase.co/rest/v1/rpc/release_timer_lock", requests[2].url)
     }
 
     @Test
@@ -135,11 +172,15 @@ class SleepWriteClientTest {
         )
         val client = SupabaseWriteClient(
             transport = {
-                captured = it
-                WearHttpResponse(
-                    200,
-                    """[{"success":true,"started_at":"2026-08-22T10:15:30.123Z"}]""",
-                )
+                if (it.method == "GET") {
+                    WearHttpResponse(200, "[]")
+                } else {
+                    captured = it
+                    WearHttpResponse(
+                        200,
+                        """[{"success":true,"started_at":"2026-08-22T10:15:30.123Z"}]""",
+                    )
+                }
             },
             ids = { ids.removeFirst() },
             wallClockMillis = { 1_787_393_730_123L },

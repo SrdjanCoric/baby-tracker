@@ -5,6 +5,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.util.UUID
+import org.json.JSONArray
 import org.json.JSONObject
 
 enum class DiaperType(val wireValue: String) {
@@ -511,7 +512,13 @@ class SupabaseWriteClient(
 
     fun newSleepTimerDraft(session: WearSessionEnvelope.Active): SleepTimerDraft {
         val now = Instant.ofEpochMilli(wallClockMillis())
-        val type = SleepTypeClassifier.at(now, session.baby.timezone)
+        val dayHours = loadSleepDayHours(session)
+        val type = SleepTypeClassifier.at(
+            now,
+            session.baby.timezone,
+            dayHours.start,
+            dayHours.end,
+        )
         val shared = newTimerDraft(session, TimerActivityType.Sleep, SLEEP_TIMER_START_CODEC) {
                 timerInstanceId, _ ->
             SleepTimerData(timerInstanceId, ids(), type)
@@ -686,7 +693,16 @@ class SupabaseWriteClient(
         val type = when (timer.morningClassification) {
             "confirmed_first_nap" -> SleepType.Nap
             "confirmed_night_continuation" -> SleepType.Night
-            else -> SleepTypeClassifier.classify(timer.startedAt, endedAt, session.baby.timezone)
+            else -> {
+                val dayHours = loadSleepDayHours(session)
+                SleepTypeClassifier.classify(
+                    timer.startedAt,
+                    endedAt,
+                    session.baby.timezone,
+                    dayHours.start,
+                    dayHours.end,
+                )
+            }
         }
         val record = JSONObject()
             .put("id", activityId)
@@ -1102,7 +1118,35 @@ class SupabaseWriteClient(
         "apikey" to session.supabase.anonKey,
         "Authorization" to "Bearer ${session.accessToken}",
     )
+
+    private fun loadSleepDayHours(session: WearSessionEnvelope.Active): SleepDayHours {
+        val fallback = SleepDayHours(start = 6, end = 19)
+        val response = try {
+            transport.execute(
+                WearHttpRequest(
+                    url = "${session.supabase.url.trimEnd('/')}/rest/v1/wake_window_preferences" +
+                        "?select=day_start_hour,day_end_hour&baby_id=eq.${session.baby.id}&limit=1",
+                    method = "GET",
+                    headers = authenticatedHeaders(session),
+                    body = "",
+                ),
+            )
+        } catch (_: Exception) {
+            return fallback
+        }
+        if (response.status !in 200..299) return fallback
+        return runCatching {
+            val rows = JSONArray(response.body)
+            if (rows.length() == 0) return@runCatching fallback
+            val row = rows.getJSONObject(0)
+            val start = row.optInt("day_start_hour", fallback.start)
+            val end = row.optInt("day_end_hour", fallback.end)
+            if (start !in 0..23 || end !in 0..23 || start == end) fallback else SleepDayHours(start, end)
+        }.getOrDefault(fallback)
+    }
 }
+
+private data class SleepDayHours(val start: Int, val end: Int)
 
 private val MILLISECOND_INSTANT = DateTimeFormatterBuilder().appendInstant(3).toFormatter()
 
