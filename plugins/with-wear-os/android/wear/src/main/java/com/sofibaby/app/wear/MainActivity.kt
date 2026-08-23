@@ -322,9 +322,9 @@ private fun SleepSection(
         Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     }
     if (activeTimer == null) {
-        presentation.awake?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
-        presentation.nextNap?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
-        presentation.wakeWindow?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
+        presentation.idleReadouts.forEach {
+            Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        }
         Button(onClick = actions.start, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
             Text("Start sleep · automatic")
         }

@@ -212,7 +212,10 @@ data class SleepSectionPresentation(
     val nextNap: String?,
     val wakeWindow: String?,
     val confirmationNotice: String?,
-)
+) {
+    val idleReadouts: List<String>
+        get() = listOfNotNull(completedSleep, awake, nextNap, wakeWindow)
+}
 
 object SleepSectionProjector {
     fun project(

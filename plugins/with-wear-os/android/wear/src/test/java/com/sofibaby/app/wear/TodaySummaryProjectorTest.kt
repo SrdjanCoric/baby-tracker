@@ -33,6 +33,10 @@ class TodaySummaryProjectorTest {
         assertEquals("10 min last sleep", presentation.completedSleep)
         assertEquals("Awake 34 min", presentation.awake)
         assertEquals("Next nap in 43 min", presentation.nextNap)
+        assertEquals(
+            listOf("10 min last sleep", "Awake 34 min", "Next nap in 43 min"),
+            presentation.idleReadouts,
+        )
         assertEquals("Confirm in SofiBaby on your phone", presentation.confirmationNotice)
     }
 
