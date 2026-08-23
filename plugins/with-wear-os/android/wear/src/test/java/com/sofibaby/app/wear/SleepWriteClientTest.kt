@@ -105,6 +105,26 @@ class SleepWriteClientTest {
     }
 
     @Test
+    fun completedSleepPreservesConfirmedMorningClassificationAndType() {
+        val client = SupabaseWriteClient(
+            transport = { error("draft creation does not use the network") },
+            wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val confirmedNight = timer().copy(
+            morningClassification = "confirmed_night_continuation",
+            morningClassificationVersion = 2,
+        )
+
+        val draft = client.newCompletedSleepDraft(active(), confirmedNight)
+
+        val record = JSONObject(requireNotNull(draft.mergeBody)).getJSONObject("p_record")
+        assertEquals("night", record.getString("type"))
+        assertEquals("confirmed_night_continuation", record.getString("morning_classification"))
+        assertEquals(2, record.getInt("morning_classification_version"))
+    }
+
+    @Test
     fun automaticSleepStartMatchesThePhoneTimerShape() {
         var captured: WearHttpRequest? = null
         val ids = ArrayDeque(

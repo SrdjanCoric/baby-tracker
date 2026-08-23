@@ -683,16 +683,21 @@ class SupabaseWriteClient(
         val durationSeconds = java.time.Duration.between(timer.startedAt, endedAt).seconds.coerceAtLeast(0)
         if (durationSeconds < 60) return CompletedSleepDraft(activityId, mergeBody = null)
         val timestamp = MILLISECOND_INSTANT.format(now)
+        val type = when (timer.morningClassification) {
+            "confirmed_first_nap" -> SleepType.Nap
+            "confirmed_night_continuation" -> SleepType.Night
+            else -> SleepTypeClassifier.classify(timer.startedAt, endedAt, session.baby.timezone)
+        }
         val record = JSONObject()
             .put("id", activityId)
             .put("baby_id", session.baby.id)
-            .put("type", SleepTypeClassifier.classify(timer.startedAt, endedAt, session.baby.timezone).wireValue)
+            .put("type", type.wireValue)
             .put("started_at", MILLISECOND_INSTANT.format(timer.startedAt))
             .put("ended_at", MILLISECOND_INSTANT.format(endedAt))
             .put("duration_seconds", durationSeconds)
             .put("logged_by", session.account.id)
-            .put("morning_classification", "automatic")
-            .put("morning_classification_version", 1)
+            .put("morning_classification", timer.morningClassification)
+            .put("morning_classification_version", timer.morningClassificationVersion)
             .put("created_at", timestamp)
             .put("updated_at", timestamp)
         val fields = listOf(
