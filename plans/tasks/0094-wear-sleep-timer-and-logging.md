@@ -57,3 +57,12 @@ pass.
 - `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
   `/tmp/agent-workflows/e2f8af45fd34/1aa0ca028842/wear-plugin.log`.
 - The stable diff contains no `supabase/` changes. CI proof remains for the review/finish workflow.
+
+## Review decisions
+
+- skipped (minor): TR-7 — Wear sleep resume writes timer_data without `effectiveStartTime` — Lower priority than the three minor correctness/data-loss findings selected for remediation.
+- skipped (minor): TR-10 — The sub-minute discard branch for sleep completion has no test — Lower priority than the three minor correctness/data-loss findings selected for remediation.
+- skipped (minor): TR-11 — The new sleep awake-readout ticker runs every 60s unconditionally — Lower priority than the three minor correctness/data-loss findings selected for remediation.
+- skipped (minor): TR-12 — The phone timer-shape fixture omits two fields the phone always writes — Lower priority than the three minor correctness/data-loss findings selected for remediation.
+- skipped (minor): TR-13 — README is not updated for Wear OS sleep timers — Lower priority than the three minor correctness/data-loss findings selected for remediation.
+- skipped (minor): TR-14 — `pausedAt` uses a non-millisecond timestamp formatter — Lower priority than the three minor correctness/data-loss findings selected for remediation.
