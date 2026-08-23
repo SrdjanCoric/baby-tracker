@@ -151,13 +151,16 @@ When the latest completed sleep is the current evening's stored `night` session,
   service to the generated phone app, registers both integrations, and adds the Wearable dependency.
   Edit the plugin sources rather than generated files under `android/`. Signed-in caregivers can
   choose a baby, read today's feeding, sleep, diaper, pumping, tummy-time, goals, and active-timer
-  summary directly on the watch, and log wet, dirty, mixed, or dry diapers. Dirty and mixed logs
-  offer the same seven stool colors as Apple Watch. Diaper writes go directly to Supabase, and a
-  successful write refreshes the summary. An offline write shows Retry and reuses the original
-  record. If a read or write returns 401, the watch asks the phone to refresh its session and shows
-  the reconnect state until a new token arrives. The summary refreshes when the app opens or wakes.
-  A failed refresh keeps the last summary for that baby visible with Retry; an account change clears
-  the cached summary and baby selection before new data loads.
+  summary directly on the watch. They can log wet, dirty, mixed, or dry diapers; dirty and mixed
+  logs offer the same seven stool colors as Apple Watch. They can also start, pause, resume, switch
+  sides, and stop breastfeeding timers, or log formula and breast-milk bottles from 0 to 500 ml.
+  Feeding timers are stored in the database, so phone-started timers appear on the watch and
+  watch-started timers appear on the phone. Writes go directly to Supabase, and a successful write
+  refreshes the summary. An offline write shows Retry and reuses the original record. If a read or
+  write returns 401, the watch asks the phone to refresh its session and shows the reconnect state
+  until a new token arrives. The summary refreshes when the app opens or wakes. A failed refresh
+  keeps the last summary for that baby visible with Retry; an account change clears the cached
+  summary and baby selection before new data loads.
 
 ### Edge Functions
 

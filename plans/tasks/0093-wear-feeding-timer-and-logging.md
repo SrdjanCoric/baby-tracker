@@ -80,6 +80,19 @@ Durable decisions this task must respect (from the brief):
 - skipped (minor): TR-11 — Older unauthorized handlers remain inline — user chose to finish without further minor/nit remediation.
 - skipped (minor): TR-12 — Owner hydration remains a second Wear read path — user chose to finish without further minor/nit remediation.
 
+## Completion record
+
+- Built the shared Wear timer transport, breastfeeding lifecycle controls, bottle logging, snapshot
+  restoration, and phone-compatible row payloads under `plugins/with-wear-os/android/wear/`.
+- Updated the README's **Wear OS Native Integration** section for feeding timers, cross-device timer
+  visibility, and bottle logging. The affected prose passed a two-pass `write-well` audit.
+- Review outcome: TR-1 through TR-5 fixed; TR-6 through TR-12 skipped at the user's request to
+  finish without further minor/nit remediation; TR-13 remained deferred out of scope.
+- Automated proof: `npm run check:code` passed on 2026-08-23. The bounded log is
+  `/tmp/agent-workflows/e2f8af45fd34/79509b673323/canonical.log`.
+- Manual verification: none required for this task. Paired phone/watch synchronization remains
+  assigned to Task 0098 by the validation boundary.
+
 ## Validation boundary
 
 No paired-emulator or phone↔watch synchronization check runs in this task. Prove timer persistence,
@@ -92,5 +105,5 @@ the bidirectional phone↔watch timer pass.
 - [x] Automated snapshot tests cover phone-started and watch-started timer visibility in both
       directions; manual paired-device proof is deferred to Task 0098.
 - [x] Watch app restart during a running timer resumes display correctly.
-- [ ] Feeding logs carry parity fields; tests green in CI; no backend changes.
+- [x] Feeding logs carry parity fields; tests green in CI; no backend changes.
 - [x] Solids, notes, manual timestamps, history, and saved-record editing are absent.
