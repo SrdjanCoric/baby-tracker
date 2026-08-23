@@ -159,7 +159,7 @@ object FeedingTimerRestorer {
         now: Instant = Instant.now(),
     ): RestoredFeedingTimer? {
         if (snapshot.type != "feeding") return null
-        val startedAt = runCatching { Instant.parse(snapshot.startTime) }.getOrNull() ?: return null
+        val startedAt = parseServerInstant(snapshot.startTime) ?: return null
         val side = when (snapshot.context) {
             BreastSide.Right.wireValue -> BreastSide.Right
             else -> BreastSide.Left
@@ -370,25 +370,29 @@ class FeedingTimerCoordinator(
             state = when (outcome) {
                 is TimerWriteOutcome.Success -> {
                     pendingRetry = null
-                    shouldRefresh = true
-                    val startedAt = Instant.parse(outcome.persistedStartedAt)
-                    FeedingTimerUiState.SnapshotActive(
-                        RestoredFeedingTimer(
-                            timerInstanceId = draft.timerInstanceId,
-                            activityId = draft.activityId,
-                            startedAt = startedAt,
-                            side = draft.side,
-                            leftAccumulatedSeconds = 0,
-                            rightAccumulatedSeconds = 0,
-                            currentSideStartedAt = startedAt,
-                            isPaused = false,
-                            accumulatedSeconds = null,
-                            totalPausedMs = 0,
-                            pausedAt = null,
-                            canControl = true,
-                            elapsedSeconds = 0,
-                        ),
-                    )
+                    val startedAt = parseServerInstant(outcome.persistedStartedAt)
+                    if (startedAt == null) {
+                        FeedingTimerUiState.Error("Could not start feeding", canRetry = false)
+                    } else {
+                        shouldRefresh = true
+                        FeedingTimerUiState.SnapshotActive(
+                            RestoredFeedingTimer(
+                                timerInstanceId = draft.timerInstanceId,
+                                activityId = draft.activityId,
+                                startedAt = startedAt,
+                                side = draft.side,
+                                leftAccumulatedSeconds = 0,
+                                rightAccumulatedSeconds = 0,
+                                currentSideStartedAt = startedAt,
+                                isPaused = false,
+                                accumulatedSeconds = null,
+                                totalPausedMs = 0,
+                                pausedAt = null,
+                                canControl = true,
+                                elapsedSeconds = 0,
+                            ),
+                        )
+                    }
                 }
                 is TimerWriteOutcome.AlreadyActive -> {
                     pendingRetry = null

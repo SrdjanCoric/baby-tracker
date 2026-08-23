@@ -7,6 +7,38 @@ import org.junit.Test
 
 class FeedingTimerCoordinatorTest {
     @Test
+    fun malformedPersistedStartBecomesANonRetryableError() {
+        val coordinator = FeedingTimerCoordinator(
+            drafts = { _, side -> draft(side) },
+            starter = { _, draft -> TimerWriteOutcome.Success(draft, "not-a-timestamp") },
+            refreshSummary = {},
+        )
+
+        coordinator.start(active(), BreastSide.Left)
+
+        assertEquals(
+            FeedingTimerUiState.Error("Could not start feeding", canRetry = false),
+            coordinator.state,
+        )
+    }
+
+    @Test
+    fun successfulStartAcceptsPostgrestOffsetTimestamp() {
+        val coordinator = FeedingTimerCoordinator(
+            drafts = { _, side -> draft(side) },
+            starter = { _, draft ->
+                TimerWriteOutcome.Success(draft, "2026-08-22T12:15:30.123+02:00")
+            },
+            refreshSummary = {},
+        )
+
+        coordinator.start(active(), BreastSide.Right)
+
+        val state = coordinator.state as FeedingTimerUiState.SnapshotActive
+        assertEquals(Instant.parse("2026-08-22T10:15:30.123Z"), state.timer.startedAt)
+    }
+
+    @Test
     fun startingWhileFeedingIsActiveSurfacesExistingTimerAndRefreshesSnapshot() {
         var refreshes = 0
         val coordinator = FeedingTimerCoordinator(

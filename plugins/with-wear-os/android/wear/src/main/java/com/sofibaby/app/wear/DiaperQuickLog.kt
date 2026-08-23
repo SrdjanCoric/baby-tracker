@@ -2,6 +2,7 @@ package com.sofibaby.app.wear
 
 import android.content.SharedPreferences
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.util.UUID
 import org.json.JSONObject
@@ -425,7 +426,10 @@ class SupabaseWriteClient(
             if (rows.length() == 0) return SharedTimerReadOutcome.Missing
             val row = rows.getJSONObject(0)
             SharedTimerReadOutcome.Success(
-                codec.decode(Instant.parse(row.getString("started_at")), row.getJSONObject("timer_data")),
+                codec.decode(
+                    requireNotNull(parseServerInstant(row.getString("started_at"))),
+                    row.getJSONObject("timer_data"),
+                ),
             )
         } catch (_: Exception) {
             SharedTimerReadOutcome.Failed
@@ -867,6 +871,9 @@ class SupabaseWriteClient(
 }
 
 private val MILLISECOND_INSTANT = DateTimeFormatterBuilder().appendInstant(3).toFormatter()
+
+internal fun parseServerInstant(value: String): Instant? =
+    runCatching { OffsetDateTime.parse(value).toInstant() }.getOrNull()
 
 sealed interface DiaperQuickLogState {
     data object Idle : DiaperQuickLogState
