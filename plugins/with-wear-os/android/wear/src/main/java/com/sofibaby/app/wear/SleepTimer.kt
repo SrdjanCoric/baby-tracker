@@ -72,6 +72,8 @@ data class SleepTimerData(
     val timerInstanceId: String,
     val activityId: String,
     val type: SleepType,
+    val morningClassification: String = "automatic",
+    val morningClassificationVersion: Int = 1,
     val isPaused: Boolean = false,
     val totalPausedMs: Long = 0,
     val pausedAt: Instant? = null,
@@ -84,14 +86,16 @@ val SLEEP_TIMER_START_CODEC = TimerDataCodec<SleepTimerData>(
             .put("timerInstanceId", data.timerInstanceId)
             .put("activityId", data.activityId)
             .put("type", data.type.wireValue)
-            .put("morningClassification", "automatic")
-            .put("morningClassificationVersion", 1)
+            .put("morningClassification", data.morningClassification)
+            .put("morningClassificationVersion", data.morningClassificationVersion)
     },
     decode = { _, data ->
         SleepTimerData(
             timerInstanceId = data.getString("timerInstanceId"),
             activityId = data.getString("activityId"),
             type = if (data.optString("type") == SleepType.Night.wireValue) SleepType.Night else SleepType.Nap,
+            morningClassification = data.optString("morningClassification", "automatic"),
+            morningClassificationVersion = data.optInt("morningClassificationVersion", 1),
             isPaused = data.optBoolean("isPaused", false),
             totalPausedMs = data.optLong("totalPausedMs", 0),
             pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse),
@@ -109,8 +113,8 @@ val SLEEP_TIMER_CODEC = TimerDataCodec<SleepTimerData>(
             .put("type", data.type.wireValue)
             .put("isPaused", data.isPaused)
             .put("totalPausedMs", data.totalPausedMs)
-            .put("morningClassification", "automatic")
-            .put("morningClassificationVersion", 1)
+            .put("morningClassification", data.morningClassification)
+            .put("morningClassificationVersion", data.morningClassificationVersion)
             .apply {
                 data.pausedAt?.let { put("pausedAt", it.toString()) }
                 data.accumulatedSeconds?.let { put("accumulatedSeconds", it) }
@@ -130,6 +134,8 @@ data class RestoredSleepTimer(
     val pausedAt: Instant?,
     val canControl: Boolean,
     val elapsedSeconds: Long,
+    val morningClassification: String = "automatic",
+    val morningClassificationVersion: Int = 1,
 )
 
 object SleepTimerRestorer {

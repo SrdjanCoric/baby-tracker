@@ -24,7 +24,7 @@ class SleepWriteClientTest {
             transport = {
                 WearHttpResponse(
                     200,
-                    """[{"started_at":"2026-08-22T10:00:00.000Z","timer_data":{"timerInstanceId":"timer-1","activityId":"sleep-1","type":"night","isPaused":true,"accumulatedSeconds":270,"totalPausedMs":15000,"pausedAt":"2026-08-22T10:04:30.000Z","morningClassification":"automatic","morningClassificationVersion":1}}]""",
+                    """[{"started_at":"2026-08-22T10:00:00.000Z","timer_data":{"timerInstanceId":"timer-1","activityId":"sleep-1","type":"night","isPaused":true,"accumulatedSeconds":270,"totalPausedMs":15000,"pausedAt":"2026-08-22T10:04:30.000Z","morningClassification":"confirmed_night_continuation","morningClassificationVersion":2}}]""",
                 )
             },
             wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
@@ -39,6 +39,8 @@ class SleepWriteClientTest {
         assertEquals(270, result.timer.accumulatedSeconds)
         assertEquals(15_000L, result.timer.totalPausedMs)
         assertEquals(Instant.parse("2026-08-22T10:04:30.000Z"), result.timer.pausedAt)
+        assertEquals("confirmed_night_continuation", result.timer.morningClassification)
+        assertEquals(2, result.timer.morningClassificationVersion)
     }
 
     @Test
@@ -54,7 +56,11 @@ class SleepWriteClientTest {
             clockStore = InMemoryWearClockStore("wear-test-device"),
         )
 
-        val paused = client.pauseSleepTimer(active(), timer()) as SleepTimerMutationOutcome.Success
+        val original = timer().copy(
+            morningClassification = "unresolved",
+            morningClassificationVersion = 2,
+        )
+        val paused = client.pauseSleepTimer(active(), original) as SleepTimerMutationOutcome.Success
         now = Instant.parse("2026-08-22T10:02:30.000Z").toEpochMilli()
         val resumed = client.resumeSleepTimer(active(), paused.timer) as SleepTimerMutationOutcome.Success
 
@@ -62,10 +68,15 @@ class SleepWriteClientTest {
         assertEquals(120, paused.timer.accumulatedSeconds)
         assertEquals(30_000L, resumed.timer.totalPausedMs)
         assertEquals("https://project.supabase.co/rest/v1/rpc/toggle_timer_pause", requests[0].url)
-        assertTrue(JSONObject(requests[0].body).getJSONObject("p_timer_data").getBoolean("isPaused"))
+        val pausedData = JSONObject(requests[0].body).getJSONObject("p_timer_data")
+        assertTrue(pausedData.getBoolean("isPaused"))
+        assertEquals("unresolved", pausedData.getString("morningClassification"))
+        assertEquals(2, pausedData.getInt("morningClassificationVersion"))
         val resumedData = JSONObject(requests[1].body).getJSONObject("p_timer_data")
         assertEquals(false, resumedData.getBoolean("isPaused"))
         assertEquals(30_000L, resumedData.getLong("totalPausedMs"))
+        assertEquals("unresolved", resumedData.getString("morningClassification"))
+        assertEquals(2, resumedData.getInt("morningClassificationVersion"))
     }
 
     @Test

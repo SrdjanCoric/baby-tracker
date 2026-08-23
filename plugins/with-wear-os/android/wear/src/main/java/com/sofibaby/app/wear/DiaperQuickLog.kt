@@ -608,6 +608,8 @@ class SupabaseWriteClient(
             timerInstanceId = requireNotNull(timer.timerInstanceId),
             activityId = requireNotNull(timer.activityId),
             type = timer.type,
+            morningClassification = timer.morningClassification,
+            morningClassificationVersion = timer.morningClassificationVersion,
             isPaused = timer.isPaused,
             totalPausedMs = timer.totalPausedMs,
             pausedAt = timer.pausedAt,
@@ -636,6 +638,8 @@ class SupabaseWriteClient(
                     timerInstanceId = requireNotNull(timer.timerInstanceId),
                     activityId = requireNotNull(timer.activityId),
                     type = timer.type,
+                    morningClassification = timer.morningClassification,
+                    morningClassificationVersion = timer.morningClassificationVersion,
                     isPaused = timer.isPaused,
                     totalPausedMs = timer.totalPausedMs,
                     pausedAt = timer.pausedAt,
@@ -663,6 +667,8 @@ class SupabaseWriteClient(
                         Instant.ofEpochMilli(wallClockMillis()),
                     ).seconds.coerceAtLeast(0)
                 },
+                morningClassification = decoded.morningClassification,
+                morningClassificationVersion = decoded.morningClassificationVersion,
             )
         },
     )
