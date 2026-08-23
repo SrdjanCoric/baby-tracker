@@ -154,6 +154,32 @@ class SleepTimerCoordinatorTest {
     }
 
     @Test
+    fun failedSleepStopRetryRemainsBoundToTheOriginatingBaby() {
+        val attemptedBabies = mutableListOf<String>()
+        val outcomes = ArrayDeque<WriteOutcome>().apply {
+            add(WriteOutcome.Offline)
+            add(WriteOutcome.Success("sleep-1"))
+        }
+        val coordinator = SleepTimerCoordinator(
+            drafts = { draft() },
+            starter = { _, _ -> SleepTimerWriteOutcome.Failed },
+            refreshSummary = {},
+            completionDrafts = { _, _ -> CompletedSleepDraft("sleep-1", "merge") },
+            completionWriter = { session, _ ->
+                attemptedBabies += session.baby.id
+                outcomes.removeFirst()
+            },
+        )
+        coordinator.restoreHydrated(timer())
+
+        coordinator.stop(active("baby-1"))
+        coordinator.retry(active("baby-2"))
+
+        assertEquals(listOf("baby-1", "baby-1"), attemptedBabies)
+        assertEquals(SleepTimerUiState.Idle, coordinator.state)
+    }
+
+    @Test
     fun successfulAutomaticStartPublishesAControllableTimerAndRefreshes() {
         var refreshes = 0
         val coordinator = SleepTimerCoordinator(
@@ -230,11 +256,11 @@ class SleepTimerCoordinatorTest {
         rpcBody = "payload",
     )
 
-    private fun active() = WearSessionEnvelope.Active(
+    private fun active(babyId: String = "baby-1") = WearSessionEnvelope.Active(
         phoneEpoch = "phone-install-1",
         revision = 3,
         account = WearSessionEnvelope.Account("user-1", "Alex"),
-        baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
+        baby = WearSessionEnvelope.Baby(babyId, "Sofi", "Europe/Belgrade"),
         supabase = WearSessionEnvelope.Supabase("https://project.supabase.co", "anon-key"),
         accessToken = "access-token",
         expiresAt = 2_000_000_000,

@@ -448,10 +448,11 @@ class SleepTimerCoordinator(
             }
             WriteOutcome.Offline -> {
                 pendingRetry = { retrySession ->
+                    val originSession = retrySession.copy(baby = session.baby)
                     applyCompletionOutcome(
-                        retrySession,
+                        originSession,
                         draft,
-                        completionWriter.write(retrySession, draft),
+                        completionWriter.write(originSession, draft),
                         expectedGeneration,
                     )
                 }
@@ -464,10 +465,11 @@ class SleepTimerCoordinator(
             }
             WriteOutcome.Failed -> {
                 pendingRetry = { retrySession ->
+                    val originSession = retrySession.copy(baby = session.baby)
                     applyCompletionOutcome(
-                        retrySession,
+                        originSession,
                         draft,
-                        completionWriter.write(retrySession, draft),
+                        completionWriter.write(originSession, draft),
                         expectedGeneration,
                     )
                 }
