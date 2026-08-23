@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createFeedingTimerAdapter } from "./feeding-timer-adapter";
 
 vi.mock("../live-activity-service", () => ({}));
@@ -43,6 +45,49 @@ describe("feeding timer adapter", () => {
       ...overrides,
     });
   }
+
+  it("restores a Wear-started timer through the phone timer contract", () => {
+    const fixture = JSON.parse(
+      readFileSync(
+        join(
+          process.cwd(),
+          "plugins/with-wear-os/android/wear/src/test/resources/phone-feeding-timer-row.json"
+        ),
+        "utf8"
+      )
+    );
+    const dispatchRestoreTimer = vi.fn();
+    const adapter = createFeedingTimerAdapter({
+      babyId: fixture.p_baby_id,
+      dispatchRestoreTimer,
+    });
+    const payload = adapter.timerDataCodec.decode(
+      fixture.p_timer_data,
+      fixture.p_started_at
+    );
+
+    adapter.dispatchRestoreTimer({
+      startedAt: new Date(fixture.p_started_at),
+      lockState: "owned",
+      timerInstanceId: fixture.p_timer_data.timerInstanceId,
+      activityId: fixture.p_timer_data.activityId,
+      payload: {
+        ...payload,
+        timerInstanceId: fixture.p_timer_data.timerInstanceId,
+        activityId: fixture.p_timer_data.activityId,
+      },
+    });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isRunning: true,
+        timerInstanceId: fixture.p_timer_data.timerInstanceId,
+        activityId: fixture.p_timer_data.activityId,
+        side: "left",
+        currentSideStartedAt: new Date(fixture.p_started_at),
+      })
+    );
+  });
 
   it("adds running elapsed time to the active left, right, or both sides", () => {
     expect(build({ side: "left" })).toMatchObject({
