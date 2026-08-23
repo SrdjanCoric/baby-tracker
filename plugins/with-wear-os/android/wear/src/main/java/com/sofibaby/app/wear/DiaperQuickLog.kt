@@ -182,6 +182,7 @@ data class SharedTimerCompletionDraft(
 enum class BreastSide(val wireValue: String) {
     Left("left"),
     Right("right"),
+    Both("both"),
 }
 
 data class FeedingTimerDraft(
@@ -648,6 +649,10 @@ class SupabaseWriteClient(
         when (timer.side) {
             BreastSide.Left -> leftSeconds += resumedPauseSeconds
             BreastSide.Right -> rightSeconds += resumedPauseSeconds
+            BreastSide.Both -> {
+                leftSeconds += resumedPauseSeconds
+                rightSeconds += resumedPauseSeconds
+            }
         }
         if (!timer.isPaused) {
             val currentSeconds = java.time.Duration.between(timer.currentSideStartedAt, endedAt)
@@ -655,6 +660,10 @@ class SupabaseWriteClient(
             when (timer.side) {
                 BreastSide.Left -> leftSeconds += currentSeconds
                 BreastSide.Right -> rightSeconds += currentSeconds
+                BreastSide.Both -> {
+                    leftSeconds += currentSeconds
+                    rightSeconds += currentSeconds
+                }
             }
         }
         val side = if (leftSeconds > 0 && rightSeconds > 0) {
@@ -799,6 +808,10 @@ class SupabaseWriteClient(
         when (side) {
             BreastSide.Left -> copy(leftAccumulatedSeconds = leftAccumulatedSeconds + seconds)
             BreastSide.Right -> copy(rightAccumulatedSeconds = rightAccumulatedSeconds + seconds)
+            BreastSide.Both -> copy(
+                leftAccumulatedSeconds = leftAccumulatedSeconds + seconds,
+                rightAccumulatedSeconds = rightAccumulatedSeconds + seconds,
+            )
         }
 
     private fun RestoredFeedingTimer.timerDataJson(effectiveStartTime: Instant? = null): JSONObject =
@@ -825,6 +838,7 @@ class SupabaseWriteClient(
             val side = when (data.getString("side")) {
                 BreastSide.Left.wireValue -> BreastSide.Left
                 BreastSide.Right.wireValue -> BreastSide.Right
+                BreastSide.Both.wireValue -> BreastSide.Both
                 else -> error("Invalid breast side")
             }
             val pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse)

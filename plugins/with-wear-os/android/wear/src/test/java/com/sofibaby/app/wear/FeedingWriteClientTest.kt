@@ -147,6 +147,28 @@ class FeedingWriteClientTest {
     }
 
     @Test
+    fun ownerTimerHydrationAcceptsPhoneBothSide() {
+        val client = SupabaseWriteClient(
+            transport = {
+                WearHttpResponse(
+                    200,
+                    """[{"started_at":"2026-08-22T10:00:00.000+00:00","timer_data":{"timerInstanceId":"timer-1","activityId":"feeding-1","side":"both","type":"breast","leftAccumulatedSeconds":120,"rightAccumulatedSeconds":90,"currentSideStartedAt":"2026-08-22T10:04:00.000Z","isPaused":false,"totalPausedMs":0}}]""",
+                )
+            },
+            wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+
+        val result = client.loadOwnedFeedingTimer(active())
+
+        val timer = (result as TimerReadOutcome.Success).timer
+        assertEquals("both", timer.side.wireValue)
+        assertEquals(120, timer.leftAccumulatedSeconds)
+        assertEquals(90, timer.rightAccumulatedSeconds)
+        assertTrue(timer.canControl)
+    }
+
+    @Test
     fun pauseResumeAndSideSwitchPersistPhoneParityTimerData() {
         val requests = mutableListOf<WearHttpRequest>()
         var now = Instant.parse("2026-08-22T10:02:00.000Z").toEpochMilli()
@@ -176,6 +198,31 @@ class FeedingWriteClientTest {
         val switchedData = JSONObject(requests[2].body).getJSONObject("timer_data")
         assertEquals("right", switchedData.getString("side"))
         assertEquals(210, switchedData.getInt("leftAccumulatedSeconds"))
+    }
+
+    @Test
+    fun bothSideTimerPreservesPhoneSemanticsThroughPauseResumeAndCompletion() {
+        var now = Instant.parse("2026-08-22T10:02:00.000Z").toEpochMilli()
+        val client = SupabaseWriteClient(
+            transport = { WearHttpResponse(204, "") },
+            wallClockMillis = { now },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val initial = timer().copy(side = BreastSide.Both)
+
+        val paused = (client.pauseFeedingTimer(active(), initial) as TimerMutationOutcome.Success).timer
+        now = Instant.parse("2026-08-22T10:02:30.000Z").toEpochMilli()
+        val resumed = (client.resumeFeedingTimer(active(), paused) as TimerMutationOutcome.Success).timer
+        now = Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli()
+        val completed = client.newCompletedFeedingDraft(active(), resumed)
+
+        assertEquals(120, paused.leftAccumulatedSeconds)
+        assertEquals(120, paused.rightAccumulatedSeconds)
+        val record = JSONObject(requireNotNull(completed.mergeBody)).getJSONObject("p_record")
+        assertEquals("both", record.getString("side"))
+        assertEquals("both", record.getString("last_finished_side"))
+        assertEquals(300, record.getInt("left_duration_seconds"))
+        assertEquals(300, record.getInt("right_duration_seconds"))
     }
 
     @Test
