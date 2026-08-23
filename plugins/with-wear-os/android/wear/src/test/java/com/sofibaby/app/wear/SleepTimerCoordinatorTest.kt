@@ -30,6 +30,40 @@ class SleepTimerCoordinatorTest {
     }
 
     @Test
+    fun snapshotRefreshDoesNotReplaceSubmittingSleepWork() {
+        val work = mutableListOf<() -> Unit>()
+        var writes = 0
+        val coordinator = SleepTimerCoordinator(
+            drafts = { draft() },
+            starter = { _, _ ->
+                writes += 1
+                SleepTimerWriteOutcome.Success("2026-08-22T10:15:30.123Z")
+            },
+            refreshSummary = {},
+            dispatch = work::add,
+        )
+        val snapshotTimer = ActivitySnapshot.ActiveTimer(
+            type = "sleep",
+            startTime = "2026-08-22T10:00:00.000Z",
+            timerInstanceId = "stale-timer",
+            context = "nap",
+            isRemote = false,
+            isPaused = false,
+            accumulatedSeconds = null,
+        )
+
+        coordinator.start(active())
+        coordinator.restoreSnapshot(snapshotTimer)
+        coordinator.start(active())
+
+        assertEquals(SleepTimerUiState.Submitting, coordinator.state)
+        assertEquals(1, work.size)
+        work.single().invoke()
+        assertEquals(1, writes)
+        assertEquals("timer-1", (coordinator.state as SleepTimerUiState.SnapshotActive).timer.timerInstanceId)
+    }
+
+    @Test
     fun sameAccountPhoneSnapshotHydratesTheCompletionIdentity() {
         val hydrated = timer().copy(type = SleepType.Night)
         val coordinator = SleepTimerCoordinator(

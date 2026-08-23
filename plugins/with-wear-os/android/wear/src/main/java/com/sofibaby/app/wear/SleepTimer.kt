@@ -250,6 +250,7 @@ class SleepTimerCoordinator(
 
     @Synchronized
     fun restoreSnapshot(timer: ActivitySnapshot.ActiveTimer?, now: Instant = Instant.now()) {
+        if (state == SleepTimerUiState.Submitting) return
         if (state is SleepTimerUiState.Error && pendingRetry != null) return
         state = timer?.let { SleepTimerRestorer.restore(it, now) }
             ?.let(SleepTimerUiState::SnapshotActive)
