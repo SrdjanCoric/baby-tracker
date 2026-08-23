@@ -206,6 +206,53 @@ data class TodaySummaryStaticPresentation(
     val updatedAgo: String,
 )
 
+data class SleepSectionPresentation(
+    val completedSleep: String,
+    val awake: String?,
+    val nextNap: String?,
+    val wakeWindow: String?,
+    val confirmationNotice: String?,
+)
+
+object SleepSectionProjector {
+    fun project(
+        sleep: ActivitySnapshot.Sleep,
+        now: Instant = Instant.now(),
+    ): SleepSectionPresentation {
+        val awakeMinutes = sleep.lastSleepEndedAt
+            ?.let { runCatching { Instant.parse(it) }.getOrNull() }
+            ?.let { Duration.between(it, now).toMinutes() }
+            ?.takeIf { it >= 0 }
+        val wakeWindow = sleep.wakeWindowMinutes?.takeIf { it > 0 }
+        return SleepSectionPresentation(
+            completedSleep = sleep.lastDurationMinutes?.let { "$it min last sleep" }
+                ?: "No completed sleep",
+            awake = awakeMinutes?.let { "Awake ${formatMinutes(it)}" },
+            nextNap = if (awakeMinutes != null && wakeWindow != null) {
+                "Next nap in ${formatMinutes((wakeWindow - awakeMinutes).coerceAtLeast(0))}"
+            } else {
+                null
+            },
+            wakeWindow = if (awakeMinutes == null && wakeWindow != null) {
+                "Wake window ${formatMinutes(wakeWindow.toLong())}"
+            } else {
+                null
+            },
+            confirmationNotice = if (sleep.morningConfirmationPending == true) {
+                "Confirm in SofiBaby on your phone"
+            } else {
+                null
+            },
+        )
+    }
+
+    private fun formatMinutes(totalMinutes: Long): String {
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return if (hours > 0) "${hours}h ${minutes}m" else "$minutes min"
+    }
+}
+
 object TodaySummaryProjector {
     fun project(
         snapshot: ActivitySnapshot,

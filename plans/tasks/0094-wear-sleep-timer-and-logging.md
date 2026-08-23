@@ -4,6 +4,12 @@
 **Depends on**: 0093
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I track my baby's sleep from my watch.
 
+## Implementation classification
+
+- **Change class**: `code`
+- **Validation tier**: `canonical`
+- **TDD applicable**: `true`
+
 ## What to build
 
 Sleep tracking with iOS-watch parity on top of the shared timer machinery from 0093: start/stop a
@@ -21,10 +27,10 @@ sleep entry, nap/night choice, overlap handling, morning-classification answers,
 
 ## Implementation work
 
-- [ ] Sleep timer UI with automatic type, pause/resume/stop, current awake/wake-window readout, and
+- [x] Sleep timer UI with automatic type, pause/resume/stop, current awake/wake-window readout, and
       phone-confirmation notice, on the shared timer machinery.
-- [ ] Snapshot-driven display of a phone-started sleep timer.
-- [ ] Tests: sleep row/timer shape fixture-matches phone rows; already-active rule; summary
+- [x] Snapshot-driven display of a phone-started sleep timer.
+- [x] Tests: sleep row/timer shape fixture-matches phone rows; already-active rule; summary
       reflects completed sleep.
 
 ## Validation boundary
@@ -35,7 +41,19 @@ pass.
 
 ## Acceptance criteria
 
-- [ ] Automated integration proof shows the watch sleep lifecycle produces phone-identical rows.
-- [ ] Snapshot tests prove a phone-started sleep timer renders on the watch.
+- [x] Automated integration proof shows the watch sleep lifecycle produces phone-identical rows.
+- [x] Snapshot tests prove a phone-started sleep timer renders on the watch.
 - [ ] Tests green in CI; no backend changes.
-- [ ] Manual sleep entry, classification controls, overlap handling, history, and editing are absent.
+- [x] Manual sleep entry, classification controls, overlap handling, history, and editing are absent.
+
+## Implementation evidence
+
+- RED/GREEN cycles covered phone-started snapshot restoration, already-active locks, automatic
+  start shape and state, phone-shaped completion and lock release, pause/resume persistence,
+  stop retry reuse, owner hydration, stale-session reset, awake/next-nap display, phone
+  confirmation, and the no-anchor wake-window display.
+- `./gradlew :wear:testDebugUnitTest :wear:assembleDebug` passed locally in 3 seconds; log:
+  `/tmp/agent-workflows/e2f8af45fd34/1aa0ca028842/wear-focused.log`.
+- `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
+  `/tmp/agent-workflows/e2f8af45fd34/1aa0ca028842/wear-plugin.log`.
+- The stable diff contains no `supabase/` changes. CI proof remains for the review/finish workflow.

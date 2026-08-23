@@ -1,0 +1,26 @@
+{
+  "id": "sleep-1",
+  "baby_id": "22222222-2222-4222-8222-222222222222",
+  "type": "nap",
+  "started_at": "2026-08-22T10:00:00.000Z",
+  "ended_at": "2026-08-22T10:05:00.000Z",
+  "duration_seconds": 300,
+  "logged_by": "33333333-3333-4333-8333-333333333333",
+  "morning_classification": "automatic",
+  "morning_classification_version": 1,
+  "created_at": "2026-08-22T10:05:00.000Z",
+  "updated_at": "2026-08-22T10:05:00.000Z",
+  "field_clocks": {
+    "id": "2026-08-22T10:05:00.000Z-0000-wear-test-device",
+    "baby_id": "2026-08-22T10:05:00.000Z-0001-wear-test-device",
+    "type": "2026-08-22T10:05:00.000Z-0002-wear-test-device",
+    "started_at": "2026-08-22T10:05:00.000Z-0003-wear-test-device",
+    "ended_at": "2026-08-22T10:05:00.000Z-0004-wear-test-device",
+    "duration_seconds": "2026-08-22T10:05:00.000Z-0005-wear-test-device",
+    "logged_by": "2026-08-22T10:05:00.000Z-0006-wear-test-device",
+    "morning_classification": "2026-08-22T10:05:00.000Z-0007-wear-test-device",
+    "morning_classification_version": "2026-08-22T10:05:00.000Z-0008-wear-test-device",
+    "created_at": "2026-08-22T10:05:00.000Z-0009-wear-test-device",
+    "updated_at": "2026-08-22T10:05:00.000Z-0010-wear-test-device"
+  }
+}

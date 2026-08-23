@@ -13,6 +13,7 @@ object WearSessionRuntime {
     private val mutableTodayState = mutableStateOf<TodaySummaryUiState>(TodaySummaryUiState.Unavailable)
     private val mutableDiaperState = mutableStateOf<DiaperQuickLogState>(DiaperQuickLogState.Idle)
     private val mutableFeedingState = mutableStateOf<FeedingTimerUiState>(FeedingTimerUiState.Idle)
+    private val mutableSleepState = mutableStateOf<SleepTimerUiState>(SleepTimerUiState.Idle)
     private val mutableBottleState = mutableStateOf<BottleLogUiState>(BottleLogUiState.Idle)
     private val executor = Executors.newSingleThreadExecutor()
     private var coordinator: WearSessionCoordinator? = null
@@ -20,12 +21,14 @@ object WearSessionRuntime {
     private var selectionStore: android.content.SharedPreferences? = null
     private var diaperCoordinator: DiaperQuickLogCoordinator? = null
     private var feedingCoordinator: FeedingTimerCoordinator? = null
+    private var sleepCoordinator: SleepTimerCoordinator? = null
     private var bottleCoordinator: BottleLogCoordinator? = null
 
     val state: State<WearSessionUiState> = mutableState
     val todayState: State<TodaySummaryUiState> = mutableTodayState
     val diaperState: State<DiaperQuickLogState> = mutableDiaperState
     val feedingState: State<FeedingTimerUiState> = mutableFeedingState
+    val sleepState: State<SleepTimerUiState> = mutableSleepState
     val bottleState: State<BottleLogUiState> = mutableBottleState
 
     @Synchronized
@@ -96,6 +99,19 @@ object WearSessionRuntime {
             onUnauthorized = ::handleUnauthorized,
             onStateChanged = { mutableFeedingState.value = it },
         )
+        sleepCoordinator = SleepTimerCoordinator(
+            drafts = writeClient::newSleepTimerDraft,
+            starter = writeClient::startSleepTimer,
+            refreshSummary = { summaryDriver?.onWake() },
+            completionDrafts = writeClient::newCompletedSleepDraft,
+            completionWriter = writeClient::completeSleepTimer,
+            pauser = writeClient::pauseSleepTimer,
+            resumer = writeClient::resumeSleepTimer,
+            timerReader = writeClient::loadOwnedSleepTimer,
+            dispatch = { work -> executor.execute { work() } },
+            onUnauthorized = ::handleUnauthorized,
+            onStateChanged = { mutableSleepState.value = it },
+        )
         bottleCoordinator = BottleLogCoordinator(
             drafts = writeClient::newBottleFeedingDraft,
             writer = writeClient::writeBottleFeeding,
@@ -124,6 +140,7 @@ object WearSessionRuntime {
         if (sessionScopeChanged) {
             diaperCoordinator?.reset()
             feedingCoordinator?.reset()
+            sleepCoordinator?.reset()
             bottleCoordinator?.reset()
         }
         target.accept(envelope)
@@ -189,6 +206,26 @@ object WearSessionRuntime {
         selectedSession()?.let { feedingCoordinator?.retry(it) }
     }
 
+    fun startSleep() {
+        selectedSession()?.let { sleepCoordinator?.start(it) }
+    }
+
+    fun pauseSleep() {
+        selectedSession()?.let { sleepCoordinator?.pause(it) }
+    }
+
+    fun resumeSleep() {
+        selectedSession()?.let { sleepCoordinator?.resume(it) }
+    }
+
+    fun stopSleep() {
+        selectedSession()?.let { sleepCoordinator?.stop(it) }
+    }
+
+    fun retrySleep() {
+        selectedSession()?.let { sleepCoordinator?.retry(it) }
+    }
+
     fun logBottle(selection: BottleLogSelection) {
         selectedSession()?.let { bottleCoordinator?.submit(it, selection) }
     }
@@ -245,6 +282,10 @@ object WearSessionRuntime {
         feedingCoordinator?.restoreSnapshot(
             session,
             snapshot.activeTimers.firstOrNull { it.type == "feeding" },
+        )
+        sleepCoordinator?.restoreSnapshot(
+            session,
+            snapshot.activeTimers.firstOrNull { it.type == "sleep" },
         )
     }
 

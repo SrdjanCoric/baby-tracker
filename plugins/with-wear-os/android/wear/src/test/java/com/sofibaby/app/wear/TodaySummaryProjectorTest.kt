@@ -9,6 +9,34 @@ import org.junit.Test
 
 class TodaySummaryProjectorTest {
     @Test
+    fun sleepPresentationShowsTheWakeWindowWithoutAnAwakeAnchor() {
+        val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()
+        val sleep = ActivitySnapshotCodec.decode(fixture).activities.sleep.copy(lastSleepEndedAt = null)
+
+        val presentation = SleepSectionProjector.project(sleep)
+
+        assertEquals("Wake window 1h 17m", presentation.wakeWindow)
+        assertEquals(null, presentation.awake)
+        assertEquals(null, presentation.nextNap)
+    }
+
+    @Test
+    fun sleepPresentationShowsCompletedSleepAwakeWindowAndPhoneConfirmation() {
+        val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()
+        val snapshot = ActivitySnapshotCodec.decode(fixture)
+
+        val presentation = SleepSectionProjector.project(
+            snapshot.activities.sleep,
+            now = Instant.parse("2026-08-21T13:14:20.000Z"),
+        )
+
+        assertEquals("10 min last sleep", presentation.completedSleep)
+        assertEquals("Awake 34 min", presentation.awake)
+        assertEquals("Next nap in 43 min", presentation.nextNap)
+        assertEquals("Confirm in SofiBaby on your phone", presentation.confirmationNotice)
+    }
+
+    @Test
     fun timerTickerRunsOnlyWithActiveTimersWhileResumed() {
         assertFalse(TodaySummaryTicker.shouldRun(hasActiveTimers = false, Lifecycle.State.RESUMED))
         assertFalse(TodaySummaryTicker.shouldRun(hasActiveTimers = true, Lifecycle.State.STARTED))

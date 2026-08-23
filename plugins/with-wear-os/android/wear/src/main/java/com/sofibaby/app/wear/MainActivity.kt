@@ -51,6 +51,14 @@ data class FeedingActions(
     val retryBottle: () -> Unit,
 )
 
+data class SleepActions(
+    val start: () -> Unit,
+    val pause: () -> Unit,
+    val resume: () -> Unit,
+    val stop: () -> Unit,
+    val retry: () -> Unit,
+)
+
 object TodaySummaryTicker {
     fun shouldRun(hasActiveTimers: Boolean, lifecycleState: Lifecycle.State): Boolean =
         hasActiveTimers && lifecycleState == Lifecycle.State.RESUMED
@@ -67,6 +75,7 @@ class MainActivity : ComponentActivity() {
                     todayState = WearSessionRuntime.todayState.value,
                     diaperState = WearSessionRuntime.diaperState.value,
                     feedingState = WearSessionRuntime.feedingState.value,
+                    sleepState = WearSessionRuntime.sleepState.value,
                     bottleState = WearSessionRuntime.bottleState.value,
                     onRetry = WearSessionRuntime::retry,
                     onSelectBaby = WearSessionRuntime::selectBaby,
@@ -81,6 +90,13 @@ class MainActivity : ComponentActivity() {
                         retryTimer = WearSessionRuntime::retryFeeding,
                         logBottle = WearSessionRuntime::logBottle,
                         retryBottle = WearSessionRuntime::retryBottle,
+                    ),
+                    sleepActions = SleepActions(
+                        start = WearSessionRuntime::startSleep,
+                        pause = WearSessionRuntime::pauseSleep,
+                        resume = WearSessionRuntime::resumeSleep,
+                        stop = WearSessionRuntime::stopSleep,
+                        retry = WearSessionRuntime::retrySleep,
                     ),
                 )
             }
@@ -99,12 +115,14 @@ fun WearAppScreen(
     todayState: TodaySummaryUiState,
     diaperState: DiaperQuickLogState,
     feedingState: FeedingTimerUiState,
+    sleepState: SleepTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
     feedingActions: FeedingActions,
+    sleepActions: SleepActions,
 ) {
     when (sessionState) {
         WearSessionUiState.SignedOut -> SignedOutScreen()
@@ -113,12 +131,14 @@ fun WearAppScreen(
             todayState,
             diaperState,
             feedingState,
+            sleepState,
             bottleState,
             onRetry,
             onSelectBaby,
             onLogDiaper,
             onRetryDiaper,
             feedingActions,
+            sleepActions,
         )
     }
 }
@@ -133,12 +153,14 @@ private fun TodaySummaryScreen(
     state: TodaySummaryUiState,
     diaperState: DiaperQuickLogState,
     feedingState: FeedingTimerUiState,
+    sleepState: SleepTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
     feedingActions: FeedingActions,
+    sleepActions: SleepActions,
 ) {
     when (state) {
         TodaySummaryUiState.Unavailable -> CenteredMessage("Loading today's activity…")
@@ -160,8 +182,10 @@ private fun TodaySummaryScreen(
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
+            sleepState = sleepState,
             bottleState = bottleState,
             feedingActions = feedingActions,
+            sleepActions = sleepActions,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -175,8 +199,10 @@ private fun TodaySummaryScreen(
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
+            sleepState = sleepState,
             bottleState = bottleState,
             feedingActions = feedingActions,
+            sleepActions = sleepActions,
         )
         is TodaySummaryUiState.Stale -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -190,8 +216,10 @@ private fun TodaySummaryScreen(
             onLogDiaper = onLogDiaper,
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
+            sleepState = sleepState,
             bottleState = bottleState,
             feedingActions = feedingActions,
+            sleepActions = sleepActions,
         )
     }
 }
@@ -209,8 +237,10 @@ private fun SummaryContent(
     onLogDiaper: (DiaperType, StoolColor?) -> Unit,
     onRetryDiaper: () -> Unit,
     feedingState: FeedingTimerUiState,
+    sleepState: SleepTimerUiState,
     bottleState: BottleLogUiState,
     feedingActions: FeedingActions,
+    sleepActions: SleepActions,
 ) {
     val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -251,6 +281,7 @@ private fun SummaryContent(
         }
         ActiveTimerCards(snapshot.activeTimers)
         FeedingSection(snapshot, feedingState, bottleState, feedingActions)
+        SleepSection(snapshot, sleepState, sleepActions)
         DiaperQuickLogSection(diaperState, onLogDiaper, onRetryDiaper)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
@@ -261,6 +292,93 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun SleepSection(
+    snapshot: ActivitySnapshot,
+    timerState: SleepTimerUiState,
+    actions: SleepActions,
+) {
+    val snapshotTimer = snapshot.activeTimers.firstOrNull { it.type == "sleep" }
+    val activeTimer = (timerState as? SleepTimerUiState.SnapshotActive)?.timer
+        ?: (timerState as? SleepTimerUiState.Hydrating)?.timer
+        ?: snapshotTimer?.let(SleepTimerRestorer::restore)
+    val busy = timerState == SleepTimerUiState.Submitting ||
+        timerState is SleepTimerUiState.Hydrating || timerState is SleepTimerUiState.Error
+    val now by produceState(initialValue = Instant.now(), key1 = snapshot.activities.sleep.lastSleepEndedAt) {
+        while (true) {
+            delay(60_000)
+            value = Instant.now()
+        }
+    }
+    val presentation = remember(snapshot.activities.sleep, now) {
+        SleepSectionProjector.project(snapshot.activities.sleep, now)
+    }
+
+    Text("Sleep", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    presentation.confirmationNotice?.let {
+        Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    }
+    if (activeTimer == null) {
+        presentation.awake?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
+        presentation.nextNap?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
+        presentation.wakeWindow?.let { Text(it, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
+        Button(onClick = actions.start, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text("Start sleep · automatic")
+        }
+    } else {
+        Text(
+            if (activeTimer.canControl) {
+                "${activeTimer.type.wireValue.replaceFirstChar { it.uppercase() }} sleep" +
+                    if (activeTimer.isPaused) " · paused" else ""
+            } else {
+                "Sleep active"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        if (activeTimer.canControl) {
+            Button(
+                onClick = if (activeTimer.isPaused) actions.resume else actions.pause,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activeTimer.isPaused) "Resume" else "Pause") }
+            Button(onClick = actions.stop, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text("Stop sleep")
+            }
+        } else {
+            Text(
+                "Active on another caregiver's device",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+    when (timerState) {
+        SleepTimerUiState.Idle, is SleepTimerUiState.SnapshotActive -> Unit
+        is SleepTimerUiState.Hydrating -> Text(
+            "Restoring sleep…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        SleepTimerUiState.Submitting -> Text(
+            "Saving sleep…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is SleepTimerUiState.AlreadyActive -> Text(
+            "Sleep already active${timerState.caregiverName?.let { " · $it" } ?: ""}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is SleepTimerUiState.Error -> {
+            Text(timerState.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (timerState.canRetry) {
+                Button(onClick = actions.retry, modifier = Modifier.fillMaxWidth()) { Text("Retry sleep") }
+            }
+        }
     }
 }
 
