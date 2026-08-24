@@ -55,3 +55,24 @@ timer, and summary behavior through automated seams; Task 0098 verifies end-to-e
 - `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
   `/tmp/agent-workflows/e2f8af45fd34/a0fd2ce14ae4/wear-plugin.log`.
 - The stable diff contains no `supabase/` changes. CI proof remains for the review/finish workflow.
+
+## Review decisions
+
+- skipped (minor): TR-3 — Pumping resume omits `effectiveStartTime` from `timer_data` — User chose
+  to defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed pumping
+  flow.
+- skipped (minor): TR-4 — Pumping `pausedAt` does not use the module's millisecond timestamp format
+  — User chose to defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the
+  completed pumping flow.
+- skipped (minor): TR-6 — The sub-minute zero-volume discard branch lacks a focused test — User
+  chose to defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed
+  pumping flow.
+- skipped (minor): TR-7 — Wear plugin assertions match internal Kotlin source text — User chose to
+  defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed pumping
+  flow.
+- skipped (minor): TR-11 — Zero-delta pumping rotary events are reported as consumed — User chose
+  to defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed pumping
+  flow.
+- skipped (minor): TR-12 — Wear pumping omits the Apple Watch switch-side control — User chose to
+  defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed pumping
+  flow.
