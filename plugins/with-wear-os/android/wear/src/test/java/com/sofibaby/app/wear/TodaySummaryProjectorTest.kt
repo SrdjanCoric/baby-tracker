@@ -11,14 +11,25 @@ import org.junit.Test
 class TodaySummaryProjectorTest {
     @Test
     fun completedPumpingEntryIsReadableThroughTheSharedSnapshotAndSummaryProjector() {
+        val writeClient = SupabaseWriteClient(
+            transport = { error("Completion draft construction does not perform HTTP requests") },
+            wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val writeDraft = writeClient.newCompletedPumpingDraft(
+            active(),
+            pumpingTimer(),
+            PumpingVolumeSelection(90),
+        )
+        val writeRecord = JSONObject(requireNotNull(writeDraft.mergeBody)).getJSONObject("p_record")
         val root = JSONObject(requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText())
         root.getJSONObject("activities").put(
             "pumping",
             JSONObject()
-                .put("lastTime", "2026-08-22T10:05:00.000Z")
-                .put("todayVolumeMl", 85)
+                .put("lastTime", writeRecord.getString("ended_at"))
+                .put("todayVolumeMl", writeRecord.getInt("amount_ml"))
                 .put("sessionCount", 1)
-                .put("lastSide", "right"),
+                .put("lastSide", writeRecord.getString("side")),
         )
 
         val decoded = ActivitySnapshotCodec.decode(root.toString())
@@ -27,10 +38,34 @@ class TodaySummaryProjectorTest {
             now = Instant.parse("2026-08-22T10:06:00.000Z"),
         ).rows.single { it.label == "Pumping" }
 
-        assertEquals(85.0, decoded.activities.pumping.todayVolumeMl, 0.0)
-        assertEquals("85 ml · 1 sessions", pumping.value)
+        assertEquals(90, writeRecord.getInt("amount_ml"))
+        assertEquals(90.0, decoded.activities.pumping.todayVolumeMl, 0.0)
+        assertEquals("90 ml · 1 sessions", pumping.value)
         assertEquals("right · Last 1m", pumping.detail)
     }
+
+    private fun active() = WearSessionEnvelope.Active(
+        phoneEpoch = "phone-install-1",
+        revision = 3,
+        account = WearSessionEnvelope.Account("user-1", "Alex"),
+        baby = WearSessionEnvelope.Baby("baby-1", "Sofi", "Europe/Belgrade"),
+        supabase = WearSessionEnvelope.Supabase("https://project.supabase.co", "anon-key"),
+        accessToken = "access-token",
+        expiresAt = 2_000_000_000,
+    )
+
+    private fun pumpingTimer() = RestoredPumpingTimer(
+        timerInstanceId = "timer-1",
+        activityId = "pumping-1",
+        startedAt = Instant.parse("2026-08-22T10:00:00.000Z"),
+        side = BreastSide.Right,
+        isPaused = false,
+        accumulatedSeconds = null,
+        totalPausedMs = 0,
+        pausedAt = null,
+        canControl = true,
+        elapsedSeconds = 300,
+    )
 
     @Test
     fun sleepPresentationShowsTheWakeWindowWithoutAnAwakeAnchor() {
