@@ -153,9 +153,10 @@ When the latest completed sleep is the current evening's stored `night` session,
   choose a baby, read today's feeding, sleep, diaper, pumping, tummy-time, goals, and active-timer
   summary directly on the watch. They can log wet, dirty, mixed, or dry diapers; dirty and mixed
   logs offer the same seven stool colors as Apple Watch. They can start, pause, resume, and stop
-  breastfeeding or automatic sleep timers, with side switching for breastfeeding, or log formula
-  and breast-milk bottles from 0 to 500 ml. The sleep section shows the last completed sleep and
-  current awake or wake-window timing. It also shows a phone-confirmation notice when needed.
+  breastfeeding or automatic sleep timers; start, pause, resume, and stop pumping timers for the
+  left, right, or both sides with stop-time volume entry; switch sides during breastfeeding; or log
+  formula and breast-milk bottles from 0 to 500 ml. The sleep section shows the last completed sleep
+  and current awake or wake-window timing. It also shows a phone-confirmation notice when needed.
   Feeding and sleep timers are stored in the database, so phone-started timers appear on the watch
   and watch-started timers appear on the phone. Writes go directly to Supabase, and a successful
   write refreshes the summary. An offline write shows Retry and reuses the original record. If a
