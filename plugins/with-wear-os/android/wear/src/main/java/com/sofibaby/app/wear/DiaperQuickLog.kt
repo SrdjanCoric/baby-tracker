@@ -683,21 +683,27 @@ class SupabaseWriteClient(
         if (durationSeconds < 60 && selection.volumeMl == 0) {
             return CompletedPumpingDraft(activityId, mergeBody = null)
         }
+        val savesVolumeOnly = durationSeconds < 60 && selection.volumeMl > 0
         val timestamp = MILLISECOND_INSTANT.format(now)
         val record = JSONObject()
             .put("id", activityId)
             .put("baby_id", session.baby.id)
             .put("side", timer.side.wireValue)
             .put("started_at", MILLISECOND_INSTANT.format(timer.startedAt))
-            .put("ended_at", MILLISECOND_INSTANT.format(endedAt))
-            .put("duration_seconds", durationSeconds)
+        if (!savesVolumeOnly) {
+            record
+                .put("ended_at", MILLISECOND_INSTANT.format(endedAt))
+                .put("duration_seconds", durationSeconds)
+        }
+        record
             .put("amount_ml", selection.volumeMl)
             .put("logged_by", session.account.id)
             .put("created_at", timestamp)
-        val fields = listOf(
-            "id", "baby_id", "side", "started_at", "ended_at", "duration_seconds",
-            "amount_ml", "logged_by", "created_at",
-        )
+        val fields = buildList {
+            addAll(listOf("id", "baby_id", "side", "started_at"))
+            if (!savesVolumeOnly) addAll(listOf("ended_at", "duration_seconds"))
+            addAll(listOf("amount_ml", "logged_by", "created_at"))
+        }
         val clocks = JSONObject()
         fields.zip(hlc.issueBatch(fields.size)).forEach { (field, clock) -> clocks.put(field, clock) }
         val mergeBody = JSONObject()

@@ -118,6 +118,26 @@ class PumpingWriteClientTest {
         assertEquals("https://project.supabase.co/rest/v1/rpc/release_timer_lock", requests[1].url)
     }
 
+    @Test
+    fun subMinutePumpingWithVolumeMatchesThePhoneVolumeOnlyRowShape() {
+        val client = SupabaseWriteClient(
+            transport = { WearHttpResponse(200, "{}") },
+            wallClockMillis = { Instant.parse("2026-08-22T10:00:30.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+
+        val draft = client.newCompletedPumpingDraft(active(), timer(), PumpingVolumeSelection(60))
+
+        val rpc = JSONObject(requireNotNull(draft.mergeBody))
+        val record = rpc.getJSONObject("p_record")
+        val fieldClocks = rpc.getJSONObject("p_field_clocks")
+        assertEquals(60, record.getInt("amount_ml"))
+        assertFalse(record.has("ended_at"))
+        assertFalse(record.has("duration_seconds"))
+        assertFalse(fieldClocks.has("ended_at"))
+        assertFalse(fieldClocks.has("duration_seconds"))
+    }
+
     private fun active() = WearSessionEnvelope.Active(
         phoneEpoch = "phone-install-1",
         revision = 3,
