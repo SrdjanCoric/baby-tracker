@@ -338,9 +338,6 @@ private fun PumpingSection(
         ?: snapshotTimer?.let(PumpingTimerRestorer::restore)
     val busy = timerState == PumpingTimerUiState.Submitting ||
         timerState is PumpingTimerUiState.Hydrating || timerState is PumpingTimerUiState.Error
-    val summary = remember(snapshot.activities.pumping) {
-        TodaySummaryProjector.projectStatic(snapshot).rows.single { it.label == "Pumping" }
-    }
     var enteringVolume by remember { mutableStateOf(false) }
     var selection by remember { mutableStateOf(PumpingVolumeSelection()) }
     var rotaryAdjustmentActive by remember { mutableStateOf(false) }
@@ -358,8 +355,6 @@ private fun PumpingSection(
     }
 
     Text("Pumping", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-    Text(summary.value, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-    Text(summary.detail, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     if (activeTimer == null) {
         val suggested = if (snapshot.activities.pumping.lastSide == BreastSide.Left.wireValue) {
             BreastSide.Right
