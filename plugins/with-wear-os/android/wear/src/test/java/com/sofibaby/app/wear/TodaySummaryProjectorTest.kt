@@ -2,12 +2,36 @@ package com.sofibaby.app.wear
 
 import java.time.Instant
 import androidx.lifecycle.Lifecycle
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TodaySummaryProjectorTest {
+    @Test
+    fun completedPumpingEntryIsReadableThroughTheSharedSnapshotAndSummaryProjector() {
+        val root = JSONObject(requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText())
+        root.getJSONObject("activities").put(
+            "pumping",
+            JSONObject()
+                .put("lastTime", "2026-08-22T10:05:00.000Z")
+                .put("todayVolumeMl", 85)
+                .put("sessionCount", 1)
+                .put("lastSide", "right"),
+        )
+
+        val decoded = ActivitySnapshotCodec.decode(root.toString())
+        val pumping = TodaySummaryProjector.projectStatic(
+            decoded,
+            now = Instant.parse("2026-08-22T10:06:00.000Z"),
+        ).rows.single { it.label == "Pumping" }
+
+        assertEquals(85.0, decoded.activities.pumping.todayVolumeMl, 0.0)
+        assertEquals("85 ml · 1 sessions", pumping.value)
+        assertEquals("right · Last 1m", pumping.detail)
+    }
+
     @Test
     fun sleepPresentationShowsTheWakeWindowWithoutAnAwakeAnchor() {
         val fixture = requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText()

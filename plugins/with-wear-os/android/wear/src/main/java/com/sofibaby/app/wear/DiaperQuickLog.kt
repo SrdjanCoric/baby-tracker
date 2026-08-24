@@ -510,6 +510,218 @@ class SupabaseWriteClient(
         return release ?: WriteOutcome.Success(draft.recordId)
     }
 
+    fun newPumpingTimerDraft(
+        session: WearSessionEnvelope.Active,
+        side: BreastSide,
+    ): PumpingTimerDraft {
+        val shared = newTimerDraft(session, TimerActivityType.Pumping, PUMPING_TIMER_START_CODEC) {
+                timerInstanceId, _ ->
+            PumpingTimerData(timerInstanceId, ids(), side)
+        }
+        return PumpingTimerDraft(
+            timerInstanceId = shared.timerInstanceId,
+            activityId = shared.timerData.activityId,
+            startedAt = shared.startedAt,
+            side = shared.timerData.side,
+            rpcBody = shared.rpcBody,
+        )
+    }
+
+    fun startPumpingTimer(
+        session: WearSessionEnvelope.Active,
+        draft: PumpingTimerDraft,
+    ): PumpingTimerWriteOutcome {
+        val shared = SharedTimerDraft(
+            timerInstanceId = draft.timerInstanceId,
+            activityType = TimerActivityType.Pumping,
+            startedAt = draft.startedAt,
+            timerData = PumpingTimerData(draft.timerInstanceId, draft.activityId, draft.side),
+            rpcBody = draft.rpcBody,
+        )
+        return when (val outcome = acquireTimer(session, shared)) {
+            is SharedTimerAcquireOutcome.Success -> PumpingTimerWriteOutcome.Success(outcome.persistedStartedAt)
+            is SharedTimerAcquireOutcome.AlreadyActive -> PumpingTimerWriteOutcome.AlreadyActive(
+                outcome.lockHolderId,
+                outcome.lockHolderName,
+                outcome.startedAt,
+            )
+            SharedTimerAcquireOutcome.Unauthorized -> PumpingTimerWriteOutcome.Unauthorized
+            SharedTimerAcquireOutcome.Offline -> PumpingTimerWriteOutcome.Offline
+            SharedTimerAcquireOutcome.Failed -> PumpingTimerWriteOutcome.Failed
+        }
+    }
+
+    fun loadOwnedPumpingTimer(session: WearSessionEnvelope.Active): PumpingTimerReadOutcome {
+        return when (
+            val outcome = loadOwnedTimer(
+                session,
+                TimerActivityType.Pumping,
+                restoredPumpingTimerCodec(),
+            )
+        ) {
+            is SharedTimerReadOutcome.Success -> PumpingTimerReadOutcome.Success(outcome.timerData)
+            SharedTimerReadOutcome.Missing -> PumpingTimerReadOutcome.Missing
+            SharedTimerReadOutcome.Unauthorized -> PumpingTimerReadOutcome.Unauthorized
+            SharedTimerReadOutcome.Offline -> PumpingTimerReadOutcome.Offline
+            SharedTimerReadOutcome.Failed -> PumpingTimerReadOutcome.Failed
+        }
+    }
+
+    fun pausePumpingTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredPumpingTimer,
+    ): PumpingTimerMutationOutcome {
+        if (timer.isPaused || !timer.canControl) return PumpingTimerMutationOutcome.Failed
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
+        val updated = timer.copy(
+            isPaused = true,
+            accumulatedSeconds = totalElapsed,
+            pausedAt = now,
+            elapsedSeconds = totalElapsed.toLong(),
+        )
+        return mutatePumpingTimer(session, updated)
+    }
+
+    fun resumePumpingTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredPumpingTimer,
+    ): PumpingTimerMutationOutcome {
+        val pausedAt = timer.pausedAt ?: return PumpingTimerMutationOutcome.Failed
+        if (!timer.isPaused || !timer.canControl) return PumpingTimerMutationOutcome.Failed
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val pauseDuration = java.time.Duration.between(pausedAt, now).toMillis().coerceAtLeast(0)
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
+        val updated = timer.copy(
+            isPaused = false,
+            accumulatedSeconds = totalElapsed,
+            totalPausedMs = timer.totalPausedMs + pauseDuration,
+            pausedAt = null,
+            elapsedSeconds = totalElapsed.toLong(),
+        )
+        return mutatePumpingTimer(session, updated)
+    }
+
+    private fun mutatePumpingTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredPumpingTimer,
+    ): PumpingTimerMutationOutcome {
+        val data = PumpingTimerData(
+            timerInstanceId = requireNotNull(timer.timerInstanceId),
+            activityId = requireNotNull(timer.activityId),
+            side = timer.side,
+            isPaused = timer.isPaused,
+            totalPausedMs = timer.totalPausedMs,
+            pausedAt = timer.pausedAt,
+            accumulatedSeconds = timer.accumulatedSeconds,
+        )
+        return when (
+            mutateTimerData(
+                session,
+                TimerActivityType.Pumping,
+                data,
+                PUMPING_TIMER_CODEC,
+                TimerMutationRoute.TogglePause,
+            )
+        ) {
+            is SharedTimerMutationOutcome.Success -> PumpingTimerMutationOutcome.Success(timer)
+            SharedTimerMutationOutcome.Unauthorized -> PumpingTimerMutationOutcome.Unauthorized
+            SharedTimerMutationOutcome.Offline -> PumpingTimerMutationOutcome.Offline
+            SharedTimerMutationOutcome.Failed -> PumpingTimerMutationOutcome.Failed
+        }
+    }
+
+    private fun restoredPumpingTimerCodec(): TimerDataCodec<RestoredPumpingTimer> = TimerDataCodec(
+        encode = { timer ->
+            PUMPING_TIMER_CODEC.encode(
+                PumpingTimerData(
+                    timerInstanceId = requireNotNull(timer.timerInstanceId),
+                    activityId = requireNotNull(timer.activityId),
+                    side = timer.side,
+                    isPaused = timer.isPaused,
+                    totalPausedMs = timer.totalPausedMs,
+                    pausedAt = timer.pausedAt,
+                    accumulatedSeconds = timer.accumulatedSeconds,
+                ),
+            )
+        },
+        decode = { startedAt, data ->
+            val decoded = PUMPING_TIMER_CODEC.decode(startedAt, data)
+            RestoredPumpingTimer(
+                timerInstanceId = decoded.timerInstanceId,
+                activityId = decoded.activityId,
+                startedAt = startedAt,
+                side = decoded.side,
+                isPaused = decoded.isPaused,
+                accumulatedSeconds = decoded.accumulatedSeconds,
+                totalPausedMs = decoded.totalPausedMs,
+                pausedAt = decoded.pausedAt,
+                canControl = true,
+                elapsedSeconds = if (decoded.isPaused && decoded.accumulatedSeconds != null) {
+                    decoded.accumulatedSeconds.toLong()
+                } else {
+                    java.time.Duration.between(
+                        startedAt,
+                        Instant.ofEpochMilli(wallClockMillis()),
+                    ).seconds.coerceAtLeast(0)
+                },
+            )
+        },
+    )
+
+    fun newCompletedPumpingDraft(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredPumpingTimer,
+        selection: PumpingVolumeSelection,
+    ): CompletedPumpingDraft {
+        val activityId = requireNotNull(timer.activityId) {
+            "A pumping timer needs an activity ID before completion"
+        }
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val endedAt = if (timer.isPaused) requireNotNull(timer.pausedAt) else now
+        val durationSeconds = java.time.Duration.between(timer.startedAt, endedAt).seconds.coerceAtLeast(0)
+        if (durationSeconds < 60 && selection.volumeMl == 0) {
+            return CompletedPumpingDraft(activityId, mergeBody = null)
+        }
+        val timestamp = MILLISECOND_INSTANT.format(now)
+        val record = JSONObject()
+            .put("id", activityId)
+            .put("baby_id", session.baby.id)
+            .put("side", timer.side.wireValue)
+            .put("started_at", MILLISECOND_INSTANT.format(timer.startedAt))
+            .put("ended_at", MILLISECOND_INSTANT.format(endedAt))
+            .put("duration_seconds", durationSeconds)
+            .put("amount_ml", selection.volumeMl)
+            .put("logged_by", session.account.id)
+            .put("created_at", timestamp)
+        val fields = listOf(
+            "id", "baby_id", "side", "started_at", "ended_at", "duration_seconds",
+            "amount_ml", "logged_by", "created_at",
+        )
+        val clocks = JSONObject()
+        fields.zip(hlc.issueBatch(fields.size)).forEach { (field, clock) -> clocks.put(field, clock) }
+        val mergeBody = JSONObject()
+            .put("p_table", "pumping_sessions")
+            .put("p_record", record)
+            .put("p_field_clocks", clocks)
+            .put("p_operation_id", "wear-pumping:$activityId")
+            .put("p_expected_user_id", session.account.id)
+            .toString()
+        return CompletedPumpingDraft(activityId, mergeBody)
+    }
+
+    fun completePumpingTimer(
+        session: WearSessionEnvelope.Active,
+        draft: CompletedPumpingDraft,
+    ): WriteOutcome = completeTimer(
+        session,
+        SharedTimerCompletionDraft(
+            recordId = draft.recordId,
+            activityType = TimerActivityType.Pumping,
+            mergeBody = draft.mergeBody,
+        ),
+    )
+
     fun newSleepTimerDraft(session: WearSessionEnvelope.Active): SleepTimerDraft {
         val now = Instant.ofEpochMilli(wallClockMillis())
         val dayHours = loadSleepDayHours(session)

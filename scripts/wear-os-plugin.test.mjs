@@ -168,6 +168,29 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
     assert.match(activity, /Could not refresh today's activity/);
     assert.match(activity, /No activity yet today/);
     assert.match(activity, /onSelectBaby\(baby\.id\)/);
+    assert.match(activity, /pumpingState = WearSessionRuntime\.pumpingState\.value/);
+    assert.match(activity, /start = WearSessionRuntime::startPumping/);
+    assert.match(activity, /stop = WearSessionRuntime::stopPumping/);
+    assert.match(activity, /PumpingSection\(snapshot, pumpingState, pumpingActions\)/);
+    assert.match(activity, /actions\.start\(BreastSide\.Both\)/);
+    assert.match(activity, /PumpingVolumeRotary\.handle/);
+    const runtime = readFileSync(
+      join(
+        moduleRoot,
+        "src",
+        "main",
+        "java",
+        "com",
+        "sofibaby",
+        "app",
+        "wear",
+        "WearSessionRuntime.kt"
+      ),
+      "utf8"
+    );
+    assert.match(runtime, /writeClient::newPumpingTimerDraft/);
+    assert.match(runtime, /writeClient::newCompletedPumpingDraft/);
+    assert.match(runtime, /snapshot\.activeTimers\.firstOrNull \{ it\.type == "pumping" \}/);
     assert.match(state, /Sign in on your phone to continue\./);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });

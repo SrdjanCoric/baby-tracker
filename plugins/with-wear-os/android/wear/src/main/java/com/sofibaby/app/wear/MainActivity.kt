@@ -59,6 +59,14 @@ data class SleepActions(
     val retry: () -> Unit,
 )
 
+data class PumpingActions(
+    val start: (BreastSide) -> Unit,
+    val pause: () -> Unit,
+    val resume: () -> Unit,
+    val stop: (PumpingVolumeSelection) -> Unit,
+    val retry: () -> Unit,
+)
+
 object TodaySummaryTicker {
     fun shouldRun(hasActiveTimers: Boolean, lifecycleState: Lifecycle.State): Boolean =
         hasActiveTimers && lifecycleState == Lifecycle.State.RESUMED
@@ -76,6 +84,7 @@ class MainActivity : ComponentActivity() {
                     diaperState = WearSessionRuntime.diaperState.value,
                     feedingState = WearSessionRuntime.feedingState.value,
                     sleepState = WearSessionRuntime.sleepState.value,
+                    pumpingState = WearSessionRuntime.pumpingState.value,
                     bottleState = WearSessionRuntime.bottleState.value,
                     onRetry = WearSessionRuntime::retry,
                     onSelectBaby = WearSessionRuntime::selectBaby,
@@ -98,6 +107,13 @@ class MainActivity : ComponentActivity() {
                         stop = WearSessionRuntime::stopSleep,
                         retry = WearSessionRuntime::retrySleep,
                     ),
+                    pumpingActions = PumpingActions(
+                        start = WearSessionRuntime::startPumping,
+                        pause = WearSessionRuntime::pausePumping,
+                        resume = WearSessionRuntime::resumePumping,
+                        stop = WearSessionRuntime::stopPumping,
+                        retry = WearSessionRuntime::retryPumping,
+                    ),
                 )
             }
         }
@@ -116,6 +132,7 @@ fun WearAppScreen(
     diaperState: DiaperQuickLogState,
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
+    pumpingState: PumpingTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
@@ -123,6 +140,7 @@ fun WearAppScreen(
     onRetryDiaper: () -> Unit,
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
+    pumpingActions: PumpingActions,
 ) {
     when (sessionState) {
         WearSessionUiState.SignedOut -> SignedOutScreen()
@@ -132,6 +150,7 @@ fun WearAppScreen(
             diaperState,
             feedingState,
             sleepState,
+            pumpingState,
             bottleState,
             onRetry,
             onSelectBaby,
@@ -139,6 +158,7 @@ fun WearAppScreen(
             onRetryDiaper,
             feedingActions,
             sleepActions,
+            pumpingActions,
         )
     }
 }
@@ -154,6 +174,7 @@ private fun TodaySummaryScreen(
     diaperState: DiaperQuickLogState,
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
+    pumpingState: PumpingTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
@@ -161,6 +182,7 @@ private fun TodaySummaryScreen(
     onRetryDiaper: () -> Unit,
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
+    pumpingActions: PumpingActions,
 ) {
     when (state) {
         TodaySummaryUiState.Unavailable -> CenteredMessage("Loading today's activity…")
@@ -183,9 +205,11 @@ private fun TodaySummaryScreen(
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
             sleepState = sleepState,
+            pumpingState = pumpingState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
+            pumpingActions = pumpingActions,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -200,9 +224,11 @@ private fun TodaySummaryScreen(
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
             sleepState = sleepState,
+            pumpingState = pumpingState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
+            pumpingActions = pumpingActions,
         )
         is TodaySummaryUiState.Stale -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -217,9 +243,11 @@ private fun TodaySummaryScreen(
             onRetryDiaper = onRetryDiaper,
             feedingState = feedingState,
             sleepState = sleepState,
+            pumpingState = pumpingState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
+            pumpingActions = pumpingActions,
         )
     }
 }
@@ -238,9 +266,11 @@ private fun SummaryContent(
     onRetryDiaper: () -> Unit,
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
+    pumpingState: PumpingTimerUiState,
     bottleState: BottleLogUiState,
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
+    pumpingActions: PumpingActions,
 ) {
     val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -282,6 +312,7 @@ private fun SummaryContent(
         ActiveTimerCards(snapshot.activeTimers)
         FeedingSection(snapshot, feedingState, bottleState, feedingActions)
         SleepSection(snapshot, sleepState, sleepActions)
+        PumpingSection(snapshot, pumpingState, pumpingActions)
         DiaperQuickLogSection(diaperState, onLogDiaper, onRetryDiaper)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
@@ -292,6 +323,161 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun PumpingSection(
+    snapshot: ActivitySnapshot,
+    timerState: PumpingTimerUiState,
+    actions: PumpingActions,
+) {
+    val snapshotTimer = snapshot.activeTimers.firstOrNull { it.type == "pumping" }
+    val activeTimer = (timerState as? PumpingTimerUiState.SnapshotActive)?.timer
+        ?: (timerState as? PumpingTimerUiState.Hydrating)?.timer
+        ?: snapshotTimer?.let(PumpingTimerRestorer::restore)
+    val busy = timerState == PumpingTimerUiState.Submitting ||
+        timerState is PumpingTimerUiState.Hydrating || timerState is PumpingTimerUiState.Error
+    val summary = remember(snapshot.activities.pumping) {
+        TodaySummaryProjector.projectStatic(snapshot).rows.single { it.label == "Pumping" }
+    }
+    var enteringVolume by remember { mutableStateOf(false) }
+    var selection by remember { mutableStateOf(PumpingVolumeSelection()) }
+    var rotaryAdjustmentActive by remember { mutableStateOf(false) }
+    val rotaryFocus = remember { FocusRequester() }
+    LaunchedEffect(timerState) {
+        if (timerState == PumpingTimerUiState.Idle) {
+            enteringVolume = false
+            rotaryAdjustmentActive = false
+            selection = PumpingVolumeSelection()
+        }
+        if (timerState == PumpingTimerUiState.Submitting) rotaryAdjustmentActive = false
+    }
+    LaunchedEffect(rotaryAdjustmentActive) {
+        if (rotaryAdjustmentActive) rotaryFocus.requestFocus()
+    }
+
+    Text("Pumping", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    Text(summary.value, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    Text(summary.detail, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    if (activeTimer == null) {
+        val suggested = if (snapshot.activities.pumping.lastSide == BreastSide.Left.wireValue) {
+            BreastSide.Right
+        } else {
+            BreastSide.Left
+        }
+        Text(
+            "Suggested ${suggested.wireValue}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = { actions.start(BreastSide.Left) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (suggested == BreastSide.Left) "Start left · suggested" else "Start left") }
+        Button(
+            onClick = { actions.start(BreastSide.Right) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(if (suggested == BreastSide.Right) "Start right · suggested" else "Start right") }
+        Button(
+            onClick = { actions.start(BreastSide.Both) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Start both") }
+    } else {
+        Text(
+            if (activeTimer.canControl) {
+                "Pumping · ${activeTimer.side.wireValue}" + if (activeTimer.isPaused) " · paused" else ""
+            } else {
+                "Pumping active"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        if (activeTimer.canControl) {
+            Button(
+                onClick = if (activeTimer.isPaused) actions.resume else actions.pause,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activeTimer.isPaused) "Resume" else "Pause") }
+            Button(
+                onClick = { enteringVolume = true },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Stop pumping") }
+        } else {
+            Text(
+                "Active on another caregiver's device",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+    if (enteringVolume && activeTimer?.canControl == true) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onRotaryScrollEvent {
+                    val outcome = PumpingVolumeRotary.handle(
+                        selection,
+                        it.verticalScrollPixels,
+                        rotaryAdjustmentActive,
+                        !busy,
+                    )
+                    selection = outcome.selection
+                    outcome.consumed
+                }
+                .focusRequester(rotaryFocus)
+                .focusable(),
+        ) {
+            Text(
+                "Volume · ${selection.volumeMl} ml",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Button(onClick = { selection = selection.minusTen() }, enabled = !busy) { Text("−10") }
+                Button(onClick = { selection = selection.plusTen() }, enabled = !busy) { Text("+10") }
+            }
+            Button(
+                onClick = { rotaryAdjustmentActive = !rotaryAdjustmentActive },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(if (rotaryAdjustmentActive) "Done adjusting" else "Adjust with crown · 5 ml steps")
+            }
+            Button(
+                onClick = { actions.stop(selection) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Save pumping") }
+        }
+    }
+    when (timerState) {
+        PumpingTimerUiState.Idle, is PumpingTimerUiState.SnapshotActive -> Unit
+        is PumpingTimerUiState.Hydrating -> Text(
+            "Restoring pumping…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        PumpingTimerUiState.Submitting -> Text(
+            "Saving pumping…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is PumpingTimerUiState.AlreadyActive -> Text(
+            "Pumping already active${timerState.caregiverName?.let { " · $it" } ?: ""}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is PumpingTimerUiState.Error -> {
+            Text(timerState.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (timerState.canRetry) {
+                Button(onClick = actions.retry, modifier = Modifier.fillMaxWidth()) { Text("Retry pumping") }
+            }
+        }
     }
 }
 
