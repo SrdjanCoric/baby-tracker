@@ -4,6 +4,7 @@ import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PumpingTimerCoordinatorTest {
@@ -27,6 +28,21 @@ class PumpingTimerCoordinatorTest {
 
         assertEquals(listOf(BreastSide.Left, BreastSide.Right, BreastSide.Both), started)
         assertEquals(3, refreshes)
+    }
+
+    @Test
+    fun successfulStartPublishesTheActiveTimerBeforeRefreshingTheSnapshot() {
+        lateinit var coordinator: PumpingTimerCoordinator
+        var stateDuringRefresh: PumpingTimerUiState? = null
+        coordinator = PumpingTimerCoordinator(
+            drafts = { _, side -> draft(side) },
+            starter = { _, _ -> PumpingTimerWriteOutcome.Success("2026-08-22T10:00:00.000Z") },
+            refreshSummary = { stateDuringRefresh = coordinator.state },
+        )
+
+        coordinator.start(active(), BreastSide.Left)
+
+        assertTrue(stateDuringRefresh is PumpingTimerUiState.SnapshotActive)
     }
 
     @Test

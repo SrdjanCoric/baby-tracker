@@ -347,11 +347,10 @@ class PumpingTimerCoordinator(
             is PumpingTimerWriteOutcome.Success -> {
                 val startedAt = parseServerInstant(outcome.persistedStartedAt)
                 pendingRetry = null
-                state = if (startedAt == null) {
-                    PumpingTimerUiState.Error("Could not start pumping", canRetry = false)
+                if (startedAt == null) {
+                    state = PumpingTimerUiState.Error("Could not start pumping", canRetry = false)
                 } else {
-                    refreshSummary()
-                    PumpingTimerUiState.SnapshotActive(
+                    state = PumpingTimerUiState.SnapshotActive(
                         RestoredPumpingTimer(
                             draft.timerInstanceId,
                             draft.activityId,
@@ -365,6 +364,7 @@ class PumpingTimerCoordinator(
                             0,
                         ),
                     )
+                    refreshSummary()
                 }
             }
             is PumpingTimerWriteOutcome.AlreadyActive -> {
