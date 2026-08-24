@@ -48,13 +48,14 @@ timer, and summary behavior through automated seams; Task 0098 verifies end-to-e
   selection with 5 ml crown and 10 ml button steps, visible stop retry with draft reuse, runtime and
   Compose action wiring, and post-write shared-summary refresh.
 - The phone-row fixture is decoded independently from the generated Wear request. A completed
-  85 ml right-side session is also decoded through `ActivitySnapshotCodec` and projected as the
-  shared last-time/today-volume Pumping summary.
+  90 ml right-side session now derives its snapshot values from the generated `p_record`, then
+  decodes through `ActivitySnapshotCodec` and projects as the shared last-time/today-volume Pumping
+  summary.
 - `./gradlew :wear:testDebugUnitTest :wear:assembleDebug` passed locally in 3 seconds; log:
   `/tmp/agent-workflows/e2f8af45fd34/a0fd2ce14ae4/wear-focused.log`.
 - `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
   `/tmp/agent-workflows/e2f8af45fd34/a0fd2ce14ae4/wear-plugin.log`.
-- The stable diff contains no `supabase/` changes. CI proof remains for the review/finish workflow.
+- The stable diff contains no `supabase/` changes.
 
 ## Review decisions
 
@@ -76,3 +77,25 @@ timer, and summary behavior through automated seams; Task 0098 verifies end-to-e
 - skipped (minor): TR-12 — Wear pumping omits the Apple Watch switch-side control — User chose to
   defer the remaining minor/nit polish to avoid expanding Task 0095 beyond the completed pumping
   flow.
+
+## Completion record
+
+- Built Wear OS pumping timers for the left, right, and both sides with pause, resume,
+  stop-with-volume, owner hydration, retry-safe completion, and shared snapshot summaries.
+- Phone-compatible writes omit duration fields for sub-minute volume-only sessions, and a
+  successful start publishes its controllable timer state before the snapshot refresh begins.
+- Relevant implementation and proof live under
+  `plugins/with-wear-os/android/wear/src/main/java/com/sofibaby/app/wear/` and
+  `plugins/with-wear-os/android/wear/src/test/java/com/sofibaby/app/wear/`.
+- README disposition: updated **Wear OS Native Integration** with pumping timer controls, sides,
+  and stop-time volume entry. The affected prose passed two `write-well` audit passes; pass 1 split
+  an overloaded timer-control sentence, and pass 2 found no new issues.
+- Review outcome: fixed TR-1, TR-2, TR-5, TR-8, TR-9, and TR-10. Skipped TR-3, TR-4, TR-6, TR-7,
+  TR-11, and TR-12 at the user's request to finish without expanding the completed pumping flow.
+  TR-13 remains deferred out of scope because it predates this task. No security risk was accepted.
+- Automated proof: `npm run check:code` passed on 2026-08-24 after generated Wear test reports were
+  cleaned from the ignored Android build directory. Log:
+  `/tmp/agent-workflows/e2f8af45fd34/a0fd2ce14ae4/canonical.log`.
+- Backend boundary: the task diff contains no `supabase/` changes.
+- Manual verification: none required. The validation boundary assigns paired phone/watch
+  synchronization to Task 0098.
