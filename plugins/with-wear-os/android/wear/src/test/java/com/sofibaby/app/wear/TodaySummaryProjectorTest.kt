@@ -10,6 +10,37 @@ import org.junit.Test
 
 class TodaySummaryProjectorTest {
     @Test
+    fun completedTummyTimeEntryIsReadableThroughTheSharedSnapshotAndSummaryProjector() {
+        val writeClient = SupabaseWriteClient(
+            transport = { error("Completion draft construction does not perform HTTP requests") },
+            wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+        val writeDraft = writeClient.newCompletedTummyTimeDraft(active(), tummyTimeTimer())
+        val writeRecord = JSONObject(writeDraft.mergeBody).getJSONObject("p_record")
+        val root = JSONObject(requireNotNull(javaClass.getResource("/activity-snapshot.json")).readText())
+        root.getJSONObject("activities").put(
+            "tummyTime",
+            JSONObject()
+                .put("lastTime", writeRecord.getString("ended_at"))
+                .put("todayMinutes", writeRecord.getInt("duration_seconds") / 60)
+                .put("goalMinutes", 30)
+                .put("lastDurationMinutes", writeRecord.getInt("duration_seconds") / 60),
+        )
+
+        val decoded = ActivitySnapshotCodec.decode(root.toString())
+        val tummyTime = TodaySummaryProjector.projectStatic(
+            decoded,
+            now = Instant.parse("2026-08-22T10:06:00.000Z"),
+        ).rows.single { it.label == "Tummy time" }
+
+        assertEquals(300, writeRecord.getInt("duration_seconds"))
+        assertEquals(5, decoded.activities.tummyTime.todayMinutes)
+        assertEquals("5 min today", tummyTime.value)
+        assertEquals("30 min goal · 5 min · Last 1m", tummyTime.detail)
+    }
+
+    @Test
     fun completedPumpingEntryIsReadableThroughTheSharedSnapshotAndSummaryProjector() {
         val writeClient = SupabaseWriteClient(
             transport = { error("Completion draft construction does not perform HTTP requests") },
@@ -61,6 +92,17 @@ class TodaySummaryProjectorTest {
         side = BreastSide.Right,
         isPaused = false,
         accumulatedSeconds = null,
+        totalPausedMs = 0,
+        pausedAt = null,
+        canControl = true,
+        elapsedSeconds = 300,
+    )
+
+    private fun tummyTimeTimer() = RestoredTummyTimeTimer(
+        timerInstanceId = "timer-1",
+        activityId = "tummy-1",
+        startedAt = Instant.parse("2026-08-22T10:00:00.000Z"),
+        isPaused = false,
         totalPausedMs = 0,
         pausedAt = null,
         canControl = true,

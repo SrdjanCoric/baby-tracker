@@ -4,6 +4,12 @@
 **Depends on**: 0095
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I time and log tummy time from my watch.
 
+## Implementation classification
+
+- **Change class**: `code`
+- **Validation tier**: `canonical`
+- **TDD applicable**: `true`
+
 ## What to build
 
 Tummy time with iOS-watch parity (reference `targets/watch/` tummy time flows) on the shared write
@@ -19,8 +25,8 @@ shown by Apple Watch. Do not add manual duration entry, notes, backdating, histo
 
 ## Implementation work
 
-- [ ] Tummy time start/pause/resume/stop timer UI and today's-minutes readout.
-- [ ] Tests: tummy time row/timer shape fixture-matches phone rows; summary reflects the entry.
+- [x] Tummy time start/pause/resume/stop timer UI and today's-minutes readout.
+- [x] Tests: tummy time row/timer shape fixture-matches phone rows; summary reflects the entry.
 
 ## Validation boundary
 
@@ -30,9 +36,24 @@ set end to end.
 
 ## Acceptance criteria
 
-- [ ] Automated integration proof shows tummy time from the watch produces a phone-identical row
+- [x] Automated integration proof shows tummy time from the watch produces a phone-identical row
       readable through the shared snapshot path.
-- [ ] Automated suites cover all five iOS-watch activity payloads; paired-device proof is deferred
+- [x] Automated suites cover all five iOS-watch activity payloads; paired-device proof is deferred
       to Task 0098.
 - [ ] Tests green in CI; no backend changes.
-- [ ] Manual duration entry, notes, backdating, history, and editing are absent.
+- [x] Manual duration entry, notes, backdating, history, and editing are absent.
+
+## Implementation evidence
+
+- RED/GREEN cycles covered the phone-shaped timer acquire payload, owner hydration, durable
+  pause/resume data, paused-stop timestamps, phone-shaped completed rows, start/hydration/stop retry
+  draft reuse, snapshot restoration, and coordinator state publication before summary refresh.
+- Independent phone fixtures verify the tummy-time timer request and completed seven-field row. A
+  generated completed entry is decoded through `ActivitySnapshotCodec` and projected as the shared
+  Tummy time summary; a zero-duration proof confirms that stopping always emits a row and exposes no
+  manual-entry fields.
+- `./gradlew :wear:testDebugUnitTest :wear:assembleDebug` passed locally in 5 seconds; log:
+  `/tmp/agent-workflows/e2f8af45fd34/a4c368a2ea54/wear-focused.log`.
+- `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
+  `/tmp/agent-workflows/e2f8af45fd34/a4c368a2ea54/wear-plugin.log`.
+- The stable diff contains no `supabase/` changes.

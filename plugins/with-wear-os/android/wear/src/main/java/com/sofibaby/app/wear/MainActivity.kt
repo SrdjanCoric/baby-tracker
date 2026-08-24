@@ -67,6 +67,14 @@ data class PumpingActions(
     val retry: () -> Unit,
 )
 
+data class TummyTimeActions(
+    val start: () -> Unit,
+    val pause: () -> Unit,
+    val resume: () -> Unit,
+    val stop: () -> Unit,
+    val retry: () -> Unit,
+)
+
 object TodaySummaryTicker {
     fun shouldRun(hasActiveTimers: Boolean, lifecycleState: Lifecycle.State): Boolean =
         hasActiveTimers && lifecycleState == Lifecycle.State.RESUMED
@@ -85,6 +93,7 @@ class MainActivity : ComponentActivity() {
                     feedingState = WearSessionRuntime.feedingState.value,
                     sleepState = WearSessionRuntime.sleepState.value,
                     pumpingState = WearSessionRuntime.pumpingState.value,
+                    tummyTimeState = WearSessionRuntime.tummyTimeState.value,
                     bottleState = WearSessionRuntime.bottleState.value,
                     onRetry = WearSessionRuntime::retry,
                     onSelectBaby = WearSessionRuntime::selectBaby,
@@ -114,6 +123,13 @@ class MainActivity : ComponentActivity() {
                         stop = WearSessionRuntime::stopPumping,
                         retry = WearSessionRuntime::retryPumping,
                     ),
+                    tummyTimeActions = TummyTimeActions(
+                        start = WearSessionRuntime::startTummyTime,
+                        pause = WearSessionRuntime::pauseTummyTime,
+                        resume = WearSessionRuntime::resumeTummyTime,
+                        stop = WearSessionRuntime::stopTummyTime,
+                        retry = WearSessionRuntime::retryTummyTime,
+                    ),
                 )
             }
         }
@@ -133,6 +149,7 @@ fun WearAppScreen(
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
     pumpingState: PumpingTimerUiState,
+    tummyTimeState: TummyTimeTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
@@ -141,6 +158,7 @@ fun WearAppScreen(
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
     pumpingActions: PumpingActions,
+    tummyTimeActions: TummyTimeActions,
 ) {
     when (sessionState) {
         WearSessionUiState.SignedOut -> SignedOutScreen()
@@ -151,6 +169,7 @@ fun WearAppScreen(
             feedingState,
             sleepState,
             pumpingState,
+            tummyTimeState,
             bottleState,
             onRetry,
             onSelectBaby,
@@ -159,6 +178,7 @@ fun WearAppScreen(
             feedingActions,
             sleepActions,
             pumpingActions,
+            tummyTimeActions,
         )
     }
 }
@@ -175,6 +195,7 @@ private fun TodaySummaryScreen(
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
     pumpingState: PumpingTimerUiState,
+    tummyTimeState: TummyTimeTimerUiState,
     bottleState: BottleLogUiState,
     onRetry: () -> Unit,
     onSelectBaby: (String) -> Unit,
@@ -183,6 +204,7 @@ private fun TodaySummaryScreen(
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
     pumpingActions: PumpingActions,
+    tummyTimeActions: TummyTimeActions,
 ) {
     when (state) {
         TodaySummaryUiState.Unavailable -> CenteredMessage("Loading today's activity…")
@@ -206,10 +228,12 @@ private fun TodaySummaryScreen(
             feedingState = feedingState,
             sleepState = sleepState,
             pumpingState = pumpingState,
+            tummyTimeState = tummyTimeState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
             pumpingActions = pumpingActions,
+            tummyTimeActions = tummyTimeActions,
         )
         is TodaySummaryUiState.Empty -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -225,10 +249,12 @@ private fun TodaySummaryScreen(
             feedingState = feedingState,
             sleepState = sleepState,
             pumpingState = pumpingState,
+            tummyTimeState = tummyTimeState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
             pumpingActions = pumpingActions,
+            tummyTimeActions = tummyTimeActions,
         )
         is TodaySummaryUiState.Stale -> SummaryContent(
             selectedBaby = state.selectedBaby,
@@ -244,10 +270,12 @@ private fun TodaySummaryScreen(
             feedingState = feedingState,
             sleepState = sleepState,
             pumpingState = pumpingState,
+            tummyTimeState = tummyTimeState,
             bottleState = bottleState,
             feedingActions = feedingActions,
             sleepActions = sleepActions,
             pumpingActions = pumpingActions,
+            tummyTimeActions = tummyTimeActions,
         )
     }
 }
@@ -267,10 +295,12 @@ private fun SummaryContent(
     feedingState: FeedingTimerUiState,
     sleepState: SleepTimerUiState,
     pumpingState: PumpingTimerUiState,
+    tummyTimeState: TummyTimeTimerUiState,
     bottleState: BottleLogUiState,
     feedingActions: FeedingActions,
     sleepActions: SleepActions,
     pumpingActions: PumpingActions,
+    tummyTimeActions: TummyTimeActions,
 ) {
     val presentation = remember(snapshot) { TodaySummaryProjector.projectStatic(snapshot) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -313,6 +343,7 @@ private fun SummaryContent(
         FeedingSection(snapshot, feedingState, bottleState, feedingActions)
         SleepSection(snapshot, sleepState, sleepActions)
         PumpingSection(snapshot, pumpingState, pumpingActions)
+        TummyTimeSection(snapshot, tummyTimeState, tummyTimeActions)
         DiaperQuickLogSection(diaperState, onLogDiaper, onRetryDiaper)
         presentation.rows.forEach { row ->
             SummaryCard(row.label, "${row.value}\n${row.detail}")
@@ -323,6 +354,82 @@ private fun SummaryContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun TummyTimeSection(
+    snapshot: ActivitySnapshot,
+    timerState: TummyTimeTimerUiState,
+    actions: TummyTimeActions,
+) {
+    val snapshotTimer = snapshot.activeTimers.firstOrNull { it.type == "tummyTime" }
+    val activeTimer = (timerState as? TummyTimeTimerUiState.SnapshotActive)?.timer
+        ?: (timerState as? TummyTimeTimerUiState.Hydrating)?.timer
+        ?: snapshotTimer?.let(TummyTimeTimerRestorer::restore)
+    val busy = timerState == TummyTimeTimerUiState.Submitting ||
+        timerState is TummyTimeTimerUiState.Hydrating || timerState is TummyTimeTimerUiState.Error
+
+    Text("Tummy time", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    Text(
+        "${snapshot.activities.tummyTime.todayMinutes} min today",
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+    )
+    if (activeTimer == null) {
+        Button(onClick = actions.start, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text("Start tummy time")
+        }
+    } else {
+        Text(
+            if (activeTimer.canControl) {
+                "Tummy time" + if (activeTimer.isPaused) " · paused" else " · active"
+            } else {
+                "Tummy time active"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        if (activeTimer.canControl) {
+            Button(
+                onClick = if (activeTimer.isPaused) actions.resume else actions.pause,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activeTimer.isPaused) "Resume" else "Pause") }
+            Button(onClick = actions.stop, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text("Stop tummy time")
+            }
+        } else {
+            Text(
+                "Active on another caregiver's device",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+    when (timerState) {
+        TummyTimeTimerUiState.Idle, is TummyTimeTimerUiState.SnapshotActive -> Unit
+        is TummyTimeTimerUiState.Hydrating -> Text(
+            "Restoring tummy time…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        TummyTimeTimerUiState.Submitting -> Text(
+            "Saving tummy time…",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is TummyTimeTimerUiState.AlreadyActive -> Text(
+            "Tummy time already active${timerState.caregiverName?.let { " · $it" } ?: ""}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        is TummyTimeTimerUiState.Error -> {
+            Text(timerState.message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (timerState.canRetry) {
+                Button(onClick = actions.retry, modifier = Modifier.fillMaxWidth()) { Text("Retry tummy time") }
+            }
+        }
     }
 }
 

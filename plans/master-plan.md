@@ -325,7 +325,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0093 · Wear feeding timer and logging (after 0092) → tasks/done/0093-wear-feeding-timer-and-logging.md
 - [x] 0094 · Wear sleep timer and logging (after 0093) → tasks/done/0094-wear-sleep-timer-and-logging.md
 - [x] 0095 · Wear pumping logging (after 0094) → tasks/done/0095-wear-pumping-logging.md
-- [ ] 0096 · Wear tummy time logging (after 0095) → tasks/0096-wear-tummy-time-logging.md
+- [~] 0096 · Wear tummy time logging (after 0095) → tasks/0096-wear-tummy-time-logging.md
 - [ ] 0097 · Wear launcher complication (after 0089) → tasks/0097-wear-launcher-complication.md
 - [ ] 0098 · Wear hardware verification and store listing floor (after 0093, 0094, 0095, 0096, 0097) → tasks/0098-wear-hardware-verification-and-listing.md
 
