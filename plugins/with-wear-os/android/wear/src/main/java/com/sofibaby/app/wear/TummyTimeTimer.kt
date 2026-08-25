@@ -21,6 +21,7 @@ data class TummyTimeTimerData(
     val isPaused: Boolean = false,
     val totalPausedMs: Long = 0,
     val pausedAt: Instant? = null,
+    val accumulatedSeconds: Int? = null,
 )
 
 data class RestoredTummyTimeTimer(
@@ -28,6 +29,7 @@ data class RestoredTummyTimeTimer(
     val activityId: String?,
     val startedAt: Instant,
     val isPaused: Boolean,
+    val accumulatedSeconds: Int?,
     val totalPausedMs: Long,
     val pausedAt: Instant?,
     val canControl: Boolean,
@@ -47,6 +49,7 @@ object TummyTimeTimerRestorer {
             activityId = null,
             startedAt = startedAt,
             isPaused = paused,
+            accumulatedSeconds = snapshot.accumulatedSeconds,
             totalPausedMs = 0,
             pausedAt = null,
             canControl = snapshot.isRemote != true,
@@ -66,7 +69,10 @@ val TUMMY_TIME_TIMER_CODEC = TimerDataCodec<TummyTimeTimerData>(
             .put("activityId", data.activityId)
             .put("isPaused", data.isPaused)
             .put("totalPausedMs", data.totalPausedMs)
-            .apply { data.pausedAt?.let { put("pausedAt", it.toString()) } }
+            .apply {
+                data.pausedAt?.let { put("pausedAt", it.toString()) }
+                data.accumulatedSeconds?.let { put("accumulatedSeconds", it) }
+            }
     },
     decode = { _, data ->
         TummyTimeTimerData(
@@ -75,6 +81,8 @@ val TUMMY_TIME_TIMER_CODEC = TimerDataCodec<TummyTimeTimerData>(
             isPaused = data.optBoolean("isPaused", false),
             totalPausedMs = data.optLong("totalPausedMs", 0),
             pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse),
+            accumulatedSeconds = data.optInt("accumulatedSeconds")
+                .takeIf { data.has("accumulatedSeconds") && !data.isNull("accumulatedSeconds") },
         )
     },
 )
@@ -301,6 +309,7 @@ class TummyTimeTimerCoordinator(
                             activityId = draft.activityId,
                             startedAt = startedAt,
                             isPaused = false,
+                            accumulatedSeconds = null,
                             totalPausedMs = 0,
                             pausedAt = null,
                             canControl = true,

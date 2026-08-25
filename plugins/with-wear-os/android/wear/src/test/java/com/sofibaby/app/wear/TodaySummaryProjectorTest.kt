@@ -103,6 +103,7 @@ class TodaySummaryProjectorTest {
         activityId = "tummy-1",
         startedAt = Instant.parse("2026-08-22T10:00:00.000Z"),
         isPaused = false,
+        accumulatedSeconds = null,
         totalPausedMs = 0,
         pausedAt = null,
         canControl = true,

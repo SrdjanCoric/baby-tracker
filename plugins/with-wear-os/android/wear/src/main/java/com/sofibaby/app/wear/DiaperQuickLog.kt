@@ -569,10 +569,12 @@ class SupabaseWriteClient(
     ): TummyTimeTimerMutationOutcome {
         if (timer.isPaused || !timer.canControl) return TummyTimeTimerMutationOutcome.Failed
         val now = Instant.ofEpochMilli(wallClockMillis())
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
         val updated = timer.copy(
             isPaused = true,
+            accumulatedSeconds = totalElapsed,
             pausedAt = now,
-            elapsedSeconds = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0),
+            elapsedSeconds = totalElapsed.toLong(),
         )
         return mutateTummyTimeTimer(session, updated)
     }
@@ -584,12 +586,14 @@ class SupabaseWriteClient(
         val pausedAt = timer.pausedAt ?: return TummyTimeTimerMutationOutcome.Failed
         if (!timer.isPaused || !timer.canControl) return TummyTimeTimerMutationOutcome.Failed
         val now = Instant.ofEpochMilli(wallClockMillis())
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
         val updated = timer.copy(
             isPaused = false,
+            accumulatedSeconds = totalElapsed,
             totalPausedMs = timer.totalPausedMs +
                 java.time.Duration.between(pausedAt, now).toMillis().coerceAtLeast(0),
             pausedAt = null,
-            elapsedSeconds = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0),
+            elapsedSeconds = totalElapsed.toLong(),
         )
         return mutateTummyTimeTimer(session, updated)
     }
@@ -604,6 +608,7 @@ class SupabaseWriteClient(
             isPaused = timer.isPaused,
             totalPausedMs = timer.totalPausedMs,
             pausedAt = timer.pausedAt,
+            accumulatedSeconds = timer.accumulatedSeconds,
         )
         return when (
             mutateTimerData(
@@ -630,6 +635,7 @@ class SupabaseWriteClient(
                     isPaused = timer.isPaused,
                     totalPausedMs = timer.totalPausedMs,
                     pausedAt = timer.pausedAt,
+                    accumulatedSeconds = timer.accumulatedSeconds,
                 ),
             )
         },
@@ -641,13 +647,18 @@ class SupabaseWriteClient(
                 activityId = decoded.activityId,
                 startedAt = startedAt,
                 isPaused = decoded.isPaused,
+                accumulatedSeconds = decoded.accumulatedSeconds,
                 totalPausedMs = decoded.totalPausedMs,
                 pausedAt = decoded.pausedAt,
                 canControl = true,
-                elapsedSeconds = java.time.Duration.between(
-                    startedAt,
-                    if (decoded.isPaused) decoded.pausedAt ?: now else now,
-                ).seconds.coerceAtLeast(0),
+                elapsedSeconds = if (decoded.isPaused && decoded.accumulatedSeconds != null) {
+                    decoded.accumulatedSeconds.toLong()
+                } else {
+                    java.time.Duration.between(
+                        startedAt,
+                        if (decoded.isPaused) decoded.pausedAt ?: now else now,
+                    ).seconds.coerceAtLeast(0)
+                },
             )
         },
     )

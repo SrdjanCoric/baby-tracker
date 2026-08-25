@@ -65,11 +65,16 @@ class TummyTimeWriteClientTest {
 
         assertEquals("tummy-1", hydrated.activityId)
         assertTrue(paused.timer.isPaused)
+        assertEquals(300, paused.timer.accumulatedSeconds)
         assertEquals(Instant.parse("2026-08-22T10:05:00.000Z"), paused.timer.pausedAt)
+        assertEquals(330, resumed.timer.accumulatedSeconds)
         assertEquals(45_000L, resumed.timer.totalPausedMs)
         assertEquals("https://project.supabase.co/rest/v1/rpc/toggle_timer_pause", requests[1].url)
+        val pausedData = JSONObject(requests[1].body).getJSONObject("p_timer_data")
+        assertEquals(300, pausedData.getInt("accumulatedSeconds"))
         val resumedData = JSONObject(requests[2].body).getJSONObject("p_timer_data")
         assertEquals(false, resumedData.getBoolean("isPaused"))
+        assertEquals(330, resumedData.getInt("accumulatedSeconds"))
         assertEquals(45_000L, resumedData.getLong("totalPausedMs"))
     }
 
@@ -136,6 +141,7 @@ class TummyTimeWriteClientTest {
         activityId = "tummy-1",
         startedAt = Instant.parse("2026-08-22T10:00:00.000Z"),
         isPaused = false,
+        accumulatedSeconds = null,
         totalPausedMs = 0,
         pausedAt = null,
         canControl = true,
