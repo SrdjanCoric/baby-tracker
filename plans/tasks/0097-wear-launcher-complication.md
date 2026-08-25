@@ -4,6 +4,12 @@
 **Depends on**: 0089
 **Source**: plans/wear-os-watch-parity.md (planning brief, 2026-08-20) · **User stories**: As a caregiver, I open the app straight from my watch face.
 
+## Implementation classification
+
+- **Change class**: `code`
+- **Validation tier**: `canonical`
+- **TDD applicable**: `true`
+
 ## What to build
 
 A watch-face complication that launches the Wear app — parity with the iOS complication, which is
@@ -18,9 +24,15 @@ Depends only on the 0089 scaffold; can land in parallel with the data tasks.
 
 ## Implementation work
 
-- [ ] Complication data source (icon + tap-to-launch) registered in the Wear manifest.
-- [ ] App icon asset sized for complication slots.
-- [ ] Test: data source returns valid complication data for supported types.
+- [x] Complication data source (icon + tap-to-launch) registered in the Wear manifest.
+- [x] App icon asset sized for complication slots.
+- [x] Test: data source returns valid complication data for supported types.
+
+## Validation boundary
+
+No watch-face picker or tap check runs in this task. The project-wide Wear integration decision
+closes Tasks 0090–0097 on automated seam tests and Android builds; Task 0098 verifies the
+complication on a Wear OS 4 emulator with the complete activity set.
 
 ## Human checkpoints
 
@@ -32,4 +44,18 @@ Depends only on the 0089 scaffold; can land in parallel with the data tasks.
 
 - [ ] Complication appears in the watch-face complication picker and launches the app on tap.
 - [ ] CI green.
-- [ ] The complication exposes no data-bearing or interactive capability beyond launching the app.
+- [x] The complication exposes no data-bearing or interactive capability beyond launching the app.
+
+## Implementation evidence
+
+- RED/GREEN cycles proved `SMALL_IMAGE` and legacy `ICON`/modern `MONOCHROMATIC_IMAGE` requests each
+  return valid image data with a tap action targeting `MainActivity`; the focused Robolectric suite
+  passed in the final Wear build. Log:
+  `/tmp/agent-workflows/e2f8af45fd34/0e2225458ba4/wear-focused.log`.
+- A generated-template test failed before provider registration, then passed with the protected
+  complication service, exact `SMALL_IMAGE,ICON` picker metadata, zero update period, copied 24dp
+  vector asset, source, and AndroidX dependency. The complete plugin suite passed 2 tests. Log:
+  `/tmp/agent-workflows/e2f8af45fd34/0e2225458ba4/wear-plugin.log`.
+- Clean Android prebuild succeeded, and `./gradlew :wear:testDebugUnitTest :wear:assembleDebug`
+  passed in 19 seconds. The provider has no timer, activity-data, Tile, configuration, periodic
+  refresh, or watch-face action path beyond launching the app.
