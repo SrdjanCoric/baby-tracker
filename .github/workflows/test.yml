@@ -81,6 +81,11 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: gradle
+      - name: Cache Robolectric Android runtime
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: ${{ runner.os }}-robolectric-${{ hashFiles('plugins/with-wear-os/android/wear/build.gradle') }}
       - run: npm ci
       - name: Install fake Firebase configuration for native generation
         run: cp .github/fixtures/google-services.ci.json google-services.json

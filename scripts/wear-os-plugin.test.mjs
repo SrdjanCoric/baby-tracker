@@ -139,6 +139,41 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
       ),
       "utf8"
     );
+    const complication = readFileSync(
+      join(
+        moduleRoot,
+        "src",
+        "main",
+        "java",
+        "com",
+        "sofibaby",
+        "app",
+        "wear",
+        "WearLauncherComplicationDataSource.kt"
+      ),
+      "utf8"
+    );
+    const complicationIcon = readFileSync(
+      join(
+        moduleRoot,
+        "src",
+        "main",
+        "res",
+        "drawable-nodpi",
+        "ic_sofibaby_complication.png"
+      )
+    );
+    const watchComplicationIcon = readFileSync(
+      join(
+        repositoryRoot,
+        "plugins",
+        "with-watch-complication",
+        "watchos",
+        "Assets.xcassets",
+        "complication-icon.imageset",
+        "complication-icon@3x.png"
+      )
+    );
     const state = readFileSync(
       join(
         moduleRoot,
@@ -160,6 +195,26 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
     assert.match(
       manifest,
       /android:name="android\.intent\.category\.LAUNCHER"/
+    );
+    assert.match(manifest, /android:name="\.WearLauncherComplicationDataSource"/);
+    assert.match(
+      manifest,
+      /android:permission="com\.google\.android\.wearable\.permission\.BIND_COMPLICATION_PROVIDER"/
+    );
+    assert.match(
+      manifest,
+      /android:value="ICON,SMALL_IMAGE"/
+    );
+    assert.match(
+      manifest,
+      /android:name="android\.support\.wearable\.complications\.UPDATE_PERIOD_SECONDS"\s+android:value="0"/
+    );
+    assert.match(complication, /ComplicationType\.SMALL_IMAGE/);
+    assert.match(complication, /ComplicationType\.MONOCHROMATIC_IMAGE/);
+    assert.deepEqual(complicationIcon, watchComplicationIcon);
+    assert.match(
+      readFileSync(join(moduleRoot, "build.gradle"), "utf8"),
+      /watchface-complications-data-source-ktx:1\.2\.1/
     );
     assert.match(activity, /sessionState = WearSessionRuntime\.state\.value/);
     assert.match(activity, /todayState = WearSessionRuntime\.todayState\.value/);

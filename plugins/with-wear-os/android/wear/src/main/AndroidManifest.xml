@@ -21,6 +21,23 @@
         </activity>
 
         <service
+            android:name=".WearLauncherComplicationDataSource"
+            android:exported="true"
+            android:icon="@drawable/ic_sofibaby_complication"
+            android:label="Sofi Baby Tracker"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="ICON,SMALL_IMAGE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="0" />
+        </service>
+
+        <service
             android:name=".WearSessionDataService"
             android:exported="true">
             <intent-filter>

@@ -53,6 +53,9 @@ test("Android CI clean-prebuilds and builds both phone and Wear apps", () => {
   const javaStep = job.steps.find(
     (step) => step.uses === "actions/setup-java@v4"
   );
+  const robolectricCacheStep = job.steps.find(
+    (step) => step.name === "Cache Robolectric Android runtime"
+  );
   const gradleStep = job.steps.find((step) =>
     step.run?.includes(":wear:testDebugUnitTest")
   );
@@ -61,6 +64,15 @@ test("Android CI clean-prebuilds and builds both phone and Wear apps", () => {
   assert.equal(javaStep.with.distribution, "temurin");
   assert.equal(javaStep.with["java-version"], "17");
   assert.equal(javaStep.with.cache, "gradle");
+  assert.equal(robolectricCacheStep.uses, "actions/cache@v4");
+  assert.equal(
+    robolectricCacheStep.with.path,
+    "~/.m2/repository/org/robolectric"
+  );
+  assert.match(
+    robolectricCacheStep.with.key,
+    /robolectric-\$\{\{ hashFiles\('plugins\/with-wear-os\/android\/wear\/build\.gradle'\) \}\}/
+  );
   assert.ok(runs("android-native", "npm ci"));
   assert.ok(
     runs(
