@@ -27,7 +27,7 @@
     "test:sql": "node scripts/run-sql-vectors.mjs",
     "test:sql:setup": "supabase start && supabase db reset --no-seed && node scripts/apply-migrations.mjs",
     "test:edge:timer": "node scripts/test-active-timer-edge.mjs",
-    "test:ci": "node --test scripts/ci-workflow.test.mjs scripts/date-picker-codegen.test.mjs scripts/dependency-security.test.mjs scripts/e2e-release-gate.test.mjs scripts/native-locale-parity.test.mjs scripts/package-scripts.test.mjs scripts/release-workflow.test.mjs scripts/require-successful-jobs.test.mjs scripts/watch-app-icon.test.mjs e2e/scripts/onboarding-network-runner.test.mjs",
+    "test:ci": "node --test scripts/ci-workflow.test.mjs scripts/date-picker-codegen.test.mjs scripts/dependency-security.test.mjs scripts/e2e-release-gate.test.mjs scripts/native-locale-parity.test.mjs scripts/package-scripts.test.mjs scripts/release-workflow.test.mjs scripts/require-successful-jobs.test.mjs scripts/watch-app-icon.test.mjs scripts/wear-os-plugin.test.mjs e2e/scripts/onboarding-network-runner.test.mjs",
     "test:production-gating": "node scripts/check-development-tools-production-bundle.mjs",
     "test:widget:swift": "node scripts/run-widget-swift-tests.mjs",
     "test:all": "npm run test:unit && npm run test:component",

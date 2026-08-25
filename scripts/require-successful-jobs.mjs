@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const requiredJobs = ["quality", "dependency-audit"];
+const requiredJobs = ["quality", "dependency-audit", "android-native"];
 const results = new Map(
   process.argv.slice(2).map((result) => result.split("=", 2))
 );

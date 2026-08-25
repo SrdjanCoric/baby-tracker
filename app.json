@@ -101,6 +101,7 @@
       "./plugins/with-16kb-pages",
       "./plugins/with-live-activity-controller",
       "./plugins/with-shared-supabase-session",
+      "./plugins/with-wear-os",
       "expo-router",
       "expo-apple-authentication",
       [
