@@ -193,7 +193,7 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
     );
     assert.match(
       manifest,
-      /android:value="SMALL_IMAGE,ICON"/
+      /android:value="ICON,SMALL_IMAGE"/
     );
     assert.match(
       manifest,
