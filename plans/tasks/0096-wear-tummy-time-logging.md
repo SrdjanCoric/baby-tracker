@@ -57,3 +57,7 @@ set end to end.
 - `node --test scripts/wear-os-plugin.test.mjs` passed 2 tests; log:
   `/tmp/agent-workflows/e2f8af45fd34/a4c368a2ea54/wear-plugin.log`.
 - The stable diff contains no `supabase/` changes.
+- skipped (minor): TR-4 — Wear tummy-time resume omits `effectiveStartTime` — user limited this remediation pass to majors and TR-6.
+- skipped (minor): TR-5 — Hydration overwrites the DB-derived paused elapsed value — user limited this remediation pass to majors and TR-6.
+- skipped (minor): TR-7 — Tummy-time coordinator duplicates the sibling timer state machines — user limited this remediation pass to majors and TR-6.
+- skipped (minor): TR-8 — Tummy-time section duplicates the today-minutes summary — user limited this remediation pass to majors and TR-6.
