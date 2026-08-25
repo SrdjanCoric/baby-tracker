@@ -13,6 +13,10 @@ import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
 import { ReturningUserProfileFallback } from "@/components/ReturningUserProfileFallback";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
+import {
+  WearSessionInvalidationSync,
+  WearSessionSync,
+} from "@/components/WearSessionSync";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { seedLegacyOnboardingFixture } from "@/services/e2e-onboarding-fixture";
 import { LanguageStorageService } from "@/services/language-storage";
@@ -352,6 +356,7 @@ export default function RootLayout() {
       <ThemeProvider>
         <LanguageProvider>
         <AuthProvider>
+          <WearSessionInvalidationSync />
           <DeepLinkHandler>
           <AuthGuard>
             <SyncProvider>
@@ -361,6 +366,7 @@ export default function RootLayout() {
                 <TimeFormatProvider>
                 <DashboardConfigProvider>
                   <BabyProvider>
+                    <WearSessionSync />
                     <AuthScopeBoundary>
                     <ActiveTimersProvider>
                     <FeedingProvider>

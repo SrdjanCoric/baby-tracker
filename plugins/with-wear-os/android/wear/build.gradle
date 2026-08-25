@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.1.20'
+}
+
+evaluationDependsOn(':app')
+def phoneAndroid = project(':app').extensions.getByName('android')
+def phoneDefaultConfig = phoneAndroid.defaultConfig
+def wearVersionCodeOffset = 1_000_000_000
+
+android {
+    namespace 'com.sofibaby.app.wear'
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId 'com.sofibaby.app'
+        minSdk 33
+        targetSdk rootProject.ext.targetSdkVersion
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        // Play requires version codes to be unique across phone and Wear artifacts.
+        versionCode wearVersionCodeOffset + phoneDefaultConfig.versionCode
+        versionName phoneDefaultConfig.versionName
+    }
+
+    buildTypes {
+        debug {
+            signingConfig phoneAndroid.buildTypes.debug.signingConfig
+        }
+        release {
+            signingConfig phoneAndroid.buildTypes.release.signingConfig
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity-compose:1.10.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.7'
+    implementation 'androidx.wear.compose:compose-material3:1.5.0'
+    implementation 'com.google.android.gms:play-services-wearable:19.0.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+}

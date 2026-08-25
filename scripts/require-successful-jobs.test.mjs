@@ -14,6 +14,7 @@ function run(...results) {
 const successfulResults = [
   "quality=success",
   "dependency-audit=success",
+  "android-native=success",
 ];
 
 test("accepts a successful result from every required non-device job", () => {
@@ -24,7 +25,11 @@ test("accepts a successful result from every required non-device job", () => {
 });
 
 test("rejects an incomplete set of required job results", () => {
-  const result = run(...successfulResults.slice(0, -1));
+  const result = run(
+    ...successfulResults.filter(
+      (value) => !value.startsWith("dependency-audit=")
+    )
+  );
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /dependency-audit=missing/);

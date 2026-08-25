@@ -182,7 +182,10 @@ describe("Widget coherent snapshot wiring", () => {
 
     expect(prediction).toContain("data.sleepPrediction");
     expect(prediction).toContain("canPresentSleepDerivedTiming");
-    expect(prediction).toContain("widgetSleepPredictionDisplay(prediction, now: now)");
+    expect(prediction).toContain("widgetSleepPredictionDisplay(");
+    expect(prediction).toContain(
+      "lastSleepEndedAt: data.activities.sleep.lastSleepEndedAt"
+    );
     expect(prediction).toContain("L.nighttime");
     expect(prediction).toContain("formatWidgetClockTime");
     expect(prediction).toContain("timeFormat: data.timeFormat");

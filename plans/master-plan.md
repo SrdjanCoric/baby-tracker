@@ -21,6 +21,9 @@ pointers. Each task is one feature on its own branch, ending in a PR. Task bodie
   dependent never branches off `main` before its prerequisite is actually on `main`.
   `implement-next-task --worktree` uses this to pick the first task not blocked by in-progress work,
   or reports "no independent task" when every remaining task is blocked.
+- Documentation-only changes (planning batches, briefs, task files, edits to this plan, README/docs
+  updates, task closeouts) skip the PR/CI/`sync-main` flow entirely: commit directly to `main` with
+  `[skip ci]` and push. PRs, CI, and `sync-main` are for code changes only.
 
 ## Architectural decisions
 
@@ -39,6 +42,21 @@ zero-padded>-<deviceId>"`, e.g. `2026-07-04T12:00:00.000Z-0003-a1b2c3`. Winner =
   (plain lexicographic compare). HLC ticks lazily on local mutations and on receipt of remote
   clocks only; persisted so it survives restarts. Per-field clocks are sync metadata only —
   user-facing timestamps (startTime, updatedAt, …) are unaffected.
+- **Wear OS companion app (2026-08-20)**: native Kotlin/Compose Wear OS 4+ module inside the Expo
+  Android build; full Apple Watch feature parity. Reads via the existing
+  `get_baby_activity_snapshot` RPC; writes go direct from watch to Supabase under RLS (no
+  phone-relay channel) and must carry valid HLC `field_clocks` with a watch device ID. Wearable
+  Data Layer carries session handoff, phone-refresh requests, and invalidation only, never activity
+  data. Authentication matches the supported Apple Watch behavior: the phone owns Supabase token
+  refresh and republishes a fresh short-lived access token; the watch never receives or redeems a
+  refresh token and shows a reconnect-from-phone state when its access token is stale. No offline
+  write queue in v1; Tizen permanently out of scope. Decision record:
+  `plans/wear-os-watch-parity.md`, superseded for token ownership by Task 0090's design.
+- **Wear OS integration validation (2026-08-21)**: Tasks 0090–0097 close on automated seam tests,
+  Android builds, and CI only. Do not pause those tasks for paired phone↔watch synchronization
+  checks. Task 0098 owns one consolidated end-to-end matrix covering session handoff, summaries,
+  every activity flow, shared timers, invalidation, refresh recovery, and the complication after
+  all Wear features are present.
 - **Schema shape**: each synced table gets `field_clocks JSONB NOT NULL DEFAULT '{}'` (map of
   column name → HLC string) and `deleted BOOLEAN NOT NULL DEFAULT FALSE`, plus a partial index
   `WHERE deleted = false`. Empty/missing clock entries compare as epoch — legacy rows lose to any
@@ -299,7 +317,17 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/done/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
-- [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [ ] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [x] 0089 · Wear OS app scaffold and build integration → tasks/done/0089-wear-os-app-scaffold.md
+- [x] 0090 · Wear session handoff with phone-owned refresh (after 0089) → tasks/done/0090-wear-session-handoff-and-refresh.md
+- [x] 0091 · Wear today summary read path (after 0090) → tasks/done/0091-wear-today-summary-read-path.md
+- [ ] 0092 · Wear diaper quick log (after 0091) → tasks/0092-wear-diaper-quick-log.md
+- [ ] 0093 · Wear feeding timer and logging (after 0092) → tasks/0093-wear-feeding-timer-and-logging.md
+- [ ] 0094 · Wear sleep timer and logging (after 0093) → tasks/0094-wear-sleep-timer-and-logging.md
+- [ ] 0095 · Wear pumping logging (after 0094) → tasks/0095-wear-pumping-logging.md
+- [ ] 0096 · Wear tummy time logging (after 0095) → tasks/0096-wear-tummy-time-logging.md
+- [ ] 0097 · Wear launcher complication (after 0089) → tasks/0097-wear-launcher-complication.md
+- [ ] 0098 · Wear hardware verification and store listing floor (after 0093, 0094, 0095, 0096, 0097) → tasks/0098-wear-hardware-verification-and-listing.md
 
 ## Workflow status
 
@@ -390,7 +418,7 @@ and reconciles. And the
 running-timer start-edit control **drops the caregiver name entirely**, reversing Task 0071's decision to
 name the starter there: only the starter may edit, so the name tells them nothing, and with no account it
 resolved to "Someone" — the app attributing a timer to a stranger on a single-user device. The
-`common.someone` key and its five other call sites, which describe a genuinely unknown *other* caregiver,
+`common.someone` key and its five other call sites, which describe a genuinely unknown _other_ caregiver,
 are unaffected.
 
 Task 0052 ran on 2026-08-01 and is marked `[-]`: the audit was performed and its findings were dispositioned, but the owner decided its matrix must never be committed, because this repository is public and the matrix describes authorization weaknesses that are live in production. The document and its two probes stay on the owner's machine, excluded through `.git/info/exclude`. Do not re-run 0052 and do not commit its output. Its findings are carried forward as Tasks 0054, 0055, 0057, and 0059; Task 0058 covers a `merge_record` sync failure the owner reported the same day. Task 0055 depends on its predecessor only because both add migrations and would otherwise collide on the next migration ordinal. Task 0056, the remaining finding, was removed on 2026-08-05 and is superseded by Task 0070.
