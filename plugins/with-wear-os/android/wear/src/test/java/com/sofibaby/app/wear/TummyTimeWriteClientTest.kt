@@ -8,6 +8,32 @@ import org.junit.Test
 
 class TummyTimeWriteClientTest {
     @Test
+    fun tummyTimeStartSendsOnlyPhoneIdentityTimerData() {
+        var captured: WearHttpRequest? = null
+        val ids = ArrayDeque(
+            listOf(
+                "11111111-1111-4111-8111-111111111111",
+                "44444444-4444-4444-8444-444444444444",
+            ),
+        )
+        val client = SupabaseWriteClient(
+            transport = {
+                captured = it
+                WearHttpResponse(200, """[{"success":true,"started_at":"2026-08-22T10:15:30.123Z"}]""")
+            },
+            ids = { ids.removeFirst() },
+            wallClockMillis = { 1_787_393_730_123L },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+
+        val draft = client.newTummyTimeTimerDraft(active())
+        client.startTummyTimeTimer(active(), draft)
+
+        val timerData = JSONObject(requireNotNull(captured).body).getJSONObject("p_timer_data")
+        assertEquals(setOf("timerInstanceId", "activityId"), timerData.keys().asSequence().toSet())
+    }
+
+    @Test
     fun tummyTimeStartMatchesThePhoneTimerRequest() {
         var captured: WearHttpRequest? = null
         val ids = ArrayDeque(

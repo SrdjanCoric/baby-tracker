@@ -62,6 +62,20 @@ object TummyTimeTimerRestorer {
     }
 }
 
+val TUMMY_TIME_TIMER_START_CODEC = TimerDataCodec<TummyTimeTimerData>(
+    encode = { data ->
+        JSONObject()
+            .put("timerInstanceId", data.timerInstanceId)
+            .put("activityId", data.activityId)
+    },
+    decode = { _, data ->
+        TummyTimeTimerData(
+            timerInstanceId = data.getString("timerInstanceId"),
+            activityId = data.getString("activityId"),
+        )
+    },
+)
+
 val TUMMY_TIME_TIMER_CODEC = TimerDataCodec<TummyTimeTimerData>(
     encode = { data ->
         JSONObject()

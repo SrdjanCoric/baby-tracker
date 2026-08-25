@@ -511,7 +511,7 @@ class SupabaseWriteClient(
     }
 
     fun newTummyTimeTimerDraft(session: WearSessionEnvelope.Active): TummyTimeTimerDraft {
-        val shared = newTimerDraft(session, TimerActivityType.TummyTime, TUMMY_TIME_TIMER_CODEC) {
+        val shared = newTimerDraft(session, TimerActivityType.TummyTime, TUMMY_TIME_TIMER_START_CODEC) {
                 timerInstanceId, _ ->
             TummyTimeTimerData(timerInstanceId, ids())
         }
