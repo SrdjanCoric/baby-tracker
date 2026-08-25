@@ -159,10 +159,20 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
         "src",
         "main",
         "res",
-        "drawable",
-        "ic_sofibaby_complication.xml"
-      ),
-      "utf8"
+        "drawable-nodpi",
+        "ic_sofibaby_complication.png"
+      )
+    );
+    const watchComplicationIcon = readFileSync(
+      join(
+        repositoryRoot,
+        "plugins",
+        "with-watch-complication",
+        "watchos",
+        "Assets.xcassets",
+        "complication-icon.imageset",
+        "complication-icon@3x.png"
+      )
     );
     const state = readFileSync(
       join(
@@ -201,7 +211,7 @@ test("the generated Wear module declares its launcher and phone sign-in state", 
     );
     assert.match(complication, /ComplicationType\.SMALL_IMAGE/);
     assert.match(complication, /ComplicationType\.MONOCHROMATIC_IMAGE/);
-    assert.match(complicationIcon, /<vector/);
+    assert.deepEqual(complicationIcon, watchComplicationIcon);
     assert.match(
       readFileSync(join(moduleRoot, "build.gradle"), "utf8"),
       /watchface-complications-data-source-ktx:1\.2\.1/
