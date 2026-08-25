@@ -517,7 +517,7 @@ class SupabaseWriteClient(
         }
         return TummyTimeTimerDraft(
             timerInstanceId = shared.timerInstanceId,
-            activityId = shared.timerData.activityId,
+            activityId = requireNotNull(shared.timerData.activityId),
             startedAt = shared.startedAt,
             rpcBody = shared.rpcBody,
         )

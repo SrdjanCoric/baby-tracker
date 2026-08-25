@@ -105,6 +105,25 @@ class TummyTimeWriteClientTest {
     }
 
     @Test
+    fun ownerHydrationAcceptsPhoneTimerDataWithoutActivityId() {
+        val client = SupabaseWriteClient(
+            transport = {
+                WearHttpResponse(
+                    200,
+                    """[{"started_at":"2026-08-22T10:00:00.000Z","timer_data":{"timerInstanceId":"timer-1","isPaused":false,"totalPausedMs":0}}]""",
+                )
+            },
+            wallClockMillis = { Instant.parse("2026-08-22T10:05:00.000Z").toEpochMilli() },
+            clockStore = InMemoryWearClockStore("wear-test-device"),
+        )
+
+        val outcome = client.loadOwnedTummyTimeTimer(active())
+
+        assertTrue(outcome is TummyTimeTimerReadOutcome.Success)
+        assertEquals(null, (outcome as TummyTimeTimerReadOutcome.Success).timer.activityId)
+    }
+
+    @Test
     fun completedPausedTummyTimeMatchesThePhoneRowAndReleasesTheTimer() {
         val requests = mutableListOf<WearHttpRequest>()
         val client = SupabaseWriteClient(

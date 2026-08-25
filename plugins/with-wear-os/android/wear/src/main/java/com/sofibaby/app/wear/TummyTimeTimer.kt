@@ -17,7 +17,7 @@ data class CompletedTummyTimeDraft(
 
 data class TummyTimeTimerData(
     val timerInstanceId: String,
-    val activityId: String,
+    val activityId: String?,
     val isPaused: Boolean = false,
     val totalPausedMs: Long = 0,
     val pausedAt: Instant? = null,
@@ -80,10 +80,10 @@ val TUMMY_TIME_TIMER_CODEC = TimerDataCodec<TummyTimeTimerData>(
     encode = { data ->
         JSONObject()
             .put("timerInstanceId", data.timerInstanceId)
-            .put("activityId", data.activityId)
             .put("isPaused", data.isPaused)
             .put("totalPausedMs", data.totalPausedMs)
             .apply {
+                data.activityId?.let { put("activityId", it) }
                 data.pausedAt?.let { put("pausedAt", it.toString()) }
                 data.accumulatedSeconds?.let { put("accumulatedSeconds", it) }
             }
@@ -91,7 +91,7 @@ val TUMMY_TIME_TIMER_CODEC = TimerDataCodec<TummyTimeTimerData>(
     decode = { _, data ->
         TummyTimeTimerData(
             timerInstanceId = data.getString("timerInstanceId"),
-            activityId = data.getString("activityId"),
+            activityId = data.optString("activityId").takeIf(String::isNotBlank),
             isPaused = data.optBoolean("isPaused", false),
             totalPausedMs = data.optLong("totalPausedMs", 0),
             pausedAt = data.optString("pausedAt").takeIf(String::isNotBlank)?.let(Instant::parse),
