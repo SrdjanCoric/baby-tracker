@@ -48,13 +48,20 @@ complication on a Wear OS 4 emulator with the complete activity set.
 
 ## Implementation evidence
 
+- skipped (minor): TR-2 — The no-data acceptance criterion lacks a test for data-bearing request types — User requested this pass be limited to TR-1, TR-3, and TR-5.
+- skipped (minor): TR-4 — Complication tests use tautological assertions that miss image and tap-action regressions — User requested this pass be limited to TR-1, TR-3, and TR-5.
+- skipped (minor): TR-6 — The template test pins an exact AndroidX dependency version — User requested this pass be limited to TR-1, TR-3, and TR-5.
+- skipped (minor): TR-7 — Complication images do not provide ambient-mode variants — User requested this pass be limited to TR-1, TR-3, and TR-5.
+- skipped (minor): TR-8 — The Wear test module declares an unused AndroidX Test dependency — User requested this pass be limited to TR-1, TR-3, and TR-5.
+
 - RED/GREEN cycles proved `SMALL_IMAGE` and legacy `ICON`/modern `MONOCHROMATIC_IMAGE` requests each
   return valid image data with a tap action targeting `MainActivity`; the focused Robolectric suite
   passed in the final Wear build. Log:
   `/tmp/agent-workflows/e2f8af45fd34/0e2225458ba4/wear-focused.log`.
 - A generated-template test failed before provider registration, then passed with the protected
-  complication service, exact `SMALL_IMAGE,ICON` picker metadata, zero update period, copied 24dp
-  vector asset, source, and AndroidX dependency. The complete plugin suite passed 2 tests. Log:
+  complication service, tintable-first `ICON,SMALL_IMAGE` picker metadata, zero update period, the
+  exact shipped watchOS/iOS complication PNG, source, and AndroidX dependency. The complete plugin
+  suite passed 2 tests. Log:
   `/tmp/agent-workflows/e2f8af45fd34/0e2225458ba4/wear-plugin.log`.
 - Clean Android prebuild succeeded, and `./gradlew :wear:testDebugUnitTest :wear:assembleDebug`
   passed in 19 seconds. The provider has no timer, activity-data, Tile, configuration, periodic
