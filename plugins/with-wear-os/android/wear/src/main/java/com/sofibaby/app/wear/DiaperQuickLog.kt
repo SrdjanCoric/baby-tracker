@@ -510,6 +510,211 @@ class SupabaseWriteClient(
         return release ?: WriteOutcome.Success(draft.recordId)
     }
 
+    fun newTummyTimeTimerDraft(session: WearSessionEnvelope.Active): TummyTimeTimerDraft {
+        val shared = newTimerDraft(session, TimerActivityType.TummyTime, TUMMY_TIME_TIMER_START_CODEC) {
+                timerInstanceId, _ ->
+            TummyTimeTimerData(timerInstanceId, ids())
+        }
+        return TummyTimeTimerDraft(
+            timerInstanceId = shared.timerInstanceId,
+            activityId = requireNotNull(shared.timerData.activityId),
+            startedAt = shared.startedAt,
+            rpcBody = shared.rpcBody,
+        )
+    }
+
+    fun startTummyTimeTimer(
+        session: WearSessionEnvelope.Active,
+        draft: TummyTimeTimerDraft,
+    ): TummyTimeTimerWriteOutcome {
+        val shared = SharedTimerDraft(
+            timerInstanceId = draft.timerInstanceId,
+            activityType = TimerActivityType.TummyTime,
+            startedAt = draft.startedAt,
+            timerData = TummyTimeTimerData(draft.timerInstanceId, draft.activityId),
+            rpcBody = draft.rpcBody,
+        )
+        return when (val outcome = acquireTimer(session, shared)) {
+            is SharedTimerAcquireOutcome.Success -> TummyTimeTimerWriteOutcome.Success(outcome.persistedStartedAt)
+            is SharedTimerAcquireOutcome.AlreadyActive -> TummyTimeTimerWriteOutcome.AlreadyActive(
+                outcome.lockHolderId,
+                outcome.lockHolderName,
+                outcome.startedAt,
+            )
+            SharedTimerAcquireOutcome.Unauthorized -> TummyTimeTimerWriteOutcome.Unauthorized
+            SharedTimerAcquireOutcome.Offline -> TummyTimeTimerWriteOutcome.Offline
+            SharedTimerAcquireOutcome.Failed -> TummyTimeTimerWriteOutcome.Failed
+        }
+    }
+
+    fun loadOwnedTummyTimeTimer(session: WearSessionEnvelope.Active): TummyTimeTimerReadOutcome {
+        return when (
+            val outcome = loadOwnedTimer(
+                session,
+                TimerActivityType.TummyTime,
+                restoredTummyTimeTimerCodec(),
+            )
+        ) {
+            is SharedTimerReadOutcome.Success -> TummyTimeTimerReadOutcome.Success(outcome.timerData)
+            SharedTimerReadOutcome.Missing -> TummyTimeTimerReadOutcome.Missing
+            SharedTimerReadOutcome.Unauthorized -> TummyTimeTimerReadOutcome.Unauthorized
+            SharedTimerReadOutcome.Offline -> TummyTimeTimerReadOutcome.Offline
+            SharedTimerReadOutcome.Failed -> TummyTimeTimerReadOutcome.Failed
+        }
+    }
+
+    fun pauseTummyTimeTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredTummyTimeTimer,
+    ): TummyTimeTimerMutationOutcome {
+        if (timer.isPaused || !timer.canControl) return TummyTimeTimerMutationOutcome.Failed
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
+        val updated = timer.copy(
+            isPaused = true,
+            accumulatedSeconds = totalElapsed,
+            pausedAt = now,
+            elapsedSeconds = totalElapsed.toLong(),
+        )
+        return mutateTummyTimeTimer(session, updated)
+    }
+
+    fun resumeTummyTimeTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredTummyTimeTimer,
+    ): TummyTimeTimerMutationOutcome {
+        val pausedAt = timer.pausedAt ?: return TummyTimeTimerMutationOutcome.Failed
+        if (!timer.isPaused || !timer.canControl) return TummyTimeTimerMutationOutcome.Failed
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val totalElapsed = java.time.Duration.between(timer.startedAt, now).seconds.coerceAtLeast(0).toInt()
+        val updated = timer.copy(
+            isPaused = false,
+            accumulatedSeconds = totalElapsed,
+            totalPausedMs = timer.totalPausedMs +
+                java.time.Duration.between(pausedAt, now).toMillis().coerceAtLeast(0),
+            pausedAt = null,
+            elapsedSeconds = totalElapsed.toLong(),
+        )
+        return mutateTummyTimeTimer(session, updated)
+    }
+
+    private fun mutateTummyTimeTimer(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredTummyTimeTimer,
+    ): TummyTimeTimerMutationOutcome {
+        val data = TummyTimeTimerData(
+            timerInstanceId = requireNotNull(timer.timerInstanceId),
+            activityId = requireNotNull(timer.activityId),
+            isPaused = timer.isPaused,
+            totalPausedMs = timer.totalPausedMs,
+            pausedAt = timer.pausedAt,
+            accumulatedSeconds = timer.accumulatedSeconds,
+        )
+        return when (
+            mutateTimerData(
+                session,
+                TimerActivityType.TummyTime,
+                data,
+                TUMMY_TIME_TIMER_CODEC,
+                TimerMutationRoute.TogglePause,
+            )
+        ) {
+            is SharedTimerMutationOutcome.Success -> TummyTimeTimerMutationOutcome.Success(timer)
+            SharedTimerMutationOutcome.Unauthorized -> TummyTimeTimerMutationOutcome.Unauthorized
+            SharedTimerMutationOutcome.Offline -> TummyTimeTimerMutationOutcome.Offline
+            SharedTimerMutationOutcome.Failed -> TummyTimeTimerMutationOutcome.Failed
+        }
+    }
+
+    private fun restoredTummyTimeTimerCodec(): TimerDataCodec<RestoredTummyTimeTimer> = TimerDataCodec(
+        encode = { timer ->
+            TUMMY_TIME_TIMER_CODEC.encode(
+                TummyTimeTimerData(
+                    timerInstanceId = requireNotNull(timer.timerInstanceId),
+                    activityId = requireNotNull(timer.activityId),
+                    isPaused = timer.isPaused,
+                    totalPausedMs = timer.totalPausedMs,
+                    pausedAt = timer.pausedAt,
+                    accumulatedSeconds = timer.accumulatedSeconds,
+                ),
+            )
+        },
+        decode = { startedAt, data ->
+            val decoded = TUMMY_TIME_TIMER_CODEC.decode(startedAt, data)
+            val now = Instant.ofEpochMilli(wallClockMillis())
+            RestoredTummyTimeTimer(
+                timerInstanceId = decoded.timerInstanceId,
+                activityId = decoded.activityId,
+                startedAt = startedAt,
+                isPaused = decoded.isPaused,
+                accumulatedSeconds = decoded.accumulatedSeconds,
+                totalPausedMs = decoded.totalPausedMs,
+                pausedAt = decoded.pausedAt,
+                canControl = true,
+                elapsedSeconds = if (decoded.isPaused && decoded.accumulatedSeconds != null) {
+                    decoded.accumulatedSeconds.toLong()
+                } else {
+                    java.time.Duration.between(
+                        startedAt,
+                        if (decoded.isPaused) decoded.pausedAt ?: now else now,
+                    ).seconds.coerceAtLeast(0)
+                },
+            )
+        },
+    )
+
+    fun newCompletedTummyTimeDraft(
+        session: WearSessionEnvelope.Active,
+        timer: RestoredTummyTimeTimer,
+    ): CompletedTummyTimeDraft {
+        val activityId = requireNotNull(timer.activityId) {
+            "A tummy time timer needs an activity ID before completion"
+        }
+        val now = Instant.ofEpochMilli(wallClockMillis())
+        val endedAt = if (timer.isPaused) requireNotNull(timer.pausedAt) else now
+        val durationSeconds = java.time.Duration.between(timer.startedAt, endedAt).seconds.coerceAtLeast(0)
+        val timestamp = MILLISECOND_INSTANT.format(now)
+        val record = JSONObject()
+            .put("id", activityId)
+            .put("baby_id", session.baby.id)
+            .put("started_at", MILLISECOND_INSTANT.format(timer.startedAt))
+            .put("ended_at", MILLISECOND_INSTANT.format(endedAt))
+            .put("duration_seconds", durationSeconds)
+            .put("logged_by", session.account.id)
+            .put("created_at", timestamp)
+        val fields = listOf(
+            "id",
+            "baby_id",
+            "started_at",
+            "ended_at",
+            "duration_seconds",
+            "logged_by",
+            "created_at",
+        )
+        val clocks = JSONObject()
+        fields.zip(hlc.issueBatch(fields.size)).forEach { (field, clock) -> clocks.put(field, clock) }
+        val mergeBody = JSONObject()
+            .put("p_table", "tummy_time_sessions")
+            .put("p_record", record)
+            .put("p_field_clocks", clocks)
+            .put("p_operation_id", "wear-tummy-time:$activityId")
+            .put("p_expected_user_id", session.account.id)
+            .toString()
+        return CompletedTummyTimeDraft(activityId, mergeBody)
+    }
+
+    fun completeTummyTimeTimer(
+        session: WearSessionEnvelope.Active,
+        draft: CompletedTummyTimeDraft,
+    ): WriteOutcome = completeTimer(
+        session,
+        SharedTimerCompletionDraft(
+            recordId = draft.recordId,
+            activityType = TimerActivityType.TummyTime,
+            mergeBody = draft.mergeBody,
+        ),
+    )
+
     fun newPumpingTimerDraft(
         session: WearSessionEnvelope.Active,
         side: BreastSide,

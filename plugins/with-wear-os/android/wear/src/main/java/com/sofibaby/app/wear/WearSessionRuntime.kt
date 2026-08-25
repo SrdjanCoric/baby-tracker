@@ -15,6 +15,7 @@ object WearSessionRuntime {
     private val mutableFeedingState = mutableStateOf<FeedingTimerUiState>(FeedingTimerUiState.Idle)
     private val mutableSleepState = mutableStateOf<SleepTimerUiState>(SleepTimerUiState.Idle)
     private val mutablePumpingState = mutableStateOf<PumpingTimerUiState>(PumpingTimerUiState.Idle)
+    private val mutableTummyTimeState = mutableStateOf<TummyTimeTimerUiState>(TummyTimeTimerUiState.Idle)
     private val mutableBottleState = mutableStateOf<BottleLogUiState>(BottleLogUiState.Idle)
     private val executor = Executors.newSingleThreadExecutor()
     private var coordinator: WearSessionCoordinator? = null
@@ -24,6 +25,7 @@ object WearSessionRuntime {
     private var feedingCoordinator: FeedingTimerCoordinator? = null
     private var sleepCoordinator: SleepTimerCoordinator? = null
     private var pumpingCoordinator: PumpingTimerCoordinator? = null
+    private var tummyTimeCoordinator: TummyTimeTimerCoordinator? = null
     private var bottleCoordinator: BottleLogCoordinator? = null
 
     val state: State<WearSessionUiState> = mutableState
@@ -32,6 +34,7 @@ object WearSessionRuntime {
     val feedingState: State<FeedingTimerUiState> = mutableFeedingState
     val sleepState: State<SleepTimerUiState> = mutableSleepState
     val pumpingState: State<PumpingTimerUiState> = mutablePumpingState
+    val tummyTimeState: State<TummyTimeTimerUiState> = mutableTummyTimeState
     val bottleState: State<BottleLogUiState> = mutableBottleState
 
     @Synchronized
@@ -128,6 +131,19 @@ object WearSessionRuntime {
             onUnauthorized = ::handleUnauthorized,
             onStateChanged = { mutablePumpingState.value = it },
         )
+        tummyTimeCoordinator = TummyTimeTimerCoordinator(
+            drafts = writeClient::newTummyTimeTimerDraft,
+            starter = writeClient::startTummyTimeTimer,
+            refreshSummary = { summaryDriver?.onWake() },
+            completionDrafts = writeClient::newCompletedTummyTimeDraft,
+            completionWriter = writeClient::completeTummyTimeTimer,
+            pauser = writeClient::pauseTummyTimeTimer,
+            resumer = writeClient::resumeTummyTimeTimer,
+            timerReader = writeClient::loadOwnedTummyTimeTimer,
+            dispatch = { work -> executor.execute { work() } },
+            onUnauthorized = ::handleUnauthorized,
+            onStateChanged = { mutableTummyTimeState.value = it },
+        )
         bottleCoordinator = BottleLogCoordinator(
             drafts = writeClient::newBottleFeedingDraft,
             writer = writeClient::writeBottleFeeding,
@@ -158,6 +174,7 @@ object WearSessionRuntime {
             feedingCoordinator?.reset()
             sleepCoordinator?.reset()
             pumpingCoordinator?.reset()
+            tummyTimeCoordinator?.reset()
             bottleCoordinator?.reset()
         }
         target.accept(envelope)
@@ -263,6 +280,26 @@ object WearSessionRuntime {
         selectedSession()?.let { pumpingCoordinator?.retry(it) }
     }
 
+    fun startTummyTime() {
+        selectedSession()?.let { tummyTimeCoordinator?.start(it) }
+    }
+
+    fun pauseTummyTime() {
+        selectedSession()?.let { tummyTimeCoordinator?.pause(it) }
+    }
+
+    fun resumeTummyTime() {
+        selectedSession()?.let { tummyTimeCoordinator?.resume(it) }
+    }
+
+    fun stopTummyTime() {
+        selectedSession()?.let { tummyTimeCoordinator?.stop(it) }
+    }
+
+    fun retryTummyTime() {
+        selectedSession()?.let { tummyTimeCoordinator?.retry(it) }
+    }
+
     fun logBottle(selection: BottleLogSelection) {
         selectedSession()?.let { bottleCoordinator?.submit(it, selection) }
     }
@@ -327,6 +364,10 @@ object WearSessionRuntime {
         pumpingCoordinator?.restoreSnapshot(
             session,
             snapshot.activeTimers.firstOrNull { it.type == "pumping" },
+        )
+        tummyTimeCoordinator?.restoreSnapshot(
+            session,
+            snapshot.activeTimers.firstOrNull { it.type == "tummyTime" },
         )
     }
 

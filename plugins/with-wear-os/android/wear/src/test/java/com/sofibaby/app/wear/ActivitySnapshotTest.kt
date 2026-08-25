@@ -85,6 +85,11 @@ class ActivitySnapshotTest {
             assertTrue(requireNotNull(isPaused))
             assertEquals(123, accumulatedSeconds)
         }
+        with(snapshot.activeTimers[3]) {
+            assertEquals("tummyTime", type)
+            assertEquals("sibling-tummy-timer", timerInstanceId)
+            assertFalse(requireNotNull(isPaused))
+        }
     }
 
     @Test
