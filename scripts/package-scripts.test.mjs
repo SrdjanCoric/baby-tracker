@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { URL } from "node:url";
+import { fileURLToPath, URL } from "node:url";
+import { ESLint } from "eslint";
+
+const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8")
@@ -13,6 +16,17 @@ const vitestConfig = readFileSync(
 
 test("the declared npm version matches pinned Node 20 tooling", () => {
   assert.equal(packageJson.packageManager, "npm@10.8.2");
+});
+
+test("lint ignores generated Android output", async () => {
+  const eslint = new ESLint({ cwd: repositoryRoot });
+
+  assert.equal(
+    await eslint.isPathIgnored(
+      "android/wear/build/reports/tests/testDebugUnitTest/js/report.js"
+    ),
+    true
+  );
 });
 
 test("the canonical check command runs every maintained non-device suite once", () => {

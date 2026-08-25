@@ -85,6 +85,7 @@ export default tseslint.config(
     ignores: [
       "node_modules/",
       ".expo/",
+      "android/",
       "dist/",
       "build/",
       "targets/",
