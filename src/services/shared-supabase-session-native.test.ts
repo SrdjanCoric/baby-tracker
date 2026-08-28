@@ -301,3 +301,85 @@ describe("createSharedSupabaseSessionLock", () => {
     );
   });
 });
+
+describe("unlocked session mutations", () => {
+  function makeModule() {
+    let nextHandle = 0;
+    const writes: { envelope: string; revision: number | null; handle: string }[] = [];
+    const removals: { revision: number; lineage: string; handle: string }[] = [];
+    const issued = new Set<string>();
+    const module = {
+      readSession: vi.fn(async () => null),
+      writeSession: vi.fn(
+        async (envelope: string, revision: number | null, handle: string) => {
+          if (!issued.has(handle)) {
+            throw Object.assign(new Error(`Unknown lock handle: ${handle}`), {
+              code: "LOCK_HANDLE",
+            });
+          }
+          writes.push({ envelope, revision, handle });
+        }
+      ),
+      removeSession: vi.fn(
+        async (revision: number, lineage: string, handle: string) => {
+          if (!issued.has(handle)) {
+            throw Object.assign(new Error(`Unknown lock handle: ${handle}`), {
+              code: "LOCK_HANDLE",
+            });
+          }
+          removals.push({ revision, lineage, handle });
+        }
+      ),
+      purgeSession: vi.fn(async () => undefined),
+      acquireSessionLock: vi.fn(async () => {
+        const handle = `handle-${++nextHandle}`;
+        issued.add(handle);
+        return handle;
+      }),
+      releaseSessionLock: vi.fn(async (handle: string) => {
+        issued.delete(handle);
+      }),
+    };
+    return { module, writes, removals };
+  }
+
+  it("acquires the flock for a sign-in session write issued outside the auth lock", async () => {
+    const { module, writes } = makeModule();
+    const adapter = createSharedSupabaseSessionNativeAdapter(module);
+
+    await adapter.writeSession("fresh-sign-in-envelope", null);
+
+    expect(writes).toEqual([
+      { envelope: "fresh-sign-in-envelope", revision: null, handle: "handle-1" },
+    ]);
+    expect(module.acquireSessionLock).toHaveBeenCalledTimes(1);
+    expect(module.releaseSessionLock).toHaveBeenCalledWith("handle-1");
+  });
+
+  it("acquires the flock for a session removal issued outside the auth lock", async () => {
+    const { module, removals } = makeModule();
+    const adapter = createSharedSupabaseSessionNativeAdapter(module);
+
+    await adapter.removeSession(3, "lineage-a");
+
+    expect(removals).toEqual([
+      { revision: 3, lineage: "lineage-a", handle: "handle-1" },
+    ]);
+    expect(module.acquireSessionLock).toHaveBeenCalledTimes(1);
+    expect(module.releaseSessionLock).toHaveBeenCalledWith("handle-1");
+  });
+
+  it("still reuses the held handle for writes inside the auth lock", async () => {
+    const { module, writes } = makeModule();
+    const adapter = createSharedSupabaseSessionNativeAdapter(module);
+
+    await adapter.lock.withLock(async () => {
+      await adapter.writeSession("locked-envelope", 2);
+    });
+
+    expect(writes).toEqual([
+      { envelope: "locked-envelope", revision: 2, handle: "handle-1" },
+    ]);
+    expect(module.acquireSessionLock).toHaveBeenCalledTimes(1);
+  });
+});
