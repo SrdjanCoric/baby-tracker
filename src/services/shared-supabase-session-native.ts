@@ -160,14 +160,34 @@ export function createSharedSupabaseSessionNativeAdapter(
     }
   };
 
+  const lock = createSharedSupabaseSessionLock(
+    module,
+    (handle) => {
+      activeHandle = handle;
+    },
+    flushPendingMutations,
+    flushPendingMutationsWithHandle
+  );
+
+  // auth-js saves freshly signed-in sessions (signInWithIdToken and friends)
+  // outside its storage lock, so no handle is active for those writes. Own the
+  // flock for that single mutation through the shared queue instead of passing
+  // an empty handle the native module rejects.
+  const withMutationHandle = async (
+    fn: (handle: string) => Promise<void>
+  ): Promise<void> => {
+    if (activeHandle != null) {
+      return fn(activeHandle);
+    }
+    return lock.withLock(fn);
+  };
+
   const bridge: SharedSupabaseSessionBridge = {
     readSession: () => module.readSession(),
     writeSession: async (envelopeJson, expectedRevision = null) => {
       try {
-        await module.writeSession(
-          envelopeJson,
-          expectedRevision,
-          activeHandle ?? ""
+        await withMutationHandle((handle) =>
+          module.writeSession(envelopeJson, expectedRevision, handle)
         );
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
@@ -180,10 +200,8 @@ export function createSharedSupabaseSessionNativeAdapter(
     },
     removeSession: async (expectedRevision, expectedLineage) => {
       try {
-        await module.removeSession(
-          expectedRevision,
-          expectedLineage,
-          activeHandle ?? ""
+        await withMutationHandle((handle) =>
+          module.removeSession(expectedRevision, expectedLineage, handle)
         );
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
@@ -195,15 +213,6 @@ export function createSharedSupabaseSessionNativeAdapter(
       }
     },
   };
-
-  const lock = createSharedSupabaseSessionLock(
-    module,
-    (handle) => {
-      activeHandle = handle;
-    },
-    flushPendingMutations,
-    flushPendingMutationsWithHandle
-  );
 
   return { ...bridge, lock, purgeSession: () => module.purgeSession() };
 }
