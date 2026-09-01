@@ -1048,8 +1048,15 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
       observedOwnedTimerRef.current = null;
       stopVersionRef.current++;
-      dispatch({ type: "STOP_TIMER" });
-      void SleepStorageService.clearActiveTimer(selectedBaby.id);
+      void (async () => {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) await endLiveActivityByType("sleep");
+        liveActivityIdRef.current = null;
+        dispatch({ type: "STOP_TIMER" });
+        await SleepStorageService.clearActiveTimer(selectedBaby.id);
+      })();
     }
   }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
 

@@ -772,6 +772,7 @@ describe("restoreTimerLifecycle", () => {
     expect(dispatchStopTimer).toHaveBeenCalledOnce();
     expect(persistRecord).not.toHaveBeenCalled();
     expect(reconcileTimerLock).not.toHaveBeenCalled();
+    expect(endLiveActivityByType).toHaveBeenCalledWith("sleep");
   });
 
   it("restores an owned local timer when the server snapshot is unavailable", async () => {

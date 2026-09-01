@@ -558,6 +558,9 @@ export async function restoreTimerLifecycle<
             : new Date(lock.startedAt).getTime() ===
               new Date(activeTimer.startedAt).getTime());
         if (!sameServerTimer) {
+          await endAdapterLiveActivity(
+            activeTimer.liveActivityId ?? liveActivityIdRef.current
+          );
           await adapter.storage.clearActiveTimer(baby.id);
           dispatchStopTimer();
           return;

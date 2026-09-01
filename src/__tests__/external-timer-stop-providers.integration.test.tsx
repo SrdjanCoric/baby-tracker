@@ -544,6 +544,17 @@ describe("external timer stops through production providers", () => {
     expect(activitySync.createSleepInDatabase).not.toHaveBeenCalled();
     expect(activitySync.createPumpingInDatabase).not.toHaveBeenCalled();
     expect(activitySync.createTummyTimeInDatabase).not.toHaveBeenCalled();
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      endLiveActivityByType: jest.Mock;
+    };
+    const endedTypes = liveActivities.endLiveActivityByType.mock.calls.map(call => call[0]);
+    expect(endedTypes).toHaveLength(4);
+    expect(endedTypes).toEqual(expect.arrayContaining([
+      "feeding",
+      "sleep",
+      "pumping",
+      "tummyTime",
+    ]));
   });
 
   it("keeps every unsaved starter timer when authentication disappears", async () => {

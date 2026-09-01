@@ -616,8 +616,15 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
       observedOwnedTimerRef.current = null;
       stopVersionRef.current++;
-      dispatch({ type: "STOP_TIMER" });
-      void FeedingStorageService.clearActiveTimer(selectedBaby.id);
+      void (async () => {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) await endLiveActivityByType("feeding");
+        liveActivityIdRef.current = null;
+        dispatch({ type: "STOP_TIMER" });
+        await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+      })();
     }
   }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
 

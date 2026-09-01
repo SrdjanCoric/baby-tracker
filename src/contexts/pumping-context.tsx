@@ -513,8 +513,15 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
       observedOwnedTimerRef.current = null;
       stopVersionRef.current++;
-      dispatch({ type: "STOP_TIMER" });
-      void PumpingStorageService.clearActiveTimer(selectedBaby.id);
+      void (async () => {
+        const endedById = liveActivityIdRef.current
+          ? await endTimerLiveActivity(liveActivityIdRef.current)
+          : false;
+        if (!endedById) await endLiveActivityByType("pumping");
+        liveActivityIdRef.current = null;
+        dispatch({ type: "STOP_TIMER" });
+        await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+      })();
     }
   }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
 
