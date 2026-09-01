@@ -574,33 +574,33 @@ export default function HomeScreen() {
   }, [stopTummyTime, t]);
 
   const handleStopRemoteTimer = useCallback(async (
-    stopRemoteTimer: () => Promise<void>,
+    stopRemoteTimer: () => Promise<unknown>,
     activityLabel: string,
-    stopErrorKey: string
+    stopErrorMessage: string
   ) => {
     try {
       await stopRemoteTimer();
     } catch (error) {
       console.error(`[HomeScreen] Failed to stop remote ${activityLabel}:`, error);
-      Alert.alert(t("common.error"), t(stopErrorKey));
+      Alert.alert(t("common.error"), stopErrorMessage);
     }
   }, [t]);
 
   const handleStopRemoteFeeding = useCallback(
-    () => handleStopRemoteTimer(stopRemoteBreastfeeding, "feeding", "feeding.stopError"),
-    [handleStopRemoteTimer, stopRemoteBreastfeeding]
+    () => handleStopRemoteTimer(stopRemoteBreastfeeding, "feeding", t("feeding.stopError")),
+    [handleStopRemoteTimer, stopRemoteBreastfeeding, t]
   );
   const handleStopRemoteSleep = useCallback(
-    () => handleStopRemoteTimer(stopRemoteSleep, "sleep", "sleep.stopError"),
-    [handleStopRemoteTimer, stopRemoteSleep]
+    () => handleStopRemoteTimer(stopRemoteSleep, "sleep", t("sleep.stopError")),
+    [handleStopRemoteTimer, stopRemoteSleep, t]
   );
   const handleStopRemotePumping = useCallback(
-    () => handleStopRemoteTimer(stopRemotePumping, "pumping", "pumping.stopError"),
-    [handleStopRemoteTimer, stopRemotePumping]
+    () => handleStopRemoteTimer(stopRemotePumping, "pumping", t("pumping.stopError")),
+    [handleStopRemoteTimer, stopRemotePumping, t]
   );
   const handleStopRemoteTummyTime = useCallback(
-    () => handleStopRemoteTimer(stopRemoteTummyTime, "tummy time", "tummyTime.stopError"),
-    [handleStopRemoteTimer, stopRemoteTummyTime]
+    () => handleStopRemoteTimer(stopRemoteTummyTime, "tummy time", t("tummyTime.stopError")),
+    [handleStopRemoteTimer, stopRemoteTummyTime, t]
   );
 
   const handleTogglePauseFeeding = useCallback(async () => {
