@@ -456,6 +456,29 @@ describe("HomeScreen", () => {
       expect(mockStopRemoteTummyTime).toHaveBeenCalledTimes(1);
     });
 
+    it("does not pass press events as remote timer stop times", () => {
+      const startedAt = "2026-08-06T10:00:00.000Z";
+      for (const activityType of ["feeding", "sleep", "pumping", "tummy_time"]) {
+        mockRemoteLocks[activityType] = {
+          startedAt,
+          startedByName: "Other caregiver",
+          timerData: { timerInstanceId: `timer-${activityType}`, isPaused: false },
+        };
+      }
+
+      render(<HomeScreen />);
+
+      const pressEvent = { nativeEvent: { timestamp: 1234 } };
+      for (const activity of ["feeding", "sleep", "pumping", "tummyTime"]) {
+        fireEvent(screen.getByTestId(`action-${activity}`), "press", pressEvent);
+      }
+
+      expect(mockStopRemoteFeeding).toHaveBeenCalledWith();
+      expect(mockStopRemoteSleep).toHaveBeenCalledWith();
+      expect(mockStopRemotePumping).toHaveBeenCalledWith();
+      expect(mockStopRemoteTummyTime).toHaveBeenCalledWith();
+    });
+
     it("passes remote timers' real start and pause instant to every dashboard surface", () => {
       const startedAt = "2026-08-06T10:00:00.000Z";
       const pausedAt = "2026-08-06T10:30:00.000Z";
