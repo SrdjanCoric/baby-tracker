@@ -162,8 +162,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   counting safe. No schema change, no stored pause span, no backfill: records written before the rule
   keep their disagreement permanently. The widget and the Watch keep sending `pauseDurationMs` and
   `accumulatedSeconds` and neither native target changes; `toggle_timer_pause` keeps its signature,
-  its meaning, and its owner-only guard. The cost taken deliberately is that tummy time and pumping
-  summed minutes now carry resumed pause spans while their record counts do not move.
+  its meaning, and its pause arithmetic, while Task 0091 supersedes its owner-only guard so any
+  authenticated caregiver in the baby's household may pause or resume the timer. The starter's
+  device persists remotely changed pause state and mirrors it to its Live Activity. The cost taken
+  deliberately is that tummy time and pumping summed minutes now carry resumed pause spans while
+  their record counts do not move.
 - **Nap slots are chronological and earn their row twice over**: a nap slot is the nth nap started
   within a sleep-day, counted forward from the start of the day, so a skipped nap shifts every later
   nap of that day up a slot. Each slot's averages divide by that slot's own occurrence count, never
@@ -178,8 +181,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   deletion, and it governs "Started earlier" identically. The range is shown as the picker's own bounds
   on both platforms rather than clamped after the fact. The write is a direct `UPDATE` on
   `active_timers.started_at` under a database trigger that fires only when that column changes, because
-  offline replay writes allowlisted tables generically and would bypass an RPC. The row policy stays
-  `USING (started_by = auth.uid())`, the dashboard card keeps its read-only gate, and no policy widens.
+  offline replay writes allowlisted tables generically and would bypass an RPC. The row policy is
+  household-scoped for timer control after Task 0091, but the database identity trigger independently
+  preserves this starter-only `started_at` rule and prevents changes to `baby_id`, `activity_type`, or
+  `started_by`. Household timers are interactive on the dashboard while starter attribution remains
+  visible.
 - **Hand-entered activities are clock times with a derived length**: both the manual add and the saved-
   record edit paths take a start time and an end time for every type that has a duration — sleep,
   breastfeeding, pumping, and tummy time — with duration a read-only readout and no minutes field or
