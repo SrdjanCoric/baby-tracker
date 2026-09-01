@@ -36,6 +36,20 @@ Superseded design (do not resurrect, from the pre-2026 version of the plan file)
 - [ ] [confirm-db] Run the new migration against the shared Supabase project.
 - [x] [decision] Mixed-version rollout: accept the transient duplicate risk from overlapping stops involving an older app during rollout. Do not add a `started_at` compatibility query: it is race-prone, can suppress legitimate records, adds a network dependency to stopping, and would revive the superseded duplicate-guard design (owner approved 2026-09-01).
 
+## Review decisions
+
+- skipped (minor): TR-11 — Remote stop omits own-stop duration and ordering guards — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-12 — Legacy queued release can delete a newer timer — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-13 — Baby switching can clear the newly selected baby's timer — owner limited this remediation pass to TR-1 through TR-10.
+- accepted (security): TR-14 — Household timer data can carry forged pause timestamps — owner accepted the risk for this PR and limited remediation to TR-1 through TR-10.
+- skipped (minor): TR-15 — Offline replay convergence lacks integration coverage — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-16 — E2E test asserts runner source text — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-17 — E2E duplicate check compares primary-key counts — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-18 — Remote pause test omits payload assertions — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-19 — Timer service failure logs omit acting caregiver — owner limited this remediation pass to TR-1 through TR-10.
+- skipped (minor): TR-20 — Maestro runner can close its log descriptor twice — owner limited this remediation pass to TR-1 through TR-10.
+- accepted (security): TR-21 — Authenticated users can self-assign a known household UUID — owner accepted the risk for this PR; deferred Task 0055 continues to track the pre-existing membership trust-boundary fix.
+
 ## Acceptance criteria
 
 - [ ] SQL authorization suite passes: household member allowed, outsider denied, unauthenticated denied, for release and pause.
