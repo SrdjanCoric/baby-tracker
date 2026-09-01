@@ -56,6 +56,7 @@ import { type TimerLockReconciliationState } from "@/services/timer-lock-reconci
 import {
   editRunningTimerStartTime,
   restoreTimerLifecycle,
+  syncObservedOwnedTimerLock,
   stopRemoteTimerLifecycle,
 } from "@/services/timer-lifecycle";
 import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
@@ -473,79 +474,52 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   }, [loadPumpings]);
 
   useEffect(() => {
-    const activeTimer = state.activeTimer;
-    if (!selectedBaby || !activeTimer || activeTimer.lockState !== "owned") {
-      observedOwnedTimerRef.current = null;
-      return;
-    }
-    if (!user?.id) return;
-    if (activeTimerLocksLoading) return;
-    const lock = activeTimerLocks.find(
-      candidate =>
-        candidate.babyId === selectedBaby.id && candidate.activityType === "pumping"
-    );
-    const serverTimerInstanceId = lock?.timerData?.timerInstanceId;
-    const matches =
-      lock !== undefined &&
-      lock.startedBy === user?.id &&
-      (typeof serverTimerInstanceId === "string"
-        ? serverTimerInstanceId === activeTimer.timerInstanceId
-        : new Date(lock.startedAt).getTime() === activeTimer.startTime.getTime());
-    if (matches && lock) {
-      observedOwnedTimerRef.current = activeTimer.timerInstanceId;
-      const isPaused = lock.timerData?.isPaused === true;
-      const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
-        ? lock.timerData.totalPausedMs
-        : 0;
-      const pausedAt = isPaused && typeof lock.timerData?.pausedAt === "string"
-        ? new Date(lock.timerData.pausedAt)
-        : undefined;
-      if (
-        activeTimer.isPaused !== isPaused ||
-        activeTimer.totalPausedMs !== totalPausedMs ||
-        activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
-      ) {
+    const babyId = selectedBaby?.id;
+    void syncObservedOwnedTimerLock({
+      activityType: "pumping",
+      babyId,
+      userId: user?.id,
+      activeTimer: state.activeTimer,
+      locks: activeTimerLocks,
+      locksLoading: activeTimerLocksLoading,
+      observedTimerInstanceIdRef: observedOwnedTimerRef,
+      onPauseChange: async ({ isPaused, pausedAt, totalPausedMs, accumulatedSeconds }, activeTimer) => {
+        if (!babyId) return;
         dispatch({
           type: "SYNC_TIMER_PAUSE",
           payload: { isPaused, pausedAt, totalPausedMs },
         });
-        const accumulatedSeconds = typeof lock.timerData?.accumulatedSeconds === "number"
-          ? lock.timerData.accumulatedSeconds
-          : Math.max(0, Math.floor(((pausedAt ?? new Date()).getTime() - activeTimer.startTime.getTime()) / 1000));
-        void (async () => {
-          if (liveActivityIdRef.current) {
-            if (isPaused) {
-              await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-            } else {
-              await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-            }
+        if (liveActivityIdRef.current) {
+          if (isPaused) {
+            await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
+          } else {
+            await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
           }
-          await PumpingStorageService.setActiveTimer(selectedBaby.id, {
-            timerInstanceId: activeTimer.timerInstanceId,
-            activityId: activeTimer.activityId,
-            startedAt: activeTimer.startTime.toISOString(),
-            side: activeTimer.side,
-            liveActivityId: liveActivityIdRef.current ?? undefined,
-            isPaused,
-            pausedAt: pausedAt?.toISOString(),
-            totalPausedMs,
-            lockState: activeTimer.lockState,
-          });
-        })();
-      }
-    } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
-      observedOwnedTimerRef.current = null;
-      stopVersionRef.current++;
-      void (async () => {
+        }
+        await PumpingStorageService.setActiveTimer(babyId, {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
+          side: activeTimer.side,
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused,
+          pausedAt: pausedAt?.toISOString(),
+          totalPausedMs,
+          lockState: activeTimer.lockState,
+        });
+      },
+      onVanished: async () => {
+        if (!babyId) return;
+        stopVersionRef.current++;
         const endedById = liveActivityIdRef.current
           ? await endTimerLiveActivity(liveActivityIdRef.current)
           : false;
         if (!endedById) await endLiveActivityByType("pumping");
         liveActivityIdRef.current = null;
         dispatch({ type: "STOP_TIMER" });
-        await PumpingStorageService.clearActiveTimer(selectedBaby.id);
-      })();
-    }
+        await PumpingStorageService.clearActiveTimer(babyId);
+      },
+    });
   }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
 
   useEffect(

@@ -37,7 +37,7 @@ import {
   type TimerIdentity,
 } from "@/services/timer-completion-service";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
-import { editRunningTimerStartTime, restoreTimerLifecycle, stopRemoteTimerLifecycle } from "@/services/timer-lifecycle";
+import { editRunningTimerStartTime, restoreTimerLifecycle, stopRemoteTimerLifecycle, syncObservedOwnedTimerLock } from "@/services/timer-lifecycle";
 import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
 import type { ActivityRangeLoadOptions, ActivityRangeStatus, UtcActivityRange } from "@/services/activity-range-loader";
@@ -492,79 +492,52 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   }, [loadTummyTimes]);
 
   useEffect(() => {
-    const activeTimer = state.activeTimer;
-    if (!selectedBaby || !activeTimer || activeTimer.lockState !== "owned") {
-      observedOwnedTimerRef.current = null;
-      return;
-    }
-    if (!user?.id) return;
-    if (activeTimerLocksLoading) return;
-    const lock = activeTimerLocks.find(
-      candidate =>
-        candidate.babyId === selectedBaby.id && candidate.activityType === "tummy_time"
-    );
-    const serverTimerInstanceId = lock?.timerData?.timerInstanceId;
-    const matches =
-      lock !== undefined &&
-      lock.startedBy === user?.id &&
-      (typeof serverTimerInstanceId === "string"
-        ? serverTimerInstanceId === activeTimer.timerInstanceId
-        : new Date(lock.startedAt).getTime() === activeTimer.startTime.getTime());
-    if (matches && lock) {
-      observedOwnedTimerRef.current = activeTimer.timerInstanceId;
-      const isPaused = lock.timerData?.isPaused === true;
-      const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
-        ? lock.timerData.totalPausedMs
-        : 0;
-      const pausedAt = isPaused && typeof lock.timerData?.pausedAt === "string"
-        ? new Date(lock.timerData.pausedAt)
-        : undefined;
-      if (
-        activeTimer.isPaused !== isPaused ||
-        activeTimer.totalPausedMs !== totalPausedMs ||
-        activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
-      ) {
+    const babyId = selectedBaby?.id;
+    void syncObservedOwnedTimerLock({
+      activityType: "tummy_time",
+      babyId,
+      userId,
+      activeTimer: state.activeTimer,
+      locks: activeTimerLocks,
+      locksLoading: activeTimerLocksLoading,
+      observedTimerInstanceIdRef: observedOwnedTimerRef,
+      onPauseChange: async ({ isPaused, pausedAt, totalPausedMs, accumulatedSeconds }, activeTimer) => {
+        if (!babyId) return;
         dispatch({
           type: "SYNC_TIMER_PAUSE",
           payload: { isPaused, pausedAt, totalPausedMs },
         });
-        const accumulatedSeconds = typeof lock.timerData?.accumulatedSeconds === "number"
-          ? lock.timerData.accumulatedSeconds
-          : Math.max(0, Math.floor(((pausedAt ?? new Date()).getTime() - activeTimer.startTime.getTime()) / 1000));
-        void (async () => {
-          if (liveActivityIdRef.current) {
-            if (isPaused) {
-              await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-            } else {
-              await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-            }
+        if (liveActivityIdRef.current) {
+          if (isPaused) {
+            await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
+          } else {
+            await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
           }
-          await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
-            timerInstanceId: activeTimer.timerInstanceId,
-            activityId: activeTimer.activityId,
-            startedAt: activeTimer.startTime.toISOString(),
-            liveActivityId: liveActivityIdRef.current ?? undefined,
-            isPaused,
-            pausedAt: pausedAt?.toISOString(),
-            totalPausedMs,
-            lockState: activeTimer.lockState,
-          });
-        })();
-      }
-    } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
-      observedOwnedTimerRef.current = null;
-      stopVersionRef.current++;
-      void (async () => {
+        }
+        await TummyTimeStorageService.setActiveTimer(babyId, {
+          timerInstanceId: activeTimer.timerInstanceId,
+          activityId: activeTimer.activityId,
+          startedAt: activeTimer.startTime.toISOString(),
+          liveActivityId: liveActivityIdRef.current ?? undefined,
+          isPaused,
+          pausedAt: pausedAt?.toISOString(),
+          totalPausedMs,
+          lockState: activeTimer.lockState,
+        });
+      },
+      onVanished: async () => {
+        if (!babyId) return;
+        stopVersionRef.current++;
         const endedById = liveActivityIdRef.current
           ? await endTimerLiveActivity(liveActivityIdRef.current)
           : false;
         if (!endedById) await endLiveActivityByType("tummyTime");
         liveActivityIdRef.current = null;
         dispatch({ type: "STOP_TIMER" });
-        await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
-      })();
-    }
-  }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
+        await TummyTimeStorageService.clearActiveTimer(babyId);
+      },
+    });
+  }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, userId]);
 
   useEffect(
     () => registerForegroundRefreshLoader?.("tummy_time_sessions", () => loadTummyTimes(true)),

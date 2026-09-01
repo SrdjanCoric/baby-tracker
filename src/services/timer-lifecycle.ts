@@ -178,6 +178,98 @@ export interface StopRemoteTimerLifecycleOptions<
   refreshLocks?(): Promise<unknown> | unknown;
 }
 
+export interface ObservedOwnedTimer {
+  timerInstanceId: string;
+  startTime: Date;
+  lockState: TimerLockReconciliationState;
+  isPaused: boolean;
+  totalPausedMs: number;
+  pausedAt?: Date;
+}
+
+export interface ObservedTimerPauseChange {
+  isPaused: boolean;
+  totalPausedMs: number;
+  pausedAt?: Date;
+  accumulatedSeconds: number;
+}
+
+export interface SyncObservedOwnedTimerLockOptions<TActiveTimer extends ObservedOwnedTimer> {
+  activityType: TimerActivityType;
+  babyId?: string;
+  userId?: string;
+  activeTimer: TActiveTimer | null;
+  locks: readonly ActiveTimerLock[];
+  locksLoading: boolean;
+  observedTimerInstanceIdRef: { current: string | null };
+  onPauseChange(change: ObservedTimerPauseChange, activeTimer: TActiveTimer): Promise<unknown> | unknown;
+  onVanished(activeTimer: TActiveTimer): Promise<unknown> | unknown;
+}
+
+function matchesOwnedTimerLock(
+  lock: ActiveTimerLock | undefined,
+  userId: string,
+  timerInstanceId: string,
+  startedAt: Date
+): boolean {
+  if (!lock || lock.startedBy !== userId) return false;
+  const serverTimerInstanceId = lock.timerData?.timerInstanceId;
+  return typeof serverTimerInstanceId === "string"
+    ? serverTimerInstanceId === timerInstanceId
+    : new Date(lock.startedAt).getTime() === startedAt.getTime();
+}
+
+export async function syncObservedOwnedTimerLock<TActiveTimer extends ObservedOwnedTimer>({
+  activityType,
+  babyId,
+  userId,
+  activeTimer,
+  locks,
+  locksLoading,
+  observedTimerInstanceIdRef,
+  onPauseChange,
+  onVanished,
+}: SyncObservedOwnedTimerLockOptions<TActiveTimer>): Promise<void> {
+  if (!babyId || !activeTimer || activeTimer.lockState !== "owned") {
+    observedTimerInstanceIdRef.current = null;
+    return;
+  }
+  if (!userId || locksLoading) return;
+
+  const lock = locks.find(
+    candidate => candidate.babyId === babyId && candidate.activityType === activityType
+  );
+  if (lock && matchesOwnedTimerLock(lock, userId, activeTimer.timerInstanceId, activeTimer.startTime)) {
+    observedTimerInstanceIdRef.current = activeTimer.timerInstanceId;
+    const isPaused = lock.timerData?.isPaused === true;
+    const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
+      ? lock.timerData.totalPausedMs
+      : 0;
+    const pausedAt = isPaused && typeof lock.timerData?.pausedAt === "string"
+      ? new Date(lock.timerData.pausedAt)
+      : undefined;
+    if (
+      activeTimer.isPaused !== isPaused ||
+      activeTimer.totalPausedMs !== totalPausedMs ||
+      activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
+    ) {
+      const accumulatedSeconds = typeof lock.timerData?.accumulatedSeconds === "number"
+        ? lock.timerData.accumulatedSeconds
+        : Math.max(0, Math.floor(((pausedAt ?? new Date()).getTime() - activeTimer.startTime.getTime()) / 1000));
+      await onPauseChange(
+        { isPaused, totalPausedMs, pausedAt, accumulatedSeconds },
+        activeTimer
+      );
+    }
+    return;
+  }
+
+  if (observedTimerInstanceIdRef.current === activeTimer.timerInstanceId) {
+    observedTimerInstanceIdRef.current = null;
+    await onVanished(activeTimer);
+  }
+}
+
 export function calculateTimerDurationSeconds(
   startedAt: Date,
   endedAt: Date,
@@ -550,13 +642,12 @@ export async function restoreTimerLifecycle<
         ? findActiveTimerLock(snapshot, adapter.activityType)
         : null;
       if (snapshot) {
-        const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
-        const sameServerTimer =
-          lock?.startedBy === user.id &&
-          (typeof lockTimerInstanceId === "string"
-            ? lockTimerInstanceId === identity.timerInstanceId
-            : new Date(lock.startedAt).getTime() ===
-              new Date(activeTimer.startedAt).getTime());
+        const sameServerTimer = matchesOwnedTimerLock(
+          lock ?? undefined,
+          user.id,
+          identity.timerInstanceId,
+          new Date(activeTimer.startedAt)
+        );
         if (!sameServerTimer) {
           await endAdapterLiveActivity(
             activeTimer.liveActivityId ?? liveActivityIdRef.current
