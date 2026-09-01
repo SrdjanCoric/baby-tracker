@@ -251,7 +251,7 @@ const CompactActivityRowInner = ({
 
           <View
             style={{
-              width: isActive && onPausePress ? 58 : 26,
+              width: (isActive || isLockedByOther) && onPausePress ? 90 : 26,
               height: 26,
               flexShrink: 0,
             }}
@@ -263,24 +263,7 @@ const CompactActivityRowInner = ({
         pointerEvents="box-none"
         style={{ position: "absolute", right: 12, top: 10 }}
       >
-        {isLockedByOther ? (
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 13,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: buttonBgColor,
-            }}
-          >
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
-              {lockedByName?.trim().charAt(0).toUpperCase() || "!"}
-            </Text>
-          </View>
-        ) : isStopping ? (
+        {isStopping ? (
           <Pressable
             disabled
             style={{
@@ -301,6 +284,86 @@ const CompactActivityRowInner = ({
               …
             </Text>
           </Pressable>
+        ) : isLockedByOther && onPausePress ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 13,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: buttonBgColor,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
+                {lockedByName?.trim().charAt(0).toUpperCase() || "!"}
+              </Text>
+            </View>
+            <Pressable
+              onPress={onPausePress}
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 13,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isPausedByOther ? buttonBgColor : "transparent",
+                borderWidth: isPausedByOther ? 0 : 2,
+                borderColor: buttonBgColor,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isPausedByOther ? t("common.resume") : t("common.pause")
+              }
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: isPausedByOther ? "#FFFFFF" : buttonBgColor,
+                }}
+              >
+                {isPausedByOther ? "▶" : "⏸"}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={onActionPress}
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 13,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: buttonBgColor,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.stop")}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
+                ⏹
+              </Text>
+            </Pressable>
+          </View>
+        ) : isLockedByOther ? (
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: buttonBgColor,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
+              {lockedByName?.trim().charAt(0).toUpperCase() || "!"}
+            </Text>
+          </View>
         ) : isActive && onPausePress ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Pressable

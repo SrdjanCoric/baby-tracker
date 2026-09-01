@@ -31,6 +31,8 @@ const mockRouterPush = jest.fn();
 const mockRouter = { push: mockRouterPush };
 const mockRemoveLock = jest.fn();
 const mockRefreshLocks = jest.fn().mockResolvedValue(undefined);
+const mockGetLockForActivity = jest.fn();
+let mockActiveTimerLocks: Array<Record<string, unknown>> = [];
 let mockUuidCounter = 0;
 
 let mockSelectedBaby = { id: "baby-1", name: "Baby One" };
@@ -87,6 +89,9 @@ jest.mock("@/contexts/sync-context", () => ({
 
 jest.mock("@/contexts/active-timers-context", () => ({
   useActiveTimers: () => ({
+    locks: mockActiveTimerLocks,
+    isLoading: false,
+    getLockForActivity: mockGetLockForActivity,
     removeLock: mockRemoveLock,
     refreshLocks: mockRefreshLocks,
   }),
@@ -205,6 +210,7 @@ jest.mock("@/services/activity-goal-service", () => ({
 
 const startedAt = "2026-07-15T08:00:00.000Z";
 const stoppedAt = "2026-07-15T08:05:00.000Z";
+const derivedActivityId = "bbbbbbbb-bbbb-5bbb-bbbb-bbbbbbbbbbbb";
 
 let feedingState: ReturnType<typeof useFeeding> | null = null;
 let sleepState: ReturnType<typeof useSleep> | null = null;
@@ -314,6 +320,8 @@ describe("external timer stops through production providers", () => {
     mockAuthUser = { id: "user-1", householdId: "household-1" };
     mockExtensionStorageData.clear();
     mockRemoteSubscribers.clear();
+    mockActiveTimerLocks = [];
+    mockGetLockForActivity.mockReset();
     await AsyncStorage.clear();
     setStorageUserId("user-1");
 
@@ -412,6 +420,221 @@ describe("external timer stops through production providers", () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it("lets a household caregiver stop every remote timer through provider APIs", async () => {
+    const timerDataByType = {
+      feeding: { timerInstanceId: "remote-feeding", side: "left", type: "breast" },
+      sleep: { timerInstanceId: "remote-sleep", type: "nap" },
+      pumping: { timerInstanceId: "remote-pumping", side: "both" },
+      tummy_time: { timerInstanceId: "remote-tummy" },
+    } as const;
+    mockGetLockForActivity.mockImplementation((babyId: string, activityType: keyof typeof timerDataByType) => ({
+      id: `lock-${activityType}`,
+      babyId,
+      activityType,
+      startedBy: "starter-2",
+      startedByName: "Other Caregiver",
+      startedAt,
+      timerData: timerDataByType[activityType],
+    }));
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+
+    await act(async () => {
+      await feedingState!.stopRemoteBreastfeeding(new Date(stoppedAt));
+      await sleepState!.stopRemoteSleep(new Date(stoppedAt));
+      await pumpingState!.stopRemotePumping(new Date(stoppedAt));
+      await tummyTimeState!.stopRemoteTummyTime(new Date(stoppedAt));
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    for (const createRecord of [
+      activitySync.createFeedingInDatabase,
+      activitySync.createSleepInDatabase,
+      activitySync.createPumpingInDatabase,
+      activitySync.createTummyTimeInDatabase,
+    ]) {
+      expect(createRecord).toHaveBeenCalledWith(
+        expect.objectContaining({
+          babyId: "baby-1",
+          startedAt: new Date(startedAt),
+          endedAt: new Date(stoppedAt),
+          durationSeconds: 300,
+        }),
+        "user-1"
+      );
+    }
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+    };
+    expect(activeTimers.releaseTimerLock.mock.calls.map(call => call[1])).toEqual([
+      "feeding",
+      "sleep",
+      "pumping",
+      "tummy_time",
+    ]);
+  });
+
+  it("clears every starter timer without saving after its observed lock disappears", async () => {
+    const view = render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    mockActiveTimerLocks = [
+      ["feeding", feedingState!.activeTimer!.timerInstanceId],
+      ["sleep", sleepState!.activeTimer!.timerInstanceId],
+      ["pumping", pumpingState!.activeTimer!.timerInstanceId],
+      ["tummy_time", tummyTimeState!.activeTimer!.timerInstanceId],
+    ].map(([activityType, timerInstanceId], index) => ({
+      id: `lock-${index}`,
+      babyId: "baby-1",
+      activityType,
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt,
+      timerData: { timerInstanceId },
+    }));
+    view.rerender(<RealTimerProviders />);
+    await act(async () => undefined);
+
+    mockActiveTimerLocks = [];
+    view.rerender(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.activeTimer,
+        sleepState?.activeTimer,
+        pumpingState?.activeTimer,
+        tummyTimeState?.activeTimer,
+      ]).toEqual([null, null, null, null])
+    );
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+      createPumpingInDatabase: jest.Mock;
+      createTummyTimeInDatabase: jest.Mock;
+    };
+    expect(activitySync.createFeedingInDatabase).not.toHaveBeenCalled();
+    expect(activitySync.createSleepInDatabase).not.toHaveBeenCalled();
+    expect(activitySync.createPumpingInDatabase).not.toHaveBeenCalled();
+    expect(activitySync.createTummyTimeInDatabase).not.toHaveBeenCalled();
+  });
+
+  it("reflects household pause and resume updates on every starter timer", async () => {
+    const view = render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    const lockInputs = [
+      ["feeding", feedingState!.activeTimer!.timerInstanceId],
+      ["sleep", sleepState!.activeTimer!.timerInstanceId],
+      ["pumping", pumpingState!.activeTimer!.timerInstanceId],
+      ["tummy_time", tummyTimeState!.activeTimer!.timerInstanceId],
+    ] as const;
+    mockActiveTimerLocks = lockInputs.map(([activityType, timerInstanceId], index) => ({
+      id: `lock-${index}`,
+      babyId: "baby-1",
+      activityType,
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt,
+      timerData: { timerInstanceId, isPaused: false, totalPausedMs: 0 },
+    }));
+    view.rerender(<RealTimerProviders />);
+    await act(async () => undefined);
+
+    const pausedAt = "2026-07-15T08:02:00.000Z";
+    mockActiveTimerLocks = mockActiveTimerLocks.map(lock => ({
+      ...lock,
+      timerData: {
+        ...(lock.timerData as Record<string, unknown>),
+        isPaused: true,
+        pausedAt,
+        totalPausedMs: 0,
+      },
+    }));
+    view.rerender(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.activeTimer?.isPaused,
+        sleepState?.activeTimer?.isPaused,
+        pumpingState?.activeTimer?.isPaused,
+        tummyTimeState?.activeTimer?.isPaused,
+      ]).toEqual([true, true, true, true])
+    );
+    expect([
+      feedingState?.activeTimer?.pausedAt,
+      sleepState?.activeTimer?.pausedAt,
+      pumpingState?.activeTimer?.pausedAt,
+      tummyTimeState?.activeTimer?.pausedAt,
+    ]).toEqual(Array(4).fill(new Date(pausedAt)));
+
+    mockActiveTimerLocks = mockActiveTimerLocks.map(lock => ({
+      ...lock,
+      timerData: {
+        ...(lock.timerData as Record<string, unknown>),
+        isPaused: false,
+        totalPausedMs: 7_000,
+      },
+    }));
+    view.rerender(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.activeTimer,
+        sleepState?.activeTimer,
+        pumpingState?.activeTimer,
+        tummyTimeState?.activeTimer,
+      ]).toEqual([
+        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+      ])
+    );
+    expect([
+      feedingState?.activeTimer?.pausedAt,
+      sleepState?.activeTimer?.pausedAt,
+      pumpingState?.activeTimer?.pausedAt,
+      tummyTimeState?.activeTimer?.pausedAt,
+    ]).toEqual([undefined, undefined, undefined, undefined]);
   });
 
   it("starts and edits all four account-less timers locally without server writes or queued edits", async () => {
@@ -1205,7 +1428,7 @@ describe("external timer stops through production providers", () => {
     });
     await waitFor(() => expect(feedingState?.feedings).toHaveLength(1));
 
-    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([identity.activityId]);
+    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([derivedActivityId]);
     await expect(FeedingStorageService.getAllFeedings("baby-1")).resolves.toEqual([]);
 
     localReturnGate.resolve();
@@ -1213,9 +1436,9 @@ describe("external timer stops through production providers", () => {
       await stopPromise;
     });
 
-    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([identity.activityId]);
+    expect(feedingState?.feedings.map(({ id }) => id)).toEqual([derivedActivityId]);
     await expect(FeedingStorageService.getAllFeedings("baby-1")).resolves.toEqual([
-      expect.objectContaining({ id: identity.activityId }),
+      expect.objectContaining({ id: derivedActivityId }),
     ]);
   });
 
@@ -2654,7 +2877,7 @@ describe("external timer stops through production providers", () => {
     };
     expect(activitySync.createPumpingInDatabase).toHaveBeenCalledWith(
       {
-        id: "short-pumping-activity",
+        id: derivedActivityId,
         babyId: "baby-1",
         side: "left",
         startedAt: new Date(startedAt),
@@ -2664,7 +2887,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(savedPumping).toEqual(
       expect.objectContaining({
-        id: "short-pumping-activity",
+        id: derivedActivityId,
         volumeMl: 120,
         durationSeconds: undefined,
       })
@@ -2948,7 +3171,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: "feeding-loser",
+        id: derivedActivityId,
         babyId: "baby-1",
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
@@ -2961,7 +3184,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(feedingState?.activeTimer).toBeNull();
     expect(feedingState?.feedings).toEqual([
-      expect.objectContaining({ id: "feeding-loser", endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
     ]);
     await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
     expect(alertSpy).toHaveBeenCalledWith(
@@ -2999,7 +3222,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createSleepInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: "sleep-loser",
+        id: derivedActivityId,
         type: "nap",
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
@@ -3009,7 +3232,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(sleepState?.activeTimer).toBeNull();
     expect(sleepState?.sleeps).toEqual([
-      expect.objectContaining({ id: "sleep-loser", endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
     ]);
     await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
     expect(alertSpy).toHaveBeenCalledWith(
@@ -3046,7 +3269,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createPumpingInDatabase).toHaveBeenCalledTimes(1));
     const input = activitySync.createPumpingInDatabase.mock.calls[0][0] as CreatePumpingInput;
     expect(input).toEqual(expect.objectContaining({
-      id: "pumping-loser",
+      id: derivedActivityId,
       endedAt: new Date(stoppedAt),
       durationSeconds: 300,
       side: "both",
@@ -3054,7 +3277,7 @@ describe("external timer stops through production providers", () => {
     expect(input.volumeMl).toBeUndefined();
     expect(pumpingState?.activeTimer).toBeNull();
     expect(pumpingState?.pumpings).toEqual([
-      expect.objectContaining({ id: "pumping-loser", volumeMl: undefined })
+      expect.objectContaining({ id: derivedActivityId, volumeMl: undefined })
     ]);
     await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
@@ -3086,7 +3309,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: "tummy-loser",
+        id: derivedActivityId,
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
@@ -3094,7 +3317,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(tummyTimeState?.activeTimer).toBeNull();
     expect(tummyTimeState?.tummyTimes).toEqual([
-      expect.objectContaining({ id: "tummy-loser", endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
     ]);
     await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });

@@ -56,6 +56,7 @@ import { type TimerLockReconciliationState } from "@/services/timer-lock-reconci
 import {
   editRunningTimerStartTime,
   restoreTimerLifecycle,
+  stopRemoteTimerLifecycle,
 } from "@/services/timer-lifecycle";
 import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
 import { useActivityRangeLoader } from "@/hooks/useActivityRangeLoader";
@@ -99,6 +100,10 @@ export type PumpingAction =
   | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
   | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
   | { type: "RESUME_TIMER" }
+  | {
+      type: "SYNC_TIMER_PAUSE";
+      payload: { isPaused: boolean; pausedAt?: Date; totalPausedMs: number };
+    }
   | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
   | { type: "EDIT_TIMER_START"; payload: Date }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
@@ -190,6 +195,18 @@ export function pumpingReducer(
       };
     }
 
+    case "SYNC_TIMER_PAUSE":
+      if (!state.activeTimer) return state;
+      return {
+        ...state,
+        activeTimer: {
+          ...state.activeTimer,
+          isPaused: action.payload.isPaused,
+          pausedAt: action.payload.isPaused ? action.payload.pausedAt : undefined,
+          totalPausedMs: action.payload.totalPausedMs,
+        },
+      };
+
     case "RESTORE_TIMER":
       return {
         ...state,
@@ -239,6 +256,9 @@ interface PumpingContextValue extends PumpingState {
     volumeMl: number,
     requestedEndTime?: Date
   ) => Promise<StoredPumpingEntry | null>;
+  stopRemotePumping: (
+    requestedEndTime?: Date
+  ) => Promise<StoredPumpingEntry | null>;
   editPumpingStartTime: (startedAt: Date) => Promise<void>;
   changePumpingSide: (side: BreastSide) => void;
   pausePumping: (requestedPauseTime?: Date) => Promise<void>;
@@ -270,11 +290,17 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
   const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const { user } = useAuth();
-  const { refreshLocks } = useActiveTimers();
+  const {
+    locks: activeTimerLocks = [],
+    isLoading: activeTimerLocksLoading = true,
+    getLockForActivity,
+    refreshLocks,
+  } = useActiveTimers();
   const liveActivityIdRef = useRef<string | null>(null);
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const observedOwnedTimerRef = useRef<string | null>(null);
   const {
     babyBinding,
     beginBabyBinding,
@@ -446,6 +472,51 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     void loadPumpings();
   }, [loadPumpings]);
 
+  useEffect(() => {
+    const activeTimer = state.activeTimer;
+    if (!selectedBaby || !activeTimer || activeTimer.lockState !== "owned") {
+      observedOwnedTimerRef.current = null;
+      return;
+    }
+    if (activeTimerLocksLoading) return;
+    const lock = activeTimerLocks.find(
+      candidate =>
+        candidate.babyId === selectedBaby.id && candidate.activityType === "pumping"
+    );
+    const serverTimerInstanceId = lock?.timerData?.timerInstanceId;
+    const matches =
+      lock !== undefined &&
+      lock.startedBy === user?.id &&
+      (typeof serverTimerInstanceId === "string"
+        ? serverTimerInstanceId === activeTimer.timerInstanceId
+        : new Date(lock.startedAt).getTime() === activeTimer.startTime.getTime());
+    if (matches && lock) {
+      observedOwnedTimerRef.current = activeTimer.timerInstanceId;
+      const isPaused = lock.timerData?.isPaused === true;
+      const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
+        ? lock.timerData.totalPausedMs
+        : 0;
+      const pausedAt = isPaused && typeof lock.timerData?.pausedAt === "string"
+        ? new Date(lock.timerData.pausedAt)
+        : undefined;
+      if (
+        activeTimer.isPaused !== isPaused ||
+        activeTimer.totalPausedMs !== totalPausedMs ||
+        activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
+      ) {
+        dispatch({
+          type: "SYNC_TIMER_PAUSE",
+          payload: { isPaused, pausedAt, totalPausedMs },
+        });
+      }
+    } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
+      observedOwnedTimerRef.current = null;
+      stopVersionRef.current++;
+      dispatch({ type: "STOP_TIMER" });
+      void PumpingStorageService.clearActiveTimer(selectedBaby.id);
+    }
+  }, [activeTimerLocks, activeTimerLocksLoading, selectedBaby, state.activeTimer, user?.id]);
+
   useEffect(
     () => registerForegroundRefreshLoader?.("pumping_sessions", () => loadPumpings(true)),
     [loadPumpings, registerForegroundRefreshLoader]
@@ -460,7 +531,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       if (!selectedBaby) return { success: false };
 
       const startTime = requestedStartTime ?? new Date();
-      const identity = requestedIdentity ?? createTimerIdentity();
+      const identity = requestedIdentity ?? (await createTimerIdentity());
       let lockState: TimerLockReconciliationState = user?.id
         ? "offline"
         : "accountless";
@@ -659,6 +730,38 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [selectedBaby, state.activeTimer, user?.householdId, user?.id]
+  );
+
+  const stopRemotePumping = useCallback(
+    async (requestedEndTime?: Date): Promise<StoredPumpingEntry | null> => {
+      if (!selectedBaby || !user?.id || !user.householdId) return null;
+      const lock = getLockForActivity(selectedBaby.id, "pumping");
+      if (!lock || lock.startedBy === user.id || isStoppingRef.current) return null;
+      isStoppingRef.current = true;
+      setIsStopping(true);
+      try {
+        const adapter = createPumpingTimerAdapter({
+          babyId: selectedBaby.id,
+          dispatchRestoreTimer: restoredTimer =>
+            dispatch({ type: "RESTORE_TIMER", payload: restoredTimer }),
+        });
+        return await stopRemoteTimerLifecycle({
+          adapter,
+          babyId: selectedBaby.id,
+          userId: user.id,
+          lock,
+          requestedStopTime: requestedEndTime,
+          persistRecord: input => createPumpingInDatabase(input, user.id),
+          dispatchAddRecord: record =>
+            dispatch({ type: "ADD_PUMPING", payload: record }),
+          refreshLocks,
+        });
+      } finally {
+        isStoppingRef.current = false;
+        setIsStopping(false);
+      }
+    },
+    [getLockForActivity, refreshLocks, selectedBaby, user?.householdId, user?.id]
   );
 
   const changePumpingSide = useCallback(
@@ -958,6 +1061,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      stopRemotePumping,
       editPumpingStartTime,
       changePumpingSide,
       pausePumping,
@@ -978,6 +1082,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      stopRemotePumping,
       editPumpingStartTime,
       changePumpingSide,
       pausePumping,

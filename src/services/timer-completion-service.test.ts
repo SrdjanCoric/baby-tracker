@@ -74,4 +74,31 @@ describe("timer completion service", () => {
       status: "completed",
     });
   });
+
+  it("converges independent stops of one timer instance on one activity id", async () => {
+    const first = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T08:00:00.000Z",
+      {
+        timerInstanceId: "00000000-0000-4000-8000-000000000001",
+        activityId: "00000000-0000-4000-8000-000000000002",
+      },
+      new Date("2026-07-15T08:05:00.000Z")
+    );
+    storage.clear();
+    const independent = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T08:00:00.000Z",
+      {
+        timerInstanceId: "00000000-0000-4000-8000-000000000001",
+        activityId: "00000000-0000-4000-8000-000000000099",
+      },
+      new Date("2026-07-15T08:06:00.000Z")
+    );
+
+    expect(independent.activityId).toBe(first.activityId);
+    expect(first.activityId).not.toBe("00000000-0000-4000-8000-000000000002");
+  });
 });

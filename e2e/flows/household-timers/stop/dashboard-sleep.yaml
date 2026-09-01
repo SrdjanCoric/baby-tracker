@@ -1,0 +1,13 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      id: "sleep-card-${CARD_STATE}"
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: "sleep-card-action"
+- extendedWaitUntil:
+    visible:
+      id: "sleep-card"
+    timeout: 30000

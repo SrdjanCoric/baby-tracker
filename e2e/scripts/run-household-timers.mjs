@@ -4,12 +4,14 @@ import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { clearTimeout, setTimeout } from "node:timers";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import {
   HOUSEHOLD_TIMER_TIMEOUTS,
   SLEEP_ACTIVITY,
+  assertHouseholdTimerStopResult,
   assertLocalEndpoint,
   assertMetroProjectRoot,
   assertRemoteSleepCompletion,
@@ -20,6 +22,7 @@ import {
   getXcodebuildArgs,
   parseRunnerOptions,
   reconcileWatchTimerProbe,
+  runConcurrentTimerStops,
   selectNamedSimulators,
   stopProcessGroup,
   watchTimerFingerprint,
@@ -422,6 +425,65 @@ function maestro(simulator, relativeFlow, variables = {}) {
   );
 }
 
+function maestroAsync(simulator, relativeFlow, variables = {}) {
+  const timestamp = Date.now();
+  const flowName = path.basename(relativeFlow, ".yaml");
+  const simulatorSlug = simulator.name.toLowerCase().replaceAll(" ", "-");
+  const outputDir = path.join(
+    artifactDir,
+    "maestro",
+    `${simulator.name.replaceAll(" ", "-")}-${flowName}-${timestamp}`
+  );
+  const environmentArgs = Object.entries(variables).flatMap(([key, value]) => [
+    "-e",
+    `${key}=${value}`,
+  ]);
+  const logFd = fs.openSync(
+    path.join(artifactDir, `maestro-${simulatorSlug}-${flowName}-${timestamp}.log`),
+    "w"
+  );
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      "maestro",
+      [
+        "--device",
+        simulator.udid,
+        "test",
+        "--test-output-dir",
+        outputDir,
+        ...environmentArgs,
+        path.join(flowDir, relativeFlow),
+      ],
+      {
+        cwd: projectDir,
+        env: {
+          ...process.env,
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: String(
+            HOUSEHOLD_TIMER_TIMEOUTS.maestroDriverStartupMs
+          ),
+        },
+        stdio: ["ignore", logFd, logFd],
+      }
+    );
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error(`${flowName} timed out on ${simulator.name}`));
+    }, HOUSEHOLD_TIMER_TIMEOUTS.maestroCommandMs);
+    child.once("error", error => {
+      clearTimeout(timer);
+      fs.closeSync(logFd);
+      reject(error);
+    });
+    child.once("exit", code => {
+      clearTimeout(timer);
+      fs.closeSync(logFd);
+      if (code === 0) resolve();
+      else reject(new Error(`${flowName} failed on ${simulator.name} with exit code ${code}`));
+    });
+  });
+}
+
 function psql(status, sql, label, options = {}) {
   return capture(
     "psql",
@@ -509,6 +571,46 @@ async function waitForDatabase(
   throw new Error(
     `Database did not converge for ${activity.key}; expected ${expectedActivities}|${expectedLocks}, received ${lastResult}`
   );
+}
+
+async function waitForTimerPause(status, expectedPaused) {
+  const deadline = Date.now() + 60_000;
+  let lastResult = "";
+  while (Date.now() < deadline) {
+    lastResult = psql(
+      status,
+      `
+        SELECT COALESCE((timer_data->>'isPaused')::boolean, false)
+        FROM active_timers
+        WHERE baby_id = '${primaryBabyId}'::uuid
+          AND activity_type = '${SLEEP_ACTIVITY.lockType}';
+      `,
+      `database-poll-sleep-pause-${Date.now()}`,
+      { allowFailure: true }
+    );
+    if (lastResult === String(expectedPaused)) return;
+    await delay(1000);
+  }
+  throw new Error(
+    `Database did not reflect sleep paused=${expectedPaused}; received ${lastResult || "none"}`
+  );
+}
+
+function verifyHouseholdTimerStop(status, expectedCount, expectedLoggedBy) {
+  const result = psql(
+    status,
+    `
+      SELECT
+        count(*) || '|' || count(DISTINCT sleep.id) || '|' ||
+        COALESCE(string_agg(caregiver.email, ',' ORDER BY caregiver.email), '')
+      FROM sleep_sessions AS sleep
+      JOIN users AS caregiver ON caregiver.id = sleep.logged_by
+      WHERE sleep.baby_id = '${primaryBabyId}'::uuid
+        AND sleep.deleted = false;
+    `,
+    `verify-household-stop-${expectedCount}-${Date.now()}`
+  );
+  assertHouseholdTimerStopResult(result, { expectedCount, expectedLoggedBy });
 }
 
 function verifyCaregiverCompletions(status) {
@@ -616,8 +718,24 @@ async function runSleepHandoff(status, owner, member) {
   });
   await waitForDatabase(status, SLEEP_ACTIVITY, 0, 1);
 
-  maestro(owner, "stop/sleep.yaml");
+  maestro(member, "remote/toggle-sleep-pause.yaml", {
+    FROM_LOCK_STATE: "locked-active",
+    TO_LOCK_STATE: "locked-paused",
+  });
+  await waitForTimerPause(status, true);
+  restartApp(owner, "refresh-owner-after-member-pause");
+  maestro(owner, "assert-owned.yaml");
+  maestro(member, "remote/toggle-sleep-pause.yaml", {
+    FROM_LOCK_STATE: "locked-paused",
+    TO_LOCK_STATE: "locked-active",
+  });
+  await waitForTimerPause(status, false);
+
+  maestro(member, "stop/dashboard-sleep.yaml", {
+    CARD_STATE: "locked-active",
+  });
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+  verifyHouseholdTimerStop(status, 1, memberEmail);
   psql(
     status,
     `
@@ -638,16 +756,16 @@ async function runSleepHandoff(status, owner, member) {
       FROM bounds, users AS caregiver
       WHERE sleep.baby_id = '${primaryBabyId}'::uuid
         AND sleep.logged_by = caregiver.id
-        AND caregiver.email = '${ownerEmail}';
+        AND caregiver.email = '${memberEmail}';
     `,
     "prepare-widget-morning-anchor"
   );
-  restartApp(member, "refresh-member-after-owner-stop");
-  maestro(member, "assert-unlocked.yaml", {
+  restartApp(owner, "refresh-owner-after-member-stop");
+  maestro(owner, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
 
-  maestro(member, "start/sleep.yaml");
+  maestro(owner, "start/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 1, 1);
   const ownerAccessToken = await authenticateLocalCaregiver({
     apiUrl: status.API_URL,
@@ -662,13 +780,13 @@ async function runSleepHandoff(status, owner, member) {
     babyId: primaryBabyId,
     timezone: snapshotTimezone,
   });
-  restartApp(owner, "refresh-owner-after-member-start");
-  maestro(owner, "assert-locked.yaml", {
+  restartApp(member, "refresh-member-after-owner-start");
+  maestro(member, "assert-locked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
   });
 
-  maestro(member, "stop/sleep.yaml");
+  maestro(owner, "stop/sleep.yaml");
   await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
   psql(
     status,
@@ -683,7 +801,7 @@ async function runSleepHandoff(status, owner, member) {
       FROM users AS caregiver
       WHERE sleep.baby_id = '${primaryBabyId}'::uuid
         AND sleep.logged_by = caregiver.id
-        AND caregiver.email = '${memberEmail}';
+        AND caregiver.email = '${ownerEmail}';
     `,
     "prepare-widget-completed-nap"
   );
@@ -700,11 +818,11 @@ async function runSleepHandoff(status, owner, member) {
       JOIN users u ON u.id = s.logged_by
       WHERE s.baby_id = '${primaryBabyId}'::uuid
         AND s.deleted = false
-        AND u.email = '${memberEmail}'
+        AND u.email = '${ownerEmail}'
       ORDER BY s.started_at DESC
       LIMIT 1;
     `,
-    "member-completed-sleep"
+    "owner-completed-sleep"
   ));
   const completedWidget = await fetchWidgetActivitySnapshot({
     apiUrl: status.API_URL,
@@ -738,8 +856,36 @@ async function runSleepHandoff(status, owner, member) {
     completedSleep,
   });
   verifyCaregiverCompletions(status);
-  restartApp(owner, "refresh-owner-after-member-stop");
+  restartApp(member, "refresh-member-after-owner-stop");
+  maestro(member, "assert-unlocked.yaml", {
+    ACTIVITY_CARD: SLEEP_ACTIVITY.card,
+  });
+
+  maestro(owner, "start/sleep.yaml");
+  await waitForDatabase(status, SLEEP_ACTIVITY, 2, 1);
+  restartApp(owner, "prepare-owner-simultaneous-stop");
+  maestro(owner, "assert-owned.yaml");
+  restartApp(member, "prepare-member-simultaneous-stop");
+  maestro(member, "assert-locked.yaml", {
+    ACTIVITY_CARD: SLEEP_ACTIVITY.card,
+    LOCK_STATE: "locked-active",
+  });
+  await runConcurrentTimerStops([
+    () => maestroAsync(owner, "stop/dashboard-sleep.yaml", {
+      CARD_STATE: "own-active",
+    }),
+    () => maestroAsync(member, "stop/dashboard-sleep.yaml", {
+      CARD_STATE: "locked-active",
+    }),
+  ]);
+  await waitForDatabase(status, SLEEP_ACTIVITY, 3, 0);
+  verifyHouseholdTimerStop(status, 3);
+  restartApp(owner, "verify-owner-after-simultaneous-stop");
   maestro(owner, "assert-unlocked.yaml", {
+    ACTIVITY_CARD: SLEEP_ACTIVITY.card,
+  });
+  restartApp(member, "verify-member-after-simultaneous-stop");
+  maestro(member, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
 }

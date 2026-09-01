@@ -64,6 +64,7 @@ jest.mock("@/components", () => ({
     isStopping,
     onPress,
     onActionPress,
+    onPausePress,
     progress,
     subtitle,
     timerStartTime,
@@ -76,6 +77,7 @@ jest.mock("@/components", () => ({
     isStopping?: boolean;
     onPress?: () => void;
     onActionPress?: () => void;
+    onPausePress?: () => void;
     progress?: number;
     subtitle?: string;
     timerStartTime?: number;
@@ -95,6 +97,11 @@ jest.mock("@/components", () => ({
         <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
         </Pressable>
+        {onPausePress && (
+          <Pressable testID={`pause-${activity}`} onPress={onPausePress}>
+            <Text>Pause</Text>
+          </Pressable>
+        )}
       </Pressable>
     );
   },
@@ -104,6 +111,7 @@ jest.mock("@/components", () => ({
     isStopping,
     onPress,
     onActionPress,
+    onPausePress,
     timerStartTime,
     timerPausedAt,
   }: {
@@ -112,6 +120,7 @@ jest.mock("@/components", () => ({
     isStopping?: boolean;
     onPress?: () => void;
     onActionPress?: () => void;
+    onPausePress?: () => void;
     timerStartTime?: number;
     timerPausedAt?: number;
   }) => {
@@ -125,6 +134,11 @@ jest.mock("@/components", () => ({
         <Pressable testID={`action-${activity}`} onPress={onActionPress} disabled={isStopping}>
           <Text>+</Text>
         </Pressable>
+        {onPausePress && (
+          <Pressable testID={`pause-${activity}`} onPress={onPausePress}>
+            <Text>Pause</Text>
+          </Pressable>
+        )}
       </Pressable>
     );
   },
@@ -167,6 +181,10 @@ const mockUseDiaper = jest.fn();
 const mockUsePumping = jest.fn();
 const mockUseGrowth = jest.fn();
 const mockUseTummyTime = jest.fn();
+const mockStopRemoteFeeding = jest.fn();
+const mockStopRemoteSleep = jest.fn();
+const mockStopRemotePumping = jest.fn();
+const mockStopRemoteTummyTime = jest.fn();
 
 jest.mock("@/contexts", () => ({
   useFeeding: () => mockUseFeeding(),
@@ -195,6 +213,7 @@ jest.mock("@/contexts", () => ({
   }),
   useAuth: () => ({
     session: { access_token: "test" },
+    user: { id: "user-1" },
   }),
   useUnits: () => ({
     temperatureUnit: "celsius",
@@ -221,6 +240,10 @@ jest.mock("@/contexts", () => ({
       ].map((activity) => ({ activity, visible: true })),
     },
   }),
+}));
+
+jest.mock("@/services/active-timer-service", () => ({
+  toggleTimerPause: jest.fn(),
 }));
 
 jest.mock("@/utils/time", () => ({
@@ -275,6 +298,7 @@ describe("HomeScreen", () => {
       suggestedSide: "left",
       refreshFeedings: jest.fn(),
       stopBreastfeeding: jest.fn(),
+      stopRemoteBreastfeeding: mockStopRemoteFeeding,
       pauseBreastfeeding: jest.fn(),
       resumeBreastfeeding: jest.fn(),
     });
@@ -288,6 +312,7 @@ describe("HomeScreen", () => {
       getDailyProgress: () => 0,
       refreshSleeps: jest.fn(),
       stopSleep: jest.fn(),
+      stopRemoteSleep: mockStopRemoteSleep,
       pauseSleep: jest.fn(),
       resumeSleep: jest.fn(),
       wakeWindowConfig: null,
@@ -308,6 +333,7 @@ describe("HomeScreen", () => {
       getTodaysTotalVolume: () => 0,
       getLastSide: () => null,
       refreshPumpings: jest.fn(),
+      stopRemotePumping: mockStopRemotePumping,
       pausePumping: jest.fn(),
       resumePumping: jest.fn(),
     });
@@ -329,6 +355,7 @@ describe("HomeScreen", () => {
       dailyGoalSeconds: 1800,
       refreshTummyTimes: jest.fn(),
       stopTummyTime: jest.fn(),
+      stopRemoteTummyTime: mockStopRemoteTummyTime,
       pauseTummyTime: jest.fn(),
       resumeTummyTime: jest.fn(),
     });
@@ -402,6 +429,33 @@ describe("HomeScreen", () => {
   });
 
   describe("active state", () => {
+    it("wires remote stop and pause controls for all four timer cards", () => {
+      const startedAt = "2026-08-06T10:00:00.000Z";
+      for (const activityType of ["feeding", "sleep", "pumping", "tummy_time"]) {
+        mockRemoteLocks[activityType] = {
+          startedAt,
+          startedByName: "Other caregiver",
+          timerData: { timerInstanceId: `timer-${activityType}`, isPaused: false },
+        };
+      }
+
+      render(<HomeScreen />);
+
+      for (const activity of ["feeding", "sleep", "pumping", "tummyTime"]) {
+        fireEvent.press(screen.getByTestId(`pause-${activity}`));
+        fireEvent.press(screen.getByTestId(`action-${activity}`));
+      }
+
+      const activeTimerService = jest.requireMock(
+        "@/services/active-timer-service"
+      ) as { toggleTimerPause: jest.Mock };
+      expect(activeTimerService.toggleTimerPause).toHaveBeenCalledTimes(4);
+      expect(mockStopRemoteFeeding).toHaveBeenCalledTimes(1);
+      expect(mockStopRemoteSleep).toHaveBeenCalledTimes(1);
+      expect(mockStopRemotePumping).toHaveBeenCalledTimes(1);
+      expect(mockStopRemoteTummyTime).toHaveBeenCalledTimes(1);
+    });
+
     it("passes remote timers' real start and pause instant to every dashboard surface", () => {
       const startedAt = "2026-08-06T10:00:00.000Z";
       const pausedAt = "2026-08-06T10:30:00.000Z";

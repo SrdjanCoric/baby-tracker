@@ -5,8 +5,10 @@ appId: com.sofibaby.app
       id: "${ACTIVITY_CARD}-${LOCK_STATE}"
     direction: DOWN
     timeout: 20000
-- assertNotVisible:
+- assertVisible:
     id: "${ACTIVITY_CARD}-action"
+- assertVisible:
+    id: "${ACTIVITY_CARD}-pause"
 - tapOn:
     id: "${ACTIVITY_CARD}-${LOCK_STATE}"
 - assertVisible:

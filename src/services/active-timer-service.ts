@@ -341,10 +341,11 @@ export async function releaseTimerLock(
   timerInstanceId?: string,
   startedAt?: string
 ): Promise<boolean> {
+  void userId;
   let lockId: string | undefined;
   if (timerInstanceId) {
     const currentLock = await getActiveTimerLock(babyId, activityType);
-    if (!currentLock || currentLock.startedBy !== userId) return false;
+    if (!currentLock) return false;
 
     const currentTimerInstanceId = currentLock.timerData?.timerInstanceId;
     if (typeof currentTimerInstanceId === "string") {
@@ -360,8 +361,7 @@ export async function releaseTimerLock(
 
   let query = supabase
     .from("active_timers")
-    .delete({ count: "exact" })
-    .eq("started_by", userId);
+    .delete({ count: "exact" });
 
   if (lockId) {
     query = query.eq("id", lockId);
@@ -505,12 +505,12 @@ export async function updateTimerData(
   userId: string,
   timerData: Record<string, unknown>
 ): Promise<boolean> {
+  void userId;
   const { error } = await supabase
     .from("active_timers")
     .update({ timer_data: timerData })
     .eq("baby_id", babyId)
-    .eq("activity_type", activityType)
-    .eq("started_by", userId);
+    .eq("activity_type", activityType);
 
   if (error) {
     console.error("[ActiveTimerService] Failed to update timer data:", error);
@@ -518,6 +518,25 @@ export async function updateTimerData(
   }
 
   return true;
+}
+
+export async function toggleTimerPause(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerData: Record<string, unknown>
+): Promise<void> {
+  const { error } = await supabase.rpc("toggle_timer_pause", {
+    p_baby_id: babyId,
+    p_activity_type: activityType,
+    p_user_id: userId,
+    p_timer_data: timerData,
+  });
+
+  if (error) {
+    console.error("[ActiveTimerService] Failed to toggle timer pause:", error);
+    throw error;
+  }
 }
 
 export async function updateTimerStartTime(

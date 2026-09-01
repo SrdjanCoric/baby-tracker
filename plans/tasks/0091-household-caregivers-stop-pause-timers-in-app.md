@@ -19,22 +19,22 @@ Superseded design (do not resurrect, from the pre-2026 version of the plan file)
 
 ## Implementation work
 
-- [ ] New migration (next free number): drop/recreate `active_timers` UPDATE and DELETE RLS policies scoped to household membership of the baby; rewrite `release_timer_lock` and `toggle_timer_pause` owner checks (currently raise `42501` for non-owner, added in migration 056) to household-membership checks, still raising `42501` for non-household callers.
-- [ ] Extend `scripts/sql/active-timer-authorization-tests.sql`: household member CAN release/pause another member's timer; outsider and unauthenticated still denied; starter path unchanged.
-- [ ] Remove client-side `.eq("started_by", userId)` filters in the active-timer service release/update paths (keep the param for logging).
-- [ ] Deterministic record-ID derivation from `timerInstanceId`, applied in ALL timer-stop record-creation paths (feeding, sleep, pumping, tummy time; own and remote stop), with unit tests proving two independent stops of the same timer instance yield the same ID.
-- [ ] `stopRemoteTimer`-style function per activity context: build stopper-owned record from lock data, save through the normal CRDT/sync path, release the lock.
-- [ ] Remote pause/resume wired through `toggle_timer_pause` from the dashboard card.
-- [ ] Starter-device external-lock-removal handling in each activity context: active local timer + lock gone → clear without saving; also on foreground timer restore, verify lock still exists before resuming.
-- [ ] Dashboard card: replace hourglass/disabled state with stop + pause controls for remote timers; keep caregiver attribution badge/text.
-- [ ] Extend `npm run e2e:household-timers` (two iOS accounts): A starts, B stops → one record (owned by B), A's timer clears; simultaneous stop → still one record.
-- [ ] Unit/integration tests per context for remote stop, clear-without-save, and replay convergence (pending offline mutation replays after remote stop → no second record).
+- [x] New migration (next free number): drop/recreate `active_timers` UPDATE and DELETE RLS policies scoped to household membership of the baby; rewrite `release_timer_lock` and `toggle_timer_pause` owner checks (currently raise `42501` for non-owner, added in migration 056) to household-membership checks, still raising `42501` for non-household callers.
+- [x] Extend `scripts/sql/active-timer-authorization-tests.sql`: household member CAN release/pause another member's timer; outsider and unauthenticated still denied; starter path unchanged.
+- [x] Remove client-side `.eq("started_by", userId)` filters in the active-timer service release/update paths (keep the param for logging).
+- [x] Deterministic record-ID derivation from `timerInstanceId`, applied in ALL timer-stop record-creation paths (feeding, sleep, pumping, tummy time; own and remote stop), with unit tests proving two independent stops of the same timer instance yield the same ID.
+- [x] `stopRemoteTimer`-style function per activity context: build stopper-owned record from lock data, save through the normal CRDT/sync path, release the lock.
+- [x] Remote pause/resume wired through `toggle_timer_pause` from the dashboard card.
+- [x] Starter-device external-lock-removal handling in each activity context: active local timer + lock gone → clear without saving; also on foreground timer restore, verify lock still exists before resuming.
+- [x] Dashboard card: replace hourglass/disabled state with stop + pause controls for remote timers; keep caregiver attribution badge/text.
+- [x] Extend `npm run e2e:household-timers` (two iOS accounts): A starts, B stops → one record (owned by B), A's timer clears; simultaneous stop → still one record.
+- [x] Unit/integration tests per context for remote stop, clear-without-save, and replay convergence (pending offline mutation replays after remote stop → no second record).
 
 ## Human checkpoints
 
-- [ ] [confirm-security] Apply the RLS/RPC authorization widening from owner to household (user approved the decision in the 2026-09-01 planning discussion; confirm the concrete migration before it ships).
+- [x] [confirm-security] Apply migration 065 server-first: widen active-timer UPDATE/DELETE and the release/pause RPCs to authenticated household members while strengthening the direct-update trigger so only the starter may change `started_at` and nobody may change timer identity. RPC signatures, INSERT, and acquisition stay unchanged; outsiders and unauthenticated callers remain denied (owner approved 2026-09-01).
 - [ ] [confirm-db] Run the new migration against the shared Supabase project.
-- [ ] [decision] Mixed-version rollout: old app versions still save stop records with random IDs, so deterministic-ID dedup only protects updated clients. Decide whether to carry a temporary compat guard (e.g. skip save when a record with the same baby/type/`started_at` exists) or accept the transient duplicate risk during rollout (`talk-it-through`).
+- [x] [decision] Mixed-version rollout: accept the transient duplicate risk from overlapping stops involving an older app during rollout. Do not add a `started_at` compatibility query: it is race-prone, can suppress legitimate records, adds a network dependency to stopping, and would revive the superseded duplicate-guard design (owner approved 2026-09-01).
 
 ## Acceptance criteria
 

@@ -162,6 +162,22 @@ export interface RestoreTimerLifecycleOptions<
   timerSnapshot?: Promise<readonly ActiveTimerLock[]>;
 }
 
+export interface StopRemoteTimerLifecycleOptions<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord extends { id: string },
+  TCreateInput,
+> {
+  adapter: TimerLifecycleAdapter<TPayload, TActiveTimer, TRecord, TCreateInput>;
+  babyId: string;
+  userId: string;
+  lock: ActiveTimerLock;
+  requestedStopTime?: Date;
+  persistRecord(input: TCreateInput): Promise<TRecord>;
+  dispatchAddRecord(record: TRecord): void;
+  refreshLocks?(): Promise<unknown> | unknown;
+}
+
 export function calculateTimerDurationSeconds(
   startedAt: Date,
   endedAt: Date,
@@ -177,6 +193,84 @@ export function parseTimerDate(
   if (!value) return fallback;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : fallback;
+}
+
+export async function stopRemoteTimerLifecycle<
+  TPayload extends SharedTimerPayload,
+  TActiveTimer extends TimerLifecycleActiveTimer,
+  TRecord extends { id: string },
+  TCreateInput,
+>({
+  adapter,
+  babyId,
+  userId,
+  lock,
+  requestedStopTime,
+  persistRecord,
+  dispatchAddRecord,
+  refreshLocks,
+}: StopRemoteTimerLifecycleOptions<
+  TPayload,
+  TActiveTimer,
+  TRecord,
+  TCreateInput
+>): Promise<TRecord | null> {
+  const timerData = lock.timerData ?? {};
+  const identity = await resolveTimerIdentity(
+    babyId,
+    adapter.activityType,
+    lock.startedAt,
+    timerData
+  );
+  const payload = adapter.timerDataCodec.decode(timerData, lock.startedAt);
+  const stopTime = payload.isPaused
+    ? (parseTimerDate(payload.pausedAt, requestedStopTime ?? new Date()) ??
+      requestedStopTime ??
+      new Date())
+    : (requestedStopTime ?? new Date());
+  const completion = await acceptTimerCompletion(
+    babyId,
+    adapter.activityType,
+    lock.startedAt,
+    identity,
+    stopTime
+  );
+
+  let record = await adapter.storage.getRecordById(
+    babyId,
+    completion.activityId
+  );
+  if (!record) {
+    record = await persistRecord(
+      adapter.buildRecord(
+        new Date(lock.startedAt),
+        new Date(completion.stoppedAt),
+        { ...payload, ...identity, activityId: completion.activityId }
+      )
+    );
+    await markTimerCompletionDurable(completion);
+  }
+  dispatchAddRecord(record);
+
+  try {
+    await releaseTimerLock(
+      babyId,
+      adapter.activityType,
+      userId,
+      identity.timerInstanceId,
+      lock.startedAt
+    );
+  } catch {
+    await queuePendingLockRelease(
+      babyId,
+      adapter.activityType,
+      userId,
+      identity.timerInstanceId,
+      lock.startedAt
+    );
+  }
+  await refreshLocks?.();
+  return record;
 }
 
 export async function editRunningTimerStartTime<
@@ -443,6 +537,31 @@ export async function restoreTimerLifecycle<
 
     const payload = adapter.timerDataCodec.fromActiveTimer(activeTimer);
     const payloadWithIdentity = { ...payload, ...identity };
+
+    if (
+      user?.id &&
+      user.householdId &&
+      activeTimer.lockState === "owned" &&
+      !hasPendingStop &&
+      timerSnapshot
+    ) {
+      const lock = findActiveTimerLock(
+        await timerSnapshot,
+        adapter.activityType
+      );
+      const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
+      const sameServerTimer =
+        lock?.startedBy === user.id &&
+        (typeof lockTimerInstanceId === "string"
+          ? lockTimerInstanceId === identity.timerInstanceId
+          : new Date(lock.startedAt).getTime() ===
+            new Date(activeTimer.startedAt).getTime());
+      if (!sameServerTimer) {
+        await adapter.storage.clearActiveTimer(baby.id);
+        dispatchStopTimer();
+        return;
+      }
+    }
 
     if (!activeTimer.timerInstanceId || !activeTimer.activityId) {
       await adapter.storage.setActiveTimer(baby.id, {

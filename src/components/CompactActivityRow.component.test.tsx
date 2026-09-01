@@ -97,9 +97,10 @@ describe("CompactActivityRow", () => {
     });
   });
 
-  it("renders a locked row without an actionable nested control", () => {
+  it("renders remote stop and pause controls outside row navigation", () => {
     const onPress = jest.fn();
     const onActionPress = jest.fn();
+    const onPausePress = jest.fn();
     render(
       <CompactActivityRow
         activity="pumping"
@@ -110,6 +111,7 @@ describe("CompactActivityRow", () => {
         lockedElapsedTime="2m"
         onPress={onPress}
         onActionPress={onActionPress}
+        onPausePress={onPausePress}
         testID="row"
       />
     );
@@ -117,10 +119,12 @@ describe("CompactActivityRow", () => {
     const row = screen.getByTestId("row-locked-active");
     expect(screen.getByText("dashboardCard.pumpingActive")).toBeTruthy();
     expect(screen.getByText("2m")).toBeTruthy();
-    expect(screen.queryByLabelText("accessibility.addActivity")).toBeNull();
+    fireEvent.press(screen.getByLabelText("common.pause"));
+    fireEvent.press(screen.getByLabelText("common.stop"));
     fireEvent.press(row);
     expect(onPress).not.toHaveBeenCalled();
-    expect(onActionPress).not.toHaveBeenCalled();
+    expect(onPausePress).toHaveBeenCalledTimes(1);
+    expect(onActionPress).toHaveBeenCalledTimes(1);
   });
 
   it("exposes paused and owned timer states on the row test ID", () => {

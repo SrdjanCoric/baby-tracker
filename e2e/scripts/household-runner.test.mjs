@@ -13,6 +13,7 @@ const inlineE2EEnv = require("./babel-inline-e2e-env.cjs");
 import {
   HOUSEHOLD_TIMER_TIMEOUTS,
   SLEEP_ACTIVITY,
+  assertHouseholdTimerStopResult,
   assertLocalEndpoint,
   assertMetroProjectRoot,
   getLocalApiRecoveryAction,
@@ -27,6 +28,7 @@ import {
   primeMetroBundle,
   selectNamedSimulators,
   stopProcessGroup,
+  runConcurrentTimerStops,
 } from "./lib/household-runner.mjs";
 
 test("household timer release gate allows slow native tool startup", () => {
@@ -194,6 +196,66 @@ test("household timer runner proves one remote sleep completion summary", () => 
     },
   }), /nap count or wake-window state did not advance coherently/);
 
+});
+
+test("household timer runner proves remote ownership and simultaneous convergence", async () => {
+  assert.doesNotThrow(() => assertHouseholdTimerStopResult("1|1|member@test.local", {
+    expectedCount: 1,
+    expectedLoggedBy: "member@test.local",
+  }));
+  assert.doesNotThrow(() => assertHouseholdTimerStopResult("3|3|", {
+    expectedCount: 3,
+  }));
+  assert.throws(
+    () => assertHouseholdTimerStopResult("2|2|member@test.local", {
+      expectedCount: 1,
+      expectedLoggedBy: "member@test.local",
+    }),
+    /expected 1 unique record/
+  );
+
+  const started = [];
+  const releases = [];
+  await runConcurrentTimerStops([
+    async () => {
+      started.push("owner");
+      await new Promise(resolve => releases.push(resolve));
+    },
+    async () => {
+      started.push("member");
+      await new Promise(resolve => releases.push(resolve));
+    },
+  ], async () => {
+    assert.deepEqual(started, ["owner", "member"]);
+    releases.forEach(resolve => resolve());
+  });
+});
+
+test("household timer flows expose remote pause, resume, and dashboard stop controls", () => {
+  const lockedFlow = fs.readFileSync(
+    new URL("../flows/household-timers/assert-locked.yaml", import.meta.url),
+    "utf8"
+  );
+  const toggleFlow = fs.readFileSync(
+    new URL("../flows/household-timers/remote/toggle-sleep-pause.yaml", import.meta.url),
+    "utf8"
+  );
+  const dashboardStopFlow = fs.readFileSync(
+    new URL("../flows/household-timers/stop/dashboard-sleep.yaml", import.meta.url),
+    "utf8"
+  );
+  const runner = fs.readFileSync(
+    new URL("./run-household-timers.mjs", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(lockedFlow, /id: "\$\{ACTIVITY_CARD\}-action"/);
+  assert.match(lockedFlow, /id: "\$\{ACTIVITY_CARD\}-pause"/);
+  assert.match(toggleFlow, /id: "sleep-card-pause"/);
+  assert.match(toggleFlow, /id: "sleep-card-\$\{TO_LOCK_STATE\}"/);
+  assert.match(dashboardStopFlow, /id: "sleep-card-action"/);
+  assert.match(runner, /await runConcurrentTimerStops\(/);
+  assert.match(runner, /verifyHouseholdTimerStop\(status, 1, memberEmail\)/);
 });
 
 test("Watch keeps its coherent base when a changed timer probe cannot fetch the full summary", () => {

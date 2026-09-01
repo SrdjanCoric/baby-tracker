@@ -31,6 +31,7 @@ import { formatVolume } from "@/utils/volume";
 import { ActivityType } from "@/constants/activities";
 import { isUnderTwoMonths } from "@/utils/sleepGoals";
 import { AGE_GROUPS } from "@/constants/milestones";
+import { toggleTimerPause, type TimerActivityType } from "@/services/active-timer-service";
 
 interface CardProps {
   label: string;
@@ -75,18 +76,18 @@ export default function HomeScreen() {
   }, [isFocused, router]);
 
   const { config: dashboardConfig } = useDashboardConfig();
-  const { activeTimer: feedingActiveTimer, isStopping: isStoppingFeeding, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
-  const { activeTimer: sleepActiveTimer, isStopping: isStoppingSleep, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, pauseSleep, resumeSleep, wakeWindowConfig, getCurrentNapSlot } = useSleep();
+  const { activeTimer: feedingActiveTimer, isStopping: isStoppingFeeding, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, stopRemoteBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
+  const { activeTimer: sleepActiveTimer, isStopping: isStoppingSleep, getLastSleep, getTodaysTotalSleepMinutes, dailyGoalMinutes, getDailyProgress: getSleepDailyProgress, refreshSleeps, stopSleep, stopRemoteSleep, pauseSleep, resumeSleep, wakeWindowConfig, getCurrentNapSlot } = useSleep();
   const { diapers, getTodaysCounts, refreshDiapers } = useDiaper();
-  const { activeTimer: pumpingActiveTimer, isStopping: isStoppingPumping, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings, pausePumping, resumePumping } = usePumping();
+  const { activeTimer: pumpingActiveTimer, isStopping: isStoppingPumping, getLastPumping, getTodaysTotalVolume, getLastSide, refreshPumpings, stopRemotePumping, pausePumping, resumePumping } = usePumping();
   const { getMeasurementHistory, getWeightChange, refreshMeasurements } = useGrowth();
-  const { activeTimer: tummyTimeActiveTimer, isStopping: isStoppingTummyTime, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
+  const { activeTimer: tummyTimeActiveTimer, isStopping: isStoppingTummyTime, getDailyProgress: getTummyTimeDailyProgress, getTodaysTotalSeconds, getTodaysSessionCount, dailyGoalSeconds, refreshTummyTimes, stopTummyTime, stopRemoteTummyTime, pauseTummyTime, resumeTummyTime } = useTummyTime();
   const { getYesCountForAge, getNotSureCountForAge, getTotalCountForAge, isAgeCompleted, getStarsEarned, getCurrentAgeGroup, refreshResponses: refreshMilestones } = useMilestones();
   const { getLastHealth, refreshHealth } = useHealth();
   const { temperatureUnit, volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const { selectedBaby, isLoading: isBabyLoading } = useBaby();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const { isLockedByOther, getLockedByName, getLockForActivity, refreshLocks } = useActiveTimers();
   const isAuthenticated = !!session?.access_token;
 
@@ -604,6 +605,62 @@ export default function HomeScreen() {
     }
   }, [tummyTimeActiveTimer?.isPaused, pauseTummyTime, resumeTummyTime]);
 
+  const handleToggleRemotePause = useCallback(async (activityType: TimerActivityType) => {
+    if (!selectedBaby?.id || !user?.id) return;
+    const lock = getLockForActivity(selectedBaby.id, activityType);
+    if (!lock || lock.startedBy === user.id) return;
+    const timerData = lock.timerData ?? {};
+    const now = new Date();
+    const isPaused = timerData.isPaused === true;
+    const previousPausedAt = typeof timerData.pausedAt === "string"
+      ? new Date(timerData.pausedAt)
+      : null;
+    const totalPausedMs = typeof timerData.totalPausedMs === "number"
+      ? timerData.totalPausedMs
+      : 0;
+    const elapsedSeconds = Math.max(
+      0,
+      Math.floor((now.getTime() - new Date(lock.startedAt).getTime()) / 1000)
+    );
+    await toggleTimerPause(selectedBaby.id, activityType, user.id, isPaused
+      ? {
+          ...timerData,
+          isPaused: false,
+          totalPausedMs:
+            totalPausedMs +
+            (previousPausedAt && Number.isFinite(previousPausedAt.getTime())
+              ? Math.max(0, now.getTime() - previousPausedAt.getTime())
+              : 0),
+          effectiveStartTime: lock.startedAt,
+          accumulatedSeconds: elapsedSeconds,
+        }
+      : {
+          ...timerData,
+          isPaused: true,
+          pausedAt: now.toISOString(),
+          totalPausedMs,
+          accumulatedSeconds: elapsedSeconds,
+        });
+    await refreshLocks();
+  }, [getLockForActivity, refreshLocks, selectedBaby?.id, user?.id]);
+
+  const handleToggleRemoteFeeding = useCallback(
+    () => handleToggleRemotePause("feeding"),
+    [handleToggleRemotePause]
+  );
+  const handleToggleRemoteSleep = useCallback(
+    () => handleToggleRemotePause("sleep"),
+    [handleToggleRemotePause]
+  );
+  const handleToggleRemotePumping = useCallback(
+    () => handleToggleRemotePause("pumping"),
+    [handleToggleRemotePause]
+  );
+  const handleToggleRemoteTummyTime = useCallback(
+    () => handleToggleRemotePause("tummy_time"),
+    [handleToggleRemotePause]
+  );
+
   const handleSettingsPress = useCallback(() => {
     safeNavigate("/settings");
   }, [safeNavigate]);
@@ -652,9 +709,15 @@ export default function HomeScreen() {
       activeLabel: feedingActiveLabel,
       isStopping: isStoppingFeeding,
       onPress: handleFeedingCardPress,
-      onActionPress: isFeedingActive ? handleStopFeeding : handleAddFeeding,
-      onPausePress: isFeedingActive && isAuthenticated ? handleTogglePauseFeeding : undefined,
-      isPaused: feedingActiveTimer?.isPaused,
+      onActionPress: feedingLock.isLocked
+        ? stopRemoteBreastfeeding
+        : isFeedingActive ? handleStopFeeding : handleAddFeeding,
+      onPausePress: feedingLock.isLocked
+        ? handleToggleRemoteFeeding
+        : isFeedingActive && isAuthenticated ? handleTogglePauseFeeding : undefined,
+      isPaused: feedingLock.isLocked
+        ? feedingLock.isPausedByOther
+        : feedingActiveTimer?.isPaused,
       actionLabel: isFeedingActive ? undefined : "+",
       isLockedByOther: feedingLock.isLocked,
       lockedByName: feedingLock.lockedByName,
@@ -668,7 +731,7 @@ export default function HomeScreen() {
         ? feedingLock.timerPausedAt
         : feedingActiveTimer?.pausedAt?.getTime(),
     };
-  }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, isStoppingFeeding, feedingActiveTimer, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleTogglePauseFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+  }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, isStoppingFeeding, feedingActiveTimer, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, stopRemoteBreastfeeding, handleTogglePauseFeeding, handleToggleRemoteFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
   const sleepCardProps = useMemo((): CardProps => {
     const sleepLock = getTimerLockInfo("sleep");
@@ -680,9 +743,15 @@ export default function HomeScreen() {
       activeLabel: t("sleep.sleeping"),
       isStopping: isStoppingSleep,
       onPress: handleSleepCardPress,
-      onActionPress: isSleepActive ? handleStopSleep : handleAddSleep,
-      onPausePress: isSleepActive && isAuthenticated ? handleTogglePauseSleep : undefined,
-      isPaused: sleepActiveTimer?.isPaused,
+      onActionPress: sleepLock.isLocked
+        ? stopRemoteSleep
+        : isSleepActive ? handleStopSleep : handleAddSleep,
+      onPausePress: sleepLock.isLocked
+        ? handleToggleRemoteSleep
+        : isSleepActive && isAuthenticated ? handleTogglePauseSleep : undefined,
+      isPaused: sleepLock.isLocked
+        ? sleepLock.isPausedByOther
+        : sleepActiveTimer?.isPaused,
       actionLabel: isSleepActive ? undefined : "+",
       progress: sleepProgress,
       isLockedByOther: sleepLock.isLocked,
@@ -697,7 +766,7 @@ export default function HomeScreen() {
         ? sleepLock.timerPausedAt
         : sleepActiveTimer?.pausedAt?.getTime(),
     };
-  }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, isStoppingSleep, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleTogglePauseSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+  }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, isStoppingSleep, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, stopRemoteSleep, handleTogglePauseSleep, handleToggleRemoteSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
   const diaperCardProps = useMemo((): CardProps => {
     const wetCount = todayDiaperCounts.wet + todayDiaperCounts.mixed;
@@ -723,9 +792,15 @@ export default function HomeScreen() {
       activeLabel: t("pumping.pumping"),
       isStopping: isStoppingPumping,
       onPress: handlePumpingCardPress,
-      onActionPress: isPumpingActive ? handleStopPumping : handleAddPumping,
-      onPausePress: isPumpingActive && isAuthenticated ? handleTogglePausePumping : undefined,
-      isPaused: pumpingActiveTimer?.isPaused,
+      onActionPress: pumpingLock.isLocked
+        ? stopRemotePumping
+        : isPumpingActive ? handleStopPumping : handleAddPumping,
+      onPausePress: pumpingLock.isLocked
+        ? handleToggleRemotePumping
+        : isPumpingActive && isAuthenticated ? handleTogglePausePumping : undefined,
+      isPaused: pumpingLock.isLocked
+        ? pumpingLock.isPausedByOther
+        : pumpingActiveTimer?.isPaused,
       actionLabel: isPumpingActive ? undefined : "+",
       isLockedByOther: pumpingLock.isLocked,
       lockedByName: pumpingLock.lockedByName,
@@ -739,7 +814,7 @@ export default function HomeScreen() {
         ? pumpingLock.timerPausedAt
         : pumpingActiveTimer?.pausedAt?.getTime(),
     };
-  }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, isStoppingPumping, pumpingActiveTimer, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleTogglePausePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+  }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, isStoppingPumping, pumpingActiveTimer, handlePumpingCardPress, handleAddPumping, handleStopPumping, stopRemotePumping, handleTogglePausePumping, handleToggleRemotePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
   const tummyTimeCardProps = useMemo((): CardProps => {
     const tummyTimeLock = getTimerLockInfo("tummy_time");
@@ -751,9 +826,15 @@ export default function HomeScreen() {
       activeLabel: t("tummyTime.inProgress"),
       isStopping: isStoppingTummyTime,
       onPress: handleTummyTimeCardPress,
-      onActionPress: isTummyTimeActive ? handleStopTummyTime : handleAddTummyTime,
-      onPausePress: isTummyTimeActive && isAuthenticated ? handleTogglePauseTummyTime : undefined,
-      isPaused: tummyTimeActiveTimer?.isPaused,
+      onActionPress: tummyTimeLock.isLocked
+        ? stopRemoteTummyTime
+        : isTummyTimeActive ? handleStopTummyTime : handleAddTummyTime,
+      onPausePress: tummyTimeLock.isLocked
+        ? handleToggleRemoteTummyTime
+        : isTummyTimeActive && isAuthenticated ? handleTogglePauseTummyTime : undefined,
+      isPaused: tummyTimeLock.isLocked
+        ? tummyTimeLock.isPausedByOther
+        : tummyTimeActiveTimer?.isPaused,
       actionLabel: isTummyTimeActive ? undefined : "+",
       progress: tummyTimeProgress,
       isLockedByOther: tummyTimeLock.isLocked,
@@ -768,7 +849,7 @@ export default function HomeScreen() {
         ? tummyTimeLock.timerPausedAt
         : tummyTimeActiveTimer?.pausedAt?.getTime(),
     };
-  }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, isStoppingTummyTime, tummyTimeActiveTimer, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleTogglePauseTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
+  }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, isStoppingTummyTime, tummyTimeActiveTimer, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, stopRemoteTummyTime, handleTogglePauseTummyTime, handleToggleRemoteTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
   const growthCardProps = useMemo((): CardProps => {
     return {
