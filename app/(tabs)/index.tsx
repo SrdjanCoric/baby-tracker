@@ -640,6 +640,9 @@ export default function HomeScreen() {
     const lock = getLockForActivity(selectedBaby.id, activityType);
     if (!lock || lock.startedBy === user.id) return;
     const timerData = lock.timerData ?? {};
+    const timerPayload = { ...timerData };
+    delete timerPayload.pausedAt;
+    delete timerPayload.effectiveStartTime;
     const now = new Date();
     const isPaused = timerData.isPaused === true;
     const previousPausedAt = typeof timerData.pausedAt === "string"
@@ -654,7 +657,7 @@ export default function HomeScreen() {
     );
     await toggleTimerPause(selectedBaby.id, activityType, user.id, isPaused
       ? {
-          ...timerData,
+          ...timerPayload,
           isPaused: false,
           totalPausedMs:
             totalPausedMs +
@@ -665,7 +668,7 @@ export default function HomeScreen() {
           accumulatedSeconds: elapsedSeconds,
         }
       : {
-          ...timerData,
+          ...timerPayload,
           isPaused: true,
           pausedAt: now.toISOString(),
           totalPausedMs,

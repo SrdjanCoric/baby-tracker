@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
 
 const mockPush = jest.fn();
 let mockRemoteLocks: Record<string, {
@@ -477,6 +477,60 @@ describe("HomeScreen", () => {
       expect(mockStopRemoteSleep).toHaveBeenCalledWith();
       expect(mockStopRemotePumping).toHaveBeenCalledWith();
       expect(mockStopRemoteTummyTime).toHaveBeenCalledWith();
+    });
+
+    it("removes stale pause anchors from remote pause and resume payloads", async () => {
+      const startedAt = "2026-08-06T10:00:00.000Z";
+      const activeTimerService = jest.requireMock(
+        "@/services/active-timer-service"
+      ) as { toggleTimerPause: jest.Mock };
+
+      mockRemoteLocks.sleep = {
+        startedAt,
+        startedByName: "Other caregiver",
+        timerData: {
+          timerInstanceId: "timer-sleep",
+          isPaused: true,
+          pausedAt: "2026-08-06T10:10:00.000Z",
+          effectiveStartTime: "stale-effective-start",
+          totalPausedMs: 1000,
+        },
+      };
+      const resumed = render(<HomeScreen />);
+      fireEvent.press(screen.getByTestId("pause-sleep"));
+
+      await waitFor(() => expect(activeTimerService.toggleTimerPause).toHaveBeenCalledTimes(1));
+      const resumePayload = activeTimerService.toggleTimerPause.mock.calls[0][3];
+      expect(resumePayload).toEqual(expect.objectContaining({
+        timerInstanceId: "timer-sleep",
+        isPaused: false,
+        effectiveStartTime: startedAt,
+      }));
+      expect(resumePayload).not.toHaveProperty("pausedAt");
+
+      resumed.unmount();
+      activeTimerService.toggleTimerPause.mockClear();
+      mockRemoteLocks.sleep = {
+        startedAt,
+        startedByName: "Other caregiver",
+        timerData: {
+          timerInstanceId: "timer-sleep",
+          isPaused: false,
+          effectiveStartTime: "2026-08-06T10:15:00.000Z",
+          totalPausedMs: 2000,
+        },
+      };
+      render(<HomeScreen />);
+      fireEvent.press(screen.getByTestId("pause-sleep"));
+
+      await waitFor(() => expect(activeTimerService.toggleTimerPause).toHaveBeenCalledTimes(1));
+      const pausePayload = activeTimerService.toggleTimerPause.mock.calls[0][3];
+      expect(pausePayload).toEqual(expect.objectContaining({
+        timerInstanceId: "timer-sleep",
+        isPaused: true,
+        totalPausedMs: 2000,
+      }));
+      expect(pausePayload).not.toHaveProperty("effectiveStartTime");
     });
 
     it("passes remote timers' real start and pause instant to every dashboard surface", () => {
