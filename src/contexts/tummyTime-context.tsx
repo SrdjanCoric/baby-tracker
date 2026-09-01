@@ -528,6 +528,28 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           type: "SYNC_TIMER_PAUSE",
           payload: { isPaused, pausedAt, totalPausedMs },
         });
+        const accumulatedSeconds = typeof lock.timerData?.accumulatedSeconds === "number"
+          ? lock.timerData.accumulatedSeconds
+          : Math.max(0, Math.floor(((pausedAt ?? new Date()).getTime() - activeTimer.startTime.getTime()) / 1000));
+        void (async () => {
+          if (liveActivityIdRef.current) {
+            if (isPaused) {
+              await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
+            } else {
+              await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
+            }
+          }
+          await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
+            timerInstanceId: activeTimer.timerInstanceId,
+            activityId: activeTimer.activityId,
+            startedAt: activeTimer.startTime.toISOString(),
+            liveActivityId: liveActivityIdRef.current ?? undefined,
+            isPaused,
+            pausedAt: pausedAt?.toISOString(),
+            totalPausedMs,
+            lockState: activeTimer.lockState,
+          });
+        })();
       }
     } else if (observedOwnedTimerRef.current === activeTimer.timerInstanceId) {
       observedOwnedTimerRef.current = null;

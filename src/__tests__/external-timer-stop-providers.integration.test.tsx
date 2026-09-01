@@ -610,6 +610,12 @@ describe("external timer stops through production providers", () => {
   });
 
   it("reflects household pause and resume updates on every starter timer", async () => {
+    const liveActivities = jest.requireMock("@/services/live-activity-service") as {
+      startTimerLiveActivity: jest.Mock;
+      pauseTimerLiveActivity: jest.Mock;
+      resumeTimerLiveActivity: jest.Mock;
+    };
+    liveActivities.startTimerLiveActivity.mockResolvedValue("live-activity-1");
     const view = render(<RealTimerProviders />);
     await waitFor(() =>
       expect([
@@ -652,6 +658,7 @@ describe("external timer stops through production providers", () => {
         isPaused: true,
         pausedAt,
         totalPausedMs: 0,
+        accumulatedSeconds: 120,
       },
     }));
     view.rerender(<RealTimerProviders />);
@@ -669,6 +676,21 @@ describe("external timer stops through production providers", () => {
       pumpingState?.activeTimer?.pausedAt,
       tummyTimeState?.activeTimer?.pausedAt,
     ]).toEqual(Array(4).fill(new Date(pausedAt)));
+    await expect(Promise.all([
+      FeedingStorageService.getActiveTimer("baby-1"),
+      SleepStorageService.getActiveTimer("baby-1"),
+      PumpingStorageService.getActiveTimer("baby-1"),
+      TummyTimeStorageService.getActiveTimer("baby-1"),
+    ])).resolves.toEqual(Array(4).fill(expect.objectContaining({
+      isPaused: true,
+      pausedAt,
+    })));
+    expect(liveActivities.pauseTimerLiveActivity.mock.calls.map(call => call[1])).toEqual([
+      120,
+      120,
+      120,
+      120,
+    ]);
 
     mockActiveTimerLocks = mockActiveTimerLocks.map(lock => ({
       ...lock,
@@ -676,6 +698,7 @@ describe("external timer stops through production providers", () => {
         ...(lock.timerData as Record<string, unknown>),
         isPaused: false,
         totalPausedMs: 7_000,
+        accumulatedSeconds: 127,
       },
     }));
     view.rerender(<RealTimerProviders />);
@@ -698,6 +721,25 @@ describe("external timer stops through production providers", () => {
       pumpingState?.activeTimer?.pausedAt,
       tummyTimeState?.activeTimer?.pausedAt,
     ]).toEqual([undefined, undefined, undefined, undefined]);
+    const resumedTimers = await Promise.all([
+      FeedingStorageService.getActiveTimer("baby-1"),
+      SleepStorageService.getActiveTimer("baby-1"),
+      PumpingStorageService.getActiveTimer("baby-1"),
+      TummyTimeStorageService.getActiveTimer("baby-1"),
+    ]);
+    for (const timer of resumedTimers) {
+      expect(timer).toEqual(expect.objectContaining({
+        isPaused: false,
+        totalPausedMs: 7_000,
+      }));
+      expect(timer).not.toHaveProperty("pausedAt");
+    }
+    expect(liveActivities.resumeTimerLiveActivity.mock.calls.map(call => call[1])).toEqual([
+      127,
+      127,
+      127,
+      127,
+    ]);
   });
 
   it("starts and edits all four account-less timers locally without server writes or queued edits", async () => {
