@@ -439,13 +439,20 @@ describe("household timer updates", () => {
     rpcMock.mockResolvedValue({ data: null, error: null });
   });
 
-  it("updates timer data without restricting the row to its starter", async () => {
+  it("updates only the matching timer instance without restricting it to the starter", async () => {
     await expect(
-      updateTimerData("baby-1", "feeding", "member-1", { isPaused: true })
+      updateTimerData("baby-1", "feeding", "member-1", {
+        timerInstanceId: "timer-1",
+        isPaused: true,
+      })
     ).resolves.toBe(true);
 
     expect(eqMock).toHaveBeenCalledWith("baby_id", "baby-1");
     expect(eqMock).toHaveBeenCalledWith("activity_type", "feeding");
+    expect(eqMock).toHaveBeenCalledWith(
+      "timer_data->>timerInstanceId",
+      "timer-1"
+    );
     expect(eqMock).not.toHaveBeenCalledWith("started_by", "member-1");
   });
 

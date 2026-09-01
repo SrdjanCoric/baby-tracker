@@ -506,11 +506,16 @@ export async function updateTimerData(
   timerData: Record<string, unknown>
 ): Promise<boolean> {
   void userId;
+  const timerInstanceId = timerData.timerInstanceId;
+  if (typeof timerInstanceId !== "string" || timerInstanceId.length === 0) {
+    return false;
+  }
   const { error } = await supabase
     .from("active_timers")
     .update({ timer_data: timerData })
     .eq("baby_id", babyId)
-    .eq("activity_type", activityType);
+    .eq("activity_type", activityType)
+    .eq("timer_data->>timerInstanceId", timerInstanceId);
 
   if (error) {
     console.error("[ActiveTimerService] Failed to update timer data:", error);
