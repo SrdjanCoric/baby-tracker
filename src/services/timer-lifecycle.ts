@@ -545,21 +545,23 @@ export async function restoreTimerLifecycle<
       !hasPendingStop &&
       timerSnapshot
     ) {
-      const lock = findActiveTimerLock(
-        await timerSnapshot,
-        adapter.activityType
-      );
-      const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
-      const sameServerTimer =
-        lock?.startedBy === user.id &&
-        (typeof lockTimerInstanceId === "string"
-          ? lockTimerInstanceId === identity.timerInstanceId
-          : new Date(lock.startedAt).getTime() ===
-            new Date(activeTimer.startedAt).getTime());
-      if (!sameServerTimer) {
-        await adapter.storage.clearActiveTimer(baby.id);
-        dispatchStopTimer();
-        return;
+      const snapshot = await timerSnapshot.catch(() => null);
+      const lock = snapshot
+        ? findActiveTimerLock(snapshot, adapter.activityType)
+        : null;
+      if (snapshot) {
+        const lockTimerInstanceId = lock?.timerData?.timerInstanceId;
+        const sameServerTimer =
+          lock?.startedBy === user.id &&
+          (typeof lockTimerInstanceId === "string"
+            ? lockTimerInstanceId === identity.timerInstanceId
+            : new Date(lock.startedAt).getTime() ===
+              new Date(activeTimer.startedAt).getTime());
+        if (!sameServerTimer) {
+          await adapter.storage.clearActiveTimer(baby.id);
+          dispatchStopTimer();
+          return;
+        }
       }
     }
 
