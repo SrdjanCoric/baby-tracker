@@ -478,6 +478,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       observedOwnedTimerRef.current = null;
       return;
     }
+    if (!user?.id) return;
     if (activeTimerLocksLoading) return;
     const lock = activeTimerLocks.find(
       candidate =>

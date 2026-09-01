@@ -546,6 +546,58 @@ describe("external timer stops through production providers", () => {
     expect(activitySync.createTummyTimeInDatabase).not.toHaveBeenCalled();
   });
 
+  it("keeps every unsaved starter timer when authentication disappears", async () => {
+    const view = render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+
+    mockActiveTimerLocks = [
+      ["feeding", feedingState!.activeTimer!.timerInstanceId],
+      ["sleep", sleepState!.activeTimer!.timerInstanceId],
+      ["pumping", pumpingState!.activeTimer!.timerInstanceId],
+      ["tummy_time", tummyTimeState!.activeTimer!.timerInstanceId],
+    ].map(([activityType, timerInstanceId], index) => ({
+      id: `lock-${index}`,
+      babyId: "baby-1",
+      activityType,
+      startedBy: "user-1",
+      startedByName: "Caregiver",
+      startedAt,
+      timerData: { timerInstanceId },
+    }));
+    view.rerender(<RealTimerProviders />);
+    await act(async () => undefined);
+
+    mockAuthUser = null;
+    mockActiveTimerLocks = [];
+    view.rerender(<RealTimerProviders />);
+    await act(async () => undefined);
+
+    expect([
+      feedingState?.activeTimer,
+      sleepState?.activeTimer,
+      pumpingState?.activeTimer,
+      tummyTimeState?.activeTimer,
+    ]).toEqual([
+      expect.objectContaining({ timerInstanceId: expect.any(String) }),
+      expect.objectContaining({ timerInstanceId: expect.any(String) }),
+      expect.objectContaining({ timerInstanceId: expect.any(String) }),
+      expect.objectContaining({ timerInstanceId: expect.any(String) }),
+    ]);
+  });
+
   it("reflects household pause and resume updates on every starter timer", async () => {
     const view = render(<RealTimerProviders />);
     await waitFor(() =>
