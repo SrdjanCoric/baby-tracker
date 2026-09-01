@@ -86,7 +86,7 @@ export default tseslint.config(
       "node_modules/",
       ".expo/",
       "dist/",
-      "build/",
+      "**/build/",
       "targets/",
       "plugins/",
       "*.config.js",
