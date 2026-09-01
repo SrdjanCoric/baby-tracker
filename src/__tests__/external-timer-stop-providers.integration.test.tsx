@@ -35,6 +35,15 @@ const mockGetLockForActivity = jest.fn();
 let mockActiveTimerLocks: Array<Record<string, unknown>> = [];
 let mockUuidCounter = 0;
 
+function mockDigestForSeed(value: string): string {
+  let hash = 2166136261;
+  for (const character of value) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0").repeat(8);
+}
+
 let mockSelectedBaby = { id: "baby-1", name: "Baby One" };
 let mockAuthUser: { id: string; householdId: string } | null = {
   id: "user-1",
@@ -47,7 +56,7 @@ jest.mock("expo-crypto", () => ({
     `00000000-0000-4000-8000-${(++mockUuidCounter).toString().padStart(12, "0")}`
   ),
   digestStringAsync: jest.fn(async (_algorithm: string, value: string) =>
-    (value.startsWith("timer:") ? "a" : "b").repeat(64)
+    mockDigestForSeed(value)
   ),
 }));
 
@@ -210,7 +219,14 @@ jest.mock("@/services/activity-goal-service", () => ({
 
 const startedAt = "2026-07-15T08:00:00.000Z";
 const stoppedAt = "2026-07-15T08:05:00.000Z";
-const derivedActivityId = "bbbbbbbb-bbbb-5bbb-bbbb-bbbbbbbbbbbb";
+
+function expectedActivityId(timerInstanceId: string): string {
+  const hash = mockDigestForSeed(`timer-activity:${timerInstanceId}`);
+  const variant = ((Number.parseInt(hash[16], 16) & 0x3) | 0x8).toString(16);
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-${variant}${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
+
+const derivedLoserActivityId = expectedActivityId("timer-loser");
 
 let feedingState: ReturnType<typeof useFeeding> | null = null;
 let sleepState: ReturnType<typeof useSleep> | null = null;
@@ -1493,6 +1509,7 @@ describe("external timer stops through production providers", () => {
       timerInstanceId: "timer-instance-1",
       activityId: "11111111-1111-4111-8111-111111111111",
     };
+    const derivedActivityId = expectedActivityId(identity.timerInstanceId);
     await act(async () => {
       await feedingState!.startBreastfeeding("left", new Date(startedAt), identity);
     });
@@ -2957,6 +2974,7 @@ describe("external timer stops through production providers", () => {
 
   it("preserves entered volume when a paused pumping timer is under one minute", async () => {
     const pausedAt = "2026-07-15T08:00:40.000Z";
+    const derivedActivityId = expectedActivityId("short-pumping-timer");
     await PumpingStorageService.setActiveTimer("baby-1", {
       timerInstanceId: "short-pumping-timer",
       activityId: "short-pumping-activity",
@@ -3276,7 +3294,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createFeedingInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: derivedActivityId,
+        id: derivedLoserActivityId,
         babyId: "baby-1",
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
@@ -3289,7 +3307,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(feedingState?.activeTimer).toBeNull();
     expect(feedingState?.feedings).toEqual([
-      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedLoserActivityId, endedAt: stoppedAt })
     ]);
     await expect(FeedingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
     expect(alertSpy).toHaveBeenCalledWith(
@@ -3327,7 +3345,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createSleepInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createSleepInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: derivedActivityId,
+        id: derivedLoserActivityId,
         type: "nap",
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
@@ -3337,7 +3355,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(sleepState?.activeTimer).toBeNull();
     expect(sleepState?.sleeps).toEqual([
-      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedLoserActivityId, endedAt: stoppedAt })
     ]);
     await expect(SleepStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
     expect(alertSpy).toHaveBeenCalledWith(
@@ -3374,7 +3392,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createPumpingInDatabase).toHaveBeenCalledTimes(1));
     const input = activitySync.createPumpingInDatabase.mock.calls[0][0] as CreatePumpingInput;
     expect(input).toEqual(expect.objectContaining({
-      id: derivedActivityId,
+      id: derivedLoserActivityId,
       endedAt: new Date(stoppedAt),
       durationSeconds: 300,
       side: "both",
@@ -3382,7 +3400,7 @@ describe("external timer stops through production providers", () => {
     expect(input.volumeMl).toBeUndefined();
     expect(pumpingState?.activeTimer).toBeNull();
     expect(pumpingState?.pumpings).toEqual([
-      expect.objectContaining({ id: derivedActivityId, volumeMl: undefined })
+      expect.objectContaining({ id: derivedLoserActivityId, volumeMl: undefined })
     ]);
     await expect(PumpingStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
@@ -3414,7 +3432,7 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: derivedActivityId,
+        id: derivedLoserActivityId,
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
@@ -3422,7 +3440,7 @@ describe("external timer stops through production providers", () => {
     );
     expect(tummyTimeState?.activeTimer).toBeNull();
     expect(tummyTimeState?.tummyTimes).toEqual([
-      expect.objectContaining({ id: derivedActivityId, endedAt: stoppedAt })
+      expect.objectContaining({ id: derivedLoserActivityId, endedAt: stoppedAt })
     ]);
     await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
   });
