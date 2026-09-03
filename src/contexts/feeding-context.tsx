@@ -35,9 +35,8 @@ import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import {
   acquireTimerLock,
-  releaseTimerLock,
+  releaseTimerLockDurably,
   updateTimerData,
-  queuePendingLockRelease,
   getActiveTimerSnapshotForBaby,
   type ActiveTimerLock as ServerActiveTimerLock,
 } from "@/services/active-timer-service";
@@ -638,6 +637,17 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
       const finishTimer = async () => {
         dispatch({ type: "STOP_TIMER" });
+        // Start the durable lock release immediately so its write-ahead
+        // intent is persisted before the app can be suspended mid-cleanup.
+        const releaseLockPromise = user?.id
+          ? releaseTimerLockDurably(
+              selectedBaby.id,
+              "feeding",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            )
+          : null;
         try {
           await FeedingStorageService.clearActiveTimer(selectedBaby.id);
         } catch (error) {
@@ -660,26 +670,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             error
           );
         }
-        if (user?.id) {
+        if (releaseLockPromise) {
           try {
-            await releaseTimerLock(
-              selectedBaby.id,
-              "feeding",
-              user.id,
-              activeTimer.timerInstanceId,
-              activeTimer.startTime.toISOString()
-            );
+            await releaseLockPromise;
           } catch (error) {
             console.error(
-              "[FeedingContext] Failed to release timer lock, queuing retry:",
+              "[FeedingContext] Failed to release timer lock, retry stays queued:",
               error
-            );
-            await queuePendingLockRelease(
-              selectedBaby.id,
-              "feeding",
-              user.id,
-              activeTimer.timerInstanceId,
-              activeTimer.startTime.toISOString()
             );
           }
         }

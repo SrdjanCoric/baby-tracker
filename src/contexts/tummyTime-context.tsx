@@ -16,7 +16,7 @@ import { useSync } from "./sync-context";
 import { useAuth } from "./auth-context";
 import { useActiveTimers } from "./active-timers-context";
 import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
-import { acquireTimerLock, releaseTimerLock, updateTimerData, queuePendingLockRelease, getActiveTimerSnapshotForBaby, type ActiveTimerLock as ServerActiveTimerLock } from "@/services/active-timer-service";
+import { acquireTimerLock, releaseTimerLockDurably, updateTimerData, getActiveTimerSnapshotForBaby, type ActiveTimerLock as ServerActiveTimerLock } from "@/services/active-timer-service";
 import {
   AgeGroup,
   GoalSource,
@@ -530,6 +530,17 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     const finishTimer = async () => {
       dispatch({ type: "STOP_TIMER" });
+      // Start the durable lock release immediately so its write-ahead
+      // intent is persisted before the app can be suspended mid-cleanup.
+      const releaseLockPromise = user?.id
+        ? releaseTimerLockDurably(
+            selectedBaby.id,
+            "tummy_time",
+            user.id,
+            activeTimer.timerInstanceId,
+            activeTimer.startTime.toISOString()
+          )
+        : null;
       try {
         await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
       } catch (error) {
@@ -546,24 +557,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("[TummyTimeContext] Failed to end completed Live Activity:", error);
       }
-      if (user?.id) {
+      if (releaseLockPromise) {
         try {
-          await releaseTimerLock(
-            selectedBaby.id,
-            "tummy_time",
-            user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
-          );
+          await releaseLockPromise;
         } catch (error) {
-          console.error("[TummyTimeContext] Failed to release timer lock, queuing retry:", error);
-          await queuePendingLockRelease(
-            selectedBaby.id,
-            "tummy_time",
-            user.id,
-            activeTimer.timerInstanceId,
-            activeTimer.startTime.toISOString()
-          );
+          console.error("[TummyTimeContext] Failed to release timer lock, retry stays queued:", error);
         }
       }
     };

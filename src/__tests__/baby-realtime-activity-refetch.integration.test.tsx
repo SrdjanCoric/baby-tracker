@@ -95,6 +95,7 @@ jest.mock("@/contexts/active-timers-context", () => ({
 jest.mock("@/services/active-timer-service", () => ({
   acquireTimerLock: jest.fn(),
   releaseTimerLock: jest.fn(),
+  releaseTimerLockDurably: jest.fn(),
   updateTimerData: jest.fn(),
   queuePendingLockRelease: jest.fn(),
   getActiveTimerSnapshotForBaby: jest.fn().mockResolvedValue([]),

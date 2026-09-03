@@ -7,6 +7,7 @@ import {
   queuePendingLockRelease,
   queuePendingTimerStartEdit,
   releaseTimerLock,
+  releaseTimerLockDurably,
   retryPendingTimerStartEdits,
   updateTimerStartTime,
 } from "./active-timer-service";
@@ -307,6 +308,93 @@ describe("active timer cleanup", () => {
       )
     ).resolves.toBe(false);
     expect(deleteMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("durable lock release", () => {
+  beforeEach(() => {
+    storage.clear();
+    vi.clearAllMocks();
+
+    const query = {
+      delete: deleteMock,
+      eq: eqMock,
+      select: selectMock,
+      maybeSingle: maybeSingleMock,
+      then: (resolve: (value: { error: null; count: number }) => unknown) =>
+        Promise.resolve({ error: null, count: 1 }).then(resolve),
+    };
+    deleteMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    selectMock.mockReturnValue(query);
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        id: "lock-1",
+        baby_id: "baby-1",
+        activity_type: "sleep",
+        started_by: "user-1",
+        started_at: "2026-07-15T08:00:00.000Z",
+        timer_data: { timerInstanceId: "timer-1" },
+        users: { display_name: "Caregiver" },
+      },
+      error: null,
+    });
+    fromMock.mockReturnValue(query);
+  });
+
+  const readPending = () =>
+    JSON.parse(storage.get("@pending_lock_releases") ?? "[]") as Array<{
+      timerInstanceId?: string;
+    }>;
+
+  it("persists the release intent before touching the network", async () => {
+    maybeSingleMock.mockReturnValue(new Promise(() => {}));
+
+    const releasing = releaseTimerLockDurably(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "timer-1",
+      "2026-07-15T08:00:00.000Z"
+    );
+    await vi.waitFor(() => expect(maybeSingleMock).toHaveBeenCalled());
+
+    expect(readPending().map(release => release.timerInstanceId)).toEqual([
+      "timer-1",
+    ]);
+    void releasing;
+  });
+
+  it("clears the persisted intent once the release settles", async () => {
+    await expect(
+      releaseTimerLockDurably(
+        "baby-1",
+        "sleep",
+        "user-1",
+        "timer-1",
+        "2026-07-15T08:00:00.000Z"
+      )
+    ).resolves.toBe(true);
+
+    expect(readPending()).toEqual([]);
+  });
+
+  it("keeps the intent queued when the release rejects", async () => {
+    maybeSingleMock.mockRejectedValue(new TypeError("Network request failed"));
+
+    await expect(
+      releaseTimerLockDurably(
+        "baby-1",
+        "sleep",
+        "user-1",
+        "timer-1",
+        "2026-07-15T08:00:00.000Z"
+      )
+    ).rejects.toThrow("Network request failed");
+
+    expect(readPending().map(release => release.timerInstanceId)).toEqual([
+      "timer-1",
+    ]);
   });
 });
 
