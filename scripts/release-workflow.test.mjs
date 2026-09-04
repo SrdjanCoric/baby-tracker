@@ -282,7 +282,7 @@ test("protected build jobs use the validated source and record exact EAS IDs", (
       build.steps.find((step) => step.uses === "actions/setup-node@v4").with[
         "node-version"
       ],
-      "20.19.4"
+      "22.14.0"
     );
     assert.equal(
       build.steps.find(
