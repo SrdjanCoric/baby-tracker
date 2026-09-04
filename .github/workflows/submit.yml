@@ -53,7 +53,7 @@ jobs:
           node-version: "20.19.4"
 
       - name: Download release metadata
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-metadata-${{ inputs.release_run_id }}
           path: release-artifacts
@@ -62,7 +62,7 @@ jobs:
 
       - name: Download iOS build record
         if: inputs.platform == 'all' || inputs.platform == 'ios'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: eas-ios-build-${{ inputs.release_run_id }}
           path: release-artifacts
@@ -71,7 +71,7 @@ jobs:
 
       - name: Download Android build record
         if: inputs.platform == 'all' || inputs.platform == 'android'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: eas-android-build-${{ inputs.release_run_id }}
           path: release-artifacts
