@@ -65,3 +65,6 @@ mockups/
 /archive
 reviews/
 handoffs/
+
+# Untracked local working document
+db-io-optimization-plan.md

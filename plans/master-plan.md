@@ -300,6 +300,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
 - [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
+- [ ] 0089 · Respect stored sleep type across sleep statistics and charts → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
+- [ ] 0091 · Household caregivers stop/pause timers in-app → tasks/0091-household-caregivers-stop-pause-timers-in-app.md
+- [ ] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
+- [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
+- [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
 
 ## Workflow status
 
@@ -440,3 +445,9 @@ tombstones. The same incident produced migration 063 (bounding
 minutes from pg_cron), applied to production as a SQL-editor hotfix the same day; committing it is
 part of Task 0086. The Watch's 30-second `active_timers` poll was examined and deliberately left
 unchanged by owner decision.
+
+On 2026-09-01 the owner prioritized household shared timer control (brief:
+`plans/allow-household-timer-control.md`, which supersedes the earlier plan previously stored in
+that file). Tasks 0091 through 0094 take priority over every other open task; 0087, 0089, and 0090
+are deferred until 0091–0094 close, without an explicit owner decision required to resume them
+afterward. 0092 and 0093 touch disjoint surfaces and may proceed in parallel once 0091 merges.
