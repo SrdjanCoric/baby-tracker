@@ -97,7 +97,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload submission metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: submission-metadata-${{ github.run_id }}
           path: submission-metadata.json
