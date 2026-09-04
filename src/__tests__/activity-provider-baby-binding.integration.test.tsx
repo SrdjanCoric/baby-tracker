@@ -88,6 +88,7 @@ jest.mock("@/services/active-timer-service", () => {
     ...actual,
     acquireTimerLock: jest.fn(),
     releaseTimerLock: jest.fn(),
+    releaseTimerLockDurably: jest.fn(),
     updateTimerData: jest.fn(),
     getActiveTimerLock: jest.fn(),
     queuePendingLockRelease: jest.fn(),

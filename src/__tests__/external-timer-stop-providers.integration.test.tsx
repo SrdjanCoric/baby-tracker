@@ -123,10 +123,37 @@ jest.mock("@/services/activity-sync-service", () => ({
 
 jest.mock("@/services/active-timer-service", () => {
   const getActiveTimerLock = jest.fn();
+  const releaseTimerLock = jest.fn();
+  const queuePendingLockRelease = jest.fn();
+  const releaseTimerLockDurably = jest.fn(
+    async (
+      babyId: string,
+      activityType: string,
+      userId: string,
+      timerInstanceId?: string,
+      startedAt?: string
+    ) => {
+      await queuePendingLockRelease(
+        babyId,
+        activityType,
+        userId,
+        timerInstanceId,
+        startedAt
+      );
+      return releaseTimerLock(
+        babyId,
+        activityType,
+        userId,
+        timerInstanceId,
+        startedAt
+      );
+    }
+  );
   const snapshots = new Map<string, Promise<unknown[]>>();
   return {
     acquireTimerLock: jest.fn(),
-    releaseTimerLock: jest.fn(),
+    releaseTimerLock,
+    releaseTimerLockDurably,
     updateTimerData: jest.fn(),
     updateTimerStartTime: jest.fn(),
     queuePendingTimerStartEdit: jest.fn(),
@@ -152,7 +179,7 @@ jest.mock("@/services/active-timer-service", () => {
       (snapshot: Array<{ activityType: string }>, activityType: string) =>
         snapshot.find(lock => lock.activityType === activityType) ?? null
     ),
-    queuePendingLockRelease: jest.fn(),
+    queuePendingLockRelease,
   };
 });
 

@@ -169,6 +169,61 @@ export function queuePendingLockRelease(
   });
 }
 
+function removePendingLockRelease(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerInstanceId?: string
+): Promise<void> {
+  return withPendingLockReleaseMutation(async () => {
+    const pending = await getPendingLockReleases();
+    const remaining = pending.filter(
+      release =>
+        !(
+          release.babyId === babyId &&
+          release.activityType === activityType &&
+          release.userId === userId &&
+          release.timerInstanceId === timerInstanceId
+        )
+    );
+    if (remaining.length === pending.length) return;
+    await AsyncStorage.setItem(
+      PENDING_LOCK_RELEASES_KEY,
+      JSON.stringify(remaining)
+    );
+  });
+}
+
+/**
+ * Releases a timer lock with a write-ahead intent: the release is persisted
+ * to the pending queue before any network call, so a process suspended or
+ * killed mid-release still releases the lock on the next foreground retry.
+ */
+export async function releaseTimerLockDurably(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerInstanceId?: string,
+  startedAt?: string
+): Promise<boolean> {
+  await queuePendingLockRelease(
+    babyId,
+    activityType,
+    userId,
+    timerInstanceId,
+    startedAt
+  );
+  const released = await releaseTimerLock(
+    babyId,
+    activityType,
+    userId,
+    timerInstanceId,
+    startedAt
+  );
+  await removePendingLockRelease(babyId, activityType, userId, timerInstanceId);
+  return released;
+}
+
 async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
   const raw = await AsyncStorage.getItem(PENDING_LOCK_RELEASES_KEY);
   if (!raw) return [];

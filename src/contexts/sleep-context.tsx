@@ -29,9 +29,8 @@ import { RemoteChange, tombstonedId, upsertById } from "@/services/sync";
 import { classifySleepByTimeRange } from "@/utils/sleep-patterns";
 import {
   acquireTimerLock,
-  releaseTimerLock,
+  releaseTimerLockDurably,
   updateTimerData,
-  queuePendingLockRelease,
   getActiveTimerSnapshotForBaby,
   type ActiveTimerLock as ServerActiveTimerLock,
 } from "@/services/active-timer-service";
@@ -1335,6 +1334,17 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           activeMorningConfirmationRef.current = null;
         }
         removeLock(babyId, "sleep");
+        // Start the durable lock release immediately so its write-ahead
+        // intent is persisted before the app can be suspended mid-cleanup.
+        const releaseLockPromise = user?.id
+          ? releaseTimerLockDurably(
+              babyId,
+              "sleep",
+              user.id,
+              activeTimer.timerInstanceId,
+              activeTimer.startTime.toISOString()
+            )
+          : null;
         try {
           await SleepStorageService.clearActiveTimer(babyId);
         } catch (error) {
@@ -1357,26 +1367,13 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             error
           );
         }
-        if (user?.id) {
+        if (releaseLockPromise) {
           try {
-            await releaseTimerLock(
-              babyId,
-              "sleep",
-              user.id,
-              activeTimer.timerInstanceId,
-              activeTimer.startTime.toISOString()
-            );
+            await releaseLockPromise;
           } catch (error) {
             console.error(
-              "[SleepContext] Failed to release timer lock, queuing retry:",
+              "[SleepContext] Failed to release timer lock, retry stays queued:",
               error
-            );
-            await queuePendingLockRelease(
-              babyId,
-              "sleep",
-              user.id,
-              activeTimer.timerInstanceId,
-              activeTimer.startTime.toISOString()
             );
           }
         }

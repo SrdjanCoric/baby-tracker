@@ -10,7 +10,7 @@
       "reason": "No patched image-size release exists. Expo 54's Metro constrains image-size to the affected 1.x line, and npm offers only a major Expo 57 upgrade.",
       "upstream": "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
       "owner": "Srdjan Coric",
-      "expiresOn": "2026-08-21"
+      "expiresOn": "2026-10-31"
     },
     {
       "advisory": "GHSA-5p2g-fcmc-qvqq",
@@ -22,7 +22,7 @@
       "reason": "No patched image-size release exists. Expo 54's Metro constrains image-size to the affected 1.x line, and npm offers only a major Expo 57 upgrade.",
       "upstream": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
       "owner": "Srdjan Coric",
-      "expiresOn": "2026-08-21"
+      "expiresOn": "2026-10-31"
     }
   ]
 }

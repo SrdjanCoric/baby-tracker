@@ -246,17 +246,21 @@ export function SummaryView({
 
       {!isNewborn && (
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <MetricCard
-            label={t("sleepPatterns.nightWakings")}
-            value={String(data.nightWakingsPerNight)}
-            colors={colors}
-          />
           {data.avgBedtime ? (
             <MetricCard
               label={t("sleepPatterns.avgBedtime")}
               value={formatTime(data.avgBedtime, timeFormat)}
               colors={colors}
               subtitle={bedtimeSubtitle}
+            />
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+          {data.avgWakeTime ? (
+            <MetricCard
+              label={t("sleepPatterns.avgWakeTime")}
+              value={formatTime(data.avgWakeTime, timeFormat)}
+              colors={colors}
             />
           ) : (
             <View style={{ flex: 1 }} />
@@ -271,7 +275,15 @@ export function SummaryView({
           colors={colors}
           subtitle={avgNapTimeSubtitle}
         />
-        <View style={{ flex: 1 }} />
+        {!isNewborn ? (
+          <MetricCard
+            label={t("sleepPatterns.nightWakings")}
+            value={String(data.nightWakingsPerNight)}
+            colors={colors}
+          />
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
       </View>
 
       {dailyBars.length > 0 && (

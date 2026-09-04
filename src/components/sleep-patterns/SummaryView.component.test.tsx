@@ -177,6 +177,17 @@ describe("SummaryView", () => {
     expect(screen.getByText("8:35 PM")).toBeTruthy();
   });
 
+  it("shows average wake time beside average bedtime", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 7, 1, 18, 0, 0));
+
+    renderSummary("24h");
+
+    const wakeCard = screen.getByText("sleepPatterns.avgWakeTime").parent!
+      .parent!;
+    expect(within(wakeCard).getByText("6:55")).toBeTruthy();
+  });
+
   it("shows average nap time with its napping-day divisor", () => {
     const divergentSleeps = [
       makeSleep(
