@@ -262,8 +262,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStorageUserId(newSession.user.id);
         setSession(newSession);
 
-        // Set authenticated user immediately from session data
-        // Profile data (householdId, displayName, isOwner) will be fetched separately
+        // Set authenticated user immediately from session data.
+        // Preserve an already-loaded profile for the same user: resetting
+        // householdId to null here remounts AuthScopeBoundary/SyncAuthGate
+        // and resets navigation (cold-start "first tap goes home" bug).
+        // Profile data (householdId, displayName, isOwner) is fetched separately.
         const authUser: AuthUser = {
           id: newSession.user.id,
           email: newSession.user.email ?? null,
@@ -272,7 +275,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isOwner: false,
           createdAt: newSession.user.created_at,
         };
-        setUser(authUser);
+        setUser(prev =>
+          prev && prev.id === newSession.user.id
+            ? {
+                ...prev,
+                email: authUser.email,
+                displayName: prev.displayName ?? authUser.displayName,
+                createdAt: authUser.createdAt,
+              }
+            : authUser
+        );
 
         // Fetch full profile in background (non-blocking)
         fetchUserProfile(newSession.user.id)
