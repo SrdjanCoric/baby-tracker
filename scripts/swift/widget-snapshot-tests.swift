@@ -152,6 +152,18 @@ enum WidgetSnapshotTests {
             require(controls.canStop, "remote timer had no stop control on \(surface.rawValue)")
             require(!controls.canPause, "remote widget pause has no phone handler")
         }
+        var ownTimer = remoteTimer
+        ownTimer.isRemote = false
+        for surface in [WidgetTimerSurface.lockScreenCircular, .lockScreenRectangular] {
+            require(
+                !WidgetTimerControls(surface: surface, timer: ownTimer, isAuthenticated: true).stopsOnTap,
+                "own lock-screen timer must open the app on tap"
+            )
+            require(
+                WidgetTimerControls(surface: surface, timer: remoteTimer, isAuthenticated: true).stopsOnTap,
+                "remote lock-screen timer must retain its stop destination"
+            )
+        }
         require(
             versionedDecoded.activities.sleep.wakeWindowRequiresNewbornOptIn == true,
             "newborn wake-window requirement was not decoded"

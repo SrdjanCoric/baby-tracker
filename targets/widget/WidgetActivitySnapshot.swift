@@ -93,9 +93,14 @@ enum WidgetTimerSurface: String, CaseIterable {
 struct WidgetTimerControls: Equatable {
     let canStop: Bool
     let canPause: Bool
+    let stopsOnTap: Bool
 
     init(surface: WidgetTimerSurface, timer: ActiveTimerData?, isAuthenticated: Bool) {
         canStop = timer != nil
+        stopsOnTap = timer != nil && (
+            (surface != .lockScreenCircular && surface != .lockScreenRectangular)
+                || timer?.isRemote == true
+        )
         canPause = timer != nil
             && timer?.isRemote != true
             && isAuthenticated

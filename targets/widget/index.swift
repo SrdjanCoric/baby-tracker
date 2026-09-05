@@ -2308,7 +2308,7 @@ struct LockScreenCircularView: View {
                 }
             }
         }
-        .widgetURL(controls.canStop
+        .widgetURL(controls.stopsOnTap
             ? routedStopURL(for: activity, data: entry.widgetData)
             : activity.deepLinkURL)
         .containerBackground(.fill.tertiary, for: .widget)
@@ -2341,7 +2341,7 @@ struct LockScreenRectangularView: View {
                             timer: data.getActiveTimer(for: activity),
                             isAuthenticated: entry.isUserAuthenticated
                         )
-                        Link(destination: controls.canStop
+                        Link(destination: controls.stopsOnTap
                             ? routedStopURL(for: activity, data: data)
                             : activity.deepLinkURL) {
                             HStack(spacing: 2) {
@@ -2359,9 +2359,14 @@ struct LockScreenRectangularView: View {
                                     Text(startDate, style: .timer)
                                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
+                                    Image(systemName: "circle.fill")
+                                        .font(.system(size: 4))
+                                        .foregroundStyle(.green)
                                 }
-                                Image(systemName: "stop.fill")
-                                    .font(.system(size: 9, weight: .bold))
+                                if controls.stopsOnTap {
+                                    Image(systemName: "stop.fill")
+                                        .font(.system(size: 9, weight: .bold))
+                                }
                             }
                         }
                     } else if let lastTime = getLastActivityTime(for: activity, data: entry.widgetData) {
