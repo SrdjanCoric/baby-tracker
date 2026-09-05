@@ -2,6 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 import { createLiveActivityTokenSynchronizer } from "./live-activity-push-token-sync";
 
 describe("Live Activity token sync", () => {
+  it("ends a foreign-account mirror whose timer is gone without changing its remote token", async () => {
+    let ended = false;
+    const end = vi.fn(async () => { ended = true; });
+    const register = vi.fn(), remove = vi.fn(), acknowledge = vi.fn();
+    const sync = createLiveActivityTokenSynchronizer("new-owner", {
+      read: async () => [{ activityId: "foreign", babyId: "baby", timerInstanceId: "run", userId: "old-owner", ended }],
+      register, remove, acknowledge, end, isActive: async () => false,
+    });
+    await sync.sync();
+    expect(end).toHaveBeenCalledWith("foreign");
+    expect(acknowledge).toHaveBeenCalledWith("foreign");
+    expect(register).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it("refreshes an unchanged start token after its registration ages", async () => {
     let now = 0;
     const registerStart = vi.fn().mockResolvedValue(undefined);

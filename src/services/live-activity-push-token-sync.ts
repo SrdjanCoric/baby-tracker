@@ -40,6 +40,11 @@ export function createLiveActivityTokenSynchronizer(
         if (disposed) return;
         if (record.userId !== userId) {
           if (record.ended) await deps.acknowledge(record.activityId);
+          else if (deps.isActive && !(await deps.isActive(record))) {
+            if (disposed) return;
+            await deps.end(record.activityId);
+            requested = true;
+          }
           continue;
         }
         const active = !record.ended && deps.isActive ? await deps.isActive(record) : true;
