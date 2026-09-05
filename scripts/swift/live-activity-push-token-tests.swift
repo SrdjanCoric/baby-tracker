@@ -3,6 +3,19 @@ import Foundation
 @main
 struct LiveActivityPushTokenTests {
     static func main() throws {
+        let candidates = [
+            LiveActivityStartCandidate(id: "legacy", activityType: "sleep", babyId: nil, timerInstanceId: nil, userId: nil),
+            LiveActivityStartCandidate(id: "old", activityType: "sleep", babyId: "baby", timerInstanceId: "old", userId: "owner"),
+            LiveActivityStartCandidate(id: "match", activityType: "sleep", babyId: "baby", timerInstanceId: "new", userId: "owner"),
+            LiveActivityStartCandidate(id: "other", activityType: "feeding", babyId: nil, timerInstanceId: nil, userId: nil),
+        ]
+        let selection = selectLiveActivityStart(candidates, activityType: "sleep",
+            identity: ["babyId": "baby", "timerInstanceId": "new", "userId": "owner"])
+        precondition(selection.reuseId == "match")
+        precondition(selection.endIds == ["legacy", "old"], "orphans must end even when a matching activity exists")
+        let replacement = selectLiveActivityStart(Array(candidates.prefix(2)), activityType: "sleep",
+            identity: ["babyId": "baby", "timerInstanceId": "new", "userId": "owner"])
+        precondition(replacement.reuseId == nil && replacement.endIds == ["legacy", "old"])
         let suite = "live-activity-token-tests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }

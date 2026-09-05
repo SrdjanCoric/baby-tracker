@@ -55,3 +55,23 @@ final class LiveActivityPushTokenStore {
         if let data = try? JSONEncoder().encode(byId) { defaults.set(data, forKey: key) }
     }
 }
+
+// Foundation-only selection keeps duplicate handling testable without ActivityKit.
+struct LiveActivityStartCandidate {
+    let id: String
+    let activityType: String
+    let babyId: String?
+    let timerInstanceId: String?
+    let userId: String?
+}
+
+func selectLiveActivityStart(
+    _ candidates: [LiveActivityStartCandidate], activityType: String, identity: [String: String]?
+) -> (reuseId: String?, endIds: [String]) {
+    let sameType = candidates.filter { $0.activityType == activityType }
+    let reusable = sameType.first {
+        identity == nil || ($0.babyId == identity?["babyId"] &&
+            $0.timerInstanceId == identity?["timerInstanceId"] && $0.userId == identity?["userId"])
+    }
+    return (reusable?.id, sameType.filter { $0.id != reusable?.id }.map { $0.id })
+}

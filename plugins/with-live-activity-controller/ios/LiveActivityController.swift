@@ -171,14 +171,19 @@ class LiveActivityController: RCTEventEmitter {
                 return
             }
 
-            // Check for existing activity of the same type (may have been started via push-to-start)
-            let existingActivity = Activity<TimerActivityAttributes>.activities.first {
-                $0.attributes.activityType == activityType &&
-                    (identity == nil || ($0.attributes.timerInstanceId == identity?["timerInstanceId"] &&
-                                        $0.attributes.babyId == identity?["babyId"] &&
-                                        $0.attributes.userId == identity?["userId"]))
+            let activities = Activity<TimerActivityAttributes>.activities.filter {
+                $0.activityState == .active || $0.activityState == .stale
             }
-            if let existing = existingActivity {
+            let selection = selectLiveActivityStart(activities.map {
+                LiveActivityStartCandidate(id: $0.id, activityType: $0.attributes.activityType,
+                    babyId: $0.attributes.babyId, timerInstanceId: $0.attributes.timerInstanceId,
+                    userId: $0.attributes.userId)
+            }, activityType: activityType, identity: identity)
+            for activity in activities where selection.endIds.contains(activity.id) {
+                await activity.end(activity.content, dismissalPolicy: .immediate)
+                recordEnded(activity.id)
+            }
+            if let existing = activities.first(where: { $0.id == selection.reuseId }) {
                 print("[LiveActivityController] Reusing existing activity (push-to-start): \(existing.id) type=\(activityType)")
                 observe(existing)
                 resolve(existing.id)
