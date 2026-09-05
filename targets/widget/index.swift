@@ -2264,8 +2264,8 @@ struct LockScreenCircularView: View {
                data.hasActiveTimer(for: activity) {
                 if isRemote {
                     VStack(spacing: 2) {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 9))
+                        Text(activity.emoji)
+                            .font(.system(size: 14))
                         Image(systemName: "stop.fill")
                             .font(.system(size: 12, weight: .semibold))
                     }

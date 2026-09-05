@@ -2,6 +2,17 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("StopActivityIntent", () => {
+  it("identifies the remote activity on the circular lock screen", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url), "utf8"
+    );
+    const view = source.split("struct LockScreenCircularView:")[1].split("\nstruct ")[0];
+    const remote = view.split("if isRemote {")[1].split("} else if")[0];
+    expect(remote).toContain("Text(activity.emoji)");
+    expect(remote).toContain('Image(systemName: "stop.fill")');
+    expect(remote).not.toContain("getTimerContext(");
+  });
+
   it("keeps caregiver names off the rectangular lock screen", () => {
     const source = readFileSync(
       new URL("../../../targets/widget/index.swift", import.meta.url), "utf8"
