@@ -133,6 +133,24 @@ enum WidgetSnapshotTests {
         let versionedDecoded = try WidgetSnapshotDecoder.decodeNetwork(versioned, expectedBabyId: "baby-versioned")
         require(versionedDecoded.schemaVersion == 1, "versioned fixture lost its schema version")
         require(versionedDecoded.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z", "sleep anchor changed")
+        let remoteTimer = ActiveTimerData(
+            type: "sleep",
+            startTime: "2026-08-08T09:30:00.000Z",
+            timerInstanceId: "remote-timer",
+            context: "Other Caregiver",
+            isRemote: true,
+            isPaused: false,
+            accumulatedSeconds: nil,
+            lockState: nil
+        )
+        for surface in WidgetTimerSurface.allCases {
+            let controls = WidgetTimerControls(
+                surface: surface,
+                timer: remoteTimer,
+                isAuthenticated: true
+            )
+            require(controls.canStop, "remote timer had no stop control on \(surface.rawValue)")
+        }
         require(
             versionedDecoded.activities.sleep.wakeWindowRequiresNewbornOptIn == true,
             "newborn wake-window requirement was not decoded"

@@ -4,6 +4,8 @@
 **Depends on**: 0091
 **Source**: `plans/allow-household-timer-control.md` (planning brief, 2026-09-01) · **User stories**: As a caregiver, I can stop a timer another household member started directly from my iOS widget or Apple Watch.
 
+**Execution classification**: `code` · **Validation tier**: `canonical` · **TDD applicable**: yes
+
 ## What to build
 
 After 0091, the backend accepts cross-member stops, and the app supports them — but the widget still renders remote timers as non-interactive ("in use" / hourglass branches), and while the Watch already renders household-wide timers (`isRemote`, `startedBy`) and its stop path routes through the phone's durable external command queue into the backend RPC, that path previously failed with `42501`.
@@ -18,11 +20,11 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 
 ## Implementation work
 
-- [ ] Widget Swift: remove remote-timer non-interactive branches in all widget families; ensure the stop intent carries no `started_by` restriction; keep attribution display.
-- [ ] Watch Swift: enable stop (and pause parity) on remote timers; verify no client-side ownership gate remains in `canPerformAction`-style checks beyond debounce.
-- [ ] Verify/extend the external command queue path so a remote-timer stop command from widget/Watch produces the deterministic, stopper-owned record via the shared providers.
-- [ ] Swift tests (`npm run test:widget:swift`): widget renders stop control for remote timers; Watch stop command issued for remote timer.
-- [ ] Extend the stop-provider integration suite (external-timer stop providers) with widget/Watch-sourced commands against a remote timer: one record, correct owner, starter cleared.
+- [x] Widget Swift: remove remote-timer non-interactive branches in all widget families; ensure the stop intent carries no `started_by` restriction; keep attribution display.
+- [x] Watch Swift: enable stop (and pause parity) on remote timers; verify no client-side ownership gate remains in `canPerformAction`-style checks beyond debounce.
+- [x] Verify/extend the external command queue path so a remote-timer stop command from widget/Watch produces the deterministic, stopper-owned record via the shared providers.
+- [x] Swift tests (`npm run test:widget:swift`): widget renders stop control for remote timers; Watch stop command issued for remote timer.
+- [x] Extend the stop-provider integration suite (external-timer stop providers) with widget/Watch-sourced commands against a remote timer: one record, correct owner, starter cleared.
 
 ## Human checkpoints
 
@@ -30,7 +32,28 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 
 ## Acceptance criteria
 
-- [ ] Widget shows an operable stop control on a remote timer in every widget family; tapping it ends the timer and saves one stopper-owned record.
-- [ ] Watch stop of a remote timer succeeds (no `42501`), same single-record outcome.
-- [ ] `npm run test:widget:swift` and the stop-provider integration suite green, including new remote-timer cases.
-- [ ] Own-timer widget/Watch behavior unchanged (existing lifecycle/session-locking tests green).
+- [x] Widget shows an operable stop control on a remote timer in every widget family; tapping it ends the timer and saves one stopper-owned record.
+- [x] Watch stop of a remote timer succeeds (no `42501`), same single-record outcome.
+- [x] `npm run test:widget:swift` and the stop-provider integration suite green, including new remote-timer cases.
+- [x] Own-timer widget/Watch behavior unchanged (existing lifecycle/session-locking tests green).
+
+## Implementation record (2026-09-05)
+
+- Widget control policy now exposes Stop for every active timer across small, medium, large,
+  accessory-circular, and accessory-rectangular surfaces, independent of `isRemote`. Remote starter
+  attribution remains visible. Routed controls keep the timer identity, and the unused direct intent
+  no longer constructs a `started_by` predicate.
+- Watch active cards use the same stop and pause/resume policy for own and remote timers. A typed
+  `WatchStopCommand` is built for both, while the only general action gate remains debounce.
+- Remote native stops stay record-first: their durable command is consumed by the phone-side handler,
+  matched to the household lock's timer identity, and sent through the existing remote provider. The
+  direct native DELETE fallback remains own-timer-only so it cannot erase the lock data before the
+  stopper-owned deterministic record is built.
+- TDD proof: the new provider test failed with zero records before the handler learned remote locks,
+  then passed with one deterministic record per Widget/Watch command, `user-1` as owner, both starter
+  locks released, and the queue empty. Swift policy/command tests failed before their production seams
+  existed, then passed.
+- Focused pre-review proof: `npm run test:widget:swift` passed; the full external stop-provider file
+  passed 58/58; the two native ordering files passed 7/7; the affected handler component file passed
+  8/8; `npm run typecheck`, targeted ESLint, and `git diff --check` passed. The real-device two-account
+  checkpoint remains for the owner and `finish-task`.

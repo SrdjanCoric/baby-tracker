@@ -6,6 +6,8 @@ import { useSleep } from "@/contexts/sleep-context";
 import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby } from "@/contexts/baby-context";
+import { useAuth } from "@/contexts/auth-context";
+import { useActiveTimers } from "@/contexts/active-timers-context";
 import { clearPendingWidgetPauseToggle } from "@/services/widget-data-service";
 import {
   acknowledgeExternalTimerCommand,
@@ -32,10 +34,24 @@ interface CommandTimer {
 export function useWidgetStopHandler() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
-  const { activeTimer: feedingTimer, stopBreastfeeding } = useFeeding();
-  const { activeTimer: sleepTimer, stopSleep } = useSleep();
-  const { activeTimer: pumpingTimer, stopPumping } = usePumping();
-  const { activeTimer: tummyTimeTimer, stopTummyTime } = useTummyTime();
+  const { user } = useAuth();
+  const { getLockForActivity } = useActiveTimers();
+  const {
+    activeTimer: feedingTimer,
+    stopBreastfeeding,
+    stopRemoteBreastfeeding,
+  } = useFeeding();
+  const { activeTimer: sleepTimer, stopSleep, stopRemoteSleep } = useSleep();
+  const {
+    activeTimer: pumpingTimer,
+    stopPumping,
+    stopRemotePumping,
+  } = usePumping();
+  const {
+    activeTimer: tummyTimeTimer,
+    stopTummyTime,
+    stopRemoteTummyTime,
+  } = useTummyTime();
   const isProcessingRef = useRef(false);
   const shouldReprocessRef = useRef(false);
   const processPendingStopRef = useRef<() => Promise<void>>(async () => {});
@@ -57,24 +73,54 @@ export function useWidgetStopHandler() {
 
       let timer: CommandTimer | null = null;
       let stop: ((endTime: Date) => Promise<unknown>) | null = null;
+      let stopRemote: ((endTime: Date) => Promise<unknown>) | null = null;
       switch (queuedCommand.activityType) {
         case "feeding":
           timer = feedingTimer;
           stop = stopBreastfeeding;
+          stopRemote = stopRemoteBreastfeeding;
           break;
         case "sleep":
           timer = sleepTimer;
           stop = stopSleep;
+          stopRemote = stopRemoteSleep;
           break;
         case "pumping":
           timer = pumpingTimer;
           stop = (endTime) =>
             stopPumping(queuedCommand.payload?.volumeMl ?? 0, endTime);
+          stopRemote = stopRemotePumping;
           break;
         case "tummy_time":
           timer = tummyTimeTimer;
           stop = stopTummyTime;
+          stopRemote = stopRemoteTummyTime;
           break;
+      }
+
+      if (!timer?.isRunning && stopRemote && user?.id && user.householdId) {
+        const lock = getLockForActivity(
+          queuedCommand.babyId,
+          queuedCommand.activityType
+        );
+        const startedAt = lock ? new Date(lock.startedAt) : null;
+        if (
+          lock &&
+          lock.startedBy !== user.id &&
+          startedAt &&
+          Number.isFinite(startedAt.getTime())
+        ) {
+          const timerInstanceId =
+            typeof lock.timerData?.timerInstanceId === "string"
+              ? lock.timerData.timerInstanceId
+              : queuedCommand.timerInstanceId;
+          timer = {
+            isRunning: true,
+            startTime: startedAt,
+            timerInstanceId,
+          };
+          stop = stopRemote;
+        }
       }
 
       if (!timer?.isRunning || !stop) return;
@@ -104,14 +150,21 @@ export function useWidgetStopHandler() {
     },
     [
       selectedBaby?.id,
+      user?.id,
+      user?.householdId,
+      getLockForActivity,
       feedingTimer,
       sleepTimer,
       pumpingTimer,
       tummyTimeTimer,
       stopBreastfeeding,
+      stopRemoteBreastfeeding,
       stopSleep,
+      stopRemoteSleep,
       stopPumping,
+      stopRemotePumping,
       stopTummyTime,
+      stopRemoteTummyTime,
       router,
     ]
   );

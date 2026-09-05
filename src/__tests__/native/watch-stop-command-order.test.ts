@@ -15,8 +15,8 @@ function functionSource(name: string, nextName: string): string {
 describe("Watch external timer commands", () => {
   it("durably transfers a typed stop before releasing the server timer", () => {
     const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
-    const commandId = stopSource.indexOf('"id": UUID().uuidString');
-    const timerIdentity = stopSource.indexOf('"timerInstanceId": timerInstanceId');
+    const commandId = stopSource.indexOf("let stopCommand = WatchStopCommand");
+    const timerIdentity = stopSource.indexOf("timerInstanceId: timerInstanceId");
     const transfer = stopSource.indexOf("sendAction(message)");
     const remoteMutation = stopSource.indexOf("supabaseStopTimer(activityType: activityType)");
 
@@ -40,5 +40,15 @@ describe("Watch external timer commands", () => {
 
     expect(sendSource.indexOf("session.transferUserInfo(messageWithId)"))
       .toBeLessThan(sendSource.indexOf("session.sendMessage(messageWithId"));
+  });
+
+  it("keeps remote stops on the durable phone path without an ownership-filtered fallback", () => {
+    const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
+    const pumpingSource = functionSource("stopPumpingWithVolume", "logDiaper");
+    const fallbackSource = functionSource("supabaseStopTimer", "endLiveActivityViaEdgeFunction");
+
+    expect(stopSource).toContain("timer.isRemote != true");
+    expect(pumpingSource).toContain("timer.isRemote != true");
+    expect(fallbackSource).not.toContain("started_by=eq.");
   });
 });

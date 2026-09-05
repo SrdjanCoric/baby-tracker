@@ -81,6 +81,47 @@ struct WatchSummaryTimer: Codable, Equatable, Hashable {
     var preservedLocally: Bool? = nil
 }
 
+struct WatchTimerControls: Equatable {
+    let canStop: Bool
+    let canPause: Bool
+    let canResume: Bool
+
+    init(isRemote _: Bool, isPaused: Bool) {
+        canStop = true
+        canPause = !isPaused
+        canResume = isPaused
+    }
+}
+
+struct WatchStopCommand: Equatable {
+    let isRemote: Bool
+    let id: String
+    let activityType: String
+    let babyId: String
+    let timerInstanceId: String
+    let eventAt: String
+    let source = "watch"
+    let legacy: Bool
+
+    init(
+        isRemote: Bool,
+        id: String,
+        activityType: String,
+        babyId: String,
+        timerInstanceId: String,
+        eventAt: String,
+        legacy: Bool
+    ) {
+        self.isRemote = isRemote
+        self.id = id
+        self.activityType = activityType
+        self.babyId = babyId
+        self.timerInstanceId = timerInstanceId
+        self.eventAt = eventAt
+        self.legacy = legacy
+    }
+}
+
 struct WatchSummaryLocalDay: Codable, Equatable {
     var startedAt: String
     var endsAt: String

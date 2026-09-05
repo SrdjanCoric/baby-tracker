@@ -37,8 +37,8 @@ describe("StopActivityIntent", () => {
     expect(activeTimersUrl).toBeGreaterThan(persistStop);
     expect(releaseScopeEnd).toBeGreaterThan(activeTimersUrl);
     expect(activityPredicate).toBeGreaterThanOrEqual(0);
-    expect(userPredicate).toBeGreaterThan(activityPredicate);
-    expect(requestCreation).toBeGreaterThan(userPredicate);
+    expect(userPredicate).toBe(-1);
+    expect(requestCreation).toBeGreaterThan(activityPredicate);
     expect(deleteRequest).toBeGreaterThan(requestCreation);
     expect(releaseLock).toBeGreaterThan(deleteRequest);
   });

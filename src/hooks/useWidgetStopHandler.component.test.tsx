@@ -8,6 +8,7 @@ const mockReadExternalTimerCommands = jest.fn();
 const mockAcknowledgeExternalTimerCommand = jest.fn();
 const mockClaimLegacyExternalTimerCommand = jest.fn();
 const mockGetTimerCompletion = jest.fn();
+const mockGetLockForActivity = jest.fn();
 const mockStopBreastfeeding = jest.fn();
 const mockStopSleep = jest.fn();
 const mockStopPumping = jest.fn();
@@ -46,6 +47,16 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1" } }),
+}));
+
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "user-1", householdId: "household-1" },
+  }),
+}));
+
+jest.mock("@/contexts/active-timers-context", () => ({
+  useActiveTimers: () => ({ getLockForActivity: mockGetLockForActivity }),
 }));
 
 jest.mock("@/contexts/feeding-context", () => ({
@@ -135,6 +146,7 @@ describe("useWidgetStopHandler", () => {
       async (command: unknown) => command
     );
     mockGetTimerCompletion.mockResolvedValue(null);
+    mockGetLockForActivity.mockReturnValue(null);
     mockStopBreastfeeding.mockResolvedValue(null);
     mockStopSleep.mockResolvedValue(null);
     mockStopPumping.mockResolvedValue(null);

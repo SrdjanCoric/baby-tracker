@@ -189,6 +189,32 @@ enum WatchSummaryTests {
             reload: { reloads.increment() }
         )
         let cached = try WatchSummaryDecoder.decodeCache(versioned).data
+        let remoteRunningControls = WatchTimerControls(isRemote: true, isPaused: false)
+        requireWatch(
+            remoteRunningControls.canStop && remoteRunningControls.canPause && !remoteRunningControls.canResume,
+            "a running remote Watch timer did not expose the own-timer stop/pause controls"
+        )
+        let remotePausedControls = WatchTimerControls(isRemote: true, isPaused: true)
+        requireWatch(
+            remotePausedControls.canStop && !remotePausedControls.canPause && remotePausedControls.canResume,
+            "a paused remote Watch timer did not expose the own-timer stop/resume controls"
+        )
+        let remoteStopCommand = WatchStopCommand(
+            isRemote: true,
+            id: "watch-command",
+            activityType: "sleep",
+            babyId: "baby-versioned",
+            timerInstanceId: "remote-timer",
+            eventAt: "2026-08-08T10:15:00.000Z",
+            legacy: false
+        )
+        requireWatch(
+            remoteStopCommand.isRemote
+                && remoteStopCommand.source == "watch"
+                && remoteStopCommand.timerInstanceId == "remote-timer"
+                && remoteStopCommand.activityType == "sleep",
+            "the Watch did not issue a targeted stop command for a remote timer"
+        )
 
         let resetSuiteName = "watch-summary-reset-tests.\(UUID().uuidString)"
         let resetDefaults = UserDefaults(suiteName: resetSuiteName)!
