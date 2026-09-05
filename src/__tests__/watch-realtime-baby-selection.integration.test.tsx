@@ -38,6 +38,14 @@ jest.mock("@/contexts/auth-context", () => ({
   }),
 }));
 
+jest.mock("@/contexts/active-timers-context", () => ({
+  useActiveTimers: () => ({
+    getLockForActivity: jest.fn(() => null),
+    refreshLocks: jest.fn(async () => undefined),
+    isLoading: false,
+  }),
+}));
+
 jest.mock("@/contexts/sync-context", () => ({
   useSync: () => ({
     subscribeToRemoteChanges: jest.fn(

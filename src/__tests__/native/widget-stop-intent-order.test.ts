@@ -2,6 +2,26 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("StopActivityIntent", () => {
+  it("identifies the remote activity on the circular lock screen", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url), "utf8"
+    );
+    const view = source.split("struct LockScreenCircularView:")[1].split("\nstruct ")[0];
+    const remote = view.split("if isRemote {")[1].split("} else if")[0];
+    expect(remote).toContain("Text(activity.emoji)");
+    expect(remote).toContain('Image(systemName: "stop.fill")');
+    expect(remote).not.toContain("getTimerContext(");
+  });
+
+  it("keeps caregiver names off the rectangular lock screen", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url), "utf8"
+    );
+    const view = source.split("struct LockScreenRectangularView:")[1].split("\nstruct ")[0];
+    expect(view).toContain("Text(L.inUse)");
+    expect(view).not.toContain("getTimerContext(");
+  });
+
   it("persists the baby-targeted stop before releasing the server lock", () => {
     const source = readFileSync(
       new URL("../../../targets/widget/index.swift", import.meta.url),
@@ -38,7 +58,9 @@ describe("StopActivityIntent", () => {
     expect(releaseScopeEnd).toBeGreaterThan(activeTimersUrl);
     expect(activityPredicate).toBeGreaterThanOrEqual(0);
     expect(userPredicate).toBeGreaterThan(activityPredicate);
-    expect(requestCreation).toBeGreaterThan(userPredicate);
+    expect(intentSource).toContain("guard let identity = widgetSnapshotRuntime?.identity.currentIdentity()");
+    expect(releaseScope).toContain("&started_by=eq.\\(identity.accountId)");
+    expect(requestCreation).toBeGreaterThan(activityPredicate);
     expect(deleteRequest).toBeGreaterThan(requestCreation);
     expect(releaseLock).toBeGreaterThan(deleteRequest);
   });

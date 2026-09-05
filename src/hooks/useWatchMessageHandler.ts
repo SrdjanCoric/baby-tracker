@@ -6,6 +6,8 @@ import { useDiaper } from "@/contexts/diaper-context";
 import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useActiveTimers } from "@/contexts/active-timers-context";
+import { toggleTimerPause, type TimerActivityType } from "@/services/active-timer-service";
 import { setWatchMessageHandler } from "@/services/watch-service";
 import type { WatchReplyHandler } from "@/services/watch-service";
 import { appendExternalTimerCommand } from "@/services/external-timer-command-service";
@@ -89,6 +91,7 @@ function parseRequestedIdentity(
 export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) {
   const { onRequestSync, onSelectBabyRequest } = options ?? {};
   const { user } = useAuth();
+  const { getLockForActivity, refreshLocks } = useActiveTimers();
   const { selectedBaby, getBabyById, selectBaby } = useBaby();
   const { babyBinding: feedingBinding, startBreastfeeding, changeSide, addFeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
   const { babyBinding: sleepBinding, startSleep, pauseSleep, resumeSleep } = useSleep();
@@ -140,6 +143,47 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       const requestedIdentity = parseRequestedIdentity(message);
 
       try {
+        if (
+          (action === "pauseTimer" || action === "resumeTimer") &&
+          targetBabyId && user?.id && user.householdId &&
+          ["feeding", "sleep", "pumping", "tummyTime"].includes(activityType ?? "")
+        ) {
+          const dbType = (activityType === "tummyTime" ? "tummy_time" : activityType) as TimerActivityType;
+          const lock = getLockForActivity(targetBabyId, dbType);
+          if (lock && lock.startedBy !== user.id) {
+            if (
+              typeof message.timerInstanceId === "string" &&
+              message.timerInstanceId !== lock.timerData?.timerInstanceId
+            ) return { success: false, error: "stale-timer" };
+            const isPaused = action === "pauseTimer";
+            if ((lock.timerData?.isPaused === true) === isPaused) {
+              return { success: true };
+            }
+            const now = parseRequestedTime(message.eventAt) ?? new Date();
+            const startedAt = new Date(lock.startedAt);
+            if (!Number.isFinite(startedAt.getTime()) || now < startedAt) {
+              return { success: false, error: "stale-timer" };
+            }
+            const timerData: Record<string, unknown> = {
+              isPaused,
+              accumulatedSeconds: Math.max(0, Math.floor((now.getTime() - startedAt.getTime()) / 1000)),
+            };
+            if (isPaused) {
+              timerData.pausedAt = now.toISOString();
+            } else {
+              const pausedAt = typeof lock.timerData?.pausedAt === "string"
+                ? new Date(lock.timerData.pausedAt).getTime() : now.getTime();
+              const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
+                ? lock.timerData.totalPausedMs : 0;
+              timerData.totalPausedMs = totalPausedMs +
+                (Number.isFinite(pausedAt) ? Math.max(0, now.getTime() - pausedAt) : 0);
+              timerData.effectiveStartTime = startedAt.toISOString();
+            }
+            await toggleTimerPause(targetBabyId, dbType, user.id, timerData);
+            await refreshLocks();
+            return { success: true };
+          }
+        }
         switch (action) {
           case "requestSync":
             if (onRequestSync) {
@@ -338,6 +382,10 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
       return { success: true };
     },
     [
+      user?.id,
+      user?.householdId,
+      getLockForActivity,
+      refreshLocks,
       onRequestSync,
       startBreastfeeding,
       pauseBreastfeeding,

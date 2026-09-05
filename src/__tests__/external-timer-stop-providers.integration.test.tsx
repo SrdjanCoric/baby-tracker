@@ -505,6 +505,118 @@ describe("external timer stops through production providers", () => {
     ]);
   });
 
+  it("consumes Widget and Watch stops for remote timers through the stopper-owned providers", async () => {
+    const remoteLocks = {
+      feeding: {
+        id: "lock-feeding",
+        babyId: "baby-1",
+        activityType: "feeding",
+        startedBy: "starter-2",
+        startedByName: "Other Caregiver",
+        startedAt,
+        timerData: {
+          timerInstanceId: "remote-widget-feeding",
+          side: "left",
+          type: "breast",
+        },
+      },
+      sleep: {
+        id: "lock-sleep",
+        babyId: "baby-1",
+        activityType: "sleep",
+        startedBy: "starter-2",
+        startedByName: "Other Caregiver",
+        startedAt,
+        timerData: {
+          timerInstanceId: "remote-watch-sleep",
+          type: "nap",
+        },
+      },
+    } as const;
+    mockGetLockForActivity.mockImplementation(
+      (_babyId: string, activityType: keyof typeof remoteLocks) =>
+        remoteLocks[activityType] ?? null
+    );
+    mockExtensionStorageData.set("externalTimerCommandQueue", JSON.stringify({
+      version: 1,
+      commands: [
+        {
+          id: "widget-remote-stop",
+          action: "stop",
+          activityType: "feeding",
+          babyId: "baby-1",
+          timerInstanceId: "remote-widget-feeding",
+          eventAt: stoppedAt,
+          source: "widget",
+        },
+        {
+          id: "watch-remote-stop",
+          action: "stop",
+          activityType: "sleep",
+          babyId: "baby-1",
+          timerInstanceId: "remote-watch-sleep",
+          eventAt: stoppedAt,
+          source: "watch",
+        },
+      ],
+    }));
+
+    render(<RealTimerProviders />);
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createFeedingInDatabase: jest.Mock;
+      createSleepInDatabase: jest.Mock;
+    };
+    await waitFor(() =>
+      expect([
+        activitySync.createFeedingInDatabase.mock.calls.length,
+        activitySync.createSleepInDatabase.mock.calls.length,
+      ]).toEqual([1, 1])
+    );
+
+    expect(activitySync.createFeedingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: expectedActivityId("remote-widget-feeding"),
+        babyId: "baby-1",
+        startedAt: new Date(startedAt),
+        endedAt: new Date(stoppedAt),
+      }),
+      "user-1"
+    );
+    expect(activitySync.createSleepInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: expectedActivityId("remote-watch-sleep"),
+        babyId: "baby-1",
+        startedAt: new Date(startedAt),
+        endedAt: new Date(stoppedAt),
+      }),
+      "user-1"
+    );
+    expect(mockRemoveLock).toHaveBeenCalledTimes(0);
+    expect(mockRefreshLocks).toHaveBeenCalledTimes(2);
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      releaseTimerLock: jest.Mock;
+    };
+    expect(activeTimers.releaseTimerLock).toHaveBeenCalledWith(
+      "baby-1",
+      "feeding",
+      "user-1",
+      "remote-widget-feeding",
+      startedAt
+    );
+    expect(activeTimers.releaseTimerLock).toHaveBeenCalledWith(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "remote-watch-sleep",
+      startedAt
+    );
+    await waitFor(() =>
+      expect(JSON.parse(mockExtensionStorageData.get("externalTimerCommandQueue") ?? "{}").commands)
+        .toEqual([])
+    );
+  });
+
   it("clears every starter timer without saving after its observed lock disappears", async () => {
     const view = render(<RealTimerProviders />);
     await waitFor(() =>

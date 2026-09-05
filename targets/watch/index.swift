@@ -900,15 +900,23 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):\(activityType):\(timer.startTime)"
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
+        let stopCommand = WatchStopCommand(
+            id: UUID().uuidString,
+            activityType: dbType,
+            babyId: babyId,
+            timerInstanceId: timerInstanceId,
+            eventAt: endTimeString,
+            legacy: timer.timerInstanceId == nil
+        )
         let externalTimerCommand: [String: Any] = [
-            "id": UUID().uuidString,
+            "id": stopCommand.id,
             "action": "stop",
-            "activityType": dbType,
-            "babyId": babyId,
-            "timerInstanceId": timerInstanceId,
-            "eventAt": endTimeString,
-            "source": "watch",
-            "legacy": timer.timerInstanceId == nil
+            "activityType": stopCommand.activityType,
+            "babyId": stopCommand.babyId,
+            "timerInstanceId": stopCommand.timerInstanceId,
+            "eventAt": stopCommand.eventAt,
+            "source": stopCommand.source,
+            "legacy": stopCommand.legacy
         ]
         let message: [String: Any] = [
             "action": "stopTimer",
@@ -928,7 +936,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             requestedAt: endTimeString
         )
 
-        if !(session?.isReachable ?? false) {
+        if !(session?.isReachable ?? false) && timer.isRemote != true {
             supabaseStopTimer(activityType: activityType)
         }
 
@@ -956,15 +964,23 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         }
         let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):pumping:\(timer.startTime)"
 
+        let stopCommand = WatchStopCommand(
+            id: UUID().uuidString,
+            activityType: "pumping",
+            babyId: babyId,
+            timerInstanceId: timerInstanceId,
+            eventAt: endTimeString,
+            legacy: timer.timerInstanceId == nil
+        )
         let externalTimerCommand: [String: Any] = [
-            "id": UUID().uuidString,
+            "id": stopCommand.id,
             "action": "stop",
-            "activityType": "pumping",
-            "babyId": babyId,
-            "timerInstanceId": timerInstanceId,
-            "eventAt": endTimeString,
-            "source": "watch",
-            "legacy": timer.timerInstanceId == nil,
+            "activityType": stopCommand.activityType,
+            "babyId": stopCommand.babyId,
+            "timerInstanceId": stopCommand.timerInstanceId,
+            "eventAt": stopCommand.eventAt,
+            "source": stopCommand.source,
+            "legacy": stopCommand.legacy,
             "payload": ["volumeMl": volumeMl]
         ]
         let message: [String: Any] = [
@@ -985,7 +1001,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             requestedAt: endTimeString
         )
 
-        if !(session?.isReachable ?? false) {
+        if !(session?.isReachable ?? false) && timer.isRemote != true {
             supabaseStopTimer(activityType: "pumping")
         }
 
@@ -1068,7 +1084,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         var message: [String: Any] = [
             "action": "pauseTimer",
-            "activityType": activityType
+            "activityType": activityType,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": requestedAt
         ]
         message["babyId"] = babyId
         let requestId = sendAction(message)
@@ -1082,6 +1100,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         )
 
         DispatchQueue.main.async {
+            // Remote state comes back through the household snapshot after the phone RPC.
+            guard timer.isRemote != true else { return }
             var accumulated: Int?
             var timerContext: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
@@ -1119,7 +1139,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         var message: [String: Any] = [
             "action": "resumeTimer",
-            "activityType": activityType
+            "activityType": activityType,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": requestedAt
         ]
         message["babyId"] = babyId
         let requestId = sendAction(message)
@@ -1133,6 +1155,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         )
 
         DispatchQueue.main.async {
+            // Do not retain an optimistic remote copy when delivery or the RPC fails.
+            guard timer.isRemote != true else { return }
             var accumulated: Int?
             var timerContext: String?
             var effectiveStartTime: String?
@@ -1578,8 +1602,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func supabaseStopTimer(activityType: String) {
-        guard hasAuthCredentials, let config = supabaseConfig, let supabaseUserId,
-              let babyId = currentBabyId else { return }
+        guard hasAuthCredentials, let config = supabaseConfig,
+              let babyId = currentBabyId, let supabaseUserId else { return }
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
         let urlString = "\(config.supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(supabaseUserId)"
@@ -2145,6 +2169,10 @@ struct ActiveTimerCard: View {
         timer.isRemote == true
     }
 
+    var controls: WatchTimerControls {
+        WatchTimerControls(isPaused: isPaused)
+    }
+
     var body: some View {
         VStack(spacing: 4) {
             HStack {
@@ -2188,7 +2216,7 @@ struct ActiveTimerCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if !isRemote {
+            if controls.canStop {
                 HStack(spacing: 6) {
                     if hasSideSwitch, let context = timer.context {
                         Button {
@@ -2206,7 +2234,7 @@ struct ActiveTimerCard: View {
                         .buttonStyle(.bordered)
                     }
 
-                    if isPaused {
+                    if controls.canResume {
                         Button {
                             connector.resumeTimer(activityType: timer.type)
                         } label: {
@@ -2221,7 +2249,7 @@ struct ActiveTimerCard: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
-                    } else {
+                    } else if controls.canPause {
                         Button {
                             connector.pauseTimer(activityType: timer.type)
                         } label: {
@@ -2816,6 +2844,10 @@ struct PumpingActiveCard: View {
         timer.isRemote == true
     }
 
+    var controls: WatchTimerControls {
+        WatchTimerControls(isPaused: isPaused)
+    }
+
     var body: some View {
         VStack(spacing: 4) {
             HStack {
@@ -2857,9 +2889,9 @@ struct PumpingActiveCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if !isRemote {
+            if controls.canStop {
                 HStack(spacing: 6) {
-                    if let context = timer.context, !isPaused {
+                    if let context = timer.context, !isPaused, timer.isRemote != true {
                         Button {
                             connector.switchSide(activityType: timer.type, currentSide: context)
                         } label: {
@@ -2875,7 +2907,7 @@ struct PumpingActiveCard: View {
                         .buttonStyle(.bordered)
                     }
 
-                    if isPaused {
+                    if controls.canResume {
                         Button {
                             connector.resumeTimer(activityType: timer.type)
                         } label: {
@@ -2890,7 +2922,7 @@ struct PumpingActiveCard: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
-                    } else {
+                    } else if controls.canPause {
                         Button {
                             connector.pauseTimer(activityType: timer.type)
                         } label: {

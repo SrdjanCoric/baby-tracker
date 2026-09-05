@@ -82,6 +82,32 @@ struct ActiveTimerData: Codable, Equatable {
     var lockState: String?
 }
 
+enum WidgetTimerSurface: String, CaseIterable {
+    case small
+    case medium
+    case large
+    case lockScreenCircular
+    case lockScreenRectangular
+}
+
+struct WidgetTimerControls: Equatable {
+    let canStop: Bool
+    let canPause: Bool
+    let stopsOnTap: Bool
+
+    init(surface: WidgetTimerSurface, timer: ActiveTimerData?, isAuthenticated: Bool) {
+        canStop = timer != nil
+        stopsOnTap = timer != nil && (
+            (surface != .lockScreenCircular && surface != .lockScreenRectangular)
+                || timer?.isRemote == true
+        )
+        canPause = timer != nil
+            && timer?.isRemote != true
+            && isAuthenticated
+            && (surface == .small || surface == .large)
+    }
+}
+
 struct WidgetLocalDay: Codable, Equatable {
     var startedAt: String
     var endsAt: String

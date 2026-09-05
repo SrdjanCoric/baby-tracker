@@ -1,6 +1,7 @@
 jest.unmock("./useWidgetStopHandler");
 
 const mockPush = jest.fn();
+const mockRouter = { push: mockPush };
 const mockReadPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetPauseToggle = jest.fn();
@@ -8,8 +9,13 @@ const mockReadExternalTimerCommands = jest.fn();
 const mockAcknowledgeExternalTimerCommand = jest.fn();
 const mockClaimLegacyExternalTimerCommand = jest.fn();
 const mockGetTimerCompletion = jest.fn();
+const mockGetLockForActivity = jest.fn();
+let mockLockLookup = mockGetLockForActivity;
+let mockLocksLoading = false;
 const mockStopBreastfeeding = jest.fn();
 const mockStopSleep = jest.fn();
+const mockStopRemoteSleep = jest.fn();
+let mockRemoteSleepStop = mockStopRemoteSleep;
 const mockStopPumping = jest.fn();
 const mockStopTummyTime = jest.fn();
 
@@ -41,11 +47,21 @@ let mockTummyTimeState = {
 };
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => mockRouter,
 }));
 
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1" } }),
+}));
+
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "user-1", householdId: "household-1" },
+  }),
+}));
+
+jest.mock("@/contexts/active-timers-context", () => ({
+  useActiveTimers: () => ({ getLockForActivity: mockLockLookup, isLoading: mockLocksLoading }),
 }));
 
 jest.mock("@/contexts/feeding-context", () => ({
@@ -53,7 +69,7 @@ jest.mock("@/contexts/feeding-context", () => ({
 }));
 
 jest.mock("@/contexts/sleep-context", () => ({
-  useSleep: () => mockSleepState,
+  useSleep: () => ({ ...mockSleepState, stopRemoteSleep: mockRemoteSleepStop }),
 }));
 
 jest.mock("@/contexts/pumping-context", () => ({
@@ -135,10 +151,15 @@ describe("useWidgetStopHandler", () => {
       async (command: unknown) => command
     );
     mockGetTimerCompletion.mockResolvedValue(null);
-    mockStopBreastfeeding.mockResolvedValue(null);
-    mockStopSleep.mockResolvedValue(null);
-    mockStopPumping.mockResolvedValue(null);
-    mockStopTummyTime.mockResolvedValue(null);
+    mockGetLockForActivity.mockReturnValue(null);
+    mockLockLookup = mockGetLockForActivity;
+    mockLocksLoading = false;
+    mockStopBreastfeeding.mockResolvedValue({ id: "feeding-record" });
+    mockStopSleep.mockResolvedValue({ id: "sleep-record" });
+    mockStopRemoteSleep.mockResolvedValue({ id: "remote-record" });
+    mockRemoteSleepStop = mockStopRemoteSleep;
+    mockStopPumping.mockResolvedValue({ id: "pumping-record" });
+    mockStopTummyTime.mockResolvedValue({ id: "tummy-time-record" });
 
     mockFeedingState = {
       activeTimer: null,
@@ -286,6 +307,110 @@ describe("useWidgetStopHandler", () => {
     expect(mockStopSleep).not.toHaveBeenCalled();
     expect(mockClearPendingWidgetPauseToggle).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, ""])("skips a remote lock without a usable timer identity (%s)", async (timerInstanceId) => {
+    const command = {
+      id: "stale-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "old-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "widget",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId },
+    });
+    render(<TestHarness />);
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockStopRemoteSleep).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("retries a remote stop that returned no record before acknowledging it", async () => {
+    const command = {
+      id: "remote-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "remote-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "remote-timer" },
+    });
+    mockStopRemoteSleep.mockResolvedValueOnce(null).mockResolvedValue({ id: "record" });
+    render(<TestHarness />);
+    await act(async () => {});
+    expect(mockStopRemoteSleep).toHaveBeenCalledTimes(1);
+    expect(mockAcknowledgeExternalTimerCommand).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+    await act(async () => { mockAppStateHandler?.("active"); });
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockStopRemoteSleep).toHaveBeenCalledTimes(2);
+    expect(mockPush).toHaveBeenCalledWith("/sleep");
+  });
+
+  it("acknowledges a null stop only when its timer completion is durable", async () => {
+    const command = {
+      id: "completed-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "remote-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "remote-timer" },
+    });
+    mockStopRemoteSleep.mockResolvedValue(null);
+    mockGetTimerCompletion.mockResolvedValueOnce(null).mockResolvedValue({ status: "completed" });
+    render(<TestHarness />);
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockGetTimerCompletion).toHaveBeenCalledTimes(2);
+  });
+
+  it("processes a queued remote stop when initial lock loading finishes", async () => {
+    mockLocksLoading = true;
+    const command = {
+      id: "cold-remote-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "remote-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    const view = render(<TestHarness />);
+    await act(async () => {});
+    expect(mockStopRemoteSleep).not.toHaveBeenCalled();
+    mockLocksLoading = false;
+    mockLockLookup = jest.fn().mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "remote-timer" },
+    });
+    view.rerender(<TestHarness />);
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockStopRemoteSleep).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not rescan on lock refresh but uses the latest lock for the next delivery", async () => {
+    mockReadExternalTimerCommands.mockResolvedValue([]);
+    const view = render(<TestHarness />);
+    await act(async () => {});
+    expect(mockReadExternalTimerCommands).toHaveBeenCalledTimes(1);
+    mockLockLookup = jest.fn().mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "latest-timer" },
+    });
+    // Remote providers also recreate their callbacks when the lock lookup changes.
+    mockRemoteSleepStop = jest.fn().mockResolvedValue({ id: "latest-record" });
+    mockLocksLoading = true;
+    view.rerender(<TestHarness />);
+    await act(async () => {});
+    mockLocksLoading = false;
+    view.rerender(<TestHarness />);
+    await act(async () => {});
+    expect(mockReadExternalTimerCommands).toHaveBeenCalledTimes(1);
+    const command = {
+      id: "latest-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "latest-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    await act(async () => { mockAppStateHandler?.("active"); });
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockRemoteSleepStop).toHaveBeenCalledTimes(1);
+    expect(mockLockLookup).toHaveBeenCalledWith("baby-1", "sleep");
   });
 
   it("rejects a command for an older timer instance", async () => {

@@ -588,7 +588,8 @@ async function waitForTimerPause(status, expectedPaused) {
       `database-poll-sleep-pause-${Date.now()}`,
       { allowFailure: true }
     );
-    if (lastResult === String(expectedPaused)) return;
+    // psql's unaligned boolean output is `t`/`f`, not JavaScript's `true`/`false`.
+    if (lastResult === (expectedPaused ? "t" : "f")) return;
     await delay(1000);
   }
   throw new Error(

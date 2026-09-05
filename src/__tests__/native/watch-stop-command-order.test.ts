@@ -13,14 +13,41 @@ function functionSource(name: string, nextName: string): string {
 }
 
 describe("Watch external timer commands", () => {
-  it("durably transfers a typed stop before releasing the server timer", () => {
-    const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
-    const commandId = stopSource.indexOf('"id": UUID().uuidString');
-    const timerIdentity = stopSource.indexOf('"timerInstanceId": timerInstanceId');
-    const transfer = stopSource.indexOf("sendAction(message)");
-    const remoteMutation = stopSource.indexOf("supabaseStopTimer(activityType: activityType)");
+  it("offers pumping side switching only for own running timers", () => {
+    const card = source.slice(source.indexOf("struct PumpingActiveCard:"));
+    const switchButton = card.slice(0, card.indexOf("connector.switchSide("));
+    expect(switchButton).toContain("if let context = timer.context, !isPaused, timer.isRemote != true {");
+  });
 
-    expect(commandId).toBeGreaterThanOrEqual(0);
+  it.each([
+    ["pauseTimer", "resumeTimer"],
+    ["resumeTimer", "switchSide"],
+  ])("does not pin remote optimism after %s", (name, nextName) => {
+    const body = functionSource(name, nextName);
+    const send = body.indexOf("sendAction(message)");
+    const ownOnly = body.indexOf("guard timer.isRemote != true else");
+    const pin = body.indexOf("self.localActiveTimers.append(serverTimer)");
+    expect(send).toBeGreaterThanOrEqual(0);
+    expect(ownOnly).toBeGreaterThan(send);
+    expect(pin).toBeGreaterThan(ownOnly);
+    expect(body.slice(ownOnly, pin)).toContain("return");
+    expect(body).toContain('"timerInstanceId": timerInstanceId');
+    expect(body).toContain('"eventAt": requestedAt');
+  });
+
+  it.each([
+    ["stopTimer", "stopPumpingWithVolume"],
+    ["stopPumpingWithVolume", "logDiaper"],
+  ])("durably transfers a fresh targeted %s before releasing the server timer", (name, nextName) => {
+    const stopSource = functionSource(name, nextName);
+    const freshId = stopSource.indexOf("id: UUID().uuidString");
+    const commandId = stopSource.indexOf('"id": stopCommand.id');
+    const timerIdentity = stopSource.indexOf('"timerInstanceId": stopCommand.timerInstanceId');
+    const transfer = stopSource.indexOf("sendAction(message)");
+    const remoteMutation = stopSource.indexOf("supabaseStopTimer(activityType:");
+
+    expect(freshId).toBeGreaterThanOrEqual(0);
+    expect(commandId).toBeGreaterThan(freshId);
     expect(timerIdentity).toBeGreaterThan(commandId);
     expect(transfer).toBeGreaterThan(timerIdentity);
     expect(remoteMutation).toBeGreaterThan(transfer);
@@ -40,5 +67,16 @@ describe("Watch external timer commands", () => {
 
     expect(sendSource.indexOf("session.transferUserInfo(messageWithId)"))
       .toBeLessThan(sendSource.indexOf("session.sendMessage(messageWithId"));
+  });
+
+  it("keeps remote stops durable and scopes offline deletion to the signed-in caregiver", () => {
+    const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
+    const pumpingSource = functionSource("stopPumpingWithVolume", "logDiaper");
+    const fallbackSource = functionSource("supabaseStopTimer", "endLiveActivityViaEdgeFunction");
+
+    expect(stopSource).toContain("timer.isRemote != true");
+    expect(pumpingSource).toContain("timer.isRemote != true");
+    expect(fallbackSource).toContain("let supabaseUserId");
+    expect(fallbackSource).toContain("&started_by=eq.\\(supabaseUserId)");
   });
 });

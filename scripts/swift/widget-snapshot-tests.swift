@@ -133,6 +133,63 @@ enum WidgetSnapshotTests {
         let versionedDecoded = try WidgetSnapshotDecoder.decodeNetwork(versioned, expectedBabyId: "baby-versioned")
         require(versionedDecoded.schemaVersion == 1, "versioned fixture lost its schema version")
         require(versionedDecoded.activities.sleep.lastSleepEndedAt == "2026-08-08T09:45:00.000Z", "sleep anchor changed")
+        let remoteTimer = ActiveTimerData(
+            type: "sleep",
+            startTime: "2026-08-08T09:30:00.000Z",
+            timerInstanceId: "remote-timer",
+            context: "Other Caregiver",
+            isRemote: true,
+            isPaused: false,
+            accumulatedSeconds: nil,
+            lockState: nil
+        )
+        for surface in WidgetTimerSurface.allCases {
+            let controls = WidgetTimerControls(
+                surface: surface,
+                timer: remoteTimer,
+                isAuthenticated: true
+            )
+            require(controls.canStop, "remote timer had no stop control on \(surface.rawValue)")
+            require(!controls.canPause, "remote widget pause has no phone handler")
+        }
+        var ownTimer = remoteTimer
+        let widgetViewSource = try String(contentsOfFile: "targets/widget/index.swift", encoding: .utf8)
+        for (viewName, surface) in [
+            ("SmallWidgetView", "small"), ("MediumWidgetView", "medium"),
+            ("ActivityRowView", "large"), ("LockScreenCircularView", "lockScreenCircular"),
+            ("LockScreenRectangularView", "lockScreenRectangular")
+        ] {
+            let view = widgetViewSource.components(separatedBy: "struct \(viewName):")[1]
+                .components(separatedBy: "\nstruct ")[0]
+            require(view.contains("surface: .\(surface),"), "\(viewName) uses the wrong control policy")
+            require(view.contains("routedStopURL(for: activity, data:"),
+                    "\(viewName) no longer routes remote stops with timer identity")
+            if surface.hasPrefix("lockScreen") {
+                require(view.contains("controls.stopsOnTap\n"),
+                        "\(viewName) bypasses the own/remote tap policy")
+                require(view.contains("? routedStopURL(for: activity, data:"),
+                        "\(viewName) lost its remote stop destination")
+            } else {
+                require(view.contains("if controls.canStop {"),
+                        "\(viewName) restored a remote read-only control branch")
+                require(view.contains("Link(destination: routedStopURL("),
+                        "\(viewName) stop policy is disconnected from its link")
+            }
+        }
+        let largeView = widgetViewSource.components(separatedBy: "struct LargeWidgetView:")[1]
+            .components(separatedBy: "\nstruct ")[0]
+        require(largeView.contains("ActivityRowView("), "large widget no longer uses the verified activity row")
+        ownTimer.isRemote = false
+        for surface in [WidgetTimerSurface.lockScreenCircular, .lockScreenRectangular] {
+            require(
+                !WidgetTimerControls(surface: surface, timer: ownTimer, isAuthenticated: true).stopsOnTap,
+                "own lock-screen timer must open the app on tap"
+            )
+            require(
+                WidgetTimerControls(surface: surface, timer: remoteTimer, isAuthenticated: true).stopsOnTap,
+                "remote lock-screen timer must retain its stop destination"
+            )
+        }
         require(
             versionedDecoded.activities.sleep.wakeWindowRequiresNewbornOptIn == true,
             "newborn wake-window requirement was not decoded"

@@ -6,6 +6,8 @@ import { useSleep } from "@/contexts/sleep-context";
 import { usePumping } from "@/contexts/pumping-context";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby } from "@/contexts/baby-context";
+import { useAuth } from "@/contexts/auth-context";
+import { useActiveTimers } from "@/contexts/active-timers-context";
 import { clearPendingWidgetPauseToggle } from "@/services/widget-data-service";
 import {
   acknowledgeExternalTimerCommand,
@@ -32,13 +34,42 @@ interface CommandTimer {
 export function useWidgetStopHandler() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
-  const { activeTimer: feedingTimer, stopBreastfeeding } = useFeeding();
-  const { activeTimer: sleepTimer, stopSleep } = useSleep();
-  const { activeTimer: pumpingTimer, stopPumping } = usePumping();
-  const { activeTimer: tummyTimeTimer, stopTummyTime } = useTummyTime();
+  const { user } = useAuth();
+  const { getLockForActivity, isLoading: locksLoading } = useActiveTimers();
+  const getLockForActivityRef = useRef(getLockForActivity);
+  getLockForActivityRef.current = getLockForActivity;
+  const {
+    activeTimer: feedingTimer,
+    stopBreastfeeding,
+    stopRemoteBreastfeeding,
+  } = useFeeding();
+  const { activeTimer: sleepTimer, stopSleep, stopRemoteSleep } = useSleep();
+  const {
+    activeTimer: pumpingTimer,
+    stopPumping,
+    stopRemotePumping,
+  } = usePumping();
+  const {
+    activeTimer: tummyTimeTimer,
+    stopTummyTime,
+    stopRemoteTummyTime,
+  } = useTummyTime();
+  const remoteStopsRef = useRef({
+    feeding: stopRemoteBreastfeeding,
+    sleep: stopRemoteSleep,
+    pumping: stopRemotePumping,
+    tummy_time: stopRemoteTummyTime,
+  });
+  remoteStopsRef.current = {
+    feeding: stopRemoteBreastfeeding,
+    sleep: stopRemoteSleep,
+    pumping: stopRemotePumping,
+    tummy_time: stopRemoteTummyTime,
+  };
   const isProcessingRef = useRef(false);
   const shouldReprocessRef = useRef(false);
   const processPendingStopRef = useRef<() => Promise<void>>(async () => {});
+  const lastAutomaticProcessorRef = useRef<(() => Promise<void>) | null>(null);
 
   const processCommand = useCallback(
     async (queuedCommand: ExternalTimerCommand): Promise<void> => {
@@ -57,6 +88,7 @@ export function useWidgetStopHandler() {
 
       let timer: CommandTimer | null = null;
       let stop: ((endTime: Date) => Promise<unknown>) | null = null;
+      const stopRemote = remoteStopsRef.current[queuedCommand.activityType];
       switch (queuedCommand.activityType) {
         case "feeding":
           timer = feedingTimer;
@@ -75,6 +107,32 @@ export function useWidgetStopHandler() {
           timer = tummyTimeTimer;
           stop = stopTummyTime;
           break;
+      }
+
+      if (!timer?.isRunning && stopRemote && user?.id && user.householdId) {
+        const lock = getLockForActivityRef.current(
+          queuedCommand.babyId,
+          queuedCommand.activityType
+        );
+        const startedAt = lock ? new Date(lock.startedAt) : null;
+        if (
+          lock &&
+          lock.startedBy !== user.id &&
+          startedAt &&
+          Number.isFinite(startedAt.getTime())
+        ) {
+          const timerInstanceId = lock.timerData?.timerInstanceId;
+          if (typeof timerInstanceId !== "string" || timerInstanceId.length === 0) {
+            await acknowledgeExternalTimerCommand(queuedCommand);
+            return;
+          }
+          timer = {
+            isRunning: true,
+            startTime: startedAt,
+            timerInstanceId,
+          };
+          stop = stopRemote;
+        }
       }
 
       if (!timer?.isRunning || !stop) return;
@@ -96,7 +154,15 @@ export function useWidgetStopHandler() {
         return;
       }
 
-      await stop(eventAt);
+      const record = await stop(eventAt);
+      if (!record) {
+        const completion = await getTimerCompletion(
+          command.babyId,
+          command.activityType,
+          command.timerInstanceId
+        );
+        if (completion?.status !== "completed") return;
+      }
       await clearPendingWidgetPauseToggle();
       await acknowledgeExternalTimerCommand(command);
       const route = ACTIVITY_ROUTE_MAP[command.activityType];
@@ -104,6 +170,8 @@ export function useWidgetStopHandler() {
     },
     [
       selectedBaby?.id,
+      user?.id,
+      user?.householdId,
       feedingTimer,
       sleepTimer,
       pumpingTimer,
@@ -162,7 +230,11 @@ export function useWidgetStopHandler() {
   }, [processPendingStop]);
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" || locksLoading) return;
+    // Hydrate once, then rerun only for a changed baby, local timer, or provider.
+    // Background lock refreshes toggle loading without introducing a new command.
+    if (lastAutomaticProcessorRef.current === processPendingStop) return;
+    lastAutomaticProcessorRef.current = processPendingStop;
     processPendingStop();
-  }, [processPendingStop]);
+  }, [processPendingStop, locksLoading]);
 }

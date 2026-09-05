@@ -410,7 +410,7 @@ struct StopActivityIntent: AppIntent {
             return .result()
         }
 
-        guard widgetSnapshotRuntime?.identity.currentIdentity() != nil else {
+        guard let identity = widgetSnapshotRuntime?.identity.currentIdentity() else {
             NSLog("[StopActivity] ERROR: no signed-in identity; ignoring unauthenticated stop")
             return .result()
         }
@@ -420,7 +420,6 @@ struct StopActivityIntent: AppIntent {
         let supabaseUrl = userDefaults.string(forKey: "supabaseUrl")
         let anonKey = userDefaults.string(forKey: "supabaseAnonKey")
         let babyId = userDefaults.string(forKey: "selectedBabyId")
-        let userId = userDefaults.string(forKey: "userId")
         let laPushToken = userDefaults.string(forKey: "liveActivityPushToken")
         NSLog("[StopActivity] liveActivityPushToken=\(laPushToken != nil ? "present" : "nil")")
 
@@ -444,11 +443,9 @@ struct StopActivityIntent: AppIntent {
             }
         }
         let eventAt = ISO8601DateFormatter().string(from: effectiveStopDate)
+        let activeTimer = loadWidgetData()?.getActiveTimer(for: activity)
         if let babyId {
-            var timerInstanceId: String?
-            if let widgetData = loadWidgetData() {
-                timerInstanceId = widgetData.getActiveTimer(for: activity)?.timerInstanceId
-            }
+            let timerInstanceId = activeTimer?.timerInstanceId
             let resolvedTimerInstanceId = timerInstanceId ?? "legacy:\(babyId):\(dbType):\(eventAt)"
             let command = ExternalTimerCommand(
                 id: UUID().uuidString,
@@ -464,8 +461,9 @@ struct StopActivityIntent: AppIntent {
             appendExternalTimerCommand(command, to: userDefaults)
         }
 
-        if let supabaseUrl, let anonKey, let babyId, let userId,
-           let url = URL(string: "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(userId)") {
+        if activeTimer?.isRemote != true,
+           let supabaseUrl, let anonKey, let babyId,
+           let url = URL(string: "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(identity.accountId)") {
             _ = try? await widgetSnapshotRuntime?.transport.send { token in
                 var request = URLRequest(url: url)
                 request.httpMethod = "DELETE"
@@ -1249,6 +1247,14 @@ struct SmallWidgetView: View {
         entry.widgetData?.isRemoteTimer(for: activity) ?? false
     }
 
+    var controls: WidgetTimerControls {
+        WidgetTimerControls(
+            surface: .small,
+            timer: entry.widgetData?.getActiveTimer(for: activity),
+            isAuthenticated: entry.isUserAuthenticated
+        )
+    }
+
     var isStale: Bool {
         isDataStale(data: entry.widgetData, now: entry.date)
     }
@@ -1387,23 +1393,9 @@ struct SmallWidgetView: View {
 
             Spacer().frame(height: 8)
 
-            if isActive && isRemote {
-                HStack(spacing: 6) {
-                    Text("⏳")
-                        .font(.system(size: 14))
-                    Text(L.inUse)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                }
-                .foregroundStyle(.white.opacity(0.9))
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(.white.opacity(0.25))
-                )
-            } else if isActive {
+            if controls.canStop {
                 HStack(spacing: 8) {
-                    if entry.isUserAuthenticated {
+                    if controls.canPause {
                         Link(destination: isTimerPausedForActivity(activity, data: entry.widgetData)
                             ? activity.resumeTimerURL : activity.pauseTimerURL) {
                             let timerPaused = isTimerPausedForActivity(activity, data: entry.widgetData)
@@ -1680,12 +1672,19 @@ struct MediumWidgetView: View {
             HStack(spacing: 16) {
                 ForEach(activities.prefix(4), id: \.self) { activity in
                     let isRemoteLock = entry.widgetData?.isRemoteTimer(for: activity) ?? false
-                    let isActiveOwn = (entry.widgetData?.hasActiveTimer(for: activity) ?? false) && !isRemoteLock
-                    if isRemoteLock {
-                        ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date, isRemoteLock: true)
-                    } else if isActiveOwn {
+                    let controls = WidgetTimerControls(
+                        surface: .medium,
+                        timer: entry.widgetData?.getActiveTimer(for: activity),
+                        isAuthenticated: entry.isUserAuthenticated
+                    )
+                    if controls.canStop {
                         Link(destination: routedStopURL(for: activity, data: entry.widgetData)) {
-                            ColorfulCircleButton(activity: activity, data: entry.widgetData, currentDate: entry.date)
+                            ColorfulCircleButton(
+                                activity: activity,
+                                data: entry.widgetData,
+                                currentDate: entry.date,
+                                isRemoteLock: isRemoteLock
+                            )
                         }
                     } else {
                         Link(destination: activity.deepLinkURL) {
@@ -1717,7 +1716,6 @@ struct ColorfulCircleButton: View {
                 Circle()
                     .fill(activity.accentColor)
                     .frame(width: 52, height: 52)
-                    .opacity(isActive && isRemoteLock ? 0.6 : 1.0)
                     .shadow(color: activity.accentColor.opacity(0.3), radius: 4, x: 0, y: 2)
 
                 if isActive {
@@ -1726,10 +1724,7 @@ struct ColorfulCircleButton: View {
                         .frame(width: 52, height: 52)
                 }
 
-                if isActive && isRemoteLock {
-                    Text(activity.emoji)
-                        .font(.system(size: 22))
-                } else if isActive {
+                if isActive {
                     Image(systemName: "stop.fill")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(.white)
@@ -1851,6 +1846,14 @@ struct ActivityRowView: View {
         data?.hasActiveTimer(for: activity) ?? false
     }
 
+    var controls: WidgetTimerControls {
+        WidgetTimerControls(
+            surface: .large,
+            timer: data?.getActiveTimer(for: activity),
+            isAuthenticated: isUserAuthenticated
+        )
+    }
+
     @ViewBuilder
     var rowContent: some View {
         HStack(spacing: 10) {
@@ -1937,18 +1940,9 @@ struct ActivityRowView: View {
 
             Spacer()
 
-            if isActive && isRemoteLock {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: WidgetColors.Button.light))
-                        .frame(width: 34, height: 34)
-                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
-                    Text("⏳")
-                        .font(.system(size: 16))
-                }
-            } else if isActive {
+            if controls.canStop {
                 HStack(spacing: 6) {
-                    if isUserAuthenticated {
+                    if controls.canPause {
                         Link(destination: isTimerPausedForActivity(activity, data: data)
                             ? activity.resumeTimerURL : activity.pauseTimerURL) {
                             let timerPaused = isTimerPausedForActivity(activity, data: data)
@@ -2256,6 +2250,14 @@ struct LockScreenCircularView: View {
         entry.widgetData?.isRemoteTimer(for: activity) ?? false
     }
 
+    var controls: WidgetTimerControls {
+        WidgetTimerControls(
+            surface: .lockScreenCircular,
+            timer: entry.widgetData?.getActiveTimer(for: activity),
+            isAuthenticated: entry.isUserAuthenticated
+        )
+    }
+
     var body: some View {
         ZStack {
             if let data = entry.widgetData,
@@ -2264,8 +2266,8 @@ struct LockScreenCircularView: View {
                     VStack(spacing: 2) {
                         Text(activity.emoji)
                             .font(.system(size: 14))
-                        Text("⏳")
-                            .font(.system(size: 12))
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 12, weight: .semibold))
                     }
                 } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
                     if isTimerPausedForActivity(activity, data: data) {
@@ -2306,7 +2308,9 @@ struct LockScreenCircularView: View {
                 }
             }
         }
-        .widgetURL(activity.deepLinkURL)
+        .widgetURL(controls.stopsOnTap
+            ? routedStopURL(for: activity, data: entry.widgetData)
+            : activity.deepLinkURL)
         .containerBackground(.fill.tertiary, for: .widget)
     }
 }
@@ -2332,28 +2336,36 @@ struct LockScreenRectangularView: View {
 
                     if let data = entry.widgetData,
                        data.hasActiveTimer(for: activity) {
-                        if data.isRemoteTimer(for: activity) {
+                        let controls = WidgetTimerControls(
+                            surface: .lockScreenRectangular,
+                            timer: data.getActiveTimer(for: activity),
+                            isAuthenticated: entry.isUserAuthenticated
+                        )
+                        Link(destination: controls.stopsOnTap
+                            ? routedStopURL(for: activity, data: data)
+                            : activity.deepLinkURL) {
                             HStack(spacing: 2) {
-                                Text("⏳")
-                                    .font(.system(size: 10))
-                                Text(L.inUse)
-                                    .font(.system(size: 11, weight: .medium))
-                            }
-                        } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                            if isTimerPausedForActivity(activity, data: data) {
-                                HStack(spacing: 2) {
+                                if data.isRemoteTimer(for: activity) {
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 8))
+                                    Text(L.inUse)
+                                        .font(.system(size: 10, weight: .medium))
+                                        .lineLimit(1)
+                                } else if isTimerPausedForActivity(activity, data: data) {
                                     Text("⏸ \(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
                                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
-                                }
-                            } else {
-                                HStack(spacing: 2) {
+                                } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
                                     Text(startDate, style: .timer)
                                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
                                     Image(systemName: "circle.fill")
                                         .font(.system(size: 4))
                                         .foregroundStyle(.green)
+                                }
+                                if controls.stopsOnTap {
+                                    Image(systemName: "stop.fill")
+                                        .font(.system(size: 9, weight: .bold))
                                 }
                             }
                         }

@@ -6,6 +6,7 @@ appId: com.sofibaby.app
       e2eMode: "true"
       e2eEmail: "${E2E_EMAIL}"
       e2ePassword: "testpassword123"
+      legacyOnboardingStatus: "completed"
 - extendedWaitUntil:
     visible:
       id: "home-screen"
