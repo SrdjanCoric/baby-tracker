@@ -54,13 +54,14 @@ export function createLiveActivityTokenSynchronizer(
     }
   }
 
-  return {
+  const synchronizer = {
     sync(): Promise<void> {
       if (disposed) return Promise.resolve();
       requested = true;
       if (!inFlight)
         inFlight = drain().finally(() => {
           inFlight = null;
+          if (requested && !disposed) return synchronizer.sync();
         });
       return inFlight;
     },
@@ -68,4 +69,5 @@ export function createLiveActivityTokenSynchronizer(
       disposed = true;
     },
   };
+  return synchronizer;
 }

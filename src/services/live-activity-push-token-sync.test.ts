@@ -2,6 +2,27 @@ import { describe, expect, it, vi } from "vitest";
 import { createLiveActivityTokenSynchronizer } from "./live-activity-push-token-sync";
 
 describe("Live Activity token sync", () => {
+  it("drains a request arriving after the loop exits but before its promise settles", async () => {
+    const record = { activityId: "a", babyId: "baby", timerInstanceId: "run",
+      userId: "owner", token: "rotated", ended: false };
+    const register = vi.fn().mockResolvedValue(true);
+    let reads = 0;
+    let late: Promise<void> | undefined;
+    const synchronizer = createLiveActivityTokenSynchronizer("owner", {
+      read: async () => {
+        if (++reads === 1) {
+          queueMicrotask(() => queueMicrotask(() => { late = synchronizer.sync(); }));
+          return [];
+        }
+        return [record];
+      },
+      register, remove: vi.fn(), acknowledge: vi.fn(), end: vi.fn(),
+    });
+    await synchronizer.sync();
+    await late;
+    expect(register).toHaveBeenCalledWith(record);
+  });
+
   it("rotates tokens without duplicate uploads and never uploads another account's token", async () => {
     let token = "initial";
     const register = vi.fn().mockResolvedValue(true);
