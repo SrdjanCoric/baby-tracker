@@ -2,6 +2,43 @@ import { describe, expect, it, vi } from "vitest";
 import { endTimerLiveActivities } from "../../supabase/functions/send-widget-push/live-activity";
 
 describe("timer DELETE Live Activity pushes", () => {
+  it("bounds parallel delivery to eight workers", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const send = vi.fn(async () => { await gate; return new Response(null, { status: 200 }); });
+    const result = endTimerLiveActivities(
+      { baby_id: "baby", started_at: "2026-09-05T12:00:00Z", timer_data: { timerInstanceId: "run" } },
+      { findTokens: async () => Array.from({ length: 12 }, (_, i) => ({ id: String(i), device_token: String(i), is_sandbox: false })),
+        removeTokens: vi.fn(), getJwt: async () => "jwt", fetch: send, now: Date.now }
+    );
+    try {
+      await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(8));
+    } finally { release(); await result; }
+    expect(await result).toEqual({ sent: 12, total: 12 });
+  });
+
+  it("retains unattempted tokens when the delivery budget expires", async () => {
+    let expired = false;
+    const clock = vi.spyOn(performance, "now").mockImplementation(() => expired ? 10001 : 0);
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const removeTokens = vi.fn();
+    const send = vi.fn(async () => { await gate; return new Response(null, { status: 200 }); });
+    const result = endTimerLiveActivities(
+      { baby_id: "baby", started_at: "2026-09-05T12:00:00Z", timer_data: { timerInstanceId: "run" } },
+      { findTokens: async () => Array.from({ length: 12 }, (_, i) => ({ id: String(i), device_token: String(i), is_sandbox: false })),
+        removeTokens, getJwt: async () => "jwt", fetch: send, now: Date.now }
+    );
+    try {
+      await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(8));
+      expired = true;
+      release();
+      expect(await result).toEqual({ sent: 8, total: 12 });
+      expect(send).toHaveBeenCalledTimes(8);
+      expect(removeTokens).toHaveBeenCalledWith(["0", "1", "2", "3", "4", "5", "6", "7"]);
+    } finally { release(); await result; clock.mockRestore(); }
+  });
+
   it("does nothing when a timer has no registered token or is from a legacy client", async () => {
     const deps = {
       findTokens: vi.fn().mockResolvedValue([]),

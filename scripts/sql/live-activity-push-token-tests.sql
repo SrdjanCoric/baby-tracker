@@ -29,6 +29,21 @@ DO $$ BEGIN
   THEN RAISE EXCEPTION 'rotation must replace the old token'; END IF;
 END $$;
 
+SAVEPOINT token_limit;
+DO $$ BEGIN
+  FOR i IN 1..7 LOOP
+    PERFORM public.register_live_activity_push_token('93a00000-0000-0000-0000-000000000001', 'run-93', 'extra-' || i, repeat('a',64), false, auth.uid());
+  END LOOP;
+  BEGIN
+    PERFORM public.register_live_activity_push_token('93a00000-0000-0000-0000-000000000001', 'run-93', 'overflow', repeat('a',64), false, auth.uid());
+    RAISE EXCEPTION 'unbounded registration accepted';
+  EXCEPTION WHEN program_limit_exceeded THEN NULL; END;
+  PERFORM public.register_live_activity_push_token('93a00000-0000-0000-0000-000000000001', 'run-93', 'local-activity', repeat('f',64), false, auth.uid());
+  IF (SELECT count(*) FROM public.live_activity_push_tokens) <> 8 THEN
+    RAISE EXCEPTION 'cap must allow eight devices and rotation'; END IF;
+END $$;
+ROLLBACK TO SAVEPOINT token_limit;
+
 SELECT set_config('request.jwt.claim.sub', '93222222-2222-2222-2222-222222222222', true);
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM public.live_activity_push_tokens) THEN

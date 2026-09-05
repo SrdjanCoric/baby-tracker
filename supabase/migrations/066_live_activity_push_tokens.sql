@@ -45,8 +45,16 @@ BEGIN
   PERFORM 1 FROM public.active_timers timer
   WHERE timer.baby_id = p_baby_id
     AND timer.timer_data->>'timerInstanceId' = p_timer_instance_id
-  FOR SHARE;
+  FOR UPDATE;
   IF NOT FOUND THEN RETURN false; END IF;
+
+  -- The timer row lock also serializes concurrent registrations before counting.
+  -- Rotation remains available at the cap; a caller cannot create unbounded fan-out.
+  IF (SELECT count(*) FROM public.live_activity_push_tokens
+      WHERE user_id = v_user_id AND baby_id = p_baby_id
+        AND timer_instance_id = p_timer_instance_id AND activity_id <> p_activity_id) >= 8 THEN
+    RAISE EXCEPTION 'Live Activity device limit reached' USING ERRCODE = '54000';
+  END IF;
 
   INSERT INTO public.live_activity_push_tokens
     (user_id, baby_id, timer_instance_id, activity_id, device_token, is_sandbox)

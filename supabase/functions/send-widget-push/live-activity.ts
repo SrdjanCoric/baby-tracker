@@ -52,22 +52,34 @@ export async function endTimerLiveActivities(
 
   let sent = 0;
   const jwt = await deps.getJwt();
-  try {
-    for (const token of tokens) {
+  let next = 0;
+  const attempted: string[] = [];
+  const deadline = performance.now() + 10000;
+  async function deliver() {
+    while (next < tokens.length) {
+      const remaining = Math.floor(deadline - performance.now());
+      if (remaining <= 0) return;
+      const token = tokens[next++];
+      attempted.push(token.id);
       try {
         const request = buildLiveActivityEndRequest({
           deviceToken: token.device_token, jwt, isSandbox: token.is_sandbox,
           timestamp, dismissalDate: timestamp - 1, contentState,
         });
-        const response = await deps.fetch(request.url, request.init);
+        const response = await deps.fetch(request.url, {
+          ...request.init, signal: AbortSignal.timeout(remaining),
+        });
         if (response.status === 200) sent++;
       } catch {
-        // Best effort delivery; foreground lock reconciliation is the fallback.
-        // One failed device must not prevent the remaining end pushes.
+        // Best effort per device; foreground reconciliation remains the fallback.
       }
     }
+  }
+  try {
+    await Promise.all(Array.from({ length: Math.min(8, tokens.length) }, deliver));
   } finally {
-    await deps.removeTokens(tokens.map((token) => token.id));
+    // Preserve rows that could not be attempted within this invocation's budget.
+    if (attempted.length) await deps.removeTokens(attempted);
   }
   return { sent, total: tokens.length };
 }

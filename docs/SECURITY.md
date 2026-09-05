@@ -28,7 +28,10 @@ Migration 066 protects `live_activity_push_tokens` with RLS: authenticated users
 read and delete only their own rows and have no direct insert or update access.
 The `register_live_activity_push_token` security-definer RPC verifies the caller's
 user ID, household membership, and active timer instance before registering or
-rotating a token. Anonymous callers cannot invoke it. The service-role DELETE
+rotating a token. Registrations serialize on the timer row and allow at most eight
+activities per user and timer, including under concurrent requests; existing tokens
+can still rotate at the limit. End delivery uses at most eight concurrent requests
+and a ten-second delivery budget. Anonymous callers cannot invoke the RPC. The service-role DELETE
 webhook reads tokens for the exact baby and timer instance; token rows survive
 timer deletion for delivery and expire after 24 hours.
 
