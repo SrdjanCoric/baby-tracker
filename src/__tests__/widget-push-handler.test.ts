@@ -44,14 +44,15 @@ function setup({ peers = false, jwtError = null as Error | null, starts = false,
     }),
   };
   const send = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+  const createJwt = vi.fn(async () => { if (jwtError) throw jwtError; return "jwt"; });
   const handler = createWidgetPushHandler({
     env: (key: string) =>
       key === "SUPABASE_SERVICE_ROLE_KEY" ? "service-secret" : "config",
     createClient: () => database as any,
     fetch: send,
-    createJwt: async () => { if (jwtError) throw jwtError; return "jwt"; },
+    createJwt,
   });
-  return { handler, database, send, remove, queries };
+  return { handler, database, send, remove, queries, createJwt };
 }
 
 function request(type: "INSERT" | "DELETE", auth = "service-secret") {
@@ -76,6 +77,24 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 }
 
 describe("widget push webhook", () => {
+  it("delivers widget refreshes while start delivery is blocked and signs only once", async () => {
+    const { handler, send, createJwt } = setup({ peers: true, starts: true });
+    let release!: (response: Response) => void;
+    const blocked = new Promise<Response>(resolve => { release = resolve; });
+    send.mockImplementation(async (_url, init) => {
+      if (init.headers["apns-push-type"] === "liveactivity") return blocked;
+      return new Response(null, { status: 200 });
+    });
+    const pending = handler(request("INSERT"));
+    try {
+      await vi.waitFor(() => expect(send.mock.calls.some(call => call[1].headers["apns-push-type"] === "widgets")).toBe(true));
+    } finally {
+      release(new Response(null, { status: 200 }));
+      await pending;
+    }
+    expect(createJwt).toHaveBeenCalledOnce();
+  });
+
   it("starts peer activities even without widget tokens, only for a verified webhook", async () => {
     const { handler, send, queries } = setup({ peers: true, starts: true, widgets: false });
     await handler(request("INSERT", "user-jwt"));
