@@ -3,9 +3,142 @@ import ActivityKit
 import React
 
 @objc(LiveActivityController)
-class LiveActivityController: NSObject {
+class LiveActivityController: RCTEventEmitter {
+    @MainActor private var tokenStore = LiveActivityPushTokenStore(defaults: .standard)
+    @MainActor private var tokenObservers: [String: Task<Void, Never>] = [:]
+    @MainActor private var stateObservers: [String: Task<Void, Never>] = [:]
+    @MainActor private var activityObserver: Task<Void, Never>?
+    @MainActor private var hasTokenListeners = false
 
-    @objc static func requiresMainQueueSetup() -> Bool {
+    override func supportedEvents() -> [String]! { ["LiveActivityPushRecordsChanged"] }
+
+    override func startObserving() {
+        Task { @MainActor in
+            self.hasTokenListeners = true
+            if #available(iOS 16.2, *) { self.observeActivities() }
+        }
+    }
+
+    override func stopObserving() {
+        Task { @MainActor in self.hasTokenListeners = false }
+    }
+
+    override func invalidate() {
+        Task { @MainActor in
+            self.activityObserver?.cancel()
+            self.activityObserver = nil
+            self.tokenObservers.values.forEach { $0.cancel() }
+            self.stateObservers.values.forEach { $0.cancel() }
+            self.tokenObservers.removeAll()
+            self.stateObservers.removeAll()
+        }
+        super.invalidate()
+    }
+
+    @MainActor private func notifyTokenChange() {
+        if hasTokenListeners { sendEvent(withName: "LiveActivityPushRecordsChanged", body: nil) }
+    }
+
+    @available(iOS 16.2, *)
+    @MainActor private func observeActivities() {
+        for activity in Activity<TimerActivityAttributes>.activities { observe(activity) }
+        guard activityObserver == nil else { return }
+        activityObserver = Task { @MainActor [weak self] in
+            for await activity in Activity<TimerActivityAttributes>.activityUpdates {
+                guard !Task.isCancelled else { return }
+                self?.observe(activity)
+            }
+        }
+    }
+
+    @available(iOS 16.2, *)
+    @MainActor private func observe(_ activity: Activity<TimerActivityAttributes>) {
+        guard activity.activityState == .active || activity.activityState == .stale else { return }
+        let attrs = activity.attributes
+        if let babyId = attrs.babyId, let instance = attrs.timerInstanceId, let userId = attrs.userId {
+            tokenStore.bind(activityId: activity.id, babyId: babyId, timerInstanceId: instance, userId: userId)
+        }
+        guard tokenObservers[activity.id] == nil else { return }
+        if let token = activity.pushToken { receiveToken(token, activityId: activity.id) }
+        tokenObservers[activity.id] = Task { @MainActor [weak self] in
+            for await token in activity.pushTokenUpdates {
+                guard !Task.isCancelled else { return }
+                self?.receiveToken(token, activityId: activity.id)
+            }
+        }
+        stateObservers[activity.id] = Task { @MainActor [weak self] in
+            for await state in activity.activityStateUpdates {
+                guard !Task.isCancelled else { return }
+                if state == .ended || state == .dismissed {
+                    self?.recordEnded(activity.id)
+                    return
+                }
+            }
+        }
+    }
+
+    @MainActor private func receiveToken(_ data: Data, activityId: String) {
+        let token = data.map { String(format: "%02x", $0) }.joined()
+        // Retain the legacy widget/Watch action key during the additive rollout.
+        UserDefaults(suiteName: "group.com.sofibaby.app")?.set(token, forKey: "liveActivityPushToken")
+        tokenStore.updateToken(activityId: activityId, token: token)
+        notifyTokenChange()
+    }
+
+    @MainActor private func recordEnded(_ activityId: String) {
+        tokenStore.markEnded(activityId: activityId)
+        tokenObservers.removeValue(forKey: activityId)?.cancel()
+        stateObservers.removeValue(forKey: activityId)?.cancel()
+        notifyTokenChange()
+    }
+
+    @objc func getLiveActivityPushRecords(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        Task { @MainActor in
+            if #available(iOS 16.2, *) {
+                observeActivities()
+                let runningIds = Set(Activity<TimerActivityAttributes>.activities.filter {
+                    $0.activityState == .active || $0.activityState == .stale
+                }.map { $0.id })
+                for record in tokenStore.records where !runningIds.contains(record.activityId) {
+                    tokenStore.markEnded(activityId: record.activityId)
+                }
+            }
+            let data = try? JSONEncoder().encode(tokenStore.records)
+            resolve(data.flatMap { try? JSONSerialization.jsonObject(with: $0) } ?? [])
+        }
+    }
+
+    @objc func bindTimerActivity(
+        _ activityId: String, identity: [String: String],
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        Task { @MainActor in
+            guard let babyId = identity["babyId"], let instance = identity["timerInstanceId"],
+                  let userId = identity["userId"] else { resolve(nil); return }
+            tokenStore.bind(activityId: activityId, babyId: babyId, timerInstanceId: instance, userId: userId)
+            if #available(iOS 16.2, *), let activity = Activity<TimerActivityAttributes>.activities.first(where: { $0.id == activityId }) {
+                observe(activity)
+                if let token = activity.pushToken { receiveToken(token, activityId: activityId) }
+            } else {
+                recordEnded(activityId)
+            }
+            notifyTokenChange()
+            resolve(nil)
+        }
+    }
+
+    @objc func acknowledgeLiveActivityEnd(
+        _ activityId: String, resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        Task { @MainActor in tokenStore.acknowledgeEnd(activityId: activityId); resolve(nil) }
+    }
+
+    @objc override static func requiresMainQueueSetup() -> Bool {
         return false
     }
 
@@ -17,77 +150,80 @@ class LiveActivityController: NSObject {
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
-        guard #available(iOS 16.2, *) else {
-            resolve(nil)
-            return
-        }
+        startTimerActivityWithIdentity(activityType, babyName: babyName, context: context,
+            startTimeISO: startTimeISO, identity: nil, resolver: resolve, rejecter: reject)
+    }
 
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            print("[LiveActivityController] Activities not enabled")
-            resolve(nil)
-            return
-        }
+    @objc func startTimerActivityWithIdentity(
+        _ activityType: String, babyName: String, context: String?, startTimeISO: String?,
+        identity: [String: String]?, resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        Task { @MainActor in
+            guard #available(iOS 16.2, *) else {
+                resolve(nil)
+                return
+            }
 
-        // Check for existing activity of the same type (may have been started via push-to-start)
-        let existingActivity = Activity<TimerActivityAttributes>.activities.first {
-            $0.attributes.activityType == activityType
-        }
-        if let existing = existingActivity {
-            print("[LiveActivityController] Reusing existing activity (push-to-start): \(existing.id) type=\(activityType)")
-            Task {
-                for await tokenData in existing.pushTokenUpdates {
-                    let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
-                    if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
-                        userDefaults.set(tokenString, forKey: "liveActivityPushToken")
-                    }
+            guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+                print("[LiveActivityController] Activities not enabled")
+                resolve(nil)
+                return
+            }
+
+            // Check for existing activity of the same type (may have been started via push-to-start)
+            let existingActivity = Activity<TimerActivityAttributes>.activities.first {
+                $0.attributes.activityType == activityType &&
+                    (identity == nil || ($0.attributes.timerInstanceId == identity?["timerInstanceId"] &&
+                                        $0.attributes.babyId == identity?["babyId"] &&
+                                        $0.attributes.userId == identity?["userId"]))
+            }
+            if let existing = existingActivity {
+                print("[LiveActivityController] Reusing existing activity (push-to-start): \(existing.id) type=\(activityType)")
+                observe(existing)
+                resolve(existing.id)
+                return
+            }
+
+            var activityStartTime = Date()
+            if let iso = startTimeISO {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let parsed = formatter.date(from: iso) {
+                    activityStartTime = parsed
                 }
             }
-            resolve(existing.id)
-            return
-        }
 
-        var activityStartTime = Date()
-        if let iso = startTimeISO {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let parsed = formatter.date(from: iso) {
-                activityStartTime = parsed
-            }
-        }
-
-        let attributes = TimerActivityAttributes(
-            activityType: activityType,
-            babyName: babyName,
-            startTime: activityStartTime
-        )
-
-        let initialState = TimerActivityAttributes.ContentState(
-            elapsedSeconds: 0,
-            context: context
-        )
-
-        do {
-            let activity = try Activity<TimerActivityAttributes>.request(
-                attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
-                pushType: .token
+            let attributes = TimerActivityAttributes(
+                activityType: activityType,
+                babyName: babyName,
+                startTime: activityStartTime,
+                babyId: identity?["babyId"],
+                timerInstanceId: identity?["timerInstanceId"],
+                userId: identity?["userId"]
             )
 
-            print("[LiveActivityController] Started activity: \(activity.id)")
+            let initialState = TimerActivityAttributes.ContentState(
+                elapsedSeconds: 0,
+                context: context
+            )
 
-            Task {
-                for await tokenData in activity.pushTokenUpdates {
-                    let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
-                    if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
-                        userDefaults.set(tokenString, forKey: "liveActivityPushToken")
-                    }
-                }
+            do {
+                let activity = try Activity<TimerActivityAttributes>.request(
+                    attributes: attributes,
+                    content: .init(state: initialState, staleDate: nil),
+                    pushType: .token
+                )
+
+                print("[LiveActivityController] Started activity: \(activity.id)")
+
+                observe(activity)
+
+                resolve(activity.id)
+            } catch {
+                print("[LiveActivityController] Failed to start: \(error.localizedDescription)")
+                reject("START_FAILED", error.localizedDescription, error)
             }
-
-            resolve(activity.id)
-        } catch {
-            print("[LiveActivityController] Failed to start: \(error.localizedDescription)")
-            reject("START_FAILED", error.localizedDescription, error)
         }
     }
 
@@ -155,6 +291,7 @@ class LiveActivityController: NSObject {
                 dismissalPolicy: .immediate
             )
 
+            await MainActor.run { self.recordEnded(activityId) }
             print("[LiveActivityController] Ended activity: \(activityId)")
             resolve(true)
         }
@@ -180,6 +317,7 @@ class LiveActivityController: NSObject {
                     ActivityContent(state: finalState, staleDate: nil),
                     dismissalPolicy: .immediate
                 )
+                await MainActor.run { self.recordEnded(activity.id) }
             }
 
             print("[LiveActivityController] Ended all activities")
@@ -211,6 +349,7 @@ class LiveActivityController: NSObject {
                         dismissalPolicy: .immediate
                     )
 
+                    await MainActor.run { self.recordEnded(activity.id) }
                     endedAny = true
                     print("[LiveActivityController] Ended activity by type: \(activityType)")
                 }
@@ -335,35 +474,7 @@ class LiveActivityController: NSObject {
             }
         }
 
-        Task {
-            for activity in Activity<TimerActivityAttributes>.activities {
-                print("[LiveActivityController] Monitoring existing activity: \(activity.id) type=\(activity.attributes.activityType)")
-                Task {
-                    for await tokenData in activity.pushTokenUpdates {
-                        let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
-                        print("[LiveActivityController] Push token for existing activity \(activity.id): \(tokenString.prefix(12))...")
-                        if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
-                            userDefaults.set(tokenString, forKey: "liveActivityPushToken")
-                        }
-                    }
-                }
-            }
-        }
-
-        Task {
-            for await activity in Activity<TimerActivityAttributes>.activityUpdates {
-                print("[LiveActivityController] New activity detected via activityUpdates: \(activity.id) type=\(activity.attributes.activityType)")
-                Task {
-                    for await tokenData in activity.pushTokenUpdates {
-                        let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
-                        print("[LiveActivityController] Push token for new activity \(activity.id): \(tokenString.prefix(12))...")
-                        if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
-                            userDefaults.set(tokenString, forKey: "liveActivityPushToken")
-                        }
-                    }
-                }
-            }
-        }
+        Task { @MainActor in observeActivities() }
 
         resolve(true)
     }

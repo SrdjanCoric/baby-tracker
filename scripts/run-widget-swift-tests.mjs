@@ -14,6 +14,7 @@ const executable = join(buildDirectory, "widget-snapshot-tests");
 const watchExecutable = join(buildDirectory, "watch-summary-tests");
 const sharedSessionExecutable = join(buildDirectory, "shared-supabase-session-tests");
 const watchSessionExecutable = join(buildDirectory, "watch-supabase-session-tests");
+const liveActivityTokenExecutable = join(buildDirectory, "live-activity-token-tests");
 const swiftEnvironment = {
   ...process.env,
   CLANG_MODULE_CACHE_PATH: moduleCache,
@@ -125,6 +126,13 @@ mkdirSync(moduleCache);
 try {
   typecheckWidgetProductionSources();
   typecheckWatchProductionSources();
+  execFileSync("swiftc", [
+    "-parse-as-library",
+    "plugins/with-live-activity-controller/ios/LiveActivityPushTokenStore.swift",
+    "scripts/swift/live-activity-push-token-tests.swift",
+    "-o", liveActivityTokenExecutable,
+  ], { cwd: root, env: swiftEnvironment, stdio: "inherit" });
+  execFileSync(liveActivityTokenExecutable, [], { cwd: root, stdio: "inherit" });
   execFileSync(
     "swiftc",
     [

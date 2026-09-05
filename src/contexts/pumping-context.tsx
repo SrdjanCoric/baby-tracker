@@ -570,7 +570,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         "pumping",
         selectedBaby.name,
         side,
-        startTime
+        startTime,
+        user?.id && lockState === "owned" ? { babyId: selectedBaby.id, timerInstanceId: identity.timerInstanceId, userId: user.id } : undefined
       );
       if (activityId) {
         liveActivityIdRef.current = activityId;

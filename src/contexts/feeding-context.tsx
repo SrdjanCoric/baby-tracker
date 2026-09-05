@@ -683,7 +683,8 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         "feeding",
         selectedBaby.name,
         side as LiveActivityBreastSide,
-        startTime
+        startTime,
+        user?.id && lockState === "owned" ? { babyId: selectedBaby.id, timerInstanceId: identity.timerInstanceId, userId: user.id } : undefined
       );
       if (activityId) {
         liveActivityIdRef.current = activityId;

@@ -3,6 +3,11 @@ import { Platform, NativeModules } from "react-native";
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
 export type SleepType = "nap" | "night";
+export interface LiveActivityTimerIdentity {
+  babyId: string;
+  timerInstanceId: string;
+  userId: string;
+}
 
 const LIVE_ACTIVITY_CHECK_TIMEOUT_MS = 3000;
 const LIVE_ACTIVITY_START_TIMEOUT_MS = 5000;
@@ -17,6 +22,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallbackValue: T
 }
 
 interface LiveActivityControllerModule {
+  startTimerActivityWithIdentity?(
+    activityType: string, babyName: string, context: string | null,
+    startTimeISO: string | null, identity: LiveActivityTimerIdentity
+  ): Promise<string | null>;
+  bindTimerActivity?(activityId: string, identity: LiveActivityTimerIdentity): Promise<void>;
   startTimerActivity(
     activityType: string,
     babyName: string,
@@ -56,7 +66,8 @@ export async function startTimerLiveActivity(
   activityType: TimerActivityType,
   babyName: string,
   context?: BreastSide | SleepType,
-  startTime?: Date
+  startTime?: Date,
+  identity?: LiveActivityTimerIdentity
 ): Promise<string | null> {
   const module = getLiveActivityModule();
   if (!module) {
@@ -64,6 +75,11 @@ export async function startTimerLiveActivity(
   }
 
   try {
+    if (Platform.OS === "ios" && identity && module.startTimerActivityWithIdentity) {
+      return await module.startTimerActivityWithIdentity(
+        activityType, babyName, context ?? null, startTime?.toISOString() ?? null, identity
+      );
+    }
     const activityId = await module.startTimerActivity(
       activityType,
       babyName,
@@ -74,6 +90,15 @@ export async function startTimerLiveActivity(
   } catch (error) {
     console.error("[LiveActivity] Failed to start:", error);
     return null;
+  }
+}
+
+export async function bindTimerLiveActivity(activityId: string, identity: LiveActivityTimerIdentity): Promise<void> {
+  if (Platform.OS !== "ios") return;
+  try {
+    await getLiveActivityModule()?.bindTimerActivity?.(activityId, identity);
+  } catch {
+    console.error("[LiveActivity] Failed to bind timer identity");
   }
 }
 

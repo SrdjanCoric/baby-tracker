@@ -31,6 +31,7 @@ vi.mock("./live-activity-service", () => ({
   endTimerLiveActivity: vi.fn(),
   isLiveActivityRunningWithTimeout: vi.fn(),
   startTimerLiveActivity: vi.fn(),
+  bindTimerLiveActivity: vi.fn(),
 }));
 
 vi.mock("./active-timer-service", () => ({
@@ -191,7 +192,8 @@ describe("editRunningTimerStartTime", () => {
       "sleep",
       "Baby",
       "nap",
-      newStart
+      newStart,
+      { babyId: "baby-1", timerInstanceId: "timer-1", userId: "user-1" }
     );
     expect(setActiveTimer).toHaveBeenCalledWith(
       "baby-1",
@@ -264,7 +266,8 @@ describe("editRunningTimerStartTime", () => {
       "sleep",
       "Baby",
       "nap",
-      newStart
+      newStart,
+      { babyId: "baby-1", timerInstanceId: "timer-1", userId: "user-1" }
     );
     expect(liveActivityIdRef.current).toBe("live-new");
     expect(setActiveTimer).toHaveBeenCalledWith(
@@ -901,7 +904,8 @@ describe("restoreTimerLifecycle", () => {
       "sleep",
       "Baby",
       "nap",
-      new Date(startedAt)
+      new Date(startedAt),
+      undefined
     );
   });
 

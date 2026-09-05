@@ -1350,7 +1350,8 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         "sleep",
         selectedBaby.name,
         sleepType,
-        startTime
+        startTime,
+        user?.id && lockState === "owned" ? { babyId: selectedBaby.id, timerInstanceId: identity.timerInstanceId, userId: user.id } : undefined
       );
       if (activityId) {
         liveActivityIdRef.current = activityId;
