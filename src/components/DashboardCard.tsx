@@ -486,7 +486,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
               )}
               <View
                 style={{
-                  width: isActive && onPausePress ? 76 : 34,
+                  width: (isActive || isLockedByOther) && onPausePress ? 76 : 34,
                   height: 34,
                 }}
               />
@@ -502,21 +502,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
             bottom: Platform.OS === "android" ? 12 : 14,
           }}
         >
-          {isLockedByOther ? (
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: isDark ? "#3A3A3A" : "#E5E5E5",
-              }}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              <Text className="text-sm">⏳</Text>
-            </View>
-          ) : isStopping ? (
+          {isStopping ? (
             <Pressable
               disabled
               className="items-center justify-center"
@@ -534,6 +520,72 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
             >
               <Text className="text-base font-bold text-white">…</Text>
             </Pressable>
+          ) : isLockedByOther && onPausePress ? (
+            <View className="flex-row items-center gap-2">
+              <AnimatedPressable
+                onPress={onPausePress}
+                onPressIn={handlePauseButtonPressIn}
+                onPressOut={handlePauseButtonPressOut}
+                className="items-center justify-center"
+                style={[
+                  pauseButtonAnimatedStyle,
+                  {
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    backgroundColor: isPausedByOther ? buttonBgColor : "transparent",
+                    borderWidth: isPausedByOther ? 0 : 2,
+                    borderColor: buttonBgColor,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isPausedByOther ? t("common.resume") : t("common.pause")
+                }
+                testID={testID ? `${testID}-pause` : undefined}
+              >
+                <Text
+                  className="text-xs font-bold"
+                  style={{ color: isPausedByOther ? "#FFFFFF" : buttonBgColor }}
+                >
+                  {isPausedByOther ? "▶" : "⏸"}
+                </Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                onPress={onActionPress}
+                onPressIn={handleButtonPressIn}
+                onPressOut={handleButtonPressOut}
+                className="items-center justify-center"
+                style={[
+                  buttonAnimatedStyle,
+                  {
+                    backgroundColor: buttonBgColor,
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.stop")}
+                testID={testID ? `${testID}-action` : undefined}
+              >
+                <Text className="text-xs font-bold text-white">⏹</Text>
+              </AnimatedPressable>
+            </View>
+          ) : isLockedByOther ? (
+            <View
+              className="items-center justify-center"
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: isDark ? "#3A3A3A" : "#E5E5E5",
+              }}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              <Text className="text-sm">⏳</Text>
+            </View>
           ) : isActive && onPausePress ? (
             <View className="flex-row items-center gap-2">
               <AnimatedPressable

@@ -9,6 +9,8 @@ import {
   releaseTimerLock,
   releaseTimerLockDurably,
   retryPendingTimerStartEdits,
+  toggleTimerPause,
+  updateTimerData,
   updateTimerStartTime,
 } from "./active-timer-service";
 
@@ -270,6 +272,30 @@ describe("active timer cleanup", () => {
 
     expect(deleteMock).toHaveBeenCalledWith({ count: "exact" });
     expect(eqMock).toHaveBeenCalledWith("id", "lock-1");
+    expect(eqMock).not.toHaveBeenCalledWith("started_by", "user-1");
+  });
+
+  it("lets a household member delete the matching timer instance", async () => {
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        id: "lock-1",
+        baby_id: "baby-1",
+        activity_type: "feeding",
+        started_by: "starter-1",
+        started_at: "2026-07-15T08:00:00.000Z",
+        timer_data: { timerInstanceId: "timer-1" },
+        users: { display_name: "Starter" },
+      },
+      error: null,
+    });
+
+    await expect(
+      releaseTimerLock("baby-1", "feeding", "member-1", "timer-1")
+    ).resolves.toBe(true);
+
+    expect(deleteMock).toHaveBeenCalledWith({ count: "exact" });
+    expect(eqMock).toHaveBeenCalledWith("id", "lock-1");
+    expect(eqMock).not.toHaveBeenCalledWith("started_by", "member-1");
   });
 
   it("targets a legacy lock by its persisted start time without deleting a replacement", async () => {
@@ -395,6 +421,58 @@ describe("durable lock release", () => {
     expect(readPending().map(release => release.timerInstanceId)).toEqual([
       "timer-1",
     ]);
+  });
+});
+
+describe("household timer updates", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const query = {
+      update: updateMock,
+      eq: eqMock,
+      then: (resolve: (value: { error: null }) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve),
+    };
+    updateMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    fromMock.mockReturnValue(query);
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("updates only the matching timer instance without restricting it to the starter", async () => {
+    await expect(
+      updateTimerData("baby-1", "feeding", "member-1", {
+        timerInstanceId: "timer-1",
+        isPaused: true,
+      })
+    ).resolves.toBe(true);
+
+    expect(eqMock).toHaveBeenCalledWith("baby_id", "baby-1");
+    expect(eqMock).toHaveBeenCalledWith("activity_type", "feeding");
+    expect(eqMock).toHaveBeenCalledWith(
+      "timer_data->>timerInstanceId",
+      "timer-1"
+    );
+    expect(eqMock).not.toHaveBeenCalledWith("started_by", "member-1");
+  });
+
+  it("pauses a household timer through the authorized RPC", async () => {
+    await expect(
+      toggleTimerPause("baby-1", "sleep", "member-1", {
+        isPaused: true,
+        pausedAt: "2026-07-15T08:05:00.000Z",
+      })
+    ).resolves.toBeUndefined();
+
+    expect(rpcMock).toHaveBeenCalledWith("toggle_timer_pause", {
+      p_baby_id: "baby-1",
+      p_activity_type: "sleep",
+      p_user_id: "member-1",
+      p_timer_data: {
+        isPaused: true,
+        pausedAt: "2026-07-15T08:05:00.000Z",
+      },
+    });
   });
 });
 

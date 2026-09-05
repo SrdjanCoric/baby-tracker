@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   editRunningTimerStartTime,
   restoreTimerLifecycle,
+  stopRemoteTimerLifecycle,
   type TimerLifecycleAdapter,
   type TimerLifecycleActiveTimer,
 } from "./timer-lifecycle";
 import {
+  acceptTimerCompletion,
   isTimerCompletionSecured,
   resolveTimerIdentity,
 } from "./timer-completion-service";
@@ -20,6 +22,7 @@ import {
 } from "./live-activity-service";
 import {
   queuePendingTimerStartEdit,
+  releaseTimerLock,
   updateTimerStartTime,
 } from "./active-timer-service";
 
@@ -31,6 +34,10 @@ vi.mock("./live-activity-service", () => ({
 }));
 
 vi.mock("./active-timer-service", () => ({
+  findActiveTimerLock: vi.fn(
+    (snapshot: Array<{ activityType: string }>, activityType: string) =>
+      snapshot.find(lock => lock.activityType === activityType) ?? null
+  ),
   getActiveTimerLock: vi.fn(),
   isRetryableTimerWriteError: vi.fn(
     (error: unknown) => error instanceof TypeError
@@ -703,6 +710,135 @@ describe("restoreTimerLifecycle", () => {
     );
   });
 
+  it("clears an owned local timer without saving when its server lock vanished", async () => {
+    const clearActiveTimer = vi.fn();
+    const dispatchStopTimer = vi.fn();
+    const persistRecord = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue({
+          startedAt: "2026-08-05T12:00:00.000Z",
+          isPaused: false,
+          totalPausedMs: 0,
+          lockState: "owned",
+          timerInstanceId: "timer-1",
+          activityId: "activity-1",
+        }),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer,
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "activity-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn() },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+
+    await restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: { id: "user-1", householdId: "household-1" },
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord,
+      dispatchStopTimer,
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+      timerSnapshot: Promise.resolve([]),
+    });
+
+    expect(clearActiveTimer).toHaveBeenCalledWith("baby-1");
+    expect(dispatchStopTimer).toHaveBeenCalledOnce();
+    expect(persistRecord).not.toHaveBeenCalled();
+    expect(reconcileTimerLock).not.toHaveBeenCalled();
+    expect(endLiveActivityByType).toHaveBeenCalledWith("sleep");
+  });
+
+  it("restores an owned local timer when the server snapshot is unavailable", async () => {
+    const clearActiveTimer = vi.fn();
+    const dispatchRestoreTimer = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn().mockResolvedValue({
+          startedAt: "2026-08-05T12:00:00.000Z",
+          isPaused: false,
+          totalPausedMs: 0,
+          lockState: "owned",
+          timerInstanceId: "timer-1",
+          activityId: "activity-1",
+        }),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer,
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => ({})),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "activity-1" })),
+      liveActivity: { type: "sleep", detail: vi.fn() },
+      dispatchRestoreTimer,
+    };
+    vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+    });
+    vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+    vi.mocked(reconcileTimerLock).mockResolvedValue({ state: "owned" });
+    vi.mocked(startTimerLiveActivity).mockResolvedValue(null);
+
+    await expect(restoreTimerLifecycle({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      user: { id: "user-1", householdId: "household-1" },
+      completedRecords: [],
+      stopVersionAtStart: 0,
+      currentStopVersion: () => 0,
+      isStopping: () => false,
+      isCurrentBabyBinding: () => true,
+      liveActivityIdRef: { current: null },
+      refreshLocks: vi.fn(),
+      persistRecord: vi.fn(),
+      dispatchStopTimer: vi.fn(),
+      dispatchAddRecord: vi.fn(),
+      errorLabel: "[TimerLifecycleTest]",
+      timerSnapshot: Promise.reject(new TypeError("offline")),
+    })).resolves.toBeUndefined();
+
+    expect(clearActiveTimer).not.toHaveBeenCalled();
+    expect(reconcileTimerLock).toHaveBeenCalledOnce();
+    expect(dispatchRestoreTimer).toHaveBeenCalledOnce();
+  });
+
   it("restarts a resumed timer's Live Activity from the real start", async () => {
     const startedAt = "2026-08-05T12:00:00.000Z";
     const activeTimer: TestActiveTimer = {
@@ -974,6 +1110,92 @@ describe("restoreTimerLifecycle", () => {
 
     expect(dispatchRestoreTimer).toHaveBeenLastCalledWith(
       expect.objectContaining({ morningClassification: "automatic" })
+    );
+  });
+});
+
+describe("stopRemoteTimerLifecycle", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("saves a stopper-owned record from lock data before releasing the lock", async () => {
+    const buildRecord = vi.fn(() => ({ id: "deterministic-activity" }));
+    const persistRecord = vi.fn(async () => ({ id: "deterministic-activity" }));
+    const dispatchAddRecord = vi.fn();
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "sleep",
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(),
+      },
+      buildRecord,
+      liveActivity: { type: "sleep", detail: vi.fn() },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "timer-remote",
+      activityId: "deterministic-activity",
+    });
+    vi.mocked(acceptTimerCompletion).mockResolvedValue({
+      babyId: "baby-1",
+      activityType: "sleep",
+      timerInstanceId: "timer-remote",
+      activityId: "deterministic-activity",
+      startedAt: "2026-08-05T12:00:00.000Z",
+      stoppedAt: "2026-08-05T12:05:00.000Z",
+      status: "pending",
+    });
+    vi.mocked(releaseTimerLock).mockResolvedValue(true);
+
+    await expect(
+      stopRemoteTimerLifecycle({
+        adapter,
+        babyId: "baby-1",
+        userId: "stopper-1",
+        lock: {
+          id: "lock-1",
+          babyId: "baby-1",
+          activityType: "sleep",
+          startedBy: "starter-1",
+          startedByName: "Starter",
+          startedAt: "2026-08-05T12:00:00.000Z",
+          timerData: { timerInstanceId: "timer-remote", type: "nap" },
+        },
+        requestedStopTime: new Date("2026-08-05T12:05:00.000Z"),
+        persistRecord,
+        dispatchAddRecord,
+      })
+    ).resolves.toEqual({ id: "deterministic-activity" });
+
+    expect(buildRecord).toHaveBeenCalledWith(
+      new Date("2026-08-05T12:00:00.000Z"),
+      new Date("2026-08-05T12:05:00.000Z"),
+      expect.objectContaining({
+        timerInstanceId: "timer-remote",
+        activityId: "deterministic-activity",
+      })
+    );
+    expect(persistRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
+    expect(dispatchAddRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
+    expect(releaseTimerLock).toHaveBeenCalledWith(
+      "baby-1",
+      "sleep",
+      "stopper-1",
+      "timer-remote",
+      "2026-08-05T12:00:00.000Z"
     );
   });
 });

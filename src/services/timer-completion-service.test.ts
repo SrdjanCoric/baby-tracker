@@ -18,9 +18,14 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 vi.mock("expo-crypto", () => ({
   CryptoDigestAlgorithm: { SHA256: "SHA-256" },
   randomUUID: vi.fn(),
-  digestStringAsync: vi.fn(async (_algorithm: string, value: string) =>
-    (value.startsWith("timer:") ? "a" : "b").repeat(64)
-  ),
+  digestStringAsync: vi.fn(async (_algorithm: string, value: string) => {
+    let hash = 2166136261;
+    for (const character of value) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0").repeat(8);
+  }),
 }));
 
 describe("timer completion service", () => {
@@ -73,5 +78,51 @@ describe("timer completion service", () => {
       ...first,
       status: "completed",
     });
+  });
+
+  it("converges independent stops of one timer instance on one activity id", async () => {
+    const first = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T08:00:00.000Z",
+      {
+        timerInstanceId: "00000000-0000-4000-8000-000000000001",
+        activityId: "00000000-0000-4000-8000-000000000002",
+      },
+      new Date("2026-07-15T08:05:00.000Z")
+    );
+    storage.clear();
+    const independent = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T08:00:00.000Z",
+      {
+        timerInstanceId: "00000000-0000-4000-8000-000000000001",
+        activityId: "00000000-0000-4000-8000-000000000099",
+      },
+      new Date("2026-07-15T08:06:00.000Z")
+    );
+
+    expect(independent.activityId).toBe(first.activityId);
+    expect(first.activityId).not.toBe("00000000-0000-4000-8000-000000000002");
+  });
+
+  it("derives different activity ids for different timer instances", async () => {
+    const first = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T08:00:00.000Z",
+      { timerInstanceId: "timer-1", activityId: "ignored-1" },
+      new Date("2026-07-15T08:05:00.000Z")
+    );
+    const second = await acceptTimerCompletion(
+      "baby-1",
+      "sleep",
+      "2026-07-15T09:00:00.000Z",
+      { timerInstanceId: "timer-2", activityId: "ignored-2" },
+      new Date("2026-07-15T09:05:00.000Z")
+    );
+
+    expect(second.activityId).not.toBe(first.activityId);
   });
 });

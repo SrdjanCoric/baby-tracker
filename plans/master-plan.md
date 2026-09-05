@@ -162,8 +162,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   counting safe. No schema change, no stored pause span, no backfill: records written before the rule
   keep their disagreement permanently. The widget and the Watch keep sending `pauseDurationMs` and
   `accumulatedSeconds` and neither native target changes; `toggle_timer_pause` keeps its signature,
-  its meaning, and its owner-only guard. The cost taken deliberately is that tummy time and pumping
-  summed minutes now carry resumed pause spans while their record counts do not move.
+  its meaning, and its pause arithmetic, while Task 0091 supersedes its owner-only guard so any
+  authenticated caregiver in the baby's household may pause or resume the timer. The starter's
+  device persists remotely changed pause state and mirrors it to its Live Activity. The cost taken
+  deliberately is that tummy time and pumping summed minutes now carry resumed pause spans while
+  their record counts do not move.
 - **Nap slots are chronological and earn their row twice over**: a nap slot is the nth nap started
   within a sleep-day, counted forward from the start of the day, so a skipped nap shifts every later
   nap of that day up a slot. Each slot's averages divide by that slot's own occurrence count, never
@@ -178,8 +181,11 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   deletion, and it governs "Started earlier" identically. The range is shown as the picker's own bounds
   on both platforms rather than clamped after the fact. The write is a direct `UPDATE` on
   `active_timers.started_at` under a database trigger that fires only when that column changes, because
-  offline replay writes allowlisted tables generically and would bypass an RPC. The row policy stays
-  `USING (started_by = auth.uid())`, the dashboard card keeps its read-only gate, and no policy widens.
+  offline replay writes allowlisted tables generically and would bypass an RPC. The row policy is
+  household-scoped for timer control after Task 0091, but the database identity trigger independently
+  preserves this starter-only `started_at` rule and prevents changes to `baby_id`, `activity_type`, or
+  `started_by`. Household timers are interactive on the dashboard while starter attribution remains
+  visible.
 - **Hand-entered activities are clock times with a derived length**: both the manual add and the saved-
   record edit paths take a start time and an end time for every type that has a duration — sleep,
   breastfeeding, pumping, and tummy time — with duration a read-only readout and no minutes field or
@@ -301,7 +307,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
 - [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
 - [ ] 0089 · Respect stored sleep type across sleep statistics and charts → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
-- [ ] 0091 · Household caregivers stop/pause timers in-app → tasks/0091-household-caregivers-stop-pause-timers-in-app.md
+- [~] 0091 · Household caregivers stop/pause timers in-app → tasks/0091-household-caregivers-stop-pause-timers-in-app.md
 - [ ] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
 - [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
 - [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
@@ -451,3 +457,8 @@ On 2026-09-01 the owner prioritized household shared timer control (brief:
 that file). Tasks 0091 through 0094 take priority over every other open task; 0087, 0089, and 0090
 are deferred until 0091–0094 close, without an explicit owner decision required to resume them
 afterward. 0092 and 0093 touch disjoint surfaces and may proceed in parallel once 0091 merges.
+On 2026-09-05 the owner applied migration 065 to the shared Supabase project (server-first, backward
+compatible with app 4.9.11) and decided that no release ships until 0091 through 0094 have all merged
+and the full household E2E (`npm run e2e:household-timers`) has passed on the combined result; each
+task's PR merges to `main` on unit, component, CI, and SQL proof only, with the E2E acceptance item
+deferred to the 0094 closeout.

@@ -16,6 +16,31 @@ export const HOUSEHOLD_TIMER_TIMEOUTS = {
   maestroCommandMs: 1_500_000,
 };
 
+export function assertHouseholdTimerStopResult(
+  result,
+  { expectedCount, expectedLoggedBy }
+) {
+  const [recordCountValue, distinctCountValue, loggedBy = ""] = result.split("|");
+  const recordCount = Number(recordCountValue);
+  const distinctCount = Number(distinctCountValue);
+  if (recordCount !== expectedCount || distinctCount !== expectedCount) {
+    throw new Error(
+      `Household timer stop expected ${expectedCount} unique record(s); received ${result || "none"}`
+    );
+  }
+  if (expectedLoggedBy && loggedBy !== expectedLoggedBy) {
+    throw new Error(
+      `Household timer stop expected ownership by ${expectedLoggedBy}; received ${loggedBy || "none"}`
+    );
+  }
+}
+
+export async function runConcurrentTimerStops(tasks, afterStarted) {
+  const pending = tasks.map(task => task());
+  await afterStarted?.();
+  await Promise.all(pending);
+}
+
 export function getMetroBundleUrl(appId) {
   const url = new URL(
     "http://127.0.0.1:8081/.expo/.virtual-metro-entry.bundle"

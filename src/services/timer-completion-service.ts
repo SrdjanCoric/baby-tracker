@@ -54,10 +54,15 @@ async function saveCompletionRecords(
   );
 }
 
-export function createTimerIdentity(): TimerIdentity {
+export async function deriveTimerActivityId(timerInstanceId: string): Promise<string> {
+  return deterministicUuid(`timer-activity:${timerInstanceId}`);
+}
+
+export async function createTimerIdentity(): Promise<TimerIdentity> {
+  const timerInstanceId = Crypto.randomUUID();
   return {
-    timerInstanceId: Crypto.randomUUID(),
-    activityId: Crypto.randomUUID(),
+    timerInstanceId,
+    activityId: await deriveTimerActivityId(timerInstanceId),
   };
 }
 
@@ -67,20 +72,18 @@ export async function resolveTimerIdentity(
   startedAt: string,
   timerData?: Partial<TimerIdentity>
 ): Promise<TimerIdentity> {
-  if (
-    typeof timerData?.timerInstanceId === "string" &&
-    typeof timerData.activityId === "string"
-  ) {
+  if (typeof timerData?.timerInstanceId === "string") {
     return {
       timerInstanceId: timerData.timerInstanceId,
-      activityId: timerData.activityId,
+      activityId: await deriveTimerActivityId(timerData.timerInstanceId),
     };
   }
 
   const compatibilitySeed = `${babyId}:${activityType}:${startedAt}`;
+  const timerInstanceId = await deterministicUuid(`timer:${compatibilitySeed}`);
   return {
-    timerInstanceId: await deterministicUuid(`timer:${compatibilitySeed}`),
-    activityId: await deterministicUuid(`activity:${compatibilitySeed}`),
+    timerInstanceId,
+    activityId: await deriveTimerActivityId(timerInstanceId),
   };
 }
 
@@ -95,8 +98,11 @@ export async function acceptTimerCompletion(
   const existing = records.find(record => record.timerInstanceId === identity.timerInstanceId);
   if (existing) return existing;
 
+  const activityId = await deriveTimerActivityId(identity.timerInstanceId);
+
   const record: TimerCompletionRecord = {
-    ...identity,
+    timerInstanceId: identity.timerInstanceId,
+    activityId,
     babyId,
     activityType,
     startedAt,

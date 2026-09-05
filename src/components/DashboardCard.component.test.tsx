@@ -203,9 +203,10 @@ describe("DashboardCard", () => {
   });
 
   describe("interactions", () => {
-    it("renders a remotely locked card without actionable controls", () => {
+    it("renders remote stop and pause controls outside card navigation", () => {
       const onPress = jest.fn();
       const onActionPress = jest.fn();
+      const onPausePress = jest.fn();
       render(
         <DashboardCard
           activity="sleep"
@@ -215,16 +216,19 @@ describe("DashboardCard", () => {
           babyName="E2E Baby"
           onPress={onPress}
           onActionPress={onActionPress}
+          onPausePress={onPausePress}
           testID="card"
         />
       );
 
       const card = screen.getByTestId("card-locked-active");
       expect(screen.getByText("dashboardCard.isSleeping")).toBeTruthy();
-      expect(screen.queryByLabelText("accessibility.addActivity")).toBeNull();
+      fireEvent.press(screen.getByLabelText("common.pause"));
+      fireEvent.press(screen.getByLabelText("common.stop"));
       fireEvent.press(card);
       expect(onPress).not.toHaveBeenCalled();
-      expect(onActionPress).not.toHaveBeenCalled();
+      expect(onPausePress).toHaveBeenCalledTimes(1);
+      expect(onActionPress).toHaveBeenCalledTimes(1);
     });
 
     it("calls onPress when card pressed", () => {

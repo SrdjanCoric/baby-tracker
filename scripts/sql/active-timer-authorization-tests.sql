@@ -202,6 +202,37 @@ BEGIN
   IF NOT denied THEN
     RAISE EXCEPTION 'an outsider acquired a timer for another household''s baby';
   END IF;
+
+  denied := false;
+  BEGIN
+    PERFORM public.release_timer_lock(
+      '7a000000-0000-0000-0000-000000000001',
+      'sleep',
+      '73333333-3333-3333-3333-333333333333'
+    );
+  EXCEPTION WHEN insufficient_privilege THEN
+    denied := true;
+  END;
+
+  IF NOT denied THEN
+    RAISE EXCEPTION 'an outsider released a timer for another household''s baby';
+  END IF;
+
+  denied := false;
+  BEGIN
+    PERFORM public.toggle_timer_pause(
+      '7a000000-0000-0000-0000-000000000001',
+      'sleep',
+      '73333333-3333-3333-3333-333333333333',
+      '{"isPaused": true}'::jsonb
+    );
+  EXCEPTION WHEN insufficient_privilege THEN
+    denied := true;
+  END;
+
+  IF NOT denied THEN
+    RAISE EXCEPTION 'an outsider paused a timer for another household''s baby';
+  END IF;
 END
 $$;
 RESET ROLE;
@@ -634,24 +665,10 @@ SELECT set_config(
 SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
-  denied BOOLEAN := false;
+  denied_start_edit BOOLEAN := false;
   visible_count INTEGER;
   updated_count INTEGER;
 BEGIN
-  BEGIN
-    PERFORM public.release_timer_lock(
-      '7a000000-0000-0000-0000-000000000001',
-      'sleep',
-      '71111111-1111-1111-1111-111111111111'
-    );
-  EXCEPTION WHEN insufficient_privilege THEN
-    denied := true;
-  END;
-
-  IF NOT denied THEN
-    RAISE EXCEPTION 'a household member released another caregiver''s timer';
-  END IF;
-
   SELECT count(*)
   INTO visible_count
   FROM public.active_timers
@@ -668,17 +685,20 @@ BEGIN
     AND activity_type = 'sleep';
   GET DIAGNOSTICS updated_count = ROW_COUNT;
 
-  IF updated_count <> 0 THEN
-    RAISE EXCEPTION 'a household member directly updated another caregiver''s timer';
+  IF updated_count <> 1 THEN
+    RAISE EXCEPTION 'a household member could not directly update another caregiver''s timer data';
   END IF;
 
-  UPDATE public.active_timers
-  SET started_at = pg_catalog.now() - INTERVAL '30 minutes'
-  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
-    AND activity_type = 'sleep';
-  GET DIAGNOSTICS updated_count = ROW_COUNT;
+  BEGIN
+    UPDATE public.active_timers
+    SET started_at = pg_catalog.now() - INTERVAL '30 minutes'
+    WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+      AND activity_type = 'sleep';
+  EXCEPTION WHEN insufficient_privilege THEN
+    denied_start_edit := true;
+  END;
 
-  IF updated_count <> 0 THEN
+  IF NOT denied_start_edit THEN
     RAISE EXCEPTION 'a household member directly changed another caregiver''s timer start';
   END IF;
 END
@@ -693,24 +713,54 @@ SELECT set_config(
 SET LOCAL ROLE authenticated;
 DO $$
 DECLARE
-  denied BOOLEAN := false;
+  paused_data JSONB;
+  released BOOLEAN;
 BEGIN
-  BEGIN
-    PERFORM public.toggle_timer_pause(
-      '7a000000-0000-0000-0000-000000000001',
-      'sleep',
-      '71111111-1111-1111-1111-111111111111',
-      '{"isPaused": true, "pausedAt": "2026-07-21T12:00:00.000Z"}'::jsonb
-    );
-  EXCEPTION WHEN insufficient_privilege THEN
-    denied := true;
-  END;
+  PERFORM public.toggle_timer_pause(
+    '7a000000-0000-0000-0000-000000000001',
+    'sleep',
+    '72222222-2222-2222-2222-222222222222',
+    '{"isPaused": true, "pausedAt": "2026-07-21T12:00:00.000Z"}'::jsonb
+  );
 
-  IF NOT denied THEN
-    RAISE EXCEPTION 'a household member paused another caregiver''s timer';
+  SELECT timer_data
+  INTO paused_data
+  FROM public.active_timers
+  WHERE baby_id = '7a000000-0000-0000-0000-000000000001'
+    AND activity_type = 'sleep';
+
+  IF paused_data -> 'isPaused' <> 'true'::jsonb OR NOT paused_data ? 'pausedAt' THEN
+    RAISE EXCEPTION 'a household member could not pause another caregiver''s timer';
+  END IF;
+
+  SELECT public.release_timer_lock(
+    '7a000000-0000-0000-0000-000000000001',
+    'sleep',
+    '72222222-2222-2222-2222-222222222222'
+  ) INTO released;
+
+  IF NOT released THEN
+    RAISE EXCEPTION 'a household member could not release another caregiver''s timer';
   END IF;
 END
 $$;
+RESET ROLE;
+
+-- Recreate the owner fixture for the unchanged starter pause/resume/release regression below.
+SELECT set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '71111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+SELECT *
+FROM public.acquire_timer_lock(
+  '7a000000-0000-0000-0000-000000000001',
+  'sleep',
+  '71111111-1111-1111-1111-111111111111',
+  '{}'::jsonb,
+  pg_catalog.now()
+);
 RESET ROLE;
 
 SELECT set_config(
