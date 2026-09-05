@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWidgetPushHandler } from "../../supabase/functions/send-widget-push/handler";
 
-function setup({ peers = false, jwtError = null as Error | null, starts = false, widgets = true } = {}) {
+function setup({ peers = false, jwtError = null as Error | null, starts = false, widgets = true, starterError = null as object | null } = {}) {
   const remove = vi.fn();
   const queries: { table: string; filters: unknown[][] }[] = [];
   const database = {
@@ -27,8 +27,9 @@ function setup({ peers = false, jwtError = null as Error | null, starts = false,
       };
       const filters: unknown[][] = [];
       queries.push({ table, filters });
+      let columns = "";
       const query: any = {
-        select: () => query,
+        select: (value: string) => { columns = value; return query; },
         eq: (...args: unknown[]) => { filters.push(["eq", ...args]); return query; },
         neq: (...args: unknown[]) => { filters.push(["neq", ...args]); return query; },
         in: (...args: unknown[]) => { filters.push(["in", ...args]); return query; },
@@ -37,8 +38,10 @@ function setup({ peers = false, jwtError = null as Error | null, starts = false,
           return query;
         },
         single: () => query,
+        maybeSingle: () => query,
         then: (resolve: any) =>
-          Promise.resolve({ data: data[table], error: null }).then(resolve),
+          Promise.resolve(table === "users" && columns === "display_name"
+            ? { data: null, error: starterError } : { data: data[table], error: null }).then(resolve),
       };
       return query;
     }),
@@ -77,6 +80,13 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 }
 
 describe("widget push webhook", () => {
+  it.each([null, { code: "PGRST116" }])("starts mirrors when the starter profile is unavailable (%j)", async starterError => {
+    const { handler, send } = setup({ peers: true, starts: true, widgets: false, starterError });
+    await handler(request("INSERT"));
+    expect(send).toHaveBeenCalledOnce();
+    expect(JSON.parse(send.mock.calls[0][1].body).aps.attributes.starterName).toBe("");
+  });
+
   it("delivers widget refreshes while start delivery is blocked and signs only once", async () => {
     const { handler, send, createJwt } = setup({ peers: true, starts: true });
     let release!: (response: Response) => void;

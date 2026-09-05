@@ -214,10 +214,10 @@ export function createWidgetPushHandler({
       if (payload.type === "INSERT" && req.headers.get("authorization") === `Bearer ${serviceRoleKey}`) {
         try {
           const { data: starter, error: starterError } = await supabase.from("users")
-            .select("display_name").eq("id", record.started_by).single();
-          if (starterError) throw starterError;
+            .select("display_name").eq("id", record.started_by).maybeSingle();
+          if (starterError) console.warn("Starter name unavailable; sending without attribution");
           const result = await startTimerLiveActivities(record, {
-            babyName: baby.name, starterName: starter?.display_name ?? "", memberIds: userIds,
+            babyName: baby.name, starterName: starterError ? "" : starter?.display_name ?? "", memberIds: userIds,
             findTokens: async (ids) => {
               const { data, error } = await supabase.from("live_activity_start_tokens")
                 .select("id, user_id, device_token, is_sandbox").in("user_id", ids);
