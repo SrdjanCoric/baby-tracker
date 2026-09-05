@@ -2891,7 +2891,7 @@ struct PumpingActiveCard: View {
 
             if controls.canStop {
                 HStack(spacing: 6) {
-                    if let context = timer.context, !isPaused {
+                    if let context = timer.context, !isPaused, timer.isRemote != true {
                         Button {
                             connector.switchSide(activityType: timer.type, currentSide: context)
                         } label: {

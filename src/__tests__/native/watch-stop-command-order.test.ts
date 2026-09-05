@@ -13,6 +13,12 @@ function functionSource(name: string, nextName: string): string {
 }
 
 describe("Watch external timer commands", () => {
+  it("offers pumping side switching only for own running timers", () => {
+    const card = source.slice(source.indexOf("struct PumpingActiveCard:"));
+    const switchButton = card.slice(0, card.indexOf("connector.switchSide("));
+    expect(switchButton).toContain("if let context = timer.context, !isPaused, timer.isRemote != true {");
+  });
+
   it.each([
     ["pauseTimer", "resumeTimer"],
     ["resumeTimer", "switchSide"],
