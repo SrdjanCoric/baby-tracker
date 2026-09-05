@@ -45,7 +45,7 @@ Verify the current APNS Live Activity payload requirements (`apns-push-type: liv
 - Registration derives ownership from `auth.uid()` and also checks the expected user, preventing an
   in-flight upload from crossing an account switch. Household membership is required. Clients can
   read/delete only their own rows and cannot bypass the registration RPC with direct writes. The RPC
-  locks the matching timer row `FOR SHARE`: registration commits before DELETE, or returns false
+  locks the matching timer row `FOR UPDATE`: registration commits before DELETE, or returns false
   after DELETE without inserting an orphan.
 - Native activities carry optional baby/timer/user attributes, retaining decoding compatibility with
   older activities. New identified starts reuse only a matching identity. Restored legacy/offline
@@ -58,10 +58,11 @@ Verify the current APNS Live Activity payload requirements (`apns-push-type: liv
   already gone ends the local activity. The legacy App Group token key remains available to existing
   widget/Watch actions.
 - The DELETE branch runs before widget-recipient early returns and sends to all tokens for the exact
-  baby/timer instance, including the starter. A normal user's fabricated DELETE is rejected; the
-  webhook must authenticate with the service-role bearer. Widget headers, recipients, and payload
-  remain unchanged for legitimate INSERT/DELETE webhooks. Each registered device gets an independent
-  delivery attempt. Undelivered pushes retain the existing foreground fallback.
+  baby/timer instance, including the starter. The Live Activity branch requires the
+  service-role bearer; other webhook bearers retain existing widget delivery and skip activity ends.
+  Widget headers, recipients, and payload remain unchanged. Delivery uses up to eight workers with a
+  ten-second total budget; rows that were not attempted remain available until cleanup. Undelivered
+  pushes retain the existing foreground fallback.
 - Both native end and the DELETE handler remove token rows. A scheduled hourly cleanup removes rows
   older than 24 hours as a backstop for missed webhooks, killed apps, or failed cleanup requests.
 - Apple requirements verified against [Starting and updating Live Activities with ActivityKit push
@@ -108,3 +109,51 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
   during implementation.
 - Physical two-device APNS acceptance remains pending. The combined household E2E remains assigned
   to the 0094 closeout by the master plan; it was not run here.
+
+## Reviewed implementation and finish evidence (2026-09-05)
+
+- Review file `reviews/0093-end-starter-live-activity-on-remote-stop-206032d.md` is closed.
+  TR-1 through TR-11 are fixed in separate commits. No minor findings were skipped and no security
+  risks were accepted. TR-12 documents the pre-existing unauthenticated widget webhook path and remains
+  deferred outside this task; bearer verification protects the new Live Activity branch.
+- Remediation preserves legacy widget delivery, retains tokens when signing fails, subtracts completed
+  pauses in the final push frame, closes the sync-settlement race, and clears account-switch tombstones.
+  Sign-out stops token synchronization and removes the departing user's rows before ending the session.
+  Native starts end same-type orphans before requesting or reusing the matching activity.
+- Both edge functions share the APNs signing and end-request builder in `supabase/functions/_shared/apns.ts`.
+  Handler tests assert baby/timer lookup and cleanup filters, and failure logs retain the caught cause.
+  `docs/SECURITY.md` describes token ownership, registration, retention, and fan-out limits.
+- Registration serializes on the timer lock and allows eight activities per user and timer. Existing
+  tokens can rotate at the cap. Delivery runs at most eight requests concurrently within ten seconds.
+- README updated: iOS Native Integrations explains remote end pushes and foreground fallback;
+  Edge Functions lists migration, webhook, native binary, and physical-device release requirements;
+  Project Structure reflects migration 066. Affected prose passed the full write-well audit in one pass.
+- Review remediation proof: 19 focused unit tests, 22 auth component tests, Swift token/selection
+  harness, controller syntax, app and edge-module type checks, affected ESLint, and rollback-only local
+  SQL registration/ownership/cap tests passed. Logs remain under
+  `/tmp/agent-workflows/e2f8af45fd34/a0416957a610` until merged-task cleanup.
+- User authorized finish-task, PR creation, and sync-main. Shared deployment and physical-device
+  checkpoint status is awaiting clarification; these are not recorded as passed.
+
+### Final automated validation
+
+- Canonical code run passed lint, strict type checking, all 2,861 unit tests, timezone checks,
+  and 117 component suites (1,093 tests). One existing Watch integration file failed at import
+  because Supabase environment variables were absent in this working environment. Its 16 tests
+  passed with command-local dummy configuration:
+  `EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 EXPO_PUBLIC_SUPABASE_ANON_KEY=test-anon-key node node_modules/jest/bin/jest.js --watchman=false --runInBand --runTestsByPath src/__tests__/watch-realtime-baby-selection.integration.test.tsx`.
+  No source or environment-file change was needed. Evidence: `canonical.log`, `component-env-proof.log`.
+- Remaining canonical stages run separately after the import failure: `npm run test:ci` passed
+  65 tests; `npm run test:widget:swift` passed all harnesses and production Widget/Watch type checks.
+  Evidence: `canonical-ci.log`, `canonical-swift.log`.
+- `npm run test:sql:setup` applied the complete local migration chain through 066;
+  `npm run test:sql` passed the complete SQL suite. This reset only the local test database.
+  Evidence: `sql-setup.log`, `canonical-sql.log`.
+- The changed ActivityKit bridge passed `swiftc -typecheck` against the installed iOS SDK and
+  React Native headers, including the new duplicate-activity selection call.
+  Evidence: `finish-native-typecheck.log`.
+- `npm run test:production-gating` passed and confirmed the iOS Hermes bundle excludes development
+  onboarding tools (`canonical-production.log`). All canonical stages now have passing evidence;
+  the initial environment-dependent component failure is resolved by the focused rerun above.
+- Finish remains blocked at the required manual/deployment checkpoint. Keep the task pointer at `[~]`
+  and retain its review file until the user confirms the result or explicitly defers the checkpoint.
