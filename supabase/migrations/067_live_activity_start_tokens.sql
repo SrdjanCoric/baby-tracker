@@ -11,6 +11,8 @@ CREATE TABLE public.live_activity_start_tokens (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, device_id)
 );
+CREATE INDEX live_activity_start_tokens_updated_at_idx ON public.live_activity_start_tokens(updated_at);
+CREATE INDEX live_activity_start_tokens_device_token_idx ON public.live_activity_start_tokens(device_token);
 ALTER TABLE public.live_activity_start_tokens ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.live_activity_start_tokens FROM PUBLIC, anon, authenticated;
 GRANT SELECT, DELETE ON public.live_activity_start_tokens TO authenticated;
@@ -28,6 +30,10 @@ BEGIN
   IF v_user_id IS NULL OR v_user_id IS DISTINCT FROM p_user_id THEN
     RAISE EXCEPTION 'Not the token owner' USING ERRCODE = '42501';
   END IF;
+  -- Serialize ownership transfers of the same APNs token across accounts.
+  PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_device_token, 0));
+  DELETE FROM public.live_activity_start_tokens
+    WHERE device_token = p_device_token AND user_id <> v_user_id;
   -- Serialize device-limit checks and rotations within one account.
   PERFORM 1 FROM public.users WHERE id = v_user_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'User not found' USING ERRCODE = '42501'; END IF;
@@ -42,5 +48,9 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.register_live_activity_start_token(text,text,boolean,uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.register_live_activity_start_token(text,text,boolean,uuid) TO authenticated;
+
+-- Backstop for failed sign-out and installations that no longer refresh.
+SELECT cron.schedule('cleanup-live-activity-start-tokens', '23 * * * *',
+  $cron$DELETE FROM public.live_activity_start_tokens WHERE updated_at < now() - interval '24 hours'$cron$);
 
 COMMIT;

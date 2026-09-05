@@ -2,6 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 import { startTimerLiveActivities } from "../../supabase/functions/send-widget-push/live-activity";
 
 describe("household timer INSERT Live Activities", () => {
+  it("removes BadDeviceToken responses but retains other rejected tokens", async () => {
+    const removeTokens = vi.fn();
+    const send = vi.fn()
+      .mockResolvedValueOnce(new Response('{"reason":"BadDeviceToken"}', { status: 400 }))
+      .mockResolvedValueOnce(new Response('{"reason":"TopicDisallowed"}', { status: 400 }));
+    await startTimerLiveActivities({
+      baby_id: "baby", activity_type: "sleep", started_by: "starter",
+      started_at: "2026-09-05T12:00:00Z", timer_data: { timerInstanceId: "run" },
+    }, { babyName: "Baby", starterName: "Alice", memberIds: ["member"],
+      findTokens: async () => ["bad", "topic"].map(id => ({ id, user_id: "member", device_token: id, is_sandbox: false })),
+      removeTokens, getJwt: async () => "jwt", fetch: send, now: Date.now });
+    expect(removeTokens).toHaveBeenCalledWith(["bad"]);
+  });
+
   it("continues after one device fails and only removes expired start tokens", async () => {
     const send = vi.fn().mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(new Response(null, { status: 410 }))

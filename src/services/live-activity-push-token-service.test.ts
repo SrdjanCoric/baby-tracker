@@ -53,6 +53,17 @@ describe("native Live Activity token transport", () => {
     } finally { stop(); }
   });
 
+  it("attempts start-token cleanup even when activity-token cleanup fails", async () => {
+    const failure = new Error("offline");
+    const startDelete = vi.fn().mockResolvedValue({ error: null });
+    mocks.from.mockImplementation(table => ({ delete: () => ({
+      eq: table === "live_activity_push_tokens"
+        ? vi.fn().mockRejectedValue(failure) : startDelete,
+    }) }));
+    await expect(removeLiveActivityPushTokens("owner")).rejects.toThrow("offline");
+    expect(startDelete).toHaveBeenCalledWith("user_id", "owner");
+  });
+
   it("removes the signing-out user's rows while the session is still available", async () => {
     const eq = vi.fn().mockResolvedValue({ error: null });
     mocks.from.mockReturnValue({ delete: () => ({ eq }) });

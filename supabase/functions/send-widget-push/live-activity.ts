@@ -152,6 +152,12 @@ export async function startTimerLiveActivities(timer: StartedTimer, deps: StartD
         });
         if (response.status === 200) sent++;
         if (response.status === 410) invalid.push(token.id);
+        if (response.status === 400) {
+          const body = await response.text();
+          try {
+            if (JSON.parse(body).reason === "BadDeviceToken") invalid.push(token.id);
+          } catch { /* A malformed rejection must not interrupt other deliveries. */ }
+        }
       } catch { /* One unavailable device must not prevent other deliveries. */ }
     }
   }

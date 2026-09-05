@@ -22,10 +22,14 @@ const activeSyncs = new Map<string, () => Promise<void>>();
 export async function removeLiveActivityPushTokens(userId?: string): Promise<void> {
   if (!userId) return;
   await activeSyncs.get(userId)?.();
-  const { error } = await supabase.from("live_activity_push_tokens").delete().eq("user_id", userId);
-  if (error) throw error;
-  const { error: startError } = await supabase.from("live_activity_start_tokens").delete().eq("user_id", userId);
-  if (startError) throw startError;
+  const results = await Promise.allSettled(
+    ["live_activity_push_tokens", "live_activity_start_tokens"].map(async table => {
+      const { error } = await supabase.from(table).delete().eq("user_id", userId);
+      if (error) throw error;
+    })
+  );
+  const failure = results.find(result => result.status === "rejected");
+  if (failure?.status === "rejected") throw failure.reason;
 }
 
 export function startLiveActivityPushTokenSync(userId: string): () => void {
