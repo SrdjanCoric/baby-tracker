@@ -1086,7 +1086,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         var message: [String: Any] = [
             "action": "pauseTimer",
-            "activityType": activityType
+            "activityType": activityType,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": requestedAt
         ]
         message["babyId"] = babyId
         let requestId = sendAction(message)
@@ -1137,7 +1139,9 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         var message: [String: Any] = [
             "action": "resumeTimer",
-            "activityType": activityType
+            "activityType": activityType,
+            "timerInstanceId": timerInstanceId,
+            "eventAt": requestedAt
         ]
         message["babyId"] = babyId
         let requestId = sendAction(message)

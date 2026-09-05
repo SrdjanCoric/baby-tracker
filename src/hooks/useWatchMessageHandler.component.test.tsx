@@ -20,6 +20,20 @@ const mockReadPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetStop = jest.fn();
 const mockClearPendingWidgetPauseToggle = jest.fn();
 const mockAppendExternalTimerCommand = jest.fn();
+const mockTimerRpc = jest.fn();
+const mockGetLockForActivity = jest.fn();
+const mockRefreshLocks = jest.fn();
+
+jest.mock("@/services/supabase", () => ({
+  supabase: { rpc: (...args: unknown[]) => mockTimerRpc(...args) },
+}));
+
+jest.mock("@/contexts/active-timers-context", () => ({
+  useActiveTimers: () => ({
+    getLockForActivity: mockGetLockForActivity,
+    refreshLocks: mockRefreshLocks,
+  }),
+}));
 
 let registeredHandler: ((message: Record<string, unknown>, replyHandler?: (reply: Record<string, unknown>) => void) => void) | null = null;
 let mockSelectedBabyId = "baby-a";
@@ -157,6 +171,9 @@ describe("useWatchMessageHandler", () => {
     mockTummyTimeBabyId = "baby-a";
     mockFeedingBindingStatus = "ready";
     mockUserId = "user-a";
+    mockGetLockForActivity.mockReturnValue(null);
+    mockTimerRpc.mockResolvedValue({ error: null });
+    mockRefreshLocks.mockResolvedValue(undefined);
     mockReadPendingWidgetStop.mockResolvedValue(null);
     mockClearPendingWidgetStop.mockResolvedValue(undefined);
     mockClearPendingWidgetPauseToggle.mockResolvedValue(undefined);
@@ -173,6 +190,96 @@ describe("useWatchMessageHandler", () => {
     mockAddFeedingB.mockResolvedValue(undefined);
     mockAddDiaperA.mockResolvedValue(undefined);
     mockAddDiaperB.mockResolvedValue(undefined);
+  });
+
+  it.each(["feeding", "sleep", "pumping", "tummyTime"])(
+    "pauses a remote %s timer through the household RPC without Watch credentials",
+    async (activityType) => {
+      const now = Date.now();
+      jest.spyOn(Date, "now").mockReturnValue(now);
+      mockGetLockForActivity.mockReturnValue({
+        startedBy: "other-caregiver",
+        startedAt: new Date(now - 600_000).toISOString(),
+        timerData: { timerInstanceId: "remote-timer", isPaused: false },
+      });
+      const reply = jest.fn();
+      render(<TestHarness />);
+      sendMessage({
+        action: "pauseTimer", activityType, babyId: "baby-a",
+        timerInstanceId: "remote-timer", eventAt: new Date(now).toISOString(),
+      }, reply);
+      await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: true }));
+      expect(mockTimerRpc).toHaveBeenCalledWith("toggle_timer_pause", {
+        p_baby_id: "baby-a",
+        p_activity_type: activityType === "tummyTime" ? "tummy_time" : activityType,
+        p_user_id: "user-a",
+        p_timer_data: {
+          isPaused: true, pausedAt: new Date(now).toISOString(), accumulatedSeconds: 600,
+        },
+      });
+      expect(mockPauseBreastfeedingA).not.toHaveBeenCalled();
+      expect(mockRefreshLocks).toHaveBeenCalled();
+      jest.restoreAllMocks();
+    }
+  );
+
+  it("resumes a remote timer preserving its original start and paused duration", async () => {
+    const now = Date.now();
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver",
+      startedAt: new Date(now - 600_000).toISOString(),
+      timerData: {
+        timerInstanceId: "remote-timer", isPaused: true,
+        pausedAt: new Date(now - 60_000).toISOString(), totalPausedMs: 30_000,
+      },
+    });
+    const reply = jest.fn();
+    render(<TestHarness />);
+    sendMessage({
+      action: "resumeTimer", activityType: "sleep", babyId: "baby-a",
+      timerInstanceId: "remote-timer", eventAt: new Date(now).toISOString(),
+    }, reply);
+    await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: true }));
+    expect(mockTimerRpc).toHaveBeenCalledWith("toggle_timer_pause", {
+      p_baby_id: "baby-a", p_activity_type: "sleep", p_user_id: "user-a",
+      p_timer_data: {
+        isPaused: false, accumulatedSeconds: 600, totalPausedMs: 90_000,
+        effectiveStartTime: new Date(now - 600_000).toISOString(),
+      },
+    });
+  });
+
+  it("rejects a stale remote pause identity without modifying the replacement timer", async () => {
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: new Date().toISOString(),
+      timerData: { timerInstanceId: "replacement-timer", isPaused: false },
+    });
+    const reply = jest.fn();
+    render(<TestHarness />);
+    sendMessage({
+      action: "pauseTimer", activityType: "feeding", babyId: "baby-a",
+      timerInstanceId: "old-timer",
+    }, reply);
+    await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: false, error: "stale-timer" }));
+    expect(mockTimerRpc).not.toHaveBeenCalled();
+  });
+
+  it("reports a remote pause RPC failure to the Watch", async () => {
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: new Date(Date.now() - 600_000).toISOString(),
+      timerData: { timerInstanceId: "remote-timer", isPaused: false },
+    });
+    mockTimerRpc.mockResolvedValue({ error: new Error("offline") });
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const reply = jest.fn();
+    render(<TestHarness />);
+    sendMessage({
+      action: "pauseTimer", activityType: "sleep", babyId: "baby-a",
+      timerInstanceId: "remote-timer",
+    }, reply);
+    await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: false, error: "action-failed" }));
+    expect(mockRefreshLocks).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("waits for contexts to bind to the requested baby before running queued activity commands", async () => {
