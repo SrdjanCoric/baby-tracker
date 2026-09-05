@@ -1,3 +1,5 @@
+import { buildLiveActivityEndRequest } from "../_shared/apns.ts";
+
 export interface EndedTimer {
   baby_id: string;
   started_at: string;
@@ -41,43 +43,23 @@ export async function endTimerLiveActivities(
       (Number.isFinite(totalPausedMs) ? Math.max(0, totalPausedMs) : 0)) / 1000
   );
   const detail = data?.sleepType ?? data?.side ?? data?.type;
-  const body = JSON.stringify({
-    aps: {
-      timestamp,
-      event: "end",
-      "dismissal-date": timestamp - 1,
-      "content-state": {
-        elapsedSeconds: Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0,
-        context: typeof detail === "string" ? detail : null,
-        isPaused: true,
-        effectiveStartTimeISO: null,
-      },
-    },
-  });
+  const contentState = {
+    elapsedSeconds: Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0,
+    context: typeof detail === "string" ? detail : null,
+    isPaused: true,
+    effectiveStartTimeISO: null,
+  };
 
   let sent = 0;
   const jwt = await deps.getJwt();
   try {
     for (const token of tokens) {
       try {
-        const host = token.is_sandbox
-          ? "api.sandbox.push.apple.com"
-          : "api.push.apple.com";
-        const response = await deps.fetch(
-          `https://${host}/3/device/${token.device_token}`,
-          {
-            method: "POST",
-            headers: {
-              authorization: `bearer ${jwt}`,
-              "apns-push-type": "liveactivity",
-              "apns-priority": "10",
-              "apns-topic": "com.sofibaby.app.push-type.liveactivity",
-              "content-type": "application/json",
-            },
-            body,
-            signal: AbortSignal.timeout(10000),
-          }
-        );
+        const request = buildLiveActivityEndRequest({
+          deviceToken: token.device_token, jwt, isSandbox: token.is_sandbox,
+          timestamp, dismissalDate: timestamp - 1, contentState,
+        });
+        const response = await deps.fetch(request.url, request.init);
         if (response.status === 200) sent++;
       } catch {
         // Best effort delivery; foreground lock reconciliation is the fallback.

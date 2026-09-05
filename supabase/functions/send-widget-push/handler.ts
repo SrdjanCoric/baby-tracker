@@ -1,3 +1,4 @@
+import { createApnsJwt } from "../_shared/apns.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { endTimerLiveActivities } from "./live-activity.ts";
 
@@ -44,55 +45,6 @@ export function createWidgetPushHandler({
       started_at: string;
       timer_data?: Record<string, unknown> | null;
     } | null;
-  }
-
-  function base64UrlEncode(data: Uint8Array): string {
-    const base64 = btoa(String.fromCharCode(...data));
-    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  }
-
-  function base64UrlEncodeString(str: string): string {
-    return base64UrlEncode(new TextEncoder().encode(str));
-  }
-
-  async function createApnsJwt(
-    teamId: string,
-    keyId: string,
-    privateKeyPem: string
-  ): Promise<string> {
-    const header = base64UrlEncodeString(
-      JSON.stringify({ alg: "ES256", kid: keyId })
-    );
-    const now = Math.floor(Date.now() / 1000);
-    const payload = base64UrlEncodeString(
-      JSON.stringify({ iss: teamId, iat: now })
-    );
-
-    const signingInput = `${header}.${payload}`;
-
-    const pemContents = privateKeyPem
-      .replace("-----BEGIN PRIVATE KEY-----", "")
-      .replace("-----END PRIVATE KEY-----", "")
-      .replace(/\s/g, "");
-    const keyData = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
-
-    const cryptoKey = await crypto.subtle.importKey(
-      "pkcs8",
-      keyData,
-      { name: "ECDSA", namedCurve: "P-256" },
-      false,
-      ["sign"]
-    );
-
-    const signature = await crypto.subtle.sign(
-      { name: "ECDSA", hash: "SHA-256" },
-      cryptoKey,
-      new TextEncoder().encode(signingInput)
-    );
-
-    const encodedSig = base64UrlEncode(new Uint8Array(signature));
-
-    return `${signingInput}.${encodedSig}`;
   }
 
   async function sendApnsPush(
