@@ -28,7 +28,7 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 
 ## Human checkpoints
 
-- [ ] [verify] On two real devices/accounts: A starts a timer on their phone; B stops it from B's widget, then repeat from B's Watch. Expected: timer stops for both, exactly one record owned by B, A's app clears without saving. Failure: stop rejected, timer lingers on either device, or duplicate record. Reason: widget/Watch interaction with APNS refresh and WatchConnectivity cannot be exercised in CI simulators.
+- [ ] [verify] On two real devices/accounts: A starts a timer on their phone; B stops it from B's widget, then repeat from B's Watch. Expected: timer stops for both, exactly one record owned by B, A's app clears without saving. Failure: stop rejected, timer lingers on either device, or duplicate record. Reason: widget/Watch interaction with APNS refresh and WatchConnectivity cannot be exercised in CI simulators. **Pending owner confirmation during finish-task.**
 
 ## Acceptance criteria
 
@@ -57,3 +57,18 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
   passed 58/58; the two native ordering files passed 7/7; the affected handler component file passed
   8/8; `npm run typecheck`, targeted ESLint, and `git diff --check` passed. The real-device two-account
   checkpoint remains for the owner and `finish-task`.
+
+## Finish-task record (2026-09-05)
+
+- README audit: no impact. README documents setup and general timer behavior but has no widget or
+  Watch control usage section; no prose changed and no `write-well` pass was needed.
+- Review outcome: all 16 findings in `reviews/0092-widget-and-watch-control-remote-timers-44a6e20.md`
+  fixed, including the three user-approved security remediations (TR-1, TR-2, TR-11). No findings
+  were skipped or accepted as security risks.
+- Final automated proof: `npm run check:code` is the required canonical gate and is recorded in the
+  finish-task workflow log. Focused native, component/integration, Swift, TypeScript, lint, and
+  diff checks remain green from the review-fix pass.
+- The real-device two-caregiver checkpoint remains pending because the environment cannot exercise
+  APNS widget refresh and WatchConnectivity on physical devices. Exact procedure: on two signed-in
+  devices in one household, have caregiver A start a timer; from caregiver B's widget stop it and
+  verify both devices clear it and exactly one record is saved with B as owner; repeat with B's Watch.
