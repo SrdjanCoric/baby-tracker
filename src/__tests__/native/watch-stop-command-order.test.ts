@@ -35,14 +35,19 @@ describe("Watch external timer commands", () => {
     expect(body).toContain('"eventAt": requestedAt');
   });
 
-  it("durably transfers a typed stop before releasing the server timer", () => {
-    const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
-    const commandId = stopSource.indexOf("let stopCommand = WatchStopCommand");
-    const timerIdentity = stopSource.indexOf("timerInstanceId: timerInstanceId");
+  it.each([
+    ["stopTimer", "stopPumpingWithVolume"],
+    ["stopPumpingWithVolume", "logDiaper"],
+  ])("durably transfers a fresh targeted %s before releasing the server timer", (name, nextName) => {
+    const stopSource = functionSource(name, nextName);
+    const freshId = stopSource.indexOf("id: UUID().uuidString");
+    const commandId = stopSource.indexOf('"id": stopCommand.id');
+    const timerIdentity = stopSource.indexOf('"timerInstanceId": stopCommand.timerInstanceId');
     const transfer = stopSource.indexOf("sendAction(message)");
-    const remoteMutation = stopSource.indexOf("supabaseStopTimer(activityType: activityType)");
+    const remoteMutation = stopSource.indexOf("supabaseStopTimer(activityType:");
 
-    expect(commandId).toBeGreaterThanOrEqual(0);
+    expect(freshId).toBeGreaterThanOrEqual(0);
+    expect(commandId).toBeGreaterThan(freshId);
     expect(timerIdentity).toBeGreaterThan(commandId);
     expect(transfer).toBeGreaterThan(timerIdentity);
     expect(remoteMutation).toBeGreaterThan(transfer);
