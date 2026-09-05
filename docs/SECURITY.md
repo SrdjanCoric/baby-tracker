@@ -22,6 +22,16 @@ The application relies on Supabase RLS policies for data access control:
 - Activity tables (feedings, sleep_sessions, etc.) are filtered by `baby_id` which references babies in the user's household
 - Real-time sync verifies ownership before applying remote changes (see `verifyChangeOwnership` in `real-time-sync.ts`)
 
+### Live Activity Push Tokens
+
+Migration 066 protects `live_activity_push_tokens` with RLS: authenticated users can
+read and delete only their own rows and have no direct insert or update access.
+The `register_live_activity_push_token` security-definer RPC verifies the caller's
+user ID, household membership, and active timer instance before registering or
+rotating a token. Anonymous callers cannot invoke it. The service-role DELETE
+webhook reads tokens for the exact baby and timer instance; token rows survive
+timer deletion for delivery and expire after 24 hours.
+
 ### User Profile Access
 
 - Users can read basic profile info of household members (for caregiver attribution)
