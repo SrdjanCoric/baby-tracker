@@ -457,3 +457,8 @@ On 2026-09-01 the owner prioritized household shared timer control (brief:
 that file). Tasks 0091 through 0094 take priority over every other open task; 0087, 0089, and 0090
 are deferred until 0091–0094 close, without an explicit owner decision required to resume them
 afterward. 0092 and 0093 touch disjoint surfaces and may proceed in parallel once 0091 merges.
+On 2026-09-05 the owner applied migration 065 to the shared Supabase project (server-first, backward
+compatible with app 4.9.11) and decided that no release ships until 0091 through 0094 have all merged
+and the full household E2E (`npm run e2e:household-timers`) has passed on the combined result; each
+task's PR merges to `main` on unit, component, CI, and SQL proof only, with the E2E acceptance item
+deferred to the 0094 closeout.

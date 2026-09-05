@@ -32,3 +32,4 @@ Fast-follow to 0093. Mirror a running timer as a Live Activity on the other hous
 - [ ] Stopping from any surface ends every mirrored Live Activity.
 - [ ] No duplicate activities when B's app is foregrounded during the start.
 - [ ] Edge-function and token-lifecycle tests green; 0093 end-push behavior unchanged.
+- [ ] [verify] Release gate for 0091 through 0094: run `npm run e2e:household-timers` on the combined `main` and confirm every 0091 E2E acceptance item (B stops A's timer, one record owned by B, A clears without saving, simultaneous stop still one record, B pause/resume reflected on both devices). Nothing ships to production before this passes (owner decision 2026-09-05).
