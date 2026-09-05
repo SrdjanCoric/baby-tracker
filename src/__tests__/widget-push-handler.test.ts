@@ -97,10 +97,11 @@ describe("widget push webhook", () => {
     ).toEqual(["liveactivity", "widgets"]);
   });
 
-  it("rejects a fabricated DELETE from a normal client before reading tokens", async () => {
-    const { handler, database, send } = setup();
-    expect((await handler(request("DELETE", "user-jwt"))).status).toBe(401);
-    expect(database.from).not.toHaveBeenCalled();
-    expect(send).not.toHaveBeenCalled();
+  it("preserves legacy widget delivery without authorizing Live Activity ends", async () => {
+    const { handler, database, send } = setup({ peers: true });
+    expect((await handler(request("DELETE", "user-jwt"))).status).toBe(200);
+    expect(database.from).not.toHaveBeenCalledWith("live_activity_push_tokens");
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][1].headers["apns-push-type"]).toBe("widgets");
   });
 });

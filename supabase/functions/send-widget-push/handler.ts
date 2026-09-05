@@ -190,15 +190,8 @@ export function createWidgetPushHandler({
       // A normal user's JWT must not authorize a fabricated timer DELETE.
       if (payload.type === "DELETE") {
         if (req.headers.get("authorization") !== `Bearer ${serviceRoleKey}`) {
-          return new Response(
-            JSON.stringify({ error: "Unauthorized webhook" }),
-            {
-              status: 401,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-        try {
+          console.warn("Skipping Live Activity end push: unverified webhook bearer");
+        } else try {
           const result = await endTimerLiveActivities(record, {
             findTokens: async (babyId, timerInstanceId) => {
               const { data, error } = await supabase
