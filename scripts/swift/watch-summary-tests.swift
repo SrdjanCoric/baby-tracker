@@ -189,12 +189,12 @@ enum WatchSummaryTests {
             reload: { reloads.increment() }
         )
         let cached = try WatchSummaryDecoder.decodeCache(versioned).data
-        let remoteRunningControls = WatchTimerControls(isRemote: true, isPaused: false)
+        let remoteRunningControls = WatchTimerControls(isPaused: false)
         requireWatch(
             remoteRunningControls.canStop && remoteRunningControls.canPause && !remoteRunningControls.canResume,
             "a running remote Watch timer did not expose the own-timer stop/pause controls"
         )
-        let remotePausedControls = WatchTimerControls(isRemote: true, isPaused: true)
+        let remotePausedControls = WatchTimerControls(isPaused: true)
         requireWatch(
             remotePausedControls.canStop && !remotePausedControls.canPause && remotePausedControls.canResume,
             "a paused remote Watch timer did not expose the own-timer stop/resume controls"

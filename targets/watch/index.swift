@@ -901,7 +901,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
         let stopCommand = WatchStopCommand(
-            isRemote: timer.isRemote == true,
             id: UUID().uuidString,
             activityType: dbType,
             babyId: babyId,
@@ -966,7 +965,6 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let timerInstanceId = timer.timerInstanceId ?? "legacy:\(babyId):pumping:\(timer.startTime)"
 
         let stopCommand = WatchStopCommand(
-            isRemote: timer.isRemote == true,
             id: UUID().uuidString,
             activityType: "pumping",
             babyId: babyId,
@@ -2172,7 +2170,7 @@ struct ActiveTimerCard: View {
     }
 
     var controls: WatchTimerControls {
-        WatchTimerControls(isRemote: isRemote, isPaused: isPaused)
+        WatchTimerControls(isPaused: isPaused)
     }
 
     var body: some View {
@@ -2847,7 +2845,7 @@ struct PumpingActiveCard: View {
     }
 
     var controls: WatchTimerControls {
-        WatchTimerControls(isRemote: isRemote, isPaused: isPaused)
+        WatchTimerControls(isPaused: isPaused)
     }
 
     var body: some View {

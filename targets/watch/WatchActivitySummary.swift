@@ -86,7 +86,7 @@ struct WatchTimerControls: Equatable {
     let canPause: Bool
     let canResume: Bool
 
-    init(isRemote _: Bool, isPaused: Bool) {
+    init(isPaused: Bool) {
         canStop = true
         canPause = !isPaused
         canResume = isPaused
@@ -94,7 +94,6 @@ struct WatchTimerControls: Equatable {
 }
 
 struct WatchStopCommand: Equatable {
-    let isRemote: Bool
     let id: String
     let activityType: String
     let babyId: String
@@ -104,7 +103,6 @@ struct WatchStopCommand: Equatable {
     let legacy: Bool
 
     init(
-        isRemote: Bool,
         id: String,
         activityType: String,
         babyId: String,
@@ -112,7 +110,6 @@ struct WatchStopCommand: Equatable {
         eventAt: String,
         legacy: Bool
     ) {
-        self.isRemote = isRemote
         self.id = id
         self.activityType = activityType
         self.babyId = babyId
