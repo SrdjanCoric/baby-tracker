@@ -410,7 +410,7 @@ struct StopActivityIntent: AppIntent {
             return .result()
         }
 
-        guard widgetSnapshotRuntime?.identity.currentIdentity() != nil else {
+        guard let identity = widgetSnapshotRuntime?.identity.currentIdentity() else {
             NSLog("[StopActivity] ERROR: no signed-in identity; ignoring unauthenticated stop")
             return .result()
         }
@@ -463,7 +463,7 @@ struct StopActivityIntent: AppIntent {
 
         if activeTimer?.isRemote != true,
            let supabaseUrl, let anonKey, let babyId,
-           let url = URL(string: "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)") {
+           let url = URL(string: "\(supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(identity.accountId)") {
             _ = try? await widgetSnapshotRuntime?.transport.send { token in
                 var request = URLRequest(url: url)
                 request.httpMethod = "DELETE"

@@ -37,7 +37,9 @@ describe("StopActivityIntent", () => {
     expect(activeTimersUrl).toBeGreaterThan(persistStop);
     expect(releaseScopeEnd).toBeGreaterThan(activeTimersUrl);
     expect(activityPredicate).toBeGreaterThanOrEqual(0);
-    expect(userPredicate).toBe(-1);
+    expect(userPredicate).toBeGreaterThan(activityPredicate);
+    expect(intentSource).toContain("guard let identity = widgetSnapshotRuntime?.identity.currentIdentity()");
+    expect(releaseScope).toContain("&started_by=eq.\\(identity.accountId)");
     expect(requestCreation).toBeGreaterThan(activityPredicate);
     expect(deleteRequest).toBeGreaterThan(requestCreation);
     expect(releaseLock).toBeGreaterThan(deleteRequest);
