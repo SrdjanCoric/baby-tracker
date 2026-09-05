@@ -2,7 +2,22 @@ import Foundation
 
 @main
 struct LiveActivityPushTokenTests {
-    static func main() throws {
+    @MainActor static func main() async throws {
+        var endings: LiveActivityDuplicateEndings? = LiveActivityDuplicateEndings()
+        weak var weakEndings = endings
+        var release: CheckedContinuation<Void, Never>?
+        var completed = false
+        let ending = endings!.start(id: "duplicate", operation: {
+            await withCheckedContinuation { release = $0 }
+        }, onEnded: { completed = true })
+        while release == nil { await Task.yield() }
+        endings!.cancelAll()
+        endings = nil
+        precondition(weakEndings == nil, "pending duplicate ending must not retain its owner")
+        release!.resume()
+        await ending.value
+        precondition(!completed, "an invalidated duplicate ending must not mutate token state")
+
         let candidates = [
             LiveActivityStartCandidate(id: "legacy", activityType: "sleep", babyId: nil, timerInstanceId: nil, userId: nil),
             LiveActivityStartCandidate(id: "old", activityType: "sleep", babyId: "baby", timerInstanceId: "old", userId: "owner"),

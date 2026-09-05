@@ -8,7 +8,7 @@ class LiveActivityController: RCTEventEmitter {
     @MainActor private var tokenObservers: [String: Task<Void, Never>] = [:]
     @MainActor private var stateObservers: [String: Task<Void, Never>] = [:]
     @MainActor private var startTokenObserver: Task<Void, Never>?
-    @MainActor private var duplicateEndings = Set<String>()
+    @MainActor private var duplicateEndings = LiveActivityDuplicateEndings()
     @MainActor private var activityObserver: Task<Void, Never>?
     @MainActor private var hasTokenListeners = false
 
@@ -27,6 +27,7 @@ class LiveActivityController: RCTEventEmitter {
 
     override func invalidate() {
         Task { @MainActor in
+            self.duplicateEndings.cancelAll()
             self.startTokenObserver?.cancel()
             self.startTokenObserver = nil
             self.activityObserver?.cancel()
@@ -66,12 +67,12 @@ class LiveActivityController: RCTEventEmitter {
                 babyId: $0.attributes.babyId, timerInstanceId: $0.attributes.timerInstanceId,
                 userId: $0.attributes.userId)
         }, preferredIds: Set(tokenObservers.keys))
-        for duplicate in running where duplicates.contains(duplicate.id) && duplicateEndings.insert(duplicate.id).inserted {
-            Task { @MainActor in
+        for duplicate in running where duplicates.contains(duplicate.id) {
+            duplicateEndings.start(id: duplicate.id, operation: {
                 await duplicate.end(duplicate.content, dismissalPolicy: .immediate)
-                self.recordEnded(duplicate.id)
-                self.duplicateEndings.remove(duplicate.id)
-            }
+            }, onEnded: { [weak self] in
+                self?.recordEnded(duplicate.id)
+            })
         }
         guard !duplicates.contains(activity.id) else { return }
         let attrs = activity.attributes

@@ -100,3 +100,30 @@ func duplicateLiveActivityIds(_ candidates: [LiveActivityStartCandidate], prefer
     }
     return duplicates
 }
+
+
+// Own duplicate-ending work separately so cancellation can be tested without ActivityKit.
+@MainActor
+final class LiveActivityDuplicateEndings {
+    private var tasks: [String: Task<Void, Never>] = [:]
+
+    @discardableResult
+    func start(id: String, operation: @escaping @MainActor () async -> Void,
+               onEnded: @escaping @MainActor () -> Void) -> Task<Void, Never> {
+        if let task = tasks[id] { return task }
+        let task = Task { @MainActor [weak self] in
+            guard !Task.isCancelled else { return }
+            await operation()
+            guard !Task.isCancelled else { return }
+            onEnded()
+            self?.tasks.removeValue(forKey: id)
+        }
+        tasks[id] = task
+        return task
+    }
+
+    func cancelAll() {
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+}
