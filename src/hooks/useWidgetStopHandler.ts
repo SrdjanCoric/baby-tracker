@@ -110,10 +110,11 @@ export function useWidgetStopHandler() {
           startedAt &&
           Number.isFinite(startedAt.getTime())
         ) {
-          const timerInstanceId =
-            typeof lock.timerData?.timerInstanceId === "string"
-              ? lock.timerData.timerInstanceId
-              : queuedCommand.timerInstanceId;
+          const timerInstanceId = lock.timerData?.timerInstanceId;
+          if (typeof timerInstanceId !== "string" || timerInstanceId.length === 0) {
+            await acknowledgeExternalTimerCommand(queuedCommand);
+            return;
+          }
           timer = {
             isRunning: true,
             startTime: startedAt,

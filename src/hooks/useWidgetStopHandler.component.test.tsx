@@ -11,6 +11,7 @@ const mockGetTimerCompletion = jest.fn();
 const mockGetLockForActivity = jest.fn();
 const mockStopBreastfeeding = jest.fn();
 const mockStopSleep = jest.fn();
+const mockStopRemoteSleep = jest.fn();
 const mockStopPumping = jest.fn();
 const mockStopTummyTime = jest.fn();
 
@@ -64,7 +65,7 @@ jest.mock("@/contexts/feeding-context", () => ({
 }));
 
 jest.mock("@/contexts/sleep-context", () => ({
-  useSleep: () => mockSleepState,
+  useSleep: () => ({ ...mockSleepState, stopRemoteSleep: mockStopRemoteSleep }),
 }));
 
 jest.mock("@/contexts/pumping-context", () => ({
@@ -149,6 +150,7 @@ describe("useWidgetStopHandler", () => {
     mockGetLockForActivity.mockReturnValue(null);
     mockStopBreastfeeding.mockResolvedValue(null);
     mockStopSleep.mockResolvedValue(null);
+    mockStopRemoteSleep.mockResolvedValue({ id: "remote-record" });
     mockStopPumping.mockResolvedValue(null);
     mockStopTummyTime.mockResolvedValue(null);
 
@@ -297,6 +299,22 @@ describe("useWidgetStopHandler", () => {
     );
     expect(mockStopSleep).not.toHaveBeenCalled();
     expect(mockClearPendingWidgetPauseToggle).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, ""])("skips a remote lock without a usable timer identity (%s)", async (timerInstanceId) => {
+    const command = {
+      id: "stale-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "old-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "widget",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId },
+    });
+    render(<TestHarness />);
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockStopRemoteSleep).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
