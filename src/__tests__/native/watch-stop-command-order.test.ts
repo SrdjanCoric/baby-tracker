@@ -42,13 +42,14 @@ describe("Watch external timer commands", () => {
       .toBeLessThan(sendSource.indexOf("session.sendMessage(messageWithId"));
   });
 
-  it("keeps remote stops on the durable phone path without an ownership-filtered fallback", () => {
+  it("keeps remote stops durable and scopes offline deletion to the signed-in caregiver", () => {
     const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
     const pumpingSource = functionSource("stopPumpingWithVolume", "logDiaper");
     const fallbackSource = functionSource("supabaseStopTimer", "endLiveActivityViaEdgeFunction");
 
     expect(stopSource).toContain("timer.isRemote != true");
     expect(pumpingSource).toContain("timer.isRemote != true");
-    expect(fallbackSource).not.toContain("started_by=eq.");
+    expect(fallbackSource).toContain("let supabaseUserId");
+    expect(fallbackSource).toContain("&started_by=eq.\\(supabaseUserId)");
   });
 });

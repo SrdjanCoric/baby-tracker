@@ -1597,10 +1597,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     private func supabaseStopTimer(activityType: String) {
         guard hasAuthCredentials, let config = supabaseConfig,
-              let babyId = currentBabyId else { return }
+              let babyId = currentBabyId, let supabaseUserId else { return }
 
         let dbType = activityType == "tummyTime" ? "tummy_time" : activityType
-        let urlString = "\(config.supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)"
+        let urlString = "\(config.supabaseUrl)/rest/v1/active_timers?baby_id=eq.\(babyId)&activity_type=eq.\(dbType)&started_by=eq.\(supabaseUserId)"
         guard let url = URL(string: urlString) else { return }
 
         let pushToken = self.liveActivityPushToken
