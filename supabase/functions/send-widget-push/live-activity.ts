@@ -52,8 +52,8 @@ export async function endTimerLiveActivities(
   });
 
   let sent = 0;
+  const jwt = await deps.getJwt();
   try {
-    const jwt = await deps.getJwt();
     for (const token of tokens) {
       try {
         const host = token.is_sandbox

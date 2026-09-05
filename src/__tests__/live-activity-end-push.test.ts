@@ -28,6 +28,19 @@ describe("timer DELETE Live Activity pushes", () => {
     expect(deps.removeTokens).not.toHaveBeenCalled();
   });
 
+  it("retains token rows when JWT creation fails before delivery", async () => {
+    const removeTokens = vi.fn();
+    const send = vi.fn();
+    await expect(endTimerLiveActivities(
+      { baby_id: "baby", started_at: "2026-09-05T12:00:00Z", timer_data: { timerInstanceId: "run" } },
+      { findTokens: async () => [{ id: "a", device_token: "a", is_sandbox: false }],
+        removeTokens, getJwt: async () => { throw new Error("invalid signing key"); },
+        fetch: send, now: Date.now }
+    )).rejects.toThrow("invalid signing key");
+    expect(send).not.toHaveBeenCalled();
+    expect(removeTokens).not.toHaveBeenCalled();
+  });
+
   it("cleans up a stopped timer even when APNS fails, and continues other devices", async () => {
     const removeTokens = vi.fn();
     const send = vi
