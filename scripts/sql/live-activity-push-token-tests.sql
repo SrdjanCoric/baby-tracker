@@ -59,10 +59,18 @@ DO $$ BEGIN
   FOR i IN 1..7 LOOP
     PERFORM public.register_live_activity_start_token('phone-' || i, repeat('d',64), false, auth.uid());
   END LOOP;
-  BEGIN
-    PERFORM public.register_live_activity_start_token('overflow', repeat('e',64), false, auth.uid());
-    RAISE EXCEPTION 'unbounded start token registration accepted';
-  EXCEPTION WHEN program_limit_exceeded THEN NULL; END;
+END $$;
+RESET ROLE;
+UPDATE public.live_activity_start_tokens SET updated_at = now() - interval '2 hours'
+  WHERE device_id = 'phone-1';
+SET LOCAL ROLE authenticated;
+DO $$ BEGIN
+  PERFORM public.register_live_activity_start_token('overflow', repeat('e',64), false, auth.uid());
+  IF (SELECT count(*) FROM public.live_activity_start_tokens) <> 8
+    OR NOT EXISTS (SELECT 1 FROM public.live_activity_start_tokens WHERE device_id = 'overflow')
+  THEN RAISE EXCEPTION 'new installations must replace the oldest registration at the cap'; END IF;
+  IF EXISTS (SELECT 1 FROM public.live_activity_start_tokens WHERE device_id = 'phone-1')
+  THEN RAISE EXCEPTION 'least recently updated installation must be evicted'; END IF;
   PERFORM public.register_live_activity_start_token('phone', repeat('f',64), false, auth.uid());
   DELETE FROM public.live_activity_start_tokens;
   IF EXISTS (SELECT 1 FROM public.live_activity_start_tokens) THEN

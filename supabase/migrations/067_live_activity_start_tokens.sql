@@ -37,10 +37,12 @@ BEGIN
   -- Serialize device-limit checks and rotations within one account.
   PERFORM 1 FROM public.users WHERE id = v_user_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'User not found' USING ERRCODE = '42501'; END IF;
-  IF (SELECT count(*) FROM public.live_activity_start_tokens
-      WHERE user_id = v_user_id AND device_id <> p_device_id) >= 8 THEN
-    RAISE EXCEPTION 'Live Activity device limit reached' USING ERRCODE = '54000';
-  END IF;
+  -- Keep room for this installation, evicting the least recently refreshed devices.
+  DELETE FROM public.live_activity_start_tokens WHERE id IN (
+    SELECT id FROM public.live_activity_start_tokens
+    WHERE user_id = v_user_id AND device_id <> p_device_id
+    ORDER BY updated_at DESC, id DESC OFFSET 7
+  );
   INSERT INTO public.live_activity_start_tokens(user_id, device_id, device_token, is_sandbox)
   VALUES (v_user_id, p_device_id, p_device_token, p_is_sandbox)
   ON CONFLICT (user_id, device_id) DO UPDATE SET
