@@ -309,7 +309,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0089 · Respect stored sleep type across sleep statistics and charts → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
 - [x] 0091 · Household caregivers stop/pause timers in-app → tasks/done/0091-household-caregivers-stop-pause-timers-in-app.md
 - [x] 0092 · Widget and Watch control remote timers (after 0091) → tasks/done/0092-widget-and-watch-control-remote-timers.md
-- [~] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
+- [>] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
 - [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
 
 ## Workflow status
