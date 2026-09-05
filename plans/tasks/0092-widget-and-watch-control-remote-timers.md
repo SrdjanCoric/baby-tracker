@@ -65,9 +65,9 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 - Review outcome: all 16 findings in `reviews/0092-widget-and-watch-control-remote-timers-44a6e20.md`
   fixed, including the three user-approved security remediations (TR-1, TR-2, TR-11). No findings
   were skipped or accepted as security risks.
-- Final automated proof: `npm run check:code` is the required canonical gate and is recorded in the
-  finish-task workflow log. Focused native, component/integration, Swift, TypeScript, lint, and
-  diff checks remain green from the review-fix pass.
+- Final automated proof: `npm run check:code` passed with 118 suites and 1,109 tests; the capped
+  output is recorded in `/tmp/agent-workflows/e2f8af45fd34/1e841d975c8b/canonical.log`. Focused
+  native, component/integration, Swift, TypeScript, lint, and diff checks remain green.
 - The real-device two-caregiver checkpoint remains pending because the environment cannot exercise
   APNS widget refresh and WatchConnectivity on physical devices. Exact procedure: on two signed-in
   devices in one household, have caregiver A start a timer; from caregiver B's widget stop it and
