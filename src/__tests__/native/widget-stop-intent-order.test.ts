@@ -2,6 +2,15 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("StopActivityIntent", () => {
+  it("keeps caregiver names off the rectangular lock screen", () => {
+    const source = readFileSync(
+      new URL("../../../targets/widget/index.swift", import.meta.url), "utf8"
+    );
+    const view = source.split("struct LockScreenRectangularView:")[1].split("\nstruct ")[0];
+    expect(view).toContain("Text(L.inUse)");
+    expect(view).not.toContain("getTimerContext(");
+  });
+
   it("persists the baby-targeted stop before releasing the server lock", () => {
     const source = readFileSync(
       new URL("../../../targets/widget/index.swift", import.meta.url),

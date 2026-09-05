@@ -2348,7 +2348,7 @@ struct LockScreenRectangularView: View {
                                 if data.isRemoteTimer(for: activity) {
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 8))
-                                    Text(getTimerContext(for: activity, data: data) ?? L.inUse)
+                                    Text(L.inUse)
                                         .font(.system(size: 10, weight: .medium))
                                         .lineLimit(1)
                                 } else if isTimerPausedForActivity(activity, data: data) {
