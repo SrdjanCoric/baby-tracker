@@ -41,6 +41,21 @@ describe("timer DELETE Live Activity pushes", () => {
     expect(removeTokens).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [false, undefined, 1800],
+    [true, "2026-09-05T12:50:00Z", 1200],
+  ])("subtracts completed pauses from final duration (paused=%s)", async (isPaused, pausedAt, expected) => {
+    const send = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    await endTimerLiveActivities(
+      { baby_id: "baby", started_at: "2026-09-05T12:00:00Z",
+        timer_data: { timerInstanceId: "run", totalPausedMs: 1800000, isPaused, pausedAt } },
+      { findTokens: async () => [{ id: "a", device_token: "a", is_sandbox: false }],
+        removeTokens: vi.fn(), getJwt: async () => "jwt", fetch: send,
+        now: () => Date.parse("2026-09-05T13:00:00Z") }
+    );
+    expect(JSON.parse(send.mock.calls[0][1].body).aps["content-state"].elapsedSeconds).toBe(expected);
+  });
+
   it("cleans up a stopped timer even when APNS fails, and continues other devices", async () => {
     const removeTokens = vi.fn();
     const send = vi

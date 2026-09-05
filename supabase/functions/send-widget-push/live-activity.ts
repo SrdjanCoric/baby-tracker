@@ -35,7 +35,11 @@ export async function endTimerLiveActivities(
     data?.isPaused === true && typeof data.pausedAt === "string"
       ? Date.parse(data.pausedAt)
       : now;
-  const elapsed = Math.floor((pausedAt - Date.parse(timer.started_at)) / 1000);
+  const totalPausedMs = Number(data?.totalPausedMs ?? 0);
+  const elapsed = Math.floor(
+    (pausedAt - Date.parse(timer.started_at) -
+      (Number.isFinite(totalPausedMs) ? Math.max(0, totalPausedMs) : 0)) / 1000
+  );
   const detail = data?.sleepType ?? data?.side ?? data?.type;
   const body = JSON.stringify({
     aps: {
