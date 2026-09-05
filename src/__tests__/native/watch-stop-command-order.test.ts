@@ -13,6 +13,22 @@ function functionSource(name: string, nextName: string): string {
 }
 
 describe("Watch external timer commands", () => {
+  it.each([
+    ["pauseTimer", "resumeTimer"],
+    ["resumeTimer", "switchSide"],
+  ])("does not pin remote optimism after %s", (name, nextName) => {
+    const body = functionSource(name, nextName);
+    const send = body.indexOf("sendAction(message)");
+    const ownOnly = body.indexOf("guard timer.isRemote != true else");
+    const pin = body.indexOf("self.localActiveTimers.append(serverTimer)");
+    expect(send).toBeGreaterThanOrEqual(0);
+    expect(ownOnly).toBeGreaterThan(send);
+    expect(pin).toBeGreaterThan(ownOnly);
+    expect(body.slice(ownOnly, pin)).toContain("return");
+    expect(body).toContain('"timerInstanceId": timerInstanceId');
+    expect(body).toContain('"eventAt": requestedAt');
+  });
+
   it("durably transfers a typed stop before releasing the server timer", () => {
     const stopSource = functionSource("stopTimer", "stopPumpingWithVolume");
     const commandId = stopSource.indexOf("let stopCommand = WatchStopCommand");

@@ -1102,6 +1102,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         )
 
         DispatchQueue.main.async {
+            // Remote state comes back through the household snapshot after the phone RPC.
+            guard timer.isRemote != true else { return }
             var accumulated: Int?
             var timerContext: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
@@ -1155,6 +1157,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         )
 
         DispatchQueue.main.async {
+            // Do not retain an optimistic remote copy when delivery or the RPC fails.
+            guard timer.isRemote != true else { return }
             var accumulated: Int?
             var timerContext: String?
             var effectiveStartTime: String?
