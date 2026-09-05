@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWidgetPushHandler } from "../../supabase/functions/send-widget-push/handler";
 
-function setup({ peers = false, jwtError = null as Error | null } = {}) {
+function setup({ peers = false, jwtError = null as Error | null, starts = false, widgets = true } = {}) {
   const remove = vi.fn();
   const queries: { table: string; filters: unknown[][] }[] = [];
   const database = {
@@ -9,13 +9,14 @@ function setup({ peers = false, jwtError = null as Error | null } = {}) {
       const data: Record<string, unknown> = {
         babies: { name: "Baby", household_id: "household" },
         users: peers ? [{ id: "member" }] : [],
-        widget_push_tokens: [
+        live_activity_start_tokens: starts ? [{ id: "start-row", user_id: "member", device_token: "start-token", is_sandbox: true }] : [],
+        widget_push_tokens: widgets ? [
           {
             device_token: "widget-token",
             user_id: "member",
             is_sandbox: false,
           },
-        ],
+        ] : [],
         live_activity_push_tokens: [
           {
             id: "activity-row",
@@ -75,6 +76,17 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 }
 
 describe("widget push webhook", () => {
+  it("starts peer activities even without widget tokens, only for a verified webhook", async () => {
+    const { handler, send, queries } = setup({ peers: true, starts: true, widgets: false });
+    await handler(request("INSERT", "user-jwt"));
+    expect(send).not.toHaveBeenCalled();
+    expect(queries.some(q => q.table === "live_activity_start_tokens")).toBe(false);
+    await handler(request("INSERT"));
+    expect(send).toHaveBeenCalledOnce();
+    expect(JSON.parse(send.mock.calls[0][1].body).aps.event).toBe("start");
+    expect(queries.find(q => q.table === "live_activity_start_tokens")?.filters).toContainEqual(["in", "user_id", ["member"]]);
+  });
+
   it("logs the cause of an activity delivery failure", async () => {
     const cause = new Error("signing failed");
     const log = vi.spyOn(console, "error");

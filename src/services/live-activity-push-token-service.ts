@@ -11,6 +11,12 @@ import {
   type LiveActivityPushRecord,
 } from "./live-activity-push-token-sync";
 
+const refreshSyncs = new Map<string, () => void>();
+
+export function refreshLiveActivityPushTokens(): void {
+  refreshSyncs.forEach(refresh => refresh());
+}
+
 const activeSyncs = new Map<string, () => Promise<void>>();
 
 export async function removeLiveActivityPushTokens(userId?: string): Promise<void> {
@@ -18,6 +24,8 @@ export async function removeLiveActivityPushTokens(userId?: string): Promise<voi
   await activeSyncs.get(userId)?.();
   const { error } = await supabase.from("live_activity_push_tokens").delete().eq("user_id", userId);
   if (error) throw error;
+  const { error: startError } = await supabase.from("live_activity_start_tokens").delete().eq("user_id", userId);
+  if (startError) throw startError;
 }
 
 export function startLiveActivityPushTokenSync(userId: string): () => void {
@@ -27,6 +35,20 @@ export function startLiveActivityPushTokenSync(userId: string): () => void {
   let disposed = false;
   let retry: ReturnType<typeof setTimeout> | undefined;
   const sync = createLiveActivityTokenSynchronizer(userId, {
+    readStart: () => native.getLiveActivityStartToken?.() ?? Promise.resolve(null),
+    registerStart: async (record) => {
+      const { error } = await supabase.rpc("register_live_activity_start_token", {
+        p_device_id: record.deviceId, p_device_token: record.token,
+        p_is_sandbox: __DEV__, p_user_id: userId,
+      });
+      if (error) throw error;
+    },
+    isActive: async (record) => {
+      const { data, error } = await supabase.from("active_timers").select("id")
+        .eq("baby_id", record.babyId).eq("timer_data->>timerInstanceId", record.timerInstanceId).limit(1);
+      if (error) throw error;
+      return (data?.length ?? 0) > 0;
+    },
     read: () =>
       native.getLiveActivityPushRecords() as Promise<LiveActivityPushRecord[]>,
     register: async (record) => {
@@ -91,8 +113,10 @@ export function startLiveActivityPushTokenSync(userId: string): () => void {
     foreground.remove();
     network();
     activeSyncs.delete(userId);
+    refreshSyncs.delete(userId);
     await pending.catch(() => {});
   };
   activeSyncs.set(userId, stop);
+  refreshSyncs.set(userId, refresh);
   return () => { void stop(); };
 }

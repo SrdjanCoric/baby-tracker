@@ -1,6 +1,6 @@
 import { createApnsJwt } from "../_shared/apns.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { endTimerLiveActivities } from "./live-activity.ts";
+import { endTimerLiveActivities, startTimerLiveActivities } from "./live-activity.ts";
 
 interface WidgetPushDependencies {
   env(name: string): string | undefined;
@@ -207,6 +207,31 @@ export function createWidgetPushHandler({
       }
 
       const userIds = householdUsers.map((u) => u.id);
+
+      if (payload.type === "INSERT" && req.headers.get("authorization") === `Bearer ${serviceRoleKey}`) {
+        try {
+          const { data: starter, error: starterError } = await supabase.from("users")
+            .select("display_name").eq("id", record.started_by).single();
+          if (starterError) throw starterError;
+          const result = await startTimerLiveActivities(record, {
+            babyName: baby.name, starterName: starter?.display_name ?? "", memberIds: userIds,
+            findTokens: async (ids) => {
+              const { data, error } = await supabase.from("live_activity_start_tokens")
+                .select("id, user_id, device_token, is_sandbox").in("user_id", ids);
+              if (error) throw error;
+              return data ?? [];
+            },
+            removeTokens: async (ids) => {
+              const { error } = await supabase.from("live_activity_start_tokens").delete().in("id", ids);
+              if (error) throw error;
+            },
+            getJwt: () => createJwt(apnsTeamId, apnsKeyId, apnsAuthKey), fetch, now: Date.now,
+          });
+          console.log(`Live Activity start push sent: ${result.sent}/${result.total}`);
+        } catch (error) {
+          console.error("Live Activity start push failed", error);
+        }
+      }
 
       const { data: tokens, error: tokensError } = await supabase
         .from("widget_push_tokens")

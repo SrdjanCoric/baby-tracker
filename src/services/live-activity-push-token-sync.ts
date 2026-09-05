@@ -7,7 +7,12 @@ export interface LiveActivityPushRecord {
   ended: boolean;
 }
 
+export interface LiveActivityStartToken { deviceId: string; token: string }
+
 interface TokenSyncDependencies {
+  readStart?(): Promise<LiveActivityStartToken | null>;
+  registerStart?(record: LiveActivityStartToken): Promise<void>;
+  isActive?(record: LiveActivityPushRecord): Promise<boolean>;
   read(): Promise<LiveActivityPushRecord[]>;
   register(record: LiveActivityPushRecord): Promise<boolean>;
   remove(record: LiveActivityPushRecord): Promise<void>;
@@ -22,6 +27,7 @@ export function createLiveActivityTokenSynchronizer(
   let disposed = false;
   let requested = false;
   let inFlight: Promise<void> | null = null;
+  let syncedStart: string | undefined;
   const synced = new Map<string, string>();
 
   async function drain() {
@@ -33,11 +39,17 @@ export function createLiveActivityTokenSynchronizer(
           if (record.ended) await deps.acknowledge(record.activityId);
           continue;
         }
+        const active = !record.ended && deps.isActive ? await deps.isActive(record) : true;
+        if (disposed) return;
         if (record.ended) {
           await deps.remove(record);
           if (disposed) return;
           await deps.acknowledge(record.activityId);
           synced.delete(record.activityId);
+        } else if (!active) {
+          if (disposed) return;
+          await deps.end(record.activityId);
+          requested = true;
         } else if (
           record.token &&
           synced.get(record.activityId) !== record.token
@@ -53,6 +65,14 @@ export function createLiveActivityTokenSynchronizer(
             requested = true;
           }
         }
+      }
+      if (disposed) return;
+      const start = await deps.readStart?.();
+      if (disposed) return;
+      if (start && deps.registerStart && syncedStart !== `${start.deviceId}:${start.token}`) {
+        await deps.registerStart(start);
+        if (disposed) return;
+        syncedStart = `${start.deviceId}:${start.token}`;
       }
     }
   }
