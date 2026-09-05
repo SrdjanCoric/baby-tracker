@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWidgetPushHandler } from "../../supabase/functions/send-widget-push/handler";
 
-function setup({ peers = false } = {}) {
+function setup({ peers = false, jwtError = null as Error | null } = {}) {
   const remove = vi.fn();
   const queries: { table: string; filters: unknown[][] }[] = [];
   const database = {
@@ -48,7 +48,7 @@ function setup({ peers = false } = {}) {
       key === "SUPABASE_SERVICE_ROLE_KEY" ? "service-secret" : "config",
     createClient: () => database as any,
     fetch: send,
-    createJwt: async () => "jwt",
+    createJwt: async () => { if (jwtError) throw jwtError; return "jwt"; },
   });
   return { handler, database, send, remove, queries };
 }
@@ -75,6 +75,18 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 }
 
 describe("widget push webhook", () => {
+  it("logs the cause of an activity delivery failure", async () => {
+    const cause = new Error("signing failed");
+    const log = vi.spyOn(console, "error");
+    try {
+      const { handler } = setup({ jwtError: cause });
+      await handler(request("DELETE"));
+      expect(log).toHaveBeenCalledWith(
+        "Live Activity end push failed; foreground reconciliation remains available", cause
+      );
+    } finally { log.mockRestore(); }
+  });
+
   it("ends the starter's activity even without another household member or widget token", async () => {
     const { handler, send, remove, queries } = setup();
     expect((await handler(request("DELETE"))).status).toBe(200);

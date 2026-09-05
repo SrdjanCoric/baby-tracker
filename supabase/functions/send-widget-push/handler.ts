@@ -168,9 +168,10 @@ export function createWidgetPushHandler({
           console.log(
             `Live Activity end push sent: ${result.sent}/${result.total}`
           );
-        } catch {
+        } catch (error) {
           console.error(
-            "Live Activity end push failed; foreground reconciliation remains available"
+            "Live Activity end push failed; foreground reconciliation remains available",
+            error
           );
         }
       }
