@@ -97,6 +97,7 @@ struct WidgetTimerControls: Equatable {
     init(surface: WidgetTimerSurface, timer: ActiveTimerData?, isAuthenticated: Bool) {
         canStop = timer != nil
         canPause = timer != nil
+            && timer?.isRemote != true
             && isAuthenticated
             && (surface == .small || surface == .large)
     }

@@ -150,6 +150,7 @@ enum WidgetSnapshotTests {
                 isAuthenticated: true
             )
             require(controls.canStop, "remote timer had no stop control on \(surface.rawValue)")
+            require(!controls.canPause, "remote widget pause has no phone handler")
         }
         require(
             versionedDecoded.activities.sleep.wakeWindowRequiresNewbornOptIn == true,
