@@ -148,11 +148,11 @@ describe("useWidgetStopHandler", () => {
     );
     mockGetTimerCompletion.mockResolvedValue(null);
     mockGetLockForActivity.mockReturnValue(null);
-    mockStopBreastfeeding.mockResolvedValue(null);
-    mockStopSleep.mockResolvedValue(null);
+    mockStopBreastfeeding.mockResolvedValue({ id: "feeding-record" });
+    mockStopSleep.mockResolvedValue({ id: "sleep-record" });
     mockStopRemoteSleep.mockResolvedValue({ id: "remote-record" });
-    mockStopPumping.mockResolvedValue(null);
-    mockStopTummyTime.mockResolvedValue(null);
+    mockStopPumping.mockResolvedValue({ id: "pumping-record" });
+    mockStopTummyTime.mockResolvedValue({ id: "tummy-time-record" });
 
     mockFeedingState = {
       activeTimer: null,
@@ -316,6 +316,45 @@ describe("useWidgetStopHandler", () => {
     await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
     expect(mockStopRemoteSleep).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("retries a remote stop that returned no record before acknowledging it", async () => {
+    const command = {
+      id: "remote-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "remote-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "remote-timer" },
+    });
+    mockStopRemoteSleep.mockResolvedValueOnce(null).mockResolvedValue({ id: "record" });
+    render(<TestHarness />);
+    await act(async () => {});
+    expect(mockStopRemoteSleep).toHaveBeenCalledTimes(1);
+    expect(mockAcknowledgeExternalTimerCommand).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+    await act(async () => { mockAppStateHandler?.("active"); });
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockStopRemoteSleep).toHaveBeenCalledTimes(2);
+    expect(mockPush).toHaveBeenCalledWith("/sleep");
+  });
+
+  it("acknowledges a null stop only when its timer completion is durable", async () => {
+    const command = {
+      id: "completed-command", action: "stop", activityType: "sleep", babyId: "baby-1",
+      timerInstanceId: "remote-timer", eventAt: "2026-07-14T10:00:00.000Z", source: "watch",
+    };
+    mockReadExternalTimerCommands.mockResolvedValue([command]);
+    mockGetLockForActivity.mockReturnValue({
+      startedBy: "other-caregiver", startedAt: "2026-07-14T09:40:00.000Z",
+      timerData: { timerInstanceId: "remote-timer" },
+    });
+    mockStopRemoteSleep.mockResolvedValue(null);
+    mockGetTimerCompletion.mockResolvedValueOnce(null).mockResolvedValue({ status: "completed" });
+    render(<TestHarness />);
+    await waitFor(() => expect(mockAcknowledgeExternalTimerCommand).toHaveBeenCalledWith(command));
+    expect(mockGetTimerCompletion).toHaveBeenCalledTimes(2);
   });
 
   it("rejects a command for an older timer instance", async () => {

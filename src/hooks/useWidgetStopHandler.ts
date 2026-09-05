@@ -143,7 +143,15 @@ export function useWidgetStopHandler() {
         return;
       }
 
-      await stop(eventAt);
+      const record = await stop(eventAt);
+      if (!record) {
+        const completion = await getTimerCompletion(
+          command.babyId,
+          command.activityType,
+          command.timerInstanceId
+        );
+        if (completion?.status !== "completed") return;
+      }
       await clearPendingWidgetPauseToggle();
       await acknowledgeExternalTimerCommand(command);
       const route = ACTIVITY_ROUTE_MAP[command.activityType];
