@@ -28,11 +28,11 @@ struct LiveActivityPushTokenTests {
         precondition(restarted.startToken == "rotated-start", "latest start token survives restart")
         let arrivals = [
             LiveActivityStartCandidate(id: "remote", activityType: "sleep", babyId: "baby", timerInstanceId: "run", userId: "member"),
-            LiveActivityStartCandidate(id: "local", activityType: "sleep", babyId: "baby", timerInstanceId: "run", userId: "member"),
+            LiveActivityStartCandidate(id: "zz-local", activityType: "sleep", babyId: "baby", timerInstanceId: "run", userId: "member"),
             LiveActivityStartCandidate(id: "other-baby", activityType: "sleep", babyId: "other", timerInstanceId: "run", userId: "member"),
         ]
-        precondition(duplicateLiveActivityIds(arrivals, preferredIds: ["local"]) == ["remote"], "remote arrival must preserve the already tracked local activity")
-        precondition(duplicateLiveActivityIds(arrivals, preferredIds: []) == ["remote"], "cold discovery must choose one deterministic survivor")
+        precondition(duplicateLiveActivityIds(arrivals, preferredIds: ["zz-local"]) == ["remote"], "remote arrival must preserve the already tracked local activity")
+        precondition(duplicateLiveActivityIds(arrivals, preferredIds: []) == ["zz-local"], "cold discovery must choose one deterministic survivor")
         store.bind(activityId: "a", babyId: "baby", timerInstanceId: "run", userId: "owner")
         store.updateToken(activityId: "a", token: "old")
         store.updateToken(activityId: "a", token: "rotated")
