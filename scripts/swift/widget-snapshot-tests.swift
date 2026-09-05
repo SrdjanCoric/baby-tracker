@@ -153,6 +153,32 @@ enum WidgetSnapshotTests {
             require(!controls.canPause, "remote widget pause has no phone handler")
         }
         var ownTimer = remoteTimer
+        let widgetViewSource = try String(contentsOfFile: "targets/widget/index.swift", encoding: .utf8)
+        for (viewName, surface) in [
+            ("SmallWidgetView", "small"), ("MediumWidgetView", "medium"),
+            ("ActivityRowView", "large"), ("LockScreenCircularView", "lockScreenCircular"),
+            ("LockScreenRectangularView", "lockScreenRectangular")
+        ] {
+            let view = widgetViewSource.components(separatedBy: "struct \(viewName):")[1]
+                .components(separatedBy: "\nstruct ")[0]
+            require(view.contains("surface: .\(surface),"), "\(viewName) uses the wrong control policy")
+            require(view.contains("routedStopURL(for: activity, data:"),
+                    "\(viewName) no longer routes remote stops with timer identity")
+            if surface.hasPrefix("lockScreen") {
+                require(view.contains("controls.stopsOnTap\n"),
+                        "\(viewName) bypasses the own/remote tap policy")
+                require(view.contains("? routedStopURL(for: activity, data:"),
+                        "\(viewName) lost its remote stop destination")
+            } else {
+                require(view.contains("if controls.canStop {"),
+                        "\(viewName) restored a remote read-only control branch")
+                require(view.contains("Link(destination: routedStopURL("),
+                        "\(viewName) stop policy is disconnected from its link")
+            }
+        }
+        let largeView = widgetViewSource.components(separatedBy: "struct LargeWidgetView:")[1]
+            .components(separatedBy: "\nstruct ")[0]
+        require(largeView.contains("ActivityRowView("), "large widget no longer uses the verified activity row")
         ownTimer.isRemote = false
         for surface in [WidgetTimerSurface.lockScreenCircular, .lockScreenRectangular] {
             require(
