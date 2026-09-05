@@ -10,6 +10,7 @@ export interface LiveActivityPushRecord {
 export interface LiveActivityStartToken { deviceId: string; token: string }
 
 interface TokenSyncDependencies {
+  now?(): number;
   readStart?(): Promise<LiveActivityStartToken | null>;
   registerStart?(record: LiveActivityStartToken): Promise<void>;
   isActive?(record: LiveActivityPushRecord): Promise<boolean>;
@@ -28,6 +29,8 @@ export function createLiveActivityTokenSynchronizer(
   let requested = false;
   let inFlight: Promise<void> | null = null;
   let syncedStart: string | undefined;
+  let startSyncedAt = 0;
+  const now = deps.now ?? Date.now;
   const synced = new Map<string, string>();
 
   async function drain() {
@@ -69,10 +72,11 @@ export function createLiveActivityTokenSynchronizer(
       if (disposed) return;
       const start = await deps.readStart?.();
       if (disposed) return;
-      if (start && deps.registerStart && syncedStart !== `${start.deviceId}:${start.token}`) {
+      if (start && deps.registerStart && (syncedStart !== `${start.deviceId}:${start.token}` || now() - startSyncedAt >= 60 * 60 * 1000)) {
         await deps.registerStart(start);
         if (disposed) return;
         syncedStart = `${start.deviceId}:${start.token}`;
+        startSyncedAt = now();
       }
     }
   }

@@ -24,7 +24,13 @@ export async function removeLiveActivityPushTokens(userId?: string): Promise<voi
   await activeSyncs.get(userId)?.();
   const results = await Promise.allSettled(
     ["live_activity_push_tokens", "live_activity_start_tokens"].map(async table => {
-      const { error } = await supabase.from(table).delete().eq("user_id", userId);
+      let query = supabase.from(table).delete().eq("user_id", userId);
+      if (table === "live_activity_start_tokens") {
+        const start = await NativeModules.LiveActivityController?.getLiveActivityStartToken?.();
+        if (!start?.deviceId) return;
+        query = query.eq("device_id", start.deviceId);
+      }
+      const { error } = await query;
       if (error) throw error;
     })
   );

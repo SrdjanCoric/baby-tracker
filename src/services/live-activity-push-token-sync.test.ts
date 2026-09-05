@@ -2,6 +2,23 @@ import { describe, expect, it, vi } from "vitest";
 import { createLiveActivityTokenSynchronizer } from "./live-activity-push-token-sync";
 
 describe("Live Activity token sync", () => {
+  it("refreshes an unchanged start token after its registration ages", async () => {
+    let now = 0;
+    const registerStart = vi.fn().mockResolvedValue(undefined);
+    const sync = createLiveActivityTokenSynchronizer("member", {
+      read: async () => [], register: vi.fn(), remove: vi.fn(), acknowledge: vi.fn(), end: vi.fn(),
+      readStart: async () => ({ deviceId: "phone", token: "stable" }), registerStart,
+      now: () => now,
+    });
+    await sync.sync();
+    now = 30_000;
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(1);
+    now = 60 * 60 * 1000;
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(2);
+  });
+
   it("does not register after sign-out overtakes an in-flight timer check", async () => {
     let release!: (active: boolean) => void;
     const isActive = vi.fn(() => new Promise<boolean>(resolve => { release = resolve; }));

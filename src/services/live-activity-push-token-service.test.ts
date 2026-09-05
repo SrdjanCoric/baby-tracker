@@ -55,7 +55,9 @@ describe("native Live Activity token transport", () => {
 
   it("attempts start-token cleanup even when activity-token cleanup fails", async () => {
     const failure = new Error("offline");
-    const startDelete = vi.fn().mockResolvedValue({ error: null });
+    mocks.start.mockResolvedValue({ deviceId: "phone", token: "start-token" });
+    const startDelete = vi.fn();
+    startDelete.mockReturnValue({ eq: startDelete, then: (resolve: any) => Promise.resolve({ error: null }).then(resolve) });
     mocks.from.mockImplementation(table => ({ delete: () => ({
       eq: table === "live_activity_push_tokens"
         ? vi.fn().mockRejectedValue(failure) : startDelete,
@@ -64,13 +66,27 @@ describe("native Live Activity token transport", () => {
     expect(startDelete).toHaveBeenCalledWith("user_id", "owner");
   });
 
-  it("removes the signing-out user's rows while the session is still available", async () => {
-    const eq = vi.fn().mockResolvedValue({ error: null });
-    mocks.from.mockReturnValue({ delete: () => ({ eq }) });
+  it("removes only the signing-out installation's start token", async () => {
+    mocks.start.mockResolvedValue({ deviceId: "phone", token: "start-token" });
+    const startRows = [{ user_id: "owner", device_id: "phone" }, { user_id: "owner", device_id: "tablet" }];
+    mocks.from.mockImplementation(table => {
+      const filters: Record<string, string> = {};
+      const query: any = {
+        delete: () => query,
+        eq: (key: string, value: string) => { filters[key] = value; return query; },
+        then: (resolve: any) => {
+          if (table === "live_activity_start_tokens") {
+            for (let i = startRows.length - 1; i >= 0; i--)
+              if (Object.entries(filters).every(([key, value]) => startRows[i][key as "user_id" | "device_id"] === value))
+                startRows.splice(i, 1);
+          }
+          return Promise.resolve({ error: null }).then(resolve);
+        },
+      };
+      return query;
+    });
     await removeLiveActivityPushTokens("owner");
-    expect(mocks.from).toHaveBeenCalledWith("live_activity_push_tokens");
-    expect(mocks.from).toHaveBeenCalledWith("live_activity_start_tokens");
-    expect(eq).toHaveBeenCalledWith("user_id", "owner");
+    expect(startRows).toEqual([{ user_id: "owner", device_id: "tablet" }]);
   });
 
   it("sends the native token with its timer and account, then removes only that activity on end", async () => {
