@@ -199,22 +199,33 @@ enum WatchSummaryTests {
             remotePausedControls.canStop && !remotePausedControls.canPause && remotePausedControls.canResume,
             "a paused remote Watch timer did not expose the own-timer stop/resume controls"
         )
-        let remoteStopCommand = WatchStopCommand(
-            isRemote: true,
-            id: "watch-command",
-            activityType: "sleep",
-            babyId: "baby-versioned",
-            timerInstanceId: "remote-timer",
-            eventAt: "2026-08-08T10:15:00.000Z",
-            legacy: false
-        )
-        requireWatch(
-            remoteStopCommand.isRemote
-                && remoteStopCommand.source == "watch"
-                && remoteStopCommand.timerInstanceId == "remote-timer"
-                && remoteStopCommand.activityType == "sleep",
-            "the Watch did not issue a targeted stop command for a remote timer"
-        )
+        // SwiftUI cannot execute in this host harness. Pin each card's wiring as
+        // well as the executable policy so restoring a view ownership gate fails.
+        let watchViewSource = try String(contentsOfFile: "targets/watch/index.swift", encoding: .utf8)
+        for cardName in ["ActiveTimerCard", "PumpingActiveCard"] {
+            let card = watchViewSource.components(separatedBy: "struct \(cardName):")[1]
+                .components(separatedBy: "\nstruct ")[0]
+            requireWatch(card.contains("if controls.canStop {"), "\(cardName) lost remote stop controls")
+            requireWatch(!card.contains("if !isRemote") && !card.contains("if timer.isRemote != true"),
+                         "\(cardName) restored an ownership gate around timer controls")
+            requireWatch(card.contains("connector.pauseTimer(activityType: timer.type)"),
+                         "\(cardName) pause action is disconnected")
+            requireWatch(card.contains("connector.resumeTimer(activityType: timer.type)"),
+                         "\(cardName) resume action is disconnected")
+            requireWatch(card.contains(cardName == "ActiveTimerCard"
+                ? "connector.stopTimer(activityType: timer.type)" : "showVolumeEntry = true"),
+                "\(cardName) stop action is disconnected")
+        }
+        for (name, nextName) in [("stopTimer", "stopPumpingWithVolume"), ("stopPumpingWithVolume", "logDiaper")] {
+            let body = watchViewSource.components(separatedBy: "func \(name)(")[1]
+                .components(separatedBy: "func \(nextName)(")[0]
+            let beforeSend = body.components(separatedBy: "sendAction(message)")[0]
+            requireWatch(body.contains("sendAction(message)"), "\(name) no longer sends a durable command")
+            requireWatch(!beforeSend.contains("if !isRemote") && !beforeSend.contains("timer.isRemote != true"),
+                         "\(name) blocks remote command delivery")
+            requireWatch(beforeSend.contains("\"timerInstanceId\": stopCommand.timerInstanceId"),
+                         "\(name) lost its targeted command payload")
+        }
 
         let resetSuiteName = "watch-summary-reset-tests.\(UUID().uuidString)"
         let resetDefaults = UserDefaults(suiteName: resetSuiteName)!
