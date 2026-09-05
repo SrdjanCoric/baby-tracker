@@ -29,7 +29,10 @@ export function createLiveActivityTokenSynchronizer(
       requested = false;
       for (const record of await deps.read()) {
         if (disposed) return;
-        if (record.userId !== userId) continue;
+        if (record.userId !== userId) {
+          if (record.ended) await deps.acknowledge(record.activityId);
+          continue;
+        }
         if (record.ended) {
           await deps.remove(record);
           if (disposed) return;
@@ -67,6 +70,7 @@ export function createLiveActivityTokenSynchronizer(
     },
     dispose() {
       disposed = true;
+      return inFlight ?? Promise.resolve();
     },
   };
   return synchronizer;

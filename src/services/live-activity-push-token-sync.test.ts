@@ -2,6 +2,18 @@ import { describe, expect, it, vi } from "vitest";
 import { createLiveActivityTokenSynchronizer } from "./live-activity-push-token-sync";
 
 describe("Live Activity token sync", () => {
+  it("acknowledges foreign tombstones without using the new account to delete them", async () => {
+    const acknowledge = vi.fn();
+    const remove = vi.fn();
+    const synchronizer = createLiveActivityTokenSynchronizer("new-owner", {
+      read: async () => [{ activityId: "old", babyId: "baby", timerInstanceId: "run", userId: "old-owner", ended: true }],
+      register: vi.fn(), remove, acknowledge, end: vi.fn(),
+    });
+    await synchronizer.sync();
+    expect(acknowledge).toHaveBeenCalledWith("old");
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it("drains a request arriving after the loop exits but before its promise settles", async () => {
     const record = { activityId: "a", babyId: "baby", timerInstanceId: "run",
       userId: "owner", token: "rotated", ended: false };

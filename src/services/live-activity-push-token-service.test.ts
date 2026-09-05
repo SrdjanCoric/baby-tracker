@@ -13,7 +13,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("@react-native-community/netinfo", () => ({ default: { addEventListener: mocks.network } }));
 vi.mock("@/services/supabase", () => ({ supabase: { rpc: mocks.rpc, from: mocks.from } }));
-import { startLiveActivityPushTokenSync } from "./live-activity-push-token-service";
+import { removeLiveActivityPushTokens, startLiveActivityPushTokenSync } from "./live-activity-push-token-service";
 
 describe("native Live Activity token transport", () => {
   beforeEach(() => {
@@ -23,6 +23,14 @@ describe("native Live Activity token transport", () => {
     mocks.network.mockReturnValue(mocks.removeNetwork);
     mocks.rpc.mockResolvedValue({ data: true, error: null });
     mocks.acknowledge.mockResolvedValue(undefined);
+  });
+
+  it("removes the signing-out user's rows while the session is still available", async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    mocks.from.mockReturnValue({ delete: () => ({ eq }) });
+    await removeLiveActivityPushTokens("owner");
+    expect(mocks.from).toHaveBeenCalledWith("live_activity_push_tokens");
+    expect(eq).toHaveBeenCalledWith("user_id", "owner");
   });
 
   it("sends the native token with its timer and account, then removes only that activity on end", async () => {

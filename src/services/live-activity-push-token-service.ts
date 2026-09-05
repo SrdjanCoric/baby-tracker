@@ -11,6 +11,15 @@ import {
   type LiveActivityPushRecord,
 } from "./live-activity-push-token-sync";
 
+const activeSyncs = new Map<string, () => Promise<void>>();
+
+export async function removeLiveActivityPushTokens(userId?: string): Promise<void> {
+  if (!userId) return;
+  await activeSyncs.get(userId)?.();
+  const { error } = await supabase.from("live_activity_push_tokens").delete().eq("user_id", userId);
+  if (error) throw error;
+}
+
 export function startLiveActivityPushTokenSync(userId: string): () => void {
   const native = NativeModules.LiveActivityController;
   if (Platform.OS !== "ios" || !native?.getLiveActivityPushRecords)
@@ -74,12 +83,16 @@ export function startLiveActivityPushTokenSync(userId: string): () => void {
     if (state.isConnected) refresh();
   });
   refresh();
-  return () => {
+  const stop = async () => {
     disposed = true;
-    sync.dispose();
+    const pending = sync.dispose();
     clearTimeout(retry);
     tokenEvents.remove();
     foreground.remove();
     network();
+    activeSyncs.delete(userId);
+    await pending.catch(() => {});
   };
+  activeSyncs.set(userId, stop);
+  return () => { void stop(); };
 }
