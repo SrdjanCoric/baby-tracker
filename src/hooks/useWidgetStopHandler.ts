@@ -35,7 +35,9 @@ export function useWidgetStopHandler() {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const { user } = useAuth();
-  const { getLockForActivity } = useActiveTimers();
+  const { getLockForActivity, isLoading: locksLoading } = useActiveTimers();
+  const getLockForActivityRef = useRef(getLockForActivity);
+  getLockForActivityRef.current = getLockForActivity;
   const {
     activeTimer: feedingTimer,
     stopBreastfeeding,
@@ -52,9 +54,22 @@ export function useWidgetStopHandler() {
     stopTummyTime,
     stopRemoteTummyTime,
   } = useTummyTime();
+  const remoteStopsRef = useRef({
+    feeding: stopRemoteBreastfeeding,
+    sleep: stopRemoteSleep,
+    pumping: stopRemotePumping,
+    tummy_time: stopRemoteTummyTime,
+  });
+  remoteStopsRef.current = {
+    feeding: stopRemoteBreastfeeding,
+    sleep: stopRemoteSleep,
+    pumping: stopRemotePumping,
+    tummy_time: stopRemoteTummyTime,
+  };
   const isProcessingRef = useRef(false);
   const shouldReprocessRef = useRef(false);
   const processPendingStopRef = useRef<() => Promise<void>>(async () => {});
+  const lastAutomaticProcessorRef = useRef<(() => Promise<void>) | null>(null);
 
   const processCommand = useCallback(
     async (queuedCommand: ExternalTimerCommand): Promise<void> => {
@@ -73,33 +88,29 @@ export function useWidgetStopHandler() {
 
       let timer: CommandTimer | null = null;
       let stop: ((endTime: Date) => Promise<unknown>) | null = null;
-      let stopRemote: ((endTime: Date) => Promise<unknown>) | null = null;
+      const stopRemote = remoteStopsRef.current[queuedCommand.activityType];
       switch (queuedCommand.activityType) {
         case "feeding":
           timer = feedingTimer;
           stop = stopBreastfeeding;
-          stopRemote = stopRemoteBreastfeeding;
           break;
         case "sleep":
           timer = sleepTimer;
           stop = stopSleep;
-          stopRemote = stopRemoteSleep;
           break;
         case "pumping":
           timer = pumpingTimer;
           stop = (endTime) =>
             stopPumping(queuedCommand.payload?.volumeMl ?? 0, endTime);
-          stopRemote = stopRemotePumping;
           break;
         case "tummy_time":
           timer = tummyTimeTimer;
           stop = stopTummyTime;
-          stopRemote = stopRemoteTummyTime;
           break;
       }
 
       if (!timer?.isRunning && stopRemote && user?.id && user.householdId) {
-        const lock = getLockForActivity(
+        const lock = getLockForActivityRef.current(
           queuedCommand.babyId,
           queuedCommand.activityType
         );
@@ -161,19 +172,14 @@ export function useWidgetStopHandler() {
       selectedBaby?.id,
       user?.id,
       user?.householdId,
-      getLockForActivity,
       feedingTimer,
       sleepTimer,
       pumpingTimer,
       tummyTimeTimer,
       stopBreastfeeding,
-      stopRemoteBreastfeeding,
       stopSleep,
-      stopRemoteSleep,
       stopPumping,
-      stopRemotePumping,
       stopTummyTime,
-      stopRemoteTummyTime,
       router,
     ]
   );
@@ -224,7 +230,11 @@ export function useWidgetStopHandler() {
   }, [processPendingStop]);
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" || locksLoading) return;
+    // Hydrate once, then rerun only for a changed baby, local timer, or provider.
+    // Background lock refreshes toggle loading without introducing a new command.
+    if (lastAutomaticProcessorRef.current === processPendingStop) return;
+    lastAutomaticProcessorRef.current = processPendingStop;
     processPendingStop();
-  }, [processPendingStop]);
+  }, [processPendingStop, locksLoading]);
 }
