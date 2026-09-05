@@ -28,7 +28,7 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 
 ## Human checkpoints
 
-- [ ] [verify] On two real devices/accounts: A starts a timer on their phone; B stops it from B's widget, then repeat from B's Watch. Expected: timer stops for both, exactly one record owned by B, A's app clears without saving. Failure: stop rejected, timer lingers on either device, or duplicate record. Reason: widget/Watch interaction with APNS refresh and WatchConnectivity cannot be exercised in CI simulators. **Pending owner confirmation during finish-task.**
+- [x] [verify] User requested iOS simulators in place of the original physical-device checkpoint. Two iOS 26.5 simulators passed the household timer gate: offline reconnect, remote pause/resume and stop, stopper-owned records, both devices clearing, coherent widget/Watch summary data, and simultaneous-stop deduplication. Swift and provider tests cover native controls and Widget/Watch-sourced commands. Physical widget taps, APNS delivery, and WatchConnectivity were not exercised; simulator proof does not establish those transport behaviors.
 
 ## Acceptance criteria
 
@@ -68,7 +68,12 @@ Excluded: Live Activity behavior (0093/0094), Wear OS (off main, out of scope).
 - Final automated proof: `npm run check:code` passed with 118 suites and 1,109 tests; the capped
   output is recorded in `/tmp/agent-workflows/e2f8af45fd34/1e841d975c8b/canonical.log`. Focused
   native, component/integration, Swift, TypeScript, lint, and diff checks remain green.
-- The real-device two-caregiver checkpoint remains pending because the environment cannot exercise
-  APNS widget refresh and WatchConnectivity on physical devices. Exact procedure: on two signed-in
-  devices in one household, have caregiver A start a timer; from caregiver B's widget stop it and
-  verify both devices clear it and exactly one record is saved with B as owner; repeat with B's Watch.
+- User-directed simulator proof: `npm run e2e:household-timers` passed on SofiBaby Owner and
+  SofiBaby Member, iOS 26.5. Artifacts: `e2e/artifacts/household-timers/2026-09-05T10-25-40-986Z`.
+  The gate also passed its native Swift preflight and date-picker smoke check.
+- Checkpoint harness fixes: compare PostgreSQL booleans with `t`/`f`, and initialize timer fixtures
+  with completed onboarding. A focused relaunch reproduction showed the returning-user restoration
+  guard redirecting `/sleep`; the existing completed-onboarding fixture removed that interference.
+  `npm run e2e:household-timers:test` passed 17/17, and temporary diagnostic logs were removed.
+- Physical APNS and WatchConnectivity delivery remain unverified. The simulator substitution was
+  requested by the user; no physical-device pass is claimed.
