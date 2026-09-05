@@ -26,12 +26,12 @@ Verify the current APNS Live Activity payload requirements (`apns-push-type: liv
 
 ## Human checkpoints
 
-- [ ] [confirm-db] Apply the token-storage migration (if any) to the shared Supabase project.
-- [ ] [verify] Two real devices: A starts a timer (Live Activity visible), backgrounds the app and locks the phone; B stops the timer from their app. Expected: A's Live Activity ends within seconds without opening the app. Failure: Live Activity keeps ticking until A foregrounds. Reason: this repository's CI does not exercise APNS delivery; physical background delivery remains a release-owner check.
+- [ ] [confirm-db] Release prerequisite: apply migration 066 to the shared Supabase project before deploying the function and app. Shared deployment remains pending; the master plan permits this task to merge on local SQL and automated proof.
+- [ ] [verify] Release prerequisite, deferred to 0094 combined acceptance under the master-plan decision: two real devices: A starts a timer (Live Activity visible), backgrounds the app and locks the phone; B stops the timer from their app. Expected: A's Live Activity ends within seconds without opening the app. Failure: Live Activity keeps ticking until A foregrounds. Reason: this repository's CI does not exercise APNS delivery; physical background delivery remains a release-owner check.
 
 ## Acceptance criteria
 
-- [ ] Remote stop ends the backgrounded starter's Live Activity via push (manual two-device verification passed).
+- [ ] Release acceptance: remote stop ends the suspended starter's Live Activity via APNs. Deferred to 0094 combined acceptance; simulator token and recovery proof below does not claim push delivery.
 - [x] Fallback intact: with push undelivered, foregrounding the app still clears timer state and dismisses the activity (0091 restore check).
 - [x] Edge-function tests green; widget silent-push behavior unchanged.
 - [x] Token rows cleaned up after timer end (no orphan accumulation).
@@ -132,8 +132,9 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
   harness, controller syntax, app and edge-module type checks, affected ESLint, and rollback-only local
   SQL registration/ownership/cap tests passed. Logs remain under
   `/tmp/agent-workflows/e2f8af45fd34/a0416957a610` until merged-task cleanup.
-- User authorized finish-task, PR creation, and sync-main. Shared deployment and physical-device
-  checkpoint status is awaiting clarification; these are not recorded as passed.
+- User authorized finish-task, PR creation, sync-main, and simulator verification. The existing master-plan
+  decision permits tasks 0091–0094 to merge on automated proof and defers combined E2E acceptance to
+  0094 before release. Shared deployment and APNs transport acceptance remain release prerequisites.
 
 ### Final automated validation
 
@@ -155,5 +156,28 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
 - `npm run test:production-gating` passed and confirmed the iOS Hermes bundle excludes development
   onboarding tools (`canonical-production.log`). All canonical stages now have passing evidence;
   the initial environment-dependent component failure is resolved by the focused rerun above.
-- Finish remains blocked at the required manual/deployment checkpoint. Keep the task pointer at `[~]`
-  and retain its review file until the user confirms the result or explicitly defers the checkpoint.
+- Merge verification is complete under the existing master-plan decision. Retain the review file until
+  the executable PR head is CI-green; release prerequisites above remain unchecked.
+
+### Simulator verification (2026-09-05)
+
+- Built the reviewed native app with clean Expo prebuild and Xcode 26.6, then installed it on the
+  existing SofiBaby Owner and SofiBaby Member simulators running iOS 26.5. All account and timer
+  actions used the local Supabase fixture household.
+- Starting sleep created a visible Live Activity and one native token record. ActivityKit supplied
+  a real push token, and the registration RPC stored one server token row for that timer.
+- The member stopped the owner's timer through the dashboard. The database contained one
+  member-owned completion and no active lock. An initial background run also cleared the activity
+  without an APNs send, so it was not used as evidence of push delivery or strict suspension.
+- Repeated with the owner app process explicitly suspended. The member's stop removed the lock,
+  while the owner retained its visible activity, native token, and server token row. Resuming and
+  foregrounding the owner cleared the timer UI, dismissed the activity, and removed both token records.
+  Final assertions found two member-owned completions for two stops, no active lock, and no token rows.
+- Evidence: `simulator-build.log`, `simulator-token-before.log`, `simulator-member-stop.log`,
+  `simulator-suspended-stop.log`, `simulator-suspended-resume.log`, `simulator-final-db.log`, and
+  `simulator-final-native.log` in the task log directory. Screenshots captured the visible suspended
+  activity and the cleared state.
+- This proves native registration and suspended-app recovery, not APNs delivery. No APNs signing key
+  was available in the workspace, so no sandbox end push or deployed DELETE webhook was exercised.
+  Apple supports ActivityKit sandbox push testing on this Apple-silicon Mac; the signing credentials
+  and release deployment are still needed for that final transport check.
