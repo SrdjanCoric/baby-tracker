@@ -3,6 +3,7 @@ import { createWidgetPushHandler } from "../../supabase/functions/send-widget-pu
 
 function setup({ peers = false } = {}) {
   const remove = vi.fn();
+  const queries: { table: string; filters: unknown[][] }[] = [];
   const database = {
     from: vi.fn((table: string) => {
       const data: Record<string, unknown> = {
@@ -23,11 +24,13 @@ function setup({ peers = false } = {}) {
           },
         ],
       };
+      const filters: unknown[][] = [];
+      queries.push({ table, filters });
       const query: any = {
         select: () => query,
-        eq: () => query,
-        neq: () => query,
-        in: () => query,
+        eq: (...args: unknown[]) => { filters.push(["eq", ...args]); return query; },
+        neq: (...args: unknown[]) => { filters.push(["neq", ...args]); return query; },
+        in: (...args: unknown[]) => { filters.push(["in", ...args]); return query; },
         delete: () => {
           remove(table);
           return query;
@@ -47,7 +50,7 @@ function setup({ peers = false } = {}) {
     fetch: send,
     createJwt: async () => "jwt",
   });
-  return { handler, database, send, remove };
+  return { handler, database, send, remove, queries };
 }
 
 function request(type: "INSERT" | "DELETE", auth = "service-secret") {
@@ -73,13 +76,17 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 
 describe("widget push webhook", () => {
   it("ends the starter's activity even without another household member or widget token", async () => {
-    const { handler, send, remove } = setup();
+    const { handler, send, remove, queries } = setup();
     expect((await handler(request("DELETE"))).status).toBe(200);
     expect(send).toHaveBeenCalledTimes(1);
     expect(send.mock.calls[0][1].headers["apns-push-type"]).toBe(
       "liveactivity"
     );
     expect(remove).toHaveBeenCalledWith("live_activity_push_tokens");
+    expect(queries.filter(q => q.table === "live_activity_push_tokens").map(q => q.filters)).toEqual([
+      [["eq", "baby_id", "baby"], ["eq", "timer_instance_id", "run"]],
+      [["in", "id", ["activity-row"]]],
+    ]);
   });
 
   it("preserves widget pushes on INSERT and DELETE", async () => {
