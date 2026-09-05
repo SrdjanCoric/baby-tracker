@@ -152,11 +152,14 @@ export async function startTimerLiveActivities(timer: StartedTimer, deps: StartD
         });
         if (response.status === 200) sent++;
         if (response.status === 410) invalid.push(token.id);
-        if (response.status === 400) {
+        if (response.status !== 200) {
           const body = await response.text();
+          console.error(`Live Activity start APNs response: status=${response.status} body=${body}`);
           try {
-            if (JSON.parse(body).reason === "BadDeviceToken") invalid.push(token.id);
+            if (response.status === 400 && JSON.parse(body).reason === "BadDeviceToken") invalid.push(token.id);
           } catch { /* A malformed rejection must not interrupt other deliveries. */ }
+        } else {
+          await response.body?.cancel();
         }
       } catch { /* One unavailable device must not prevent other deliveries. */ }
     }
