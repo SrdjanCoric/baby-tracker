@@ -32,6 +32,10 @@ type AuthStateCallback = (
 ) => void;
 let authStateCallback: AuthStateCallback | null = null;
 
+const mockRemoveLiveActivityPushTokens = jest.fn().mockResolvedValue(undefined);
+jest.mock("@/services/live-activity-push-token-service", () => ({
+  removeLiveActivityPushTokens: () => mockRemoveLiveActivityPushTokens(),
+}));
 const mockSignOut = jest.fn().mockResolvedValue({ error: null });
 const mockSignInWithPassword = jest.fn();
 const mockSignUp = jest.fn();
@@ -466,6 +470,8 @@ describe("AuthContext", () => {
       });
 
       expect(mockSignOut).toHaveBeenCalled();
+      expect(mockRemoveLiveActivityPushTokens).toHaveBeenCalled();
+      expect(mockRemoveLiveActivityPushTokens.mock.invocationCallOrder[0]).toBeLessThan(mockSignOut.mock.invocationCallOrder[0]);
     });
 
     it("keeps local account data when remote sign out fails", async () => {

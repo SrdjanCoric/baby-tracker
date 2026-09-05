@@ -572,7 +572,7 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: "START_TIMER", payload: { startTime, lockState, ...identity } });
 
-    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, startTime);
+    const activityId = await startTimerLiveActivity("tummyTime", selectedBaby.name, undefined, startTime, user?.id && lockState === "owned" ? { babyId: selectedBaby.id, timerInstanceId: identity.timerInstanceId, userId: user.id } : undefined);
     if (activityId) {
       liveActivityIdRef.current = activityId;
     }

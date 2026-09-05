@@ -25,6 +25,7 @@ import { supabase } from "@/services/supabase";
 import { setStorageUserId } from "@/services/storage-prefix";
 import { clearSyncData } from "@/contexts/sync-context";
 import { clearWidgetData, purgeLegacyAppGroupAccessToken, purgeStaleSharedSessionOnFirstLaunch } from "@/services/widget-data-service";
+import { removeLiveActivityPushTokens } from "@/services/live-activity-push-token-service";
 import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
@@ -437,6 +438,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async (options?: { preserveGuestData?: boolean }) => {
+    try {
+      await removeLiveActivityPushTokens(user?.id);
+    } catch (error) {
+      console.error("Failed to remove Live Activity push tokens during sign-out:", error);
+    }
     const { error } = await supabase.auth.signOut();
     await clearWatchContext();
     if (error) return { error };
@@ -445,7 +451,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await clearWidgetData();
     setStorageUserId(null);
     return { error: null };
-  }, []);
+  }, [user?.id]);
 
   const updateDisplayName = useCallback(async (displayName: string) => {
     if (!user) {

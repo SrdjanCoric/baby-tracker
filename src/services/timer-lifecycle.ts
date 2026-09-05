@@ -15,6 +15,7 @@ import {
   isLiveActivityRunningWithTimeout,
   pauseTimerLiveActivity,
   startTimerLiveActivity,
+  bindTimerLiveActivity,
   type BreastSide,
   type SleepType,
   type TimerActivityType as LiveActivityType,
@@ -457,7 +458,10 @@ export async function editRunningTimerStartTime<
       adapter.liveActivity.type,
       baby.name,
       adapter.liveActivity.detail(payload),
-      startedAt
+      startedAt,
+      userId && activeTimer.lockState === "owned"
+        ? { babyId: baby.id, timerInstanceId: activeTimer.timerInstanceId, userId }
+        : undefined
     );
   }
   liveActivityIdRef.current = replacementLiveActivityId;
@@ -574,13 +578,18 @@ export async function restoreTimerLifecycle<
   };
   const startAdapterLiveActivity = async (
     startedAt: string,
-    payload: TPayload
+    payload: TPayload,
+    identity: TimerIdentity,
+    lockState: TimerLockReconciliationState
   ) => {
     const activityId = await startTimerLiveActivity(
       adapter.liveActivity.type,
       baby.name,
       adapter.liveActivity.detail(payload),
-      new Date(startedAt)
+      new Date(startedAt),
+      user?.id && lockState === "owned"
+        ? { babyId: baby.id, timerInstanceId: identity.timerInstanceId, userId: user.id }
+        : undefined
     );
     return acceptStartedLiveActivity(activityId);
   };
@@ -781,15 +790,20 @@ export async function restoreTimerLifecycle<
         if (!isCurrentBabyBinding()) return;
         if (isRunning) {
           liveActivityIdRef.current = activeTimer.liveActivityId;
+          if (user?.id && lockState === "owned") {
+            await bindTimerLiveActivity(activeTimer.liveActivityId, {
+              babyId: baby.id, timerInstanceId: identity.timerInstanceId, userId: user.id,
+            });
+          }
         } else if (!payload.isPaused) {
           if (
-            !(await startAdapterLiveActivity(activeTimer.startedAt, payload))
+            !(await startAdapterLiveActivity(activeTimer.startedAt, payload, identity, lockState))
           ) {
             return;
           }
         }
       } else if (!hasPendingStop && !payload.isPaused) {
-        if (!(await startAdapterLiveActivity(activeTimer.startedAt, payload))) {
+        if (!(await startAdapterLiveActivity(activeTimer.startedAt, payload, identity, lockState))) {
           return;
         }
       }
@@ -838,7 +852,7 @@ export async function restoreTimerLifecycle<
         if (!isCurrentBabyBinding()) return;
 
         if (!payload.isPaused) {
-          if (!(await startAdapterLiveActivity(lock.startedAt, payload))) {
+          if (!(await startAdapterLiveActivity(lock.startedAt, payload, identity, "owned"))) {
             return;
           }
         }

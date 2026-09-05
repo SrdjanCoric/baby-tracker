@@ -15,4 +15,7 @@ struct TimerActivityAttributes: ActivityAttributes {
     var activityType: String
     var babyName: String
     var startTime: Date
+    var babyId: String? = nil
+    var timerInstanceId: String? = nil
+    var userId: String? = nil
 }

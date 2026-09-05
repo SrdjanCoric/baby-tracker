@@ -1,3 +1,6 @@
+jest.mock("@/services/live-activity-push-token-service", () => ({
+  startLiveActivityPushTokenSync: jest.fn(() => jest.fn()),
+}));
 import React from "react";
 import { act, render } from "@testing-library/react-native";
 

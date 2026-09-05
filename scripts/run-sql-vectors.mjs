@@ -124,6 +124,14 @@ function runActiveTimerAuthorizationTests() {
   }
 }
 
+function runLiveActivityPushTokenTests() {
+  try {
+    return { ok: true, out: psql(["-f", join(ROOT, "scripts/sql/live-activity-push-token-tests.sql")]) };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 function runCaregiverInvitationTests() {
   const file = join(ROOT, "scripts/sql/caregiver-invitation-tests.sql");
   try {
@@ -396,6 +404,16 @@ if (timerAuthorization.ok) {
 } else {
   console.log(`${RED}✗ active timer authorization tests failed${RESET}`);
   process.stdout.write(timerAuthorization.out);
+  hardFail = true;
+}
+
+console.log("");
+const liveActivityTokens = runLiveActivityPushTokenTests();
+if (liveActivityTokens.ok) {
+  console.log(`${GREEN}✓${RESET} Live Activity tokens: rotation, ownership, late registration and cleanup`);
+} else {
+  console.log(`${RED}✗ Live Activity token tests failed${RESET}`);
+  process.stdout.write(liveActivityTokens.out);
   hardFail = true;
 }
 

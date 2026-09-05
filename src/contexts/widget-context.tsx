@@ -24,6 +24,7 @@ import {
   type WatchAuthContext,
 } from "@/services/widget-data-service";
 import { syncWidgetPushToken } from "@/services/widget-push-token-service";
+import { startLiveActivityPushTokenSync } from "@/services/live-activity-push-token-service";
 import {
   acknowledgeExternalTimerCommand,
   readExternalTimerCommands,
@@ -581,6 +582,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     if (Platform.OS !== "ios") return;
     if (!user?.id) return;
 
+    const stopLiveActivityTokenSync = startLiveActivityPushTokenSync(user.id);
     syncWidgetPushToken();
 
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -589,7 +591,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.remove();
+    return () => { subscription.remove(); stopLiveActivityTokenSync(); };
   }, [user?.id]);
 
   const getWidgetDataJson = useCallback((): string | null => {
