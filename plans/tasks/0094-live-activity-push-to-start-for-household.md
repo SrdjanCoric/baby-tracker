@@ -25,6 +25,10 @@ Fast-follow to 0093. Mirror a running timer as a Live Activity on the other hous
 
 ## Human checkpoints
 
+Owner decision (2026-09-06): the APNs delivery checkpoint and the three delivery-dependent
+acceptance checks below are deferred until release. They are not claimed as passed and do not
+block the authorized PR, merge, or implementation closeout. No production release is authorized.
+
 - [ ] [verify] Two real devices (both iOS 17.2+): A starts a timer; B's locked phone shows the Live Activity within seconds; B stops from the Live Activity/app; both devices' activities end and one record exists. Failure: no activity appears on B, duplicate activities, or activities that outlive the timer. Reason: push-to-start is real-device-only; APNS delivery cannot run in CI.
 
 ## Acceptance criteria
@@ -139,3 +143,13 @@ Fast-follow to 0093. Mirror a running timer as a Live Activity on the other hous
   Output-only capture was capped at 5 MiB while draining full streams and preserving exit status.
 - First incomplete finish-task checklist item: required manual proof. No PR was created, no task
   marker was advanced, and no retained review was deleted.
+
+## Finish-task release deferral (2026-09-06)
+
+- After the missing APNs proof was identified, the owner confirmed proceeding with PR creation
+  and sync-main while deferring that device check until release. This supersedes the earlier
+  finish-task blocker; it does not establish delivery success or waive the production release gate.
+- Implementation and review work are complete. All eleven review findings are fixed, README
+  audit and final automated stages are complete, and the observed Watch regression is fixed.
+- The combined-main household E2E gate will run after merge before task closeout. Locked-device
+  push-to-start/end and foreground mirror deduplication remain release checks.
