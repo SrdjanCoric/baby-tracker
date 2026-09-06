@@ -84,3 +84,58 @@ Fast-follow to 0093. Mirror a running timer as a Live Activity on the other hous
   `bridge-typecheck.log`, `typecheck.log`, `lint.log`, `sql-green.log`, plus RED evidence).
 - The two-device APNS check and combined-main household E2E release gate remain unchecked for
   `finish-task`/0094 closeout. No production migration, deployment, or device-delivery claim is made.
+
+
+## Finish-task evidence (2026-09-06, awaiting delivery verification)
+
+- Branch and task match. All eleven findings in
+  `reviews/0094-live-activity-push-to-start-for-household-74eefbd.md` are fixed; none were skipped
+  or accepted as security risks. Retain this review file until PR CI is green.
+- The two-iPhone clean household gate passed on the feature branch after review fixes. It exercised
+  offline start/reconnect, caregiver pause/resume, both stop directions, concurrent stops, completion
+  ownership, and unique records. This is branch evidence, not the required combined-main release run.
+- Actual member Widget Stop passed with its app terminated: one feeding completion owned by the
+  member, no remaining lock, and the owner's native Live Activity cleared.
+- Native Watch testing found a persisted type-only stop marker hiding a subsequent remote sleep
+  timer. Commit `898c631` scopes stop markers to timer instances and handles older saved markers.
+  Swift regression checks passed. The original Watch UI repro passed with its old cache retained,
+  followed by a second successful member-start/owner-Watch-stop cycle. Each saved one owner-attributed
+  completion and cleared the member's Live Activity.
+- Final focused proof: 58 external-stop provider integration tests, 13 Watch wiring/command-order
+  tests, the complete native Swift suite, and a Watch simulator build passed. The native suite
+  includes Widget and Watch production typechecks. Final canonical stages passed as detailed below.
+- Native E2E evidence:
+  `e2e/artifacts/household-timers/2026-09-06T05-00-17-958Z/native-proof/report.md`.
+  Clean gate artifacts: `e2e/artifacts/household-timers/2026-09-06T04-43-16-338Z`.
+- README updated in iOS Native Integrations, Edge Functions, and the migration count. It documents
+  iOS 17.2 push-to-start, mirrored end delivery, migrations 066/067, and authenticated INSERT/DELETE
+  webhooks. The affected prose passed the complete write-well audit in two passes.
+- Locked/background APNs delivery remains unverified. The local runtime has no APNs credentials or
+  timer push webhook. Both simulators obtained ActivityKit start tokens, but this does not prove
+  remote start/end delivery. The widget needed a foreground refresh to display the remote timer;
+  standalone Watch delivery was not established. The acceptance and human checkpoint boxes above
+  remain unchecked until the missing delivery evidence exists.
+- Remaining device check: with both caregivers signed in on APNs-configured iOS 17.2+ devices,
+  lock B's phone and start a timer on A. B must show one Live Activity without opening the app.
+  Stop through B's app/widget/Watch; both activities must end and the database must contain one
+  completion owned by B. Repeat with B foregrounded to check duplicate suppression. Missing or
+  duplicate activities, surviving activities, or duplicate completions fail the check. The current
+  Live Activity exposes Open, not a direct Stop button.
+- The user authorized PR creation and sync-main. No PR has been opened or merge attempted because
+  the required manual proof remains pending. Master-plan status remains `[~]`.
+
+- Final canonical validation: `npm run check:code` passed lint, TypeScript, 2,878 Vitest tests,
+  timezone checks, and 117 component suites (1,094 tests). Its remaining component suite could not
+  initialize because this workspace has `.env.local` disabled and no Supabase variables. With
+  process-local `EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` and
+  `EXPO_PUBLIC_SUPABASE_ANON_KEY=local-validation-placeholder`, the affected
+  `watch-realtime-baby-selection.integration.test.tsx` passed all 16 tests. No environment file was
+  changed. The remaining canonical stages, `npm run test:ci && npm run test:widget:swift &&
+  npm run test:production-gating`, then passed (65 CI-contract tests, native checks, and production
+  bundle exclusion). All canonical stages are covered; the original chained invocation exited 1
+  for the missing test configuration and was not represented as a single green run.
+- Validation logs are under `/tmp/agent-workflows/e2f8af45fd34/7d63e66a2c3f/`:
+  `finish-canonical.log`, `finish-component-retry.log`, and `finish-canonical-remainder.log`.
+  Output-only capture was capped at 5 MiB while draining full streams and preserving exit status.
+- First incomplete finish-task checklist item: required manual proof. No PR was created, no task
+  marker was advanced, and no retained review was deleted.
