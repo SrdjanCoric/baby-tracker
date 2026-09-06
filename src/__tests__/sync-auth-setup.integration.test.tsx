@@ -58,6 +58,41 @@ describe("SyncAuthGate", () => {
     expect(queryByText("Activity providers ready")).not.toBeNull();
   });
 
+  it("shows only the initializing fallback while the engine starts for a user with a household", async () => {
+    // Regression: rendering the restoration fallback here let it revalidate a
+    // terminal onboarding state on every cold start, so the first navigation
+    // redirected to the restore screen and bounced back to Home.
+    const { queryByText, getByText, rerender } = render(
+      <SyncAuthGate
+        blockedFallback={<Text>Restricted restoration</Text>}
+        initializingFallback={<Text>Starting sync</Text>}
+      >
+        <Text>Activity providers ready</Text>
+      </SyncAuthGate>
+    );
+
+    expect(queryByText("Restricted restoration")).toBeNull();
+    expect(getByText("Starting sync")).toBeTruthy();
+    expect(queryByText("Activity providers ready")).toBeNull();
+    await waitFor(() => {
+      expect(mockSetAuthContext).toHaveBeenCalledWith("test-household-456", "test-user-123");
+    });
+
+    mockIsInitialized = true;
+    rerender(
+      <SyncAuthGate
+        blockedFallback={<Text>Restricted restoration</Text>}
+        initializingFallback={<Text>Starting sync</Text>}
+      >
+        <Text>Activity providers ready</Text>
+      </SyncAuthGate>
+    );
+
+    expect(queryByText("Restricted restoration")).toBeNull();
+    expect(queryByText("Starting sync")).toBeNull();
+    expect(getByText("Activity providers ready")).toBeTruthy();
+  });
+
   it("waits for the authenticated user's household and renders only the restricted fallback", () => {
     mockIsInitialized = true;
     mockUser = {
