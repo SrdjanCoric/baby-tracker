@@ -1,37 +1,46 @@
-# Sofi Baby 4.9.12
+# Sofi Baby 4.10.0
 
 ## English
 
-- Fixed the first tap after opening the app sending you back to the home screen.
+- Any caregiver in your household can now stop or pause a shared timer, from the app, the widget, or Apple Watch.
+- Live Activities for household timers now appear on every caregiver's iPhone and end for everyone when the timer stops.
 
 ## Srpski
 
-- Ispravljeno: prvi dodir nakon otvaranja aplikacije više vas ne vraća na početni ekran.
+- Svaki negovatelj u vašem domaćinstvu sada može da zaustavi ili pauzira zajednički tajmer iz aplikacije, vidžeta ili Apple Watch-a.
+- Live Activities za tajmere domaćinstva sada se prikazuju na iPhone-u svakog negovatelja i završavaju se za sve kada se tajmer zaustavi.
 
 ## Español (Latinoamérica)
 
-- Se corrigió que el primer toque al abrir la app te regresara a la pantalla de inicio.
+- Ahora cualquier cuidador de tu hogar puede detener o pausar un temporizador compartido desde la app, el widget o el Apple Watch.
+- Las Live Activities de los temporizadores del hogar ahora aparecen en el iPhone de cada cuidador y terminan para todos cuando el temporizador se detiene.
 
 ## Español (España)
 
-- Se ha corregido que el primer toque al abrir la app te devolviera a la pantalla de inicio.
+- Ahora cualquier cuidador de tu hogar puede detener o pausar un temporizador compartido desde la app, el widget o el Apple Watch.
+- Las Live Activities de los temporizadores del hogar ahora aparecen en el iPhone de cada cuidador y terminan para todos cuando el temporizador se detiene.
 
 ## Français
 
-- Correction : le premier appui après l'ouverture de l'app ne vous ramène plus à l'écran d'accueil.
+- Tout aidant de votre foyer peut désormais arrêter ou mettre en pause un minuteur partagé, depuis l'app, le widget ou l'Apple Watch.
+- Les Live Activities des minuteurs du foyer apparaissent maintenant sur l'iPhone de chaque aidant et se terminent pour tous à l'arrêt du minuteur.
 
 ## Português (Portugal)
 
-- Corrigido: o primeiro toque após abrir a app já não o leva de volta ao ecrã inicial.
+- Qualquer cuidador do seu agregado pode agora parar ou pausar um temporizador partilhado, a partir da app, do widget ou do Apple Watch.
+- As Live Activities dos temporizadores do agregado aparecem agora no iPhone de cada cuidador e terminam para todos quando o temporizador para.
 
 ## Português (Brasil)
 
-- Corrigido: o primeiro toque após abrir o app não leva mais você de volta à tela inicial.
+- Qualquer cuidador da sua família agora pode parar ou pausar um timer compartilhado pelo app, pelo widget ou pelo Apple Watch.
+- As Live Activities dos timers da família agora aparecem no iPhone de cada cuidador e terminam para todos quando o timer para.
 
 ## Deutsch
 
-- Behoben: Der erste Tipp nach dem Öffnen der App bringt dich nicht mehr zurück zum Startbildschirm.
+- Jede Betreuungsperson in deinem Haushalt kann jetzt einen geteilten Timer stoppen oder pausieren, aus der App, dem Widget oder der Apple Watch.
+- Live Activities für Haushalts-Timer erscheinen jetzt auf dem iPhone jeder Betreuungsperson und enden für alle, wenn der Timer stoppt.
 
 ## Italiano
 
-- Risolto: il primo tocco dopo l'apertura dell'app non ti riporta più alla schermata iniziale.
+- Ora qualsiasi caregiver della tua famiglia può fermare o mettere in pausa un timer condiviso dall'app, dal widget o da Apple Watch.
+- Le Live Activities dei timer della famiglia ora compaiono sull'iPhone di ogni caregiver e terminano per tutti quando il timer si ferma.
