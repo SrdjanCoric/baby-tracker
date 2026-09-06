@@ -101,6 +101,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function SyncInitializingFallback() {
+  return (
+    <View className="flex-1 items-center justify-center bg-surface dark:bg-surface-dark">
+      <ActivityIndicator size="large" />
+    </View>
+  );
+}
+
 function NotificationAuthSetup({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { registerPushTokenForUser } = useNotifications();
@@ -356,7 +364,10 @@ export default function RootLayout() {
           <AuthGuard>
             <SyncProvider>
               <HouseholdProvider>
-                <SyncAuthGate blockedFallback={<ReturningUserProfileFallback />}>
+                <SyncAuthGate
+                  blockedFallback={<ReturningUserProfileFallback />}
+                  initializingFallback={<SyncInitializingFallback />}
+                >
                 <UnitProvider>
                 <TimeFormatProvider>
                 <DashboardConfigProvider>
