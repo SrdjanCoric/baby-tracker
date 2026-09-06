@@ -334,6 +334,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
     // Locally stopped timers (hide server timers until phone confirms)
     @Published var locallyStoppedTimerTypes: Set<String> = []
+    var locallyStoppedTimerInstanceIds: [String: String] = [:]
 
     // Local optimistic diaper logs (pending confirmation from phone)
     @Published var pendingDiaperLogs: [(type: String, time: Date)] = []
@@ -398,6 +399,16 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         multiBabyData?.babies ?? []
     }
 
+    private func isLocallyStopped(_ timer: WatchActiveTimer) -> Bool {
+        guard locallyStoppedTimerTypes.contains(timer.type) else { return false }
+        return WatchStoppedTimerPolicy.hides(
+            timerInstanceId: timer.timerInstanceId,
+            startedAt: parseDate(timer.startTime),
+            stoppedInstanceId: locallyStoppedTimerInstanceIds[timer.type],
+            requestedAt: localStoppedActivityTimes[timer.type]
+        )
+    }
+
     /// Combined active timers: local optimistic timers take precedence over server data
     var combinedActiveTimers: [WatchActiveTimer] {
         var timers: [WatchActiveTimer] = []
@@ -405,7 +416,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         // Local timers take precedence (they reflect user's most recent action)
         for localTimer in localActiveTimers {
-            if !locallyStoppedTimerTypes.contains(localTimer.type) {
+            if !isLocallyStopped(localTimer) {
                 timers.append(localTimer)
                 includedTypes.insert(localTimer.type)
             }
@@ -421,7 +432,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
 
         for timer in serverTimers {
             // Skip if we have a local timer for this type, or if locally stopped
-            if !includedTypes.contains(timer.type) && !locallyStoppedTimerTypes.contains(timer.type) {
+            if !includedTypes.contains(timer.type) && !isLocallyStopped(timer) {
                 timers.append(timer)
             }
         }
@@ -460,6 +471,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         let payload: [String: Any] = [
             "localActiveTimers": (try? JSONSerialization.jsonObject(with: encoder.encode(localActiveTimers))) ?? [],
             "locallyStoppedTimerTypes": Array(locallyStoppedTimerTypes).sorted(),
+            "locallyStoppedTimerInstanceIds": locallyStoppedTimerInstanceIds,
             "localStoppedActivityTimes": localStoppedActivityTimes.mapValues {
                 ISO8601DateFormatter().string(from: $0)
             },
@@ -542,6 +554,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             defaults?.removeObject(forKey: "watchSelectedBabyId")
             localActiveTimers.removeAll()
             locallyStoppedTimerTypes.removeAll()
+            locallyStoppedTimerInstanceIds.removeAll()
             localStoppedActivityTimes.removeAll()
             pendingDiaperLogs.removeAll()
             stopNetworkPolling()
@@ -581,6 +594,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 authDefaults.removeObject(forKey: "watchSelectedBabyId")
                 localActiveTimers.removeAll()
                 locallyStoppedTimerTypes.removeAll()
+                locallyStoppedTimerInstanceIds.removeAll()
                 localStoppedActivityTimes.removeAll()
                 pendingDiaperLogs.removeAll()
                 stopNetworkPolling()
@@ -874,6 +888,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.localActiveTimers.removeAll { $0.type == activityType }
             self.locallyStoppedTimerTypes.remove(activityType)
+            self.locallyStoppedTimerInstanceIds.removeValue(forKey: activityType)
             self.localActiveTimers.append(localTimer)
             print("[WatchConnector] startTimer: added local optimistic timer")
             self.syncOptimisticStateToCache()
@@ -944,6 +959,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.localActiveTimers.removeAll { $0.type == activityType }
             self.locallyStoppedTimerTypes.insert(activityType)
+            self.locallyStoppedTimerInstanceIds[activityType] = timerInstanceId
             self.localStoppedActivityTimes[activityType] = endTime
             print("[WatchConnector] stopTimer: removed local timer and marked as stopped")
             self.syncOptimisticStateToCache()
@@ -1009,6 +1025,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.localActiveTimers.removeAll { $0.type == "pumping" }
             self.locallyStoppedTimerTypes.insert("pumping")
+            self.locallyStoppedTimerInstanceIds["pumping"] = timerInstanceId
             self.localStoppedActivityTimes["pumping"] = endTime
             self.syncOptimisticStateToCache()
         }
@@ -1207,6 +1224,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         widgetData = nil
         localActiveTimers.removeAll()
         locallyStoppedTimerTypes.removeAll()
+        locallyStoppedTimerInstanceIds.removeAll()
         localStoppedActivityTimes.removeAll()
         pendingDiaperLogs.removeAll()
         sendAction([
@@ -1308,6 +1326,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                     continue
                 }
                 locallyStoppedTimerTypes.remove(type)
+                locallyStoppedTimerInstanceIds.removeValue(forKey: type)
                 localStoppedActivityTimes.removeValue(forKey: type)
             }
             pendingDiaperLogs.removeAll { $0.time <= acceptedAt }
@@ -1371,6 +1390,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             localActiveTimers = decoded
         }
         locallyStoppedTimerTypes = Set(object["locallyStoppedTimerTypes"] as? [String] ?? [])
+        locallyStoppedTimerInstanceIds = object["locallyStoppedTimerInstanceIds"] as? [String: String] ?? [:]
         if let stoppedTimes = object["localStoppedActivityTimes"] as? [String: String] {
             localStoppedActivityTimes = stoppedTimes.reduce(into: [:]) { result, item in
                 if let date = parseDate(item.value) {

@@ -163,6 +163,42 @@ final class TestSuspendingWatchFetcher: WatchSummaryFetching, @unchecked Sendabl
 @main
 enum WatchSummaryTests {
     static func main() async throws {
+        let stoppedAt = Date(timeIntervalSince1970: 100)
+        requireWatch(
+            !WatchStoppedTimerPolicy.hides(
+                timerInstanceId: "member-sleep", startedAt: stoppedAt.addingTimeInterval(60),
+                stoppedInstanceId: "owner-sleep", requestedAt: stoppedAt
+            ),
+            "stopping owner sleep hid the next member sleep timer"
+        )
+        requireWatch(
+            WatchStoppedTimerPolicy.hides(
+                timerInstanceId: "owner-sleep", startedAt: stoppedAt.addingTimeInterval(-60),
+                stoppedInstanceId: "owner-sleep", requestedAt: stoppedAt
+            ),
+            "pending stop allowed the same timer instance to reappear"
+        )
+        requireWatch(
+            !WatchStoppedTimerPolicy.hides(
+                timerInstanceId: "replacement", startedAt: stoppedAt.addingTimeInterval(-120),
+                stoppedInstanceId: "owner-sleep", requestedAt: stoppedAt
+            ),
+            "backdated replacement timer was hidden by another instance's stop"
+        )
+        requireWatch(
+            !WatchStoppedTimerPolicy.hides(
+                timerInstanceId: "member-sleep", startedAt: stoppedAt.addingTimeInterval(60),
+                stoppedInstanceId: nil, requestedAt: stoppedAt
+            ),
+            "persisted legacy stop marker hid a newly started timer"
+        )
+        requireWatch(
+            WatchStoppedTimerPolicy.hides(
+                timerInstanceId: "owner-sleep", startedAt: stoppedAt.addingTimeInterval(-60),
+                stoppedInstanceId: nil, requestedAt: stoppedAt
+            ),
+            "legacy pending stop resurrected the old timer"
+        )
         let fixtureDirectory = CommandLine.arguments[1]
         let versioned = try Data(contentsOf: URL(fileURLWithPath: fixtureDirectory)
             .appendingPathComponent("versioned.json"))
