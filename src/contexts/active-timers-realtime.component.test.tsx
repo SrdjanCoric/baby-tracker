@@ -7,6 +7,10 @@ let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null
 let registeredRefresh: (() => Promise<void>) | null = null;
 let activeTimersContext: ReturnType<typeof useActiveTimers> | null = null;
 
+jest.mock("@/services/live-activity-push-token-service", () => ({
+  refreshLiveActivityPushTokens: jest.fn(),
+}));
+
 jest.mock("./baby-context", () => ({
   useBaby: () => ({ selectedBaby: { id: "baby-1", name: "Baby" } }),
 }));
@@ -95,6 +99,19 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
   afterEach(() => {
     jest.restoreAllMocks();
     jest.useRealTimers();
+  });
+
+  it("refreshes Live Activity tokens after a realtime timer DELETE", async () => {
+    render(<ActiveTimersProvider><ContextProbe /></ActiveTimersProvider>);
+    await waitFor(() => expect(remoteChangeHandler).not.toBeNull());
+    const { refreshLiveActivityPushTokens } = jest.requireMock("@/services/live-activity-push-token-service");
+    await act(async () => {
+      await remoteChangeHandler!({
+        eventType: "DELETE", new: null,
+        old: { id: "lock-1", baby_id: "baby-1", activity_type: "sleep" },
+      });
+    });
+    expect(refreshLiveActivityPushTokens).toHaveBeenCalledTimes(1);
   });
 
   it("re-renders a second device's elapsed display from an edited started_at", async () => {

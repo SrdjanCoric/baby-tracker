@@ -21,6 +21,7 @@ struct TimerActivityAttributes: ActivityAttributes {
     var babyId: String? = nil
     var timerInstanceId: String? = nil
     var userId: String? = nil
+    var starterName: String? = nil
 }
 
 // MARK: - Activity Colors

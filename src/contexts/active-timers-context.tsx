@@ -1,3 +1,4 @@
+import { refreshLiveActivityPushTokens } from "@/services/live-activity-push-token-service";
 import React, {
   createContext,
   useContext,
@@ -191,6 +192,7 @@ export function ActiveTimersProvider({
         | string
         | undefined;
 
+      if (change.eventType === "DELETE") refreshLiveActivityPushTokens();
       if (change.eventType === "DELETE" && change.old?.id) {
         const deletedBabyId = change.old.baby_id as string | undefined;
         const deletedId = change.old.id as string;

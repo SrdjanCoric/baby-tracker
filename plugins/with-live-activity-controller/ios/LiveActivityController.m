@@ -63,4 +63,7 @@ RCT_EXTERN_METHOD(resumeTimerActivity:(NSString *)activityId
 RCT_EXTERN_METHOD(registerPushToStart:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getLiveActivityStartToken:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 @end

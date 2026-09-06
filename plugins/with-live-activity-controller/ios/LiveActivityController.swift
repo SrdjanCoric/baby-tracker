@@ -7,6 +7,8 @@ class LiveActivityController: RCTEventEmitter {
     @MainActor private var tokenStore = LiveActivityPushTokenStore(defaults: .standard)
     @MainActor private var tokenObservers: [String: Task<Void, Never>] = [:]
     @MainActor private var stateObservers: [String: Task<Void, Never>] = [:]
+    @MainActor private var startTokenObserver: Task<Void, Never>?
+    @MainActor private var duplicateEndings = LiveActivityDuplicateEndings()
     @MainActor private var activityObserver: Task<Void, Never>?
     @MainActor private var hasTokenListeners = false
 
@@ -25,6 +27,9 @@ class LiveActivityController: RCTEventEmitter {
 
     override func invalidate() {
         Task { @MainActor in
+            self.duplicateEndings.cancelAll()
+            self.startTokenObserver?.cancel()
+            self.startTokenObserver = nil
             self.activityObserver?.cancel()
             self.activityObserver = nil
             self.tokenObservers.values.forEach { $0.cancel() }
@@ -54,6 +59,22 @@ class LiveActivityController: RCTEventEmitter {
     @available(iOS 16.2, *)
     @MainActor private func observe(_ activity: Activity<TimerActivityAttributes>) {
         guard activity.activityState == .active || activity.activityState == .stale else { return }
+        let running = Activity<TimerActivityAttributes>.activities.filter {
+            $0.activityState == .active || $0.activityState == .stale
+        }
+        let duplicates = duplicateLiveActivityIds(running.map {
+            LiveActivityStartCandidate(id: $0.id, activityType: $0.attributes.activityType,
+                babyId: $0.attributes.babyId, timerInstanceId: $0.attributes.timerInstanceId,
+                userId: $0.attributes.userId)
+        }, preferredIds: Set(tokenObservers.keys))
+        for duplicate in running where duplicates.contains(duplicate.id) {
+            duplicateEndings.start(id: duplicate.id, operation: {
+                await duplicate.end(duplicate.content, dismissalPolicy: .immediate)
+            }, onEnded: { [weak self] in
+                self?.recordEnded(duplicate.id)
+            })
+        }
+        guard !duplicates.contains(activity.id) else { return }
         let attrs = activity.attributes
         if let babyId = attrs.babyId, let instance = attrs.timerInstanceId, let userId = attrs.userId {
             tokenStore.bind(activityId: activity.id, babyId: babyId, timerInstanceId: instance, userId: userId)
@@ -469,18 +490,40 @@ class LiveActivityController: RCTEventEmitter {
             return
         }
 
-        Task {
-            for await tokenData in Activity<TimerActivityAttributes>.pushToStartTokenUpdates {
-                let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
-                if let userDefaults = UserDefaults(suiteName: "group.com.sofibaby.app") {
-                    userDefaults.set(tokenString, forKey: "pushToStartToken")
+        Task { @MainActor in
+            observeActivities()
+            if let token = Activity<TimerActivityAttributes>.pushToStartToken { receiveStartToken(token) }
+            if startTokenObserver == nil {
+                startTokenObserver = Task { @MainActor [weak self] in
+                    for await token in Activity<TimerActivityAttributes>.pushToStartTokenUpdates {
+                        guard !Task.isCancelled else { return }
+                        self?.receiveStartToken(token)
+                    }
                 }
-                print("[LiveActivityController] Push-to-start token: \(tokenString.prefix(12))...")
             }
+            resolve(true)
         }
+    }
 
-        Task { @MainActor in observeActivities() }
+    @MainActor private func receiveStartToken(_ data: Data) {
+        let token = data.map { String(format: "%02x", $0) }.joined()
+        guard tokenStore.startToken != token else { return }
+        tokenStore.updateStartToken(token)
+        UserDefaults(suiteName: "group.com.sofibaby.app")?.set(token, forKey: "pushToStartToken")
+        notifyTokenChange()
+    }
 
-        resolve(true)
+    @objc func getLiveActivityStartToken(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        Task { @MainActor in
+            guard #available(iOS 17.2, *), ActivityAuthorizationInfo().areActivitiesEnabled else {
+                resolve(nil); return
+            }
+            if let token = Activity<TimerActivityAttributes>.pushToStartToken { receiveStartToken(token) }
+            guard let token = tokenStore.startToken else { resolve(nil); return }
+            resolve(["deviceId": tokenStore.deviceId, "token": token])
+        }
     }
 }

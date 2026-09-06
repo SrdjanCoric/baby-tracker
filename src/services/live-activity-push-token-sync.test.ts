@@ -2,6 +2,89 @@ import { describe, expect, it, vi } from "vitest";
 import { createLiveActivityTokenSynchronizer } from "./live-activity-push-token-sync";
 
 describe("Live Activity token sync", () => {
+  it("ends a foreign-account mirror whose timer is gone without changing its remote token", async () => {
+    let ended = false;
+    const end = vi.fn(async () => { ended = true; });
+    const register = vi.fn(), remove = vi.fn(), acknowledge = vi.fn();
+    const sync = createLiveActivityTokenSynchronizer("new-owner", {
+      read: async () => [{ activityId: "foreign", babyId: "baby", timerInstanceId: "run", userId: "old-owner", ended }],
+      register, remove, acknowledge, end, isActive: async () => false,
+    });
+    await sync.sync();
+    expect(end).toHaveBeenCalledWith("foreign");
+    expect(acknowledge).toHaveBeenCalledWith("foreign");
+    expect(register).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it("refreshes an unchanged start token after its registration ages", async () => {
+    let now = 0;
+    const registerStart = vi.fn().mockResolvedValue(undefined);
+    const sync = createLiveActivityTokenSynchronizer("member", {
+      read: async () => [], register: vi.fn(), remove: vi.fn(), acknowledge: vi.fn(), end: vi.fn(),
+      readStart: async () => ({ deviceId: "phone", token: "stable" }), registerStart,
+      now: () => now,
+    });
+    await sync.sync();
+    now = 30_000;
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(1);
+    now = 60 * 60 * 1000;
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not register after sign-out overtakes an in-flight timer check", async () => {
+    let release!: (active: boolean) => void;
+    const isActive = vi.fn(() => new Promise<boolean>(resolve => { release = resolve; }));
+    const register = vi.fn();
+    const sync = createLiveActivityTokenSynchronizer("member", {
+      read: async () => [{ activityId: "mirror", babyId: "baby", timerInstanceId: "run", userId: "member", token: "token", ended: false }],
+      register, remove: vi.fn(), acknowledge: vi.fn(), end: vi.fn(), isActive,
+    });
+    const pending = sync.sync();
+    await vi.waitFor(() => expect(isActive).toHaveBeenCalledOnce());
+    const stopped = sync.dispose();
+    release(true);
+    await Promise.all([pending, stopped]);
+    expect(register).not.toHaveBeenCalled();
+  });
+
+  it("retries and rotates the device start token, then stops uploads at sign-out", async () => {
+    let token = "first";
+    const registerStart = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
+    const sync = createLiveActivityTokenSynchronizer("member", {
+      read: async () => [], register: vi.fn(), remove: vi.fn(), acknowledge: vi.fn(), end: vi.fn(),
+      readStart: async () => ({ deviceId: "phone", token }), registerStart,
+    });
+    await expect(sync.sync()).rejects.toThrow("offline");
+    await sync.sync();
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(2);
+    token = "rotated";
+    await sync.sync();
+    expect(registerStart).toHaveBeenLastCalledWith({ deviceId: "phone", token: "rotated" });
+    await sync.dispose();
+    token = "signed-out";
+    await sync.sync();
+    expect(registerStart).toHaveBeenCalledTimes(3);
+  });
+
+  it("ends a previously registered mirror when reconciliation finds its timer gone", async () => {
+    let active = true;
+    let ended = false;
+    const end = vi.fn(async () => { ended = true; });
+    const sync = createLiveActivityTokenSynchronizer("member", {
+      read: async () => ended ? [] : [{ activityId: "mirror", babyId: "baby", timerInstanceId: "run", userId: "member", token: "token", ended }],
+      register: async () => true, remove: vi.fn(), acknowledge: vi.fn(), end,
+      isActive: async () => active,
+    });
+    await sync.sync();
+    active = false;
+    await sync.sync();
+    expect(end).toHaveBeenCalledWith("mirror");
+  });
+
   it("acknowledges foreign tombstones without using the new account to delete them", async () => {
     const acknowledge = vi.fn();
     const remove = vi.fn();

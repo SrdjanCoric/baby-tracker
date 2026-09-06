@@ -992,3 +992,22 @@ actor WatchSummaryCoordinator {
         return fractional.date(from: value) ?? ISO8601DateFormatter().date(from: value)
     }
 }
+
+// A stop hides its timer instance while completion is pending.
+enum WatchStoppedTimerPolicy {
+    static func hides(
+        timerInstanceId: String?,
+        startedAt: Date?,
+        stoppedInstanceId: String?,
+        requestedAt: Date?
+    ) -> Bool {
+        if let stoppedInstanceId, let timerInstanceId {
+            return stoppedInstanceId == timerInstanceId
+        }
+        // Migrate persisted type-only markers without hiding later timers.
+        if let requestedAt, let startedAt, startedAt > requestedAt {
+            return false
+        }
+        return true
+    }
+}

@@ -1,6 +1,6 @@
 import { createApnsJwt } from "../_shared/apns.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { endTimerLiveActivities } from "./live-activity.ts";
+import { endTimerLiveActivities, startTimerLiveActivities } from "./live-activity.ts";
 
 interface WidgetPushDependencies {
   env(name: string): string | undefined;
@@ -137,6 +137,8 @@ export function createWidgetPushHandler({
       }
 
       const supabase = createClient(supabaseUrl, serviceRoleKey);
+      let jwtPromise: Promise<string> | undefined;
+      const getJwt = () => jwtPromise ??= createJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
 
       // Only the database webhook may turn service-role token reads into end pushes.
       // A normal user's JWT must not authorize a fabricated timer DELETE.
@@ -161,7 +163,7 @@ export function createWidgetPushHandler({
                 .in("id", ids);
               if (error) throw error;
             },
-            getJwt: () => createJwt(apnsTeamId, apnsKeyId, apnsAuthKey),
+            getJwt,
             fetch,
             now: Date.now,
           });
@@ -208,6 +210,35 @@ export function createWidgetPushHandler({
 
       const userIds = householdUsers.map((u) => u.id);
 
+      const startDelivery = (async () => {
+      if (payload.type === "INSERT" && req.headers.get("authorization") === `Bearer ${serviceRoleKey}`) {
+        try {
+          const { data: starter, error: starterError } = await supabase.from("users")
+            .select("display_name").eq("id", record.started_by).maybeSingle();
+          if (starterError) console.warn("Starter name unavailable; sending without attribution");
+          const result = await startTimerLiveActivities(record, {
+            babyName: baby.name, starterName: starterError ? "" : starter?.display_name ?? "", memberIds: userIds,
+            findTokens: async (ids) => {
+              const { data, error } = await supabase.from("live_activity_start_tokens")
+                .select("id, user_id, device_token, is_sandbox").in("user_id", ids);
+              if (error) throw error;
+              return data ?? [];
+            },
+            removeTokens: async (ids) => {
+              const { error } = await supabase.from("live_activity_start_tokens").delete().in("id", ids);
+              if (error) throw error;
+            },
+            getJwt, fetch, now: Date.now,
+          });
+          console.log(`Live Activity start push sent: ${result.sent}/${result.total}`);
+        } catch (error) {
+          console.error("Live Activity start push failed", error);
+        }
+      }
+
+      })();
+
+      try {
       const { data: tokens, error: tokensError } = await supabase
         .from("widget_push_tokens")
         .select("device_token, user_id, is_sandbox")
@@ -225,7 +256,7 @@ export function createWidgetPushHandler({
 
       const apnsTopic = "com.sofibaby.app.push-type.widgets";
 
-      const jwt = await createJwt(apnsTeamId, apnsKeyId, apnsAuthKey);
+      const jwt = await getJwt();
 
       const tokensToRemove: string[] = [];
       let sentCount = 0;
@@ -272,6 +303,9 @@ export function createWidgetPushHandler({
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+      } finally {
+        await startDelivery;
+      }
     } catch (error) {
       console.error("Unexpected error:", error);
       return new Response(JSON.stringify({ error: "Internal server error" }), {

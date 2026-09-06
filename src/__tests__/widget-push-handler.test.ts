@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWidgetPushHandler } from "../../supabase/functions/send-widget-push/handler";
 
-function setup({ peers = false, jwtError = null as Error | null } = {}) {
+function setup({ peers = false, jwtError = null as Error | null, starts = false, widgets = true, starterError = null as object | null } = {}) {
   const remove = vi.fn();
   const queries: { table: string; filters: unknown[][] }[] = [];
   const database = {
@@ -9,13 +9,14 @@ function setup({ peers = false, jwtError = null as Error | null } = {}) {
       const data: Record<string, unknown> = {
         babies: { name: "Baby", household_id: "household" },
         users: peers ? [{ id: "member" }] : [],
-        widget_push_tokens: [
+        live_activity_start_tokens: starts ? [{ id: "start-row", user_id: "member", device_token: "start-token", is_sandbox: true }] : [],
+        widget_push_tokens: widgets ? [
           {
             device_token: "widget-token",
             user_id: "member",
             is_sandbox: false,
           },
-        ],
+        ] : [],
         live_activity_push_tokens: [
           {
             id: "activity-row",
@@ -26,8 +27,9 @@ function setup({ peers = false, jwtError = null as Error | null } = {}) {
       };
       const filters: unknown[][] = [];
       queries.push({ table, filters });
+      let columns = "";
       const query: any = {
-        select: () => query,
+        select: (value: string) => { columns = value; return query; },
         eq: (...args: unknown[]) => { filters.push(["eq", ...args]); return query; },
         neq: (...args: unknown[]) => { filters.push(["neq", ...args]); return query; },
         in: (...args: unknown[]) => { filters.push(["in", ...args]); return query; },
@@ -36,21 +38,24 @@ function setup({ peers = false, jwtError = null as Error | null } = {}) {
           return query;
         },
         single: () => query,
+        maybeSingle: () => query,
         then: (resolve: any) =>
-          Promise.resolve({ data: data[table], error: null }).then(resolve),
+          Promise.resolve(table === "users" && columns === "display_name"
+            ? { data: null, error: starterError } : { data: data[table], error: null }).then(resolve),
       };
       return query;
     }),
   };
   const send = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+  const createJwt = vi.fn(async () => { if (jwtError) throw jwtError; return "jwt"; });
   const handler = createWidgetPushHandler({
     env: (key: string) =>
       key === "SUPABASE_SERVICE_ROLE_KEY" ? "service-secret" : "config",
     createClient: () => database as any,
     fetch: send,
-    createJwt: async () => { if (jwtError) throw jwtError; return "jwt"; },
+    createJwt,
   });
-  return { handler, database, send, remove, queries };
+  return { handler, database, send, remove, queries, createJwt };
 }
 
 function request(type: "INSERT" | "DELETE", auth = "service-secret") {
@@ -75,6 +80,42 @@ function request(type: "INSERT" | "DELETE", auth = "service-secret") {
 }
 
 describe("widget push webhook", () => {
+  it.each([null, { code: "PGRST116" }])("starts mirrors when the starter profile is unavailable (%j)", async starterError => {
+    const { handler, send } = setup({ peers: true, starts: true, widgets: false, starterError });
+    await handler(request("INSERT"));
+    expect(send).toHaveBeenCalledOnce();
+    expect(JSON.parse(send.mock.calls[0][1].body).aps.attributes.starterName).toBe("");
+  });
+
+  it("delivers widget refreshes while start delivery is blocked and signs only once", async () => {
+    const { handler, send, createJwt } = setup({ peers: true, starts: true });
+    let release!: (response: Response) => void;
+    const blocked = new Promise<Response>(resolve => { release = resolve; });
+    send.mockImplementation(async (_url, init) => {
+      if (init.headers["apns-push-type"] === "liveactivity") return blocked;
+      return new Response(null, { status: 200 });
+    });
+    const pending = handler(request("INSERT"));
+    try {
+      await vi.waitFor(() => expect(send.mock.calls.some(call => call[1].headers["apns-push-type"] === "widgets")).toBe(true));
+    } finally {
+      release(new Response(null, { status: 200 }));
+      await pending;
+    }
+    expect(createJwt).toHaveBeenCalledOnce();
+  });
+
+  it("starts peer activities even without widget tokens, only for a verified webhook", async () => {
+    const { handler, send, queries } = setup({ peers: true, starts: true, widgets: false });
+    await handler(request("INSERT", "user-jwt"));
+    expect(send).not.toHaveBeenCalled();
+    expect(queries.some(q => q.table === "live_activity_start_tokens")).toBe(false);
+    await handler(request("INSERT"));
+    expect(send).toHaveBeenCalledOnce();
+    expect(JSON.parse(send.mock.calls[0][1].body).aps.event).toBe("start");
+    expect(queries.find(q => q.table === "live_activity_start_tokens")?.filters).toContainEqual(["in", "user_id", ["member"]]);
+  });
+
   it("logs the cause of an activity delivery failure", async () => {
     const cause = new Error("signing failed");
     const log = vi.spyOn(console, "error");

@@ -131,9 +131,12 @@ When the latest completed sleep is the current evening's stored `night` session,
   that have no server row, while server-owned timer removals still apply. Widgets also show locally cached
   activity data for accountless and signed-out users. Accountless timers keep running in the widget; a
   timer left behind by sign-out does not continue ticking.
-- **Live Activities + Dynamic Island** for active feeding and sleep timers. A remote household stop
-  sends an ActivityKit end push to the starter's registered activities, including while the app is
-  backgrounded. If the push is undelivered, opening the app clears the stopped timer and its activity.
+- **Live Activities + Dynamic Island** for feeding, sleep, pumping, and tummy-time timers. On iOS
+  17.2 or later, ActivityKit push-to-start can show another caregiver's timer without opening the app.
+  The starter keeps their local activity. The app removes duplicate activities for the same timer.
+  A household stop sends end pushes to the registered starter and mirrored activities. If a push is
+  undelivered, opening the app clears activities whose timers have stopped. Earlier iOS versions
+  retain app, widget, and Watch timer controls without remotely started Live Activities.
 - **Apple Watch** companion app using WCSession as an optional fast path and direct Supabase fallback.
   The Watch reads a phone-published session capsule from its Keychain. When a direct request returns
   401, it marks the credential stale and asks the paired phone to refresh its session and republish
@@ -149,12 +152,13 @@ When the latest completed sleep is the current evening's stored `night` session,
 
 Deno-based serverless functions for direct APNs push delivery, feeding reminders, wake window alerts, and Live Activity management. All push notifications use direct APNs (not Expo Push API).
 
-Remote Live Activity endings require migration 066, the updated `send-widget-push` function, and an
-app binary with the Live Activity token bridge. The `active_timers` DELETE webhook must include
-`old_record.timer_data.timerInstanceId` and authenticate with the service-role bearer. A webhook
-with another bearer still sends widget updates but skips Live Activity endings. Verify delivery on
-two physical devices before release. See [`docs/SECURITY.md`](docs/SECURITY.md) for token access and
-delivery limits.
+Household Live Activity mirroring requires migrations 066 and 067, the updated `send-widget-push`
+function, APNs credentials, and an app binary with the Live Activity token bridge. Configure
+`active_timers` INSERT and DELETE webhooks with the service-role bearer. INSERT supplies the new
+record; DELETE must include `old_record.timer_data.timerInstanceId` to end the matching activities.
+Other webhook bearers skip Live Activity delivery. Verify remote start on a locked recipient phone
+and mirrored activity cleanup on two devices before release. See [`docs/SECURITY.md`](docs/SECURITY.md)
+for token access and delivery limits.
 
 ## Project Structure
 
@@ -172,7 +176,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 066
+└── migrations/             # PostgreSQL migrations through 067
 localization/native/        # Nine locale files the Watch app and widget render from;
                             # npm run native:strings rebuilds targets/*/GeneratedStrings.swift
 targets/

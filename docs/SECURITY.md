@@ -35,10 +35,30 @@ and a ten-second delivery budget. Anonymous callers cannot invoke the RPC. The s
 webhook reads tokens for the exact baby and timer instance; token rows survive
 timer deletion for delivery and expire after 24 hours.
 
+Push-to-start registrations live separately in `live_activity_start_tokens` (migration 067),
+one row per account and installation (`user_id`, `device_id`). RLS permits authenticated users
+to SELECT and DELETE only their own rows; direct INSERT/UPDATE and anonymous access are denied.
+The `register_live_activity_start_token(text,text,boolean,uuid)` SECURITY DEFINER RPC uses an
+empty search path, verifies the supplied account against `auth.uid()`, validates identifiers and
+hex tokens through table constraints, and serializes registration. Registering an APNs token for a
+new account removes that token's prior-account rows under a token-level transaction lock. An
+account retains at most eight installations; a new installation evicts the least recently updated
+registration when necessary.
+
+Sign-out attempts both token-table cleanups independently and scopes start-token deletion to the
+current installation. Unchanged start tokens refresh on synchronization once an hour old. An
+indexed hourly `cleanup-live-activity-start-tokens` job deletes registrations older than 24 hours,
+providing a backstop for failed sign-out or abandoned installations. APNs 410 and 400
+`BadDeviceToken` responses remove invalid start registrations. Until re-registration or expiry,
+a failed offline sign-out can leave a stale registration; account transfer removes it when the
+same token registers again. Push-to-start payloads include baby and caregiver names and are sent
+only to other current household members.
+
 ### User Profile Access
 
 - Users can read basic profile info of household members (for caregiver attribution)
 - Users can only update their own profile
+
 
 ## Authentication
 

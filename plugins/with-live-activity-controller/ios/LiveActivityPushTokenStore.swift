@@ -13,6 +13,15 @@ final class LiveActivityPushTokenStore {
     }
 
     private let defaults: UserDefaults
+    var deviceId: String {
+        if let id = defaults.string(forKey: "liveActivityDeviceId") { return id }
+        let id = UUID().uuidString
+        defaults.set(id, forKey: "liveActivityDeviceId")
+        return id
+    }
+    var startToken: String? { defaults.string(forKey: "liveActivityStartToken") }
+    func updateStartToken(_ token: String) { defaults.set(token, forKey: "liveActivityStartToken") }
+
     private let key = "liveActivityPushRecordsV1"
     private var byId: [String: Record]
     var records: [Record] { Array(byId.values) }
@@ -74,4 +83,47 @@ func selectLiveActivityStart(
             $0.timerInstanceId == identity?["timerInstanceId"] && $0.userId == identity?["userId"])
     }
     return (reusable?.id, sameType.filter { $0.id != reusable?.id }.map { $0.id })
+}
+
+// Deduplicate only one exact household timer, never another baby or account.
+func duplicateLiveActivityIds(_ candidates: [LiveActivityStartCandidate], preferredIds: Set<String>) -> [String] {
+    var seen = Set<[String]>()
+    var duplicates: [String] = []
+    let ordered = candidates.sorted {
+        if preferredIds.contains($0.id) != preferredIds.contains($1.id) { return preferredIds.contains($0.id) }
+        return $0.id < $1.id
+    }
+    for candidate in ordered {
+        guard let baby = candidate.babyId, let instance = candidate.timerInstanceId,
+              let user = candidate.userId else { continue }
+        if !seen.insert([candidate.activityType, baby, instance, user]).inserted { duplicates.append(candidate.id) }
+    }
+    return duplicates
+}
+
+
+// Own duplicate-ending work separately so cancellation can be tested without ActivityKit.
+@MainActor
+final class LiveActivityDuplicateEndings {
+    private var tasks: [String: Task<Void, Never>] = [:]
+
+    @discardableResult
+    func start(id: String, operation: @escaping @MainActor () async -> Void,
+               onEnded: @escaping @MainActor () -> Void) -> Task<Void, Never> {
+        if let task = tasks[id] { return task }
+        let task = Task { @MainActor [weak self] in
+            guard !Task.isCancelled else { return }
+            await operation()
+            guard !Task.isCancelled else { return }
+            onEnded()
+            self?.tasks.removeValue(forKey: id)
+        }
+        tasks[id] = task
+        return task
+    }
+
+    func cancelAll() {
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
 }

@@ -2,7 +2,22 @@ import Foundation
 
 @main
 struct LiveActivityPushTokenTests {
-    static func main() throws {
+    @MainActor static func main() async throws {
+        var endings: LiveActivityDuplicateEndings? = LiveActivityDuplicateEndings()
+        weak var weakEndings = endings
+        var release: CheckedContinuation<Void, Never>?
+        var completed = false
+        let ending = endings!.start(id: "duplicate", operation: {
+            await withCheckedContinuation { release = $0 }
+        }, onEnded: { completed = true })
+        while release == nil { await Task.yield() }
+        endings!.cancelAll()
+        endings = nil
+        precondition(weakEndings == nil, "pending duplicate ending must not retain its owner")
+        release!.resume()
+        await ending.value
+        precondition(!completed, "an invalidated duplicate ending must not mutate token state")
+
         let candidates = [
             LiveActivityStartCandidate(id: "legacy", activityType: "sleep", babyId: nil, timerInstanceId: nil, userId: nil),
             LiveActivityStartCandidate(id: "old", activityType: "sleep", babyId: "baby", timerInstanceId: "old", userId: "owner"),
@@ -20,6 +35,19 @@ struct LiveActivityPushTokenTests {
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         let store = LiveActivityPushTokenStore(defaults: defaults)
+        let device = store.deviceId
+        store.updateStartToken("first")
+        store.updateStartToken("rotated-start")
+        let restarted = LiveActivityPushTokenStore(defaults: defaults)
+        precondition(restarted.deviceId == device, "start token rotation must keep device identity")
+        precondition(restarted.startToken == "rotated-start", "latest start token survives restart")
+        let arrivals = [
+            LiveActivityStartCandidate(id: "remote", activityType: "sleep", babyId: "baby", timerInstanceId: "run", userId: "member"),
+            LiveActivityStartCandidate(id: "zz-local", activityType: "sleep", babyId: "baby", timerInstanceId: "run", userId: "member"),
+            LiveActivityStartCandidate(id: "other-baby", activityType: "sleep", babyId: "other", timerInstanceId: "run", userId: "member"),
+        ]
+        precondition(duplicateLiveActivityIds(arrivals, preferredIds: ["zz-local"]) == ["remote"], "remote arrival must preserve the already tracked local activity")
+        precondition(duplicateLiveActivityIds(arrivals, preferredIds: []) == ["zz-local"], "cold discovery must choose one deterministic survivor")
         store.bind(activityId: "a", babyId: "baby", timerInstanceId: "run", userId: "owner")
         store.updateToken(activityId: "a", token: "old")
         store.updateToken(activityId: "a", token: "rotated")
