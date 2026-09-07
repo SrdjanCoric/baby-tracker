@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from "react";
 import { useBaby } from "./baby-context";
 import { useAuth } from "./auth-context";
@@ -54,6 +55,8 @@ interface ActiveTimersContextValue {
   ) => string | null;
   refreshLocks: () => Promise<void>;
 }
+
+const MAX_TRACKED_LOCK_REMOVALS = 32;
 
 const ActiveTimersContext = createContext<ActiveTimersContextValue | null>(
   null
@@ -138,6 +141,40 @@ export function ActiveTimersProvider({
     isLoading: true,
   });
 
+  // A lock read that was already in flight when the lock was removed resolves
+  // with the pre-removal row. Without this bookkeeping its `SET_LOCKS` would
+  // resurrect a timer the user has just stopped.
+  const removalRevisionRef = useRef(0);
+  const removedLocksRef = useRef(new Map<string, number>());
+
+  const noteLockRemoval = useCallback((key: string) => {
+    const removals = removedLocksRef.current;
+    removals.delete(key);
+    removals.set(key, ++removalRevisionRef.current);
+    // Bounded ring of the most recent removals: a read in flight during a
+    // removal always settles long before this many further removals happen.
+    while (removals.size > MAX_TRACKED_LOCK_REMOVALS) {
+      const oldest = removals.keys().next();
+      if (oldest.done) break;
+      removals.delete(oldest.value);
+    }
+  }, []);
+
+  const dropStaleLocks = useCallback(
+    (locks: ActiveTimerLock[], issuedAtRevision: number) => {
+      return locks.filter(lock => {
+        const byId = removedLocksRef.current.get(lock.id);
+        const byActivity = removedLocksRef.current.get(
+          `${lock.babyId}:${lock.activityType}`
+        );
+        return (
+          (byId ?? 0) <= issuedAtRevision && (byActivity ?? 0) <= issuedAtRevision
+        );
+      });
+    },
+    []
+  );
+
   const loadLocks = useCallback(async (
     throwOnError: boolean,
     requireFreshSnapshot = false
@@ -155,16 +192,20 @@ export function ActiveTimersProvider({
 
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
+      const issuedAtRevision = removalRevisionRef.current;
       const locks = await (requireFreshSnapshot
         ? getActiveTimersForBaby(selectedBaby.id)
         : getActiveTimerSnapshotForBaby(selectedBaby.id));
-      dispatch({ type: "SET_LOCKS", locks: [...locks] });
+      dispatch({
+        type: "SET_LOCKS",
+        locks: dropStaleLocks([...locks], issuedAtRevision),
+      });
     } catch (error) {
       console.error("[ActiveTimersContext] Failed to load locks:", error);
       dispatch({ type: "SET_LOADING", isLoading: false });
       if (throwOnError) throw error;
     }
-  }, [selectedBaby?.id, user?.id]);
+  }, [dropStaleLocks, selectedBaby?.id, user?.id]);
 
   const refreshLocks = useCallback(
     () => loadLocks(false),
@@ -198,6 +239,11 @@ export function ActiveTimersProvider({
         const deletedId = change.old.id as string;
         if (deletedBabyId && deletedBabyId !== selectedBaby?.id) {
           return;
+        }
+        noteLockRemoval(deletedId);
+        const deletedActivityType = change.old.activity_type as string | undefined;
+        if (deletedBabyId && deletedActivityType) {
+          noteLockRemoval(`${deletedBabyId}:${deletedActivityType}`);
         }
         dispatch({
           type: "REMOVE_LOCK_BY_ID",
@@ -245,7 +291,7 @@ export function ActiveTimersProvider({
 
     const unsubscribe = subscribeToRemoteChanges("active_timers", handleChange);
     return unsubscribe;
-  }, [subscribeToRemoteChanges, selectedBaby?.id]);
+  }, [noteLockRemoval, subscribeToRemoteChanges, selectedBaby?.id]);
 
   const getLockForActivity = useCallback(
     (babyId: string, activityType: TimerActivityType) => {
@@ -260,9 +306,10 @@ export function ActiveTimersProvider({
 
   const removeLock = useCallback(
     (babyId: string, activityType: TimerActivityType) => {
+      noteLockRemoval(`${babyId}:${activityType}`);
       dispatch({ type: "REMOVE_LOCK", babyId, activityType });
     },
-    []
+    [noteLockRemoval]
   );
 
   const isLockedByOther = useCallback(
