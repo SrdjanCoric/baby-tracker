@@ -321,6 +321,8 @@ export async function acquireTimerLock(
     throw error;
   }
 
+  invalidateActiveTimerSnapshot(babyId);
+
   if (!data || data.length === 0) {
     return { success: false };
   }
@@ -378,6 +380,7 @@ export async function releaseTimerLock(
     throw error;
   }
 
+  invalidateActiveTimerSnapshot(babyId);
   return (count ?? 0) > 0;
 }
 
@@ -435,6 +438,14 @@ export function findActiveTimerLock(
   activityType: TimerActivityType
 ): ActiveTimerLock | null {
   return snapshot.find(lock => lock.activityType === activityType) ?? null;
+}
+
+/**
+ * Drops the shared read for a baby so any read issued after a lock write goes
+ * to the server instead of resolving with a pre-write snapshot.
+ */
+export function invalidateActiveTimerSnapshot(babyId: string): void {
+  activeTimerSnapshotFlights.delete(babyId);
 }
 
 /**
