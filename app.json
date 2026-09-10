@@ -105,8 +105,10 @@
       [
         "@sentry/react-native/expo",
         {
-          "url": "https://sentry.io/",
-          "note": "Org, project and auth token come from SENTRY_ORG, SENTRY_PROJECT and SENTRY_AUTH_TOKEN env vars on EAS."
+          "url": "https://de.sentry.io/",
+          "organization": "sofibaby",
+          "project": "react-native",
+          "note": "Auth token comes from the SENTRY_AUTH_TOKEN env var on EAS. DSN comes from EXPO_PUBLIC_SENTRY_DSN."
         }
       ],
       "expo-router",
