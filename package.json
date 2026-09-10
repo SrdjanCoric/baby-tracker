@@ -128,9 +128,10 @@
     "yaml": "2.8.2"
   },
   "overrides": {
-    "@xmldom/xmldom": "0.8.13",
+    "@xmldom/xmldom": "0.8.15",
     "nanoid": "3.3.18",
-    "postcss": "8.5.22"
+    "postcss": "8.5.22",
+    "js-yaml": "4.3.2"
   },
   "private": true
 }
