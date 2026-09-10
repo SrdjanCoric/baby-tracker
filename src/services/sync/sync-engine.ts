@@ -15,6 +15,7 @@ import { supabase } from '../supabase';
 import { isCrdtTable } from './crdt-sync';
 import { getCrdtSync } from './crdt-sync-instance';
 import { compareClocks, type ClockedRecord, type FieldClocks } from './crdt';
+import { recordBreadcrumb, reportIssue } from '@/utils/observability-sink';
 
 type SyncStateListener = (state: SyncState) => void;
 
@@ -155,6 +156,7 @@ export class SyncEngine {
         '[SyncEngine] Network status unavailable during initialization; starting offline:',
         error instanceof Error ? error.message : 'Unknown error'
       );
+      reportIssue({ name: 'sync.network_status_unavailable', area: 'sync', level: 'warning', error });
     }
 
     this.updateState({
@@ -232,6 +234,11 @@ export class SyncEngine {
               lastSyncedAt: new Date().toISOString(),
               pendingCount: this.queue.getCount(),
             });
+            recordBreadcrumb({
+              category: 'sync',
+              message: 'sync completed',
+              data: { attempts: retryCount + 1, remaining: this.queue.getCount() },
+            });
 
             this.isSyncing = false;
             this.activeSyncPromise = null;
@@ -253,6 +260,12 @@ export class SyncEngine {
                 `[SyncEngine] Sync failed after ${retryCount} attempts; ${this.queue.getCount()} operations remain queued:`,
                 error instanceof Error ? error.message : 'Unknown error'
               );
+              reportIssue({
+                name: 'sync.push_exhausted',
+                area: 'sync',
+                error,
+                tags: { attempts: retryCount, remaining: this.queue.getCount() },
+              });
               throw error;
             }
             await this.delay(this.queue.calculateBackoff(retryCount));
@@ -336,6 +349,12 @@ export class SyncEngine {
         error: 'Failed to persist sync queue',
         pendingCount: this.queue.getCount(),
       });
+      reportIssue({
+        name: 'sync.enqueue_persist_failed',
+        area: 'sync',
+        error,
+        tags: { table: operation.table, type: operation.type },
+      });
       throw error;
     }
 
@@ -358,6 +377,12 @@ export class SyncEngine {
         }
         await this.restorePreviousShadow(operation, previousShadow);
         this.updateState({ pendingCount: this.queue.getCount() });
+        reportIssue({
+          name: 'sync.local_mutation_apply_failed',
+          area: 'sync',
+          error,
+          tags: { table: operation.table, type: operation.type },
+        });
         throw error;
       }
 
@@ -369,6 +394,7 @@ export class SyncEngine {
           '[SyncEngine] Local mutation committed with a durable prepared queue record; restart will finalize it:',
           error instanceof Error ? error.message : 'Unknown error'
         );
+        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'commit' } });
       }
     }
 
@@ -415,6 +441,7 @@ export class SyncEngine {
     this.enqueueChain = migration.catch(() => {});
     this.pullReadiness = migration;
     void migration.catch((error) => {
+      reportIssue({ name: 'sync.legacy_owner_migration_failed', area: 'sync', error });
       this.legacyOwnerMigrationError = error instanceof Error
         ? error
         : new Error('Failed to migrate legacy sync operation ownership');
@@ -550,6 +577,7 @@ export class SyncEngine {
           '[SyncEngine] Prepared local mutation was resolved in memory but could not be checkpointed:',
           error instanceof Error ? error.message : 'Unknown error'
         );
+        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'resolve' } });
       }
     }
   }
@@ -665,6 +693,13 @@ export class SyncEngine {
         }
         const validation = this.validateOperation(operation);
         if (!validation.valid) {
+          reportIssue({
+            name: 'sync.operation_quarantined',
+            area: 'sync',
+            level: 'warning',
+            tags: { table: operation.table, type: operation.type },
+            extra: { errors: validation.errors },
+          });
           await this.quarantineOperation(operation);
           continue;
         }
