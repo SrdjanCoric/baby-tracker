@@ -1,37 +1,37 @@
-# Sofi Baby 4.9.12
+# Sofi Baby 4.9.13
 
 ## English
 
-- Fixed the first tap after opening the app sending you back to the home screen.
+- Fixed a crash when holding or dragging a toggle switch on iOS 26.
 
 ## Srpski
 
-- Ispravljeno: prvi dodir nakon otvaranja aplikacije više vas ne vraća na početni ekran.
+- Ispravljeno rušenje aplikacije pri držanju ili prevlačenju prekidača na iOS-u 26.
 
 ## Español (Latinoamérica)
 
-- Se corrigió que el primer toque al abrir la app te regresara a la pantalla de inicio.
+- Se corrigió un cierre inesperado al mantener presionado o arrastrar un interruptor en iOS 26.
 
 ## Español (España)
 
-- Se ha corregido que el primer toque al abrir la app te devolviera a la pantalla de inicio.
+- Se ha corregido un cierre inesperado al mantener pulsado o arrastrar un interruptor en iOS 26.
 
 ## Français
 
-- Correction : le premier appui après l'ouverture de l'app ne vous ramène plus à l'écran d'accueil.
+- Correction d’un plantage lors d’un appui long ou d’un glissement sur un interrupteur sous iOS 26.
 
 ## Português (Portugal)
 
-- Corrigido: o primeiro toque após abrir a app já não o leva de volta ao ecrã inicial.
+- Corrigido um encerramento inesperado ao manter premido ou arrastar um interruptor no iOS 26.
 
 ## Português (Brasil)
 
-- Corrigido: o primeiro toque após abrir o app não leva mais você de volta à tela inicial.
+- Corrigido um travamento ao segurar ou arrastar um botão de alternância no iOS 26.
 
 ## Deutsch
 
-- Behoben: Der erste Tipp nach dem Öffnen der App bringt dich nicht mehr zurück zum Startbildschirm.
+- Absturz behoben, der beim Halten oder Ziehen eines Schalters unter iOS 26 auftrat.
 
 ## Italiano
 
-- Risolto: il primo tocco dopo l'apertura dell'app non ti riporta più alla schermata iniziale.
+- Risolto un arresto anomalo quando si tiene premuto o si trascina un interruttore su iOS 26.

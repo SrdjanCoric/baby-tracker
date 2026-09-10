@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sofi Baby Tracker",
     "slug": "sofi-baby-tracker",
-    "version": "4.9.12",
+    "version": "4.9.13",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -101,6 +101,7 @@
       "./plugins/with-16kb-pages",
       "./plugins/with-live-activity-controller",
       "./plugins/with-shared-supabase-session",
+      "./plugins/with-switch-event-emitter-guard",
       "expo-router",
       "expo-apple-authentication",
       [
