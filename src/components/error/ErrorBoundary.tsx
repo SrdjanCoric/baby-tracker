@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import type { ErrorBoundaryState, ErrorInfo as AppErrorInfo } from "@/types/error";
 import { ErrorFallback } from "./ErrorFallback";
+import { captureObservabilityException } from "@/services/observability";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -30,6 +31,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       errorInfo: {
         componentStack: errorInfo.componentStack || "",
       },
+    });
+
+    captureObservabilityException(error, {
+      componentStack: errorInfo.componentStack || "",
     });
 
     if (this.props.onError) {

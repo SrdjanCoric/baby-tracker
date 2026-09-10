@@ -205,3 +205,13 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
+
+jest.mock("@sentry/react-native", () => ({
+  init: jest.fn(),
+  wrap: (component) => component,
+  setUser: jest.fn(),
+  setTag: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  captureException: jest.fn(),
+  expoRouterIntegration: jest.fn(() => ({ name: "ExpoRouter" })),
+}));

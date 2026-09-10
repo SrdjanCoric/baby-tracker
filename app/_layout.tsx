@@ -1,5 +1,6 @@
 import "../global.css";
 import "../src/i18n";
+import { initObservability, wrapRootComponent } from "@/services/observability";
 import { useEffect, useState, useRef } from "react";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,6 +12,7 @@ import * as Linking from "expo-linking";
 import { AuthProvider, BabyProvider, FeedingProvider, SleepProvider, DiaperProvider, PumpingProvider, GrowthProvider, TummyTimeProvider, MilestonesProvider, ThemeProvider, UnitProvider, TimeFormatProvider, DashboardConfigProvider, HouseholdProvider, SyncProvider, NotificationProvider, LanguageProvider, ActiveTimersProvider, WidgetProvider, HealthProvider, useTheme, useAuth, useNotifications, useWidget } from "@/contexts";
 import { AchievementProvider } from "@/contexts/achievement-context";
 import { SyncAuthGate } from "@/components/SyncAuthGate";
+import { ObservabilityScope } from "@/components/ObservabilityScope";
 import { ReturningUserProfileFallback } from "@/components/ReturningUserProfileFallback";
 import { AuthScopeBoundary } from "@/components/AuthScopeBoundary";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
@@ -337,7 +339,10 @@ function AppContent() {
   );
 }
 
-export default function RootLayout() {
+// Crash reporting starts before any provider mounts so early failures are captured.
+initObservability();
+
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
     'Nunito-Medium': require('../assets/fonts/Nunito-Medium.ttf'),
@@ -364,6 +369,7 @@ export default function RootLayout() {
           <AuthGuard>
             <SyncProvider>
               <HouseholdProvider>
+                <ObservabilityScope />
                 <SyncAuthGate
                   blockedFallback={<ReturningUserProfileFallback />}
                   initializingFallback={<SyncInitializingFallback />}
@@ -428,3 +434,5 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default wrapRootComponent(RootLayout);
