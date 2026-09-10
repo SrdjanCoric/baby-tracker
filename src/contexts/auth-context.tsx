@@ -28,6 +28,7 @@ import { clearWidgetData, purgeLegacyAppGroupAccessToken, purgeStaleSharedSessio
 import { removeLiveActivityPushTokens } from "@/services/live-activity-push-token-service";
 import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 
 const APP_STORAGE_PREFIXES = [
@@ -179,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error("[GoogleSignIn] Failed to configure:", error);
+      reportIssue({ name: "auth.google_configure_failed", area: "auth", level: "warning", error });
     }
   }, []);
 
@@ -233,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
+        reportIssue({ name: "auth.initialize_failed", area: "auth", error });
         setStorageUserId(null);
       } finally {
         setIsLoading(false);
@@ -242,11 +245,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      recordBreadcrumb({ category: "auth", message: event, data: { hasSession: Boolean(newSession?.user) } });
       if (event === "TOKEN_REFRESHED") {
         if (newSession?.user) {
           setSession(newSession);
         } else {
           console.error("Token refresh failed - session expired");
+          reportIssue({ name: "auth.session_expired", area: "auth", level: "warning" });
           setStorageUserId(null);
           setUser(null);
           setSession(null);
@@ -292,8 +297,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .then(profile => {
             setUser(prev => prev ? { ...prev, ...profile } : prev);
           })
-          .catch(() => {
-            // Profile fetch failed - user is still authenticated, just missing profile data
+          .catch((error) => {
+            // Profile fetch failed - user is still authenticated, just missing profile data,
+            // which means household sync never configures for this session.
+            reportIssue({ name: "auth.profile_fetch_failed", area: "auth", error, tags: { event } });
           });
       } else {
         setStorageUserId(null);

@@ -1,4 +1,5 @@
 import { Platform, NativeModules } from "react-native";
+import { reportIssue } from "@/utils/observability-sink";
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
@@ -89,6 +90,7 @@ export async function startTimerLiveActivity(
     return activityId;
   } catch (error) {
     console.error("[LiveActivity] Failed to start:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "start" } });
     return null;
   }
 }
@@ -116,6 +118,7 @@ export async function updateTimerLiveActivity(
     return success;
   } catch (error) {
     console.error("[LiveActivity] Failed to update:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "update" } });
     return false;
   }
 }
@@ -131,6 +134,7 @@ export async function endTimerLiveActivity(activityId: string): Promise<boolean>
     return success;
   } catch (error) {
     console.error("[LiveActivity] Failed to end:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "end" } });
     return false;
   }
 }
@@ -145,6 +149,7 @@ export async function endAllLiveActivities(): Promise<void> {
     await module.endAllActivities();
   } catch (error) {
     console.error("[LiveActivity] Failed to end all:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "end_all" } });
   }
 }
 
@@ -159,6 +164,7 @@ export async function endLiveActivityByType(activityType: TimerActivityType): Pr
     return ended;
   } catch (error) {
     console.error("[LiveActivity] Failed to end by type:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "end_by_type" } });
     return false;
   }
 }
@@ -177,6 +183,7 @@ export async function pauseTimerLiveActivity(
     return success;
   } catch (error) {
     console.error("[LiveActivity] Failed to pause:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "pause" } });
     return false;
   }
 }
@@ -195,6 +202,7 @@ export async function resumeTimerLiveActivity(
     return success;
   } catch (error) {
     console.error("[LiveActivity] Failed to resume:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "resume" } });
     return false;
   }
 }
@@ -220,6 +228,7 @@ export async function isLiveActivityRunning(activityId: string): Promise<boolean
     return isRunning;
   } catch (error) {
     console.error("[LiveActivity] Failed to check activity status:", error);
+    reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "status" } });
     return false;
   }
 }
@@ -255,6 +264,7 @@ export async function registerPushToStart(): Promise<boolean> {
     return result === true;
   } catch (error) {
     console.error("[LiveActivity] Failed to register push-to-start:", error);
+    reportIssue({ name: "live_activity.push_to_start_register_failed", area: "live_activity", level: "warning", error });
     return false;
   }
 }

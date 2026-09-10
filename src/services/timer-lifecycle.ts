@@ -39,6 +39,7 @@ import {
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -429,6 +430,12 @@ export async function editRunningTimerStartTime<
       );
     } catch (error) {
       if (!isRetryableTimerWriteError(error)) throw error;
+      recordBreadcrumb({
+        category: "timers",
+        message: "start edit queued",
+        level: "warning",
+        data: { activityType: adapter.activityType },
+      });
       await queuePendingTimerStartEdit(
         baby.id,
         adapter.activityType,
@@ -566,7 +573,16 @@ export async function restoreTimerLifecycle<
         identity.timerInstanceId,
         startedAt
       );
-    } catch {
+    } catch (error) {
+      // The other device keeps seeing this timer as running until the queued
+      // release succeeds, so surface how often that happens.
+      reportIssue({
+        name: "timers.lock_release_queued",
+        area: "timers",
+        level: "warning",
+        error,
+        tags: { activityType: adapter.activityType },
+      });
       await queuePendingLockRelease(
         baby.id,
         adapter.activityType,
@@ -860,6 +876,12 @@ export async function restoreTimerLifecycle<
     } catch (error) {
       if (!isCurrentBabyBinding()) return;
       console.error(`${errorLabel} Failed to restore from server:`, error);
+      reportIssue({
+        name: "timers.restore_failed",
+        area: "timers",
+        error,
+        tags: { activityType: adapter.activityType },
+      });
     }
   }
 }

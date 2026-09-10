@@ -4,6 +4,7 @@ import {
   type ActiveTimerLock,
   type TimerActivityType,
 } from "./active-timer-service";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export type TimerLockReconciliationState =
   | "accountless"
@@ -95,6 +96,12 @@ export async function reconcileTimerLock({
     }
 
     await persistState("conflicted");
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock reconciliation conflicted",
+      level: "warning",
+      data: { activityType, ownLock: lock?.startedBy === userId, hasLock: lock != null },
+    });
     return {
       state: "conflicted",
       lockHolderId: lock?.startedBy ?? acquisition.lockHolderId,
@@ -104,6 +111,13 @@ export async function reconcileTimerLock({
   } catch (error) {
     await persistState("offline");
     console.error("[TimerLockReconciliation] Lock reconciliation failed:", error);
+    reportIssue({
+      name: "timers.lock_reconciliation_failed",
+      area: "timers",
+      level: "warning",
+      error,
+      tags: { activityType },
+    });
     return { state: "offline" };
   }
 }
