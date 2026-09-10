@@ -101,6 +101,16 @@
       "./plugins/with-16kb-pages",
       "./plugins/with-live-activity-controller",
       "./plugins/with-shared-supabase-session",
+      "./plugins/with-switch-event-emitter-guard",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://de.sentry.io/",
+          "organization": "sofibaby",
+          "project": "react-native",
+          "note": "Auth token comes from the SENTRY_AUTH_TOKEN env var on EAS. DSN comes from EXPO_PUBLIC_SENTRY_DSN."
+        }
+      ],
       "expo-router",
       "expo-apple-authentication",
       [
