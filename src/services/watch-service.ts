@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
 import { loadSharedSupabaseSessionBridge } from "./shared-supabase-session-native";
+import { reportIssue } from "@/utils/observability-sink";
 
 type WatchPayload = Record<string, unknown>;
 
@@ -231,6 +232,7 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     console.log("[WatchService] Synced data to watch");
   } catch (error) {
     console.error("[WatchService] Failed to sync to watch:", error);
+    reportIssue({ name: "watch.sync_failed", area: "watch", level: "warning", error });
   }
 }
 
@@ -252,11 +254,13 @@ export async function sendMessageToWatch(
         },
         (error) => {
           console.error("[WatchService] Failed to send message:", error);
+          reportIssue({ name: "watch.send_failed", area: "watch", level: "warning", error, tags: { stage: "reply" } });
           resolve(null);
         }
       );
     } catch (error) {
       console.error("[WatchService] Failed to send message:", error);
+      reportIssue({ name: "watch.send_failed", area: "watch", level: "warning", error, tags: { stage: "send" } });
       resolve(null);
     }
   });
@@ -272,6 +276,7 @@ export async function isWatchReachable(): Promise<boolean> {
     return await module.getReachability();
   } catch (error) {
     console.error("[WatchService] Failed to check reachability:", error);
+    reportIssue({ name: "watch.reachability_failed", area: "watch", level: "warning", error });
     return false;
   }
 }

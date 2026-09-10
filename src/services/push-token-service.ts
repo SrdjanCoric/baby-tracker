@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { supabase } from "@/services/supabase";
+import { errorCode, reportIssue } from "@/utils/observability-sink";
 
 export type DeviceType = "ios" | "android";
 
@@ -27,6 +28,7 @@ export async function savePushToken(token: string): Promise<{ error: Error | nul
     );
 
   if (error) {
+    reportIssue({ name: "push.token_save_failed", area: "push", error, tags: { code: errorCode(error), kind: "expo" } });
     return { error: new Error(error.message) };
   }
 

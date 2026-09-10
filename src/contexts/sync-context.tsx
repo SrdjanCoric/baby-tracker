@@ -3,6 +3,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable, isCrdtTable, reconcileRemoteChange } from '@/services/sync';
 import { getCrdtSync } from '@/services/sync/crdt-sync-instance';
 import { createForegroundRefreshCoordinator, type ForegroundRefreshLoader } from '@/services/foreground-refresh-coordinator';
+import { recordBreadcrumb, reportIssue, setContextTag } from '@/utils/observability-sink';
 
 export interface SyncState {
   status: SyncStatus;
@@ -108,11 +109,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       appStateRef.current = nextState;
       if (previousState.match(/inactive|background/) && nextState === 'active') {
         refreshCoordinatorRef.current.startWakeCycle();
+        recordBreadcrumb({
+          category: 'app',
+          message: 'foreground',
+          data: {
+            pending: syncEngineInstance?.getPendingCount() ?? 0,
+            connected: syncEngineInstance?.getState().isConnected ?? false,
+          },
+        });
         if (syncEngineInstance && syncEngineInstance.getPendingCount() > 0) {
           try {
             await syncEngineInstance.sync();
-          } catch {
+          } catch (error) {
             // Sync failed — still refresh to show best available data
+            reportIssue({
+              name: 'sync.foreground_sync_failed',
+              area: 'sync',
+              level: 'warning',
+              error,
+              tags: { pending: syncEngineInstance.getPendingCount() },
+            });
           }
         }
         await refreshCoordinatorRef.current.trigger(
@@ -178,6 +194,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           dispatchChange(reconciled);
         } catch (error) {
           console.error('[SyncContext] CRDT reconcile failed; dispatching raw change:', error);
+          reportIssue({
+            name: 'sync.crdt_reconcile_failed',
+            area: 'sync',
+            error,
+            tags: { table: change.table, eventType: change.eventType },
+          });
           dispatchChange(change);
         }
       });
@@ -191,13 +213,28 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch((error) => {
+        reportIssue({ name: 'sync.initialize_failed', area: 'sync', error });
         dispatch({ type: 'SYNC_ERROR', payload: error.message });
       });
+
+    const unsubscribeRealTimeErrors = realTimeSync.onError((error) => {
+      reportIssue({ name: 'realtime.channel_error', area: 'realtime', level: 'warning', error });
+    });
+    const unsubscribeRealTimeConnection = realTimeSync.onConnectionChange((connected) => {
+      setContextTag('realtime_connected', connected);
+      recordBreadcrumb({
+        category: 'realtime',
+        message: connected ? 'connected' : 'disconnected',
+        level: connected ? 'info' : 'warning',
+      });
+    });
 
     return () => {
       isMounted = false;
       unsubscribe();
       unsubscribeRealTime();
+      unsubscribeRealTimeErrors();
+      unsubscribeRealTimeConnection();
       instanceRefCount--;
 
       if (instanceRefCount === 0) {
@@ -275,6 +312,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       realTimeSyncInstance.setAuthContext({ householdId, userId });
       realTimeSyncInstance.subscribeToHousehold(householdId).catch((error) => {
         console.error('[SyncContext] Failed to subscribe to household:', error);
+        reportIssue({ name: 'realtime.subscribe_failed', area: 'realtime', error });
         dispatch({ type: 'SYNC_ERROR', payload: error.message });
       });
     }

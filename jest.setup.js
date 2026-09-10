@@ -213,5 +213,6 @@ jest.mock("@sentry/react-native", () => ({
   setTag: jest.fn(),
   addBreadcrumb: jest.fn(),
   captureException: jest.fn(),
+  captureMessage: jest.fn(),
   expoRouterIntegration: jest.fn(() => ({ name: "ExpoRouter" })),
 }));

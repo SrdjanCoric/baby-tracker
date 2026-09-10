@@ -1,5 +1,6 @@
 import { supabase } from '@/services/supabase';
 import { SyncableTable } from './types';
+import { reportIssue } from '@/utils/observability-sink';
 
 export interface RemoteChange {
   table: SyncableTable | string;
@@ -142,6 +143,12 @@ export class RealTimeSync {
     }
 
     if (!this.verifyChangeOwnership(change)) {
+      reportIssue({
+        name: 'realtime.change_rejected',
+        area: 'realtime',
+        level: 'warning',
+        tags: { table, eventType: change.eventType, hasAuthContext: this.authContext !== null },
+      });
       return;
     }
 
