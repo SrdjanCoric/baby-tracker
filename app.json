@@ -102,6 +102,13 @@
       "./plugins/with-live-activity-controller",
       "./plugins/with-shared-supabase-session",
       "./plugins/with-switch-event-emitter-guard",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "note": "Org, project and auth token come from SENTRY_ORG, SENTRY_PROJECT and SENTRY_AUTH_TOKEN env vars on EAS."
+        }
+      ],
       "expo-router",
       "expo-apple-authentication",
       [
