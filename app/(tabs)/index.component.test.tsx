@@ -2,6 +2,8 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 
 const mockPush = jest.fn();
+const mockDismissAll = jest.fn();
+let mockIsFocused = true;
 let mockRemoteLocks: Record<string, {
   startedAt: string;
   startedByName: string;
@@ -12,12 +14,12 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: mockPush,
     back: jest.fn(),
-    dismissAll: jest.fn(),
+    dismissAll: mockDismissAll,
   }),
 }));
 
 jest.mock("@react-navigation/native", () => ({
-  useIsFocused: () => true,
+  useIsFocused: () => mockIsFocused,
 }));
 
 jest.mock("react-i18next", () => ({
@@ -267,6 +269,7 @@ describe("HomeScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRemoteLocks = {};
+    mockIsFocused = true;
 
     mockUseFeeding.mockReturnValue({
       feedings: [],
@@ -398,6 +401,58 @@ describe("HomeScreen", () => {
       render(<HomeScreen />);
       fireEvent.press(screen.getByTestId("baby-header"));
       expect(mockPush).toHaveBeenCalledWith("/settings");
+    });
+
+    // Regression: a second tap landing while the first push was still committing
+    // used to reach the unfocused branch and dispatch POP_TO_TOP against a screen
+    // that was still attaching, crashing with "No view found for id ... for
+    // fragment ScreenStackFragment".
+    it("ignores a second press while the first navigation is still in flight", () => {
+      render(<HomeScreen />);
+
+      fireEvent.press(screen.getByTestId("dashboard-card-feeding"));
+      fireEvent.press(screen.getByTestId("dashboard-card-feeding"));
+
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockDismissAll).not.toHaveBeenCalled();
+    });
+
+    it("does not dismiss the stack when a second press lands after focus is lost", () => {
+      const { rerender } = render(<HomeScreen />);
+
+      fireEvent.press(screen.getByTestId("dashboard-card-feeding"));
+      mockIsFocused = false;
+      rerender(<HomeScreen />);
+      fireEvent.press(screen.getByTestId("dashboard-card-sleep"));
+
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith("/feeding");
+      expect(mockDismissAll).not.toHaveBeenCalled();
+    });
+
+    // The unfocused branch still has to recover a stale stack on a cold start,
+    // which is what it was added for.
+    it("still dismisses a stale stack when the first press lands unfocused", () => {
+      mockIsFocused = false;
+      render(<HomeScreen />);
+
+      fireEvent.press(screen.getByTestId("dashboard-card-feeding"));
+
+      expect(mockDismissAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("navigates again once the screen regains focus", () => {
+      const { rerender } = render(<HomeScreen />);
+
+      fireEvent.press(screen.getByTestId("dashboard-card-feeding"));
+      mockIsFocused = false;
+      rerender(<HomeScreen />);
+      mockIsFocused = true;
+      rerender(<HomeScreen />);
+      fireEvent.press(screen.getByTestId("dashboard-card-sleep"));
+
+      expect(mockPush).toHaveBeenCalledTimes(2);
+      expect(mockPush).toHaveBeenLastCalledWith("/sleep");
     });
   });
 

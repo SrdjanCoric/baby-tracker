@@ -9,6 +9,10 @@ import { getActionColor } from "@/constants/design-tokens";
 import { useTimeRefresh, useBirthdayCelebration } from "@/hooks";
 
 const isAndroid = Platform.OS === "android";
+
+// Upper bound on how long a dashboard navigation may stay in flight before the
+// tap lock is released regardless of focus.
+const NAVIGATION_LOCK_TIMEOUT_MS = 1000;
 import {
   BabyHeader,
   DashboardCard,
@@ -63,7 +67,38 @@ export default function HomeScreen() {
   const isFocused = useIsFocused();
   const timeTick = useTimeRefresh(60000);
 
+  // A dashboard tap starts a navigation that takes a few frames to commit. A second
+  // tap landing in that gap sees isFocused already false and would take the branch
+  // below, dispatching POP_TO_TOP against a screen that is still attaching — which
+  // crashes with "No view found for id ... for fragment ScreenStackFragment". Hold a
+  // lock until this screen is focused again, so only the first tap navigates.
+  const navigationInFlightRef = useRef(false);
+  const navigationLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const releaseNavigationLock = useCallback(() => {
+    navigationInFlightRef.current = false;
+    if (navigationLockTimerRef.current) {
+      clearTimeout(navigationLockTimerRef.current);
+      navigationLockTimerRef.current = null;
+    }
+  }, []);
+
+  // Focus returns when the pushed screen is dismissed, which is the normal release.
+  useEffect(() => {
+    if (isFocused) {
+      releaseNavigationLock();
+    }
+  }, [isFocused, releaseNavigationLock]);
+
+  useEffect(() => releaseNavigationLock, [releaseNavigationLock]);
+
   const safeNavigate = useCallback((path: string) => {
+    if (navigationInFlightRef.current) return;
+    navigationInFlightRef.current = true;
+    // Safety net: if the navigation never happens, the lock must not wedge the
+    // dashboard permanently, because focus would never change to release it.
+    navigationLockTimerRef.current = setTimeout(releaseNavigationLock, NAVIGATION_LOCK_TIMEOUT_MS);
+
     if (isFocused) {
       router.push(path as Parameters<typeof router.push>[0]);
     } else {
@@ -72,7 +107,7 @@ export default function HomeScreen() {
         router.push(path as Parameters<typeof router.push>[0]);
       }, 50);
     }
-  }, [isFocused, router]);
+  }, [isFocused, releaseNavigationLock, router]);
 
   const { config: dashboardConfig } = useDashboardConfig();
   const { activeTimer: feedingActiveTimer, isStopping: isStoppingFeeding, getLastFeeding, suggestedSide, refreshFeedings, stopBreastfeeding, pauseBreastfeeding, resumeBreastfeeding } = useFeeding();
