@@ -1,4 +1,4 @@
-# Sofi Baby 4.10.1
+# Sofi Baby 4.10.2
 
 ## English
 
