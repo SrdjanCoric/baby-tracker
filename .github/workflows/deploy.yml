@@ -59,7 +59,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload release metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-metadata-${{ github.run_id }}
           path: release-metadata.json
@@ -110,7 +110,7 @@ jobs:
           echo "iOS EAS build: \`$BUILD_ID\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload iOS build record
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eas-ios-build-${{ github.run_id }}
           path: eas-ios-build.json
@@ -161,7 +161,7 @@ jobs:
           echo "Android EAS build: \`$BUILD_ID\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Android build record
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eas-android-build-${{ github.run_id }}
           path: eas-android-build.json
