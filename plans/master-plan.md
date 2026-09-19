@@ -211,6 +211,16 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   suspended Watch, raw activity history, all-baby snapshots, and new push triggers for every manual
   activity edit remain out of scope.
 
+- **Production hotfixes come off the `hotfix/4.9` integration line, never off `main`**: `main`
+  carries the unreleased 4.10 work. `hotfix/4.9` starts at the 4.9.16 production tip (commit
+  `6385378`) and holds this plan for the 4.9 line. Every Sentry-driven fix branches
+  `hotfix/4.9.N-<slug>` off `hotfix/4.9`, is built and shipped from that task branch, bumps the
+  patch version, and is fast-forwarded back into `hotfix/4.9` after it ships so the next fix stacks
+  on it. Each fix starts with the `diagnose` skill — reproduce locally before proposing a fix — and
+  lands the smallest regression test at the lowest reliable seam. Folding `hotfix/4.9` into `main`
+  is a separate task once 4.10 is production-ready.
+- **Base branch**: `hotfix/4.9`
+
 ---
 
 ## Tasks
@@ -305,6 +315,12 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
 - [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
 - [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
+- [ ] 0096 · Survive a background wake while the device is locked (AsyncStorage) → tasks/0096-survive-locked-device-background-wake-storage.md
+- [ ] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/0097-treat-session-lock-abandonment-as-expected.md
+- [ ] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
+- [ ] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
+- [ ] 0100 · Fix the Android Fabric addViewAt crash on Home → tasks/0100-fix-android-fabric-addviewat-crash.md
+- [ ] 0101 · Quiet the observability sink offline → tasks/0101-quiet-observability-sink-offline.md
 
 ## Workflow status
 
@@ -451,3 +467,10 @@ On 2026-09-01 the owner prioritized household shared timer control (brief:
 that file). Tasks 0091 through 0094 take priority over every other open task; 0087, 0089, and 0090
 are deferred until 0091–0094 close, without an explicit owner decision required to resume them
 afterward. 0092 and 0093 touch disjoint surfaces and may proceed in parallel once 0091 merges.
+Tasks 0096 through 0101 were added on 2026-09-19 from a Sentry triage of production 4.9.14–4.9.16
+(org `sofibaby`, project `react-native`). They are ordered by users affected and severity and are
+all cut from `hotfix/4.9` per the decision above; none depends on another and each may
+be claimed in order. Task 0097's three Sentry issues are the three abandon exits Task 0088 added to
+the shared-session lock, so 0097 changes only the JavaScript consumers and leaves 0088's protocol and
+its open device verification untouched. Task 0095 (already shipped as 4.9.16) is the model for the
+branch naming and the `Base` line these tasks carry.
