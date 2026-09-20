@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
@@ -29,6 +29,7 @@ import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
 import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
+import { isSharedSupabaseSessionLockAbandoned } from "@/services/shared-supabase-session";
 
 const APP_STORAGE_PREFIXES = [
   "@babies",
@@ -184,7 +185,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let retryOnActive = false;
+    let initializationInFlight = false;
+
     const initializeAuth = async () => {
+      if (initializationInFlight) return;
+      initializationInFlight = true;
+      const isRetry = retryOnActive;
+      let deferredForActive = false;
       try {
         // TR-6: purge a Keychain capsule left by a previous owner on the first
         // launch after a reinstall (iOS keeps Keychain items across uninstall).
@@ -214,6 +222,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const sessionResult = await supabase.auth.getSession();
+        if (isSharedSupabaseSessionLockAbandoned(sessionResult)) {
+          retryOnActive = true;
+          deferredForActive = true;
+          return;
+        }
         const currentSession = sessionResult?.data?.session ?? null;
 
         // TR-5: `getSession()` triggers the iOS storage adapter's migration of
@@ -233,16 +246,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setStorageUserId(null);
         }
+        if (isRetry) {
+          await supabase.auth.startAutoRefresh();
+          retryOnActive = false;
+        }
       } catch (error) {
         console.error("Error initializing auth:", error);
         reportIssue({ name: "auth.initialize_failed", area: "auth", error });
         setStorageUserId(null);
       } finally {
-        setIsLoading(false);
+        initializationInFlight = false;
+        if (!deferredForActive) setIsLoading(false);
       }
     };
 
     initializeAuth();
+
+    const appStateSubscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && retryOnActive) {
+        void initializeAuth();
+      }
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       recordBreadcrumb({ category: "auth", message: event, data: { hasSession: Boolean(newSession?.user) } });
@@ -317,6 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
+      appStateSubscription.remove();
     };
   }, []);
 
