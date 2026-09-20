@@ -84,6 +84,8 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-9 · REACT-NATIVE-B · REACT-NATI
       `red-auth-abandonment.log` → `green-auth-abandonment.log`.
 - [x] Validation: `unit.log`, `security.log`, `component-changed.log`, `typecheck.log`, and
       `lint-affected.log` in the task log directory all pass.
+- skipped (minor): TR-6 — the module-level foreground warning flag has no reset hook — skipped at the user's request.
+- skipped (minor): TR-7 — the unobservable pending-mutation flush path consumes the foreground warning — skipped at the user's request.
 
 ## Human checkpoints
 
