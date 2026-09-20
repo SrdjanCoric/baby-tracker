@@ -38,8 +38,6 @@ const EXPECTED_LOCK_ABANDONMENT_CODES = new Set([
   "LOCK_OPEN",
 ]);
 
-type LockAbandonmentHandler = (error: unknown) => boolean;
-
 let foregroundWarningReported = false;
 
 export function consumeSharedSupabaseSessionLockAbandonment(
@@ -77,8 +75,7 @@ export function createSharedSupabaseSessionLock(
   module: SharedSupabaseSessionNativeLockModule,
   setActiveHandle: (handle: string | null) => void = () => undefined,
   afterRelease: () => Promise<void> = async () => undefined,
-  beforeBody: (handle: string) => Promise<void> = async () => undefined,
-  handleAbandonment: LockAbandonmentHandler = consumeSharedSupabaseSessionLockAbandonment
+  beforeBody: (handle: string) => Promise<void> = async () => undefined
 ): SharedSupabaseSessionLock {
   // React Native dispatches this module's methods through one serial native
   // queue. Queue app callers here so a waiting acquire cannot sit ahead of the
@@ -101,7 +98,7 @@ export function createSharedSupabaseSessionLock(
         try {
           handle = await module.acquireSessionLock();
         } catch (error) {
-          if (!handleAbandonment(error)) throw error;
+          if (!consumeSharedSupabaseSessionLockAbandonment(error)) throw error;
           return undefined;
         }
         setActiveHandle(handle);
@@ -195,8 +192,6 @@ export function createSharedSupabaseSessionNativeAdapter(
     }
   };
 
-  const handleAbandonment = consumeSharedSupabaseSessionLockAbandonment;
-
   const flushPendingMutations = async (): Promise<void> => {
     if (pendingMutations.length === 0) return;
 
@@ -204,7 +199,7 @@ export function createSharedSupabaseSessionNativeAdapter(
     try {
       recoveryHandle = await module.acquireSessionLock();
     } catch (error) {
-      if (handleAbandonment(error)) return;
+      if (consumeSharedSupabaseSessionLockAbandonment(error)) return;
       throw error;
     }
     activeHandle = recoveryHandle;
@@ -225,8 +220,7 @@ export function createSharedSupabaseSessionNativeAdapter(
       activeHandle = handle;
     },
     flushPendingMutations,
-    flushPendingMutationsWithHandle,
-    handleAbandonment
+    flushPendingMutationsWithHandle
   );
 
   // auth-js saves freshly signed-in sessions (signInWithIdToken and friends)
