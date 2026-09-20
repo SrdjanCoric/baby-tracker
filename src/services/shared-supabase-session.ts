@@ -163,11 +163,11 @@ export function createSharedSupabaseClientOptions(
     | { revision: number; lineage: string }
     | null
     | undefined;
-  const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = async (
-    _name,
-    _acquireTimeoutMillis,
-    fn
-  ) => {
+  const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = async <T>(
+    _name: string,
+    _acquireTimeoutMillis: number,
+    fn: () => Promise<T>
+  ): Promise<T> => {
     const result = await appLock.withLock(async () => {
       transactionObservation = undefined;
       try {

@@ -155,12 +155,10 @@ const CONFIGURED_WAKE_WINDOWS = {
 };
 
 let capturedJson: string | null = null;
-let capturedRefreshWidgetData: (() => Promise<void>) | null = null;
 
 function CaptureWidgetData() {
   const widget = useWidget();
   capturedJson = widget.getWidgetDataJson();
-  capturedRefreshWidgetData = widget.refreshWidgetData;
   return null;
 }
 
@@ -199,7 +197,6 @@ describe("WidgetProvider running timer payload", () => {
     mockBaby = { id: "baby-1", name: "Sofi" };
     mockWakeWindowConfig = null;
     capturedJson = null;
-    capturedRefreshWidgetData = null;
   });
 
   it("publishes the app clock preference for native prediction labels", () => {
