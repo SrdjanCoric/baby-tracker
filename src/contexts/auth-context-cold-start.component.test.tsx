@@ -33,6 +33,12 @@ let authStateCallback: AuthStateCallback | null = null;
 
 const mockGetSession = jest.fn();
 const mockProfileSingle = jest.fn();
+const mockReportIssue = jest.fn();
+
+jest.mock("@/utils/observability-sink", () => ({
+  recordBreadcrumb: jest.fn(),
+  reportIssue: (...args: unknown[]) => mockReportIssue(...args),
+}));
 
 jest.mock("@/services/supabase", () => ({
   supabase: {
@@ -127,6 +133,25 @@ describe("AuthContext cold start with stored session", () => {
       },
       error: null,
     });
+    mockReportIssue.mockClear();
+  });
+
+  it("keeps an intentionally skipped session read non-fatal", async () => {
+    mockGetSession.mockResolvedValue(undefined);
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("loading").props.children).toBe("ready")
+    );
+
+    expect(mockReportIssue).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: "auth.initialize_failed" })
+    );
   });
 
   it("keeps householdId when a late auth event re-delivers the same session", async () => {

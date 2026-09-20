@@ -1,6 +1,9 @@
 import { Platform } from "react-native";
 import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
-import { loadSharedSupabaseSessionBridge } from "./shared-supabase-session-native";
+import {
+  consumeSharedSupabaseSessionLockAbandonment,
+  loadSharedSupabaseSessionBridge,
+} from "./shared-supabase-session-native";
 import { reportIssue } from "@/utils/observability-sink";
 
 type WatchPayload = Record<string, unknown>;
@@ -169,7 +172,12 @@ export async function refreshWatchCredentialsFromPhone(
   }
   let sessionCapsule = await bridge.readSession();
   if (watchSessionNeedsRefresh(sessionCapsule)) {
-    await refreshSession();
+    try {
+      await refreshSession();
+    } catch (error) {
+      if (consumeSharedSupabaseSessionLockAbandonment(error)) return false;
+      throw error;
+    }
     sessionCapsule = await bridge.readSession();
   }
   if (!sessionCapsule) return false;

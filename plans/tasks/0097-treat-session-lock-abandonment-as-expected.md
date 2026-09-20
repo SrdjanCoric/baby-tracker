@@ -3,6 +3,7 @@
 **Branch**: `hotfix/4.9.18-session-lock-abandonment`
 **Depends on**: none
 **Base**: `hotfix/4.9` (the 4.9 integration line; its tip is the latest shipped hotfix). Not `main`.
+**Execution classification**: `mixed` · **Validation tier**: `canonical` · **TDD applicable**: yes.
 **Source**: Sentry REACT-NATIVE-9 (12 users), REACT-NATIVE-B (5 users), REACT-NATIVE-F (1 user),
 2026-09-14 → 2026-09-19, all iOS 4.9.14, all `in_foreground: false` · **User stories**: a caregiver's
 app never surfaces a crash-level error because iOS suspended it mid-refresh; the widget and Watch keep
@@ -60,12 +61,29 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-9 · REACT-NATIVE-B · REACT-NATI
 
 ## Implementation work
 
-- [ ] The lock wrapper's callers classify the three abandon codes per the table and skip without an
+- [x] The lock wrapper's callers classify the three abandon codes per the table and skip without an
       unhandled rejection; proved in `src/services/shared-supabase-session-native.test.ts`.
-- [ ] Widget and Watch refresh keep prior data on abandonment; proved in their existing service tests.
-- [ ] Abandonment produces a breadcrumb (background) or one warning per session (foreground), never
+- [x] Widget and Watch refresh keep prior data on abandonment; proved in their existing service tests.
+- [x] Abandonment produces a breadcrumb (background) or one warning per session (foreground), never
       an error-level event; proved in the wrapper test.
-- [ ] Bump `app.json` and add a release note.
+- [x] Bump `app.json` and add a release note.
+
+## Implementation record (2026-09-20)
+
+- [x] The native lock wrapper consumes `LOCK_NO_ASSERTION`, `LOCK_REVOKED`, and `LOCK_OPEN`, skips
+      the lock body, and leaves `LOCK_TIMEOUT` and unknown codes as rejections. Background
+      abandonments record a breadcrumb; foreground abandonments report one warning per app session.
+- [x] Widget refresh clears its published-hash guard only for an expected abandonment so the next
+      foreground or scheduled refresh retries; Watch refresh leaves its last application context in
+      place and returns `false` when credential refresh is abandoned; auth initialization treats a
+      skipped session read as non-fatal.
+- [x] `app.json` is 4.9.18 and `release-notes.md` has the localized 4.9.18 entry.
+- [x] RED/GREEN proof: `red-lock-abandonment.log` → `green-lock-abandonment.log`,
+      `red-widget-abandonment.log` → `green-widget-abandonment.log`,
+      `red-watch-abandonment.log` → `green-watch-abandonment.log`, and
+      `red-auth-abandonment.log` → `green-auth-abandonment.log`.
+- [x] Validation: `unit.log`, `security.log`, `component-changed.log`, `typecheck.log`, and
+      `lint-affected.log` in the task log directory all pass.
 
 ## Human checkpoints
 
@@ -75,6 +93,6 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-9 · REACT-NATIVE-B · REACT-NATI
 
 ## Acceptance criteria
 
-- [ ] The wrapper test proves each abandon code is consumed without an unhandled rejection.
-- [ ] `npm run test:unit` and `npm run test:security` pass with no new failures.
+- [x] The wrapper test proves each abandon code is consumed without an unhandled rejection.
+- [x] `npm run test:unit` and `npm run test:security` pass with no new failures.
 - [ ] The device verification above passes.

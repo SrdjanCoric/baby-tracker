@@ -316,7 +316,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
 - [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
 - [-] 0096 · Survive a background wake while the device is locked (AsyncStorage) (deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
-- [ ] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/0097-treat-session-lock-abandonment-as-expected.md
+- [~] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/0097-treat-session-lock-abandonment-as-expected.md
 - [ ] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
 - [ ] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
 - [ ] 0100 · Fix the Android Fabric addViewAt crash on Home → tasks/0100-fix-android-fabric-addviewat-crash.md

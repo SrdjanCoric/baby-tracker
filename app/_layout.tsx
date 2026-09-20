@@ -163,7 +163,9 @@ export function WatchMessageHandler({ children }: { children: React.ReactNode })
       }
       try {
         await refreshWatchCredentialsFromPhone(async () => {
-          const { error } = await supabase.auth.refreshSession();
+          const result = await supabase.auth.refreshSession();
+          if (!result) return;
+          const { error } = result;
           if (error) throw error;
         });
       } catch (error) {

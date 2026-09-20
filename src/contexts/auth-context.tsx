@@ -213,7 +213,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const sessionResult = await supabase.auth.getSession();
+        const currentSession = sessionResult?.data?.session ?? null;
 
         // TR-5: `getSession()` triggers the iOS storage adapter's migration of
         // the AsyncStorage session into the shared Keychain capsule, so by this
@@ -498,8 +499,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUserProfile = useCallback(async () => {
     let userId = user?.id;
     if (!userId) {
-      const { data } = await supabase.auth.getSession();
-      userId = data.session?.user?.id;
+      const sessionResult = await supabase.auth.getSession();
+      userId = sessionResult?.data?.session?.user?.id;
     }
     if (!userId) return { displayName: null, householdId: null, isOwner: false };
 

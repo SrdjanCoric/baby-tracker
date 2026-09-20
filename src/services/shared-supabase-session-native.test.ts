@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
+const mockAppState = vi.hoisted(() => ({ currentState: "background" }));
+const mockObservability = vi.hoisted(() => ({
+  recordBreadcrumb: vi.fn(),
+  reportIssue: vi.fn(),
+}));
+
 vi.mock("react-native", () => ({
   NativeModules: {},
   Platform: { OS: "ios" },
+  AppState: mockAppState,
 }));
+vi.mock("@/utils/observability-sink", () => mockObservability);
 
 import {
   createSharedSupabaseSessionLock,
@@ -19,6 +27,78 @@ function deferred<T>() {
 }
 
 describe("createSharedSupabaseSessionLock", () => {
+  it.each(["LOCK_NO_ASSERTION", "LOCK_REVOKED", "LOCK_OPEN"])(
+    "consumes %s without invoking the body while in the background",
+    async (code) => {
+      mockAppState.currentState = "background";
+      mockObservability.recordBreadcrumb.mockClear();
+      mockObservability.reportIssue.mockClear();
+      const nativeModule = {
+        acquireSessionLock: vi.fn(async () => {
+          throw Object.assign(new Error(code), { code });
+        }),
+        releaseSessionLock: vi.fn(async () => undefined),
+      };
+      const body = vi.fn(async () => "body result");
+      const lock = createSharedSupabaseSessionLock(nativeModule);
+
+      await expect(lock.withLock(body)).resolves.toBeUndefined();
+
+      expect(body).not.toHaveBeenCalled();
+      expect(mockObservability.recordBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "shared_session",
+          data: { code },
+        })
+      );
+      expect(mockObservability.reportIssue).not.toHaveBeenCalled();
+    }
+  );
+
+  it("reports one foreground warning for repeated abandonments and never an error", async () => {
+    mockAppState.currentState = "active";
+    mockObservability.recordBreadcrumb.mockClear();
+    mockObservability.reportIssue.mockClear();
+    const nativeModule = {
+      acquireSessionLock: vi.fn(async () => {
+        throw Object.assign(new Error("abandoned"), {
+          code: "LOCK_REVOKED",
+        });
+      }),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const lock = createSharedSupabaseSessionLock(nativeModule);
+
+    await expect(lock.withLock(async () => "first")).resolves.toBeUndefined();
+    await expect(lock.withLock(async () => "second")).resolves.toBeUndefined();
+
+    expect(mockObservability.recordBreadcrumb).not.toHaveBeenCalled();
+    expect(mockObservability.reportIssue).toHaveBeenCalledTimes(1);
+    expect(mockObservability.reportIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "shared_session.lock_abandoned",
+        level: "warning",
+        tags: { code: "LOCK_REVOKED" },
+      })
+    );
+  });
+
+  it.each(["LOCK_TIMEOUT", "LOCK_UNKNOWN"])(
+    "keeps %s as a rejection",
+    async (code) => {
+      mockAppState.currentState = "background";
+      const nativeModule = {
+        acquireSessionLock: vi.fn(async () => {
+          throw Object.assign(new Error(code), { code });
+        }),
+        releaseSessionLock: vi.fn(async () => undefined),
+      };
+      const lock = createSharedSupabaseSessionLock(nativeModule);
+
+      await expect(lock.withLock(async () => "body result")).rejects.toThrow(code);
+    }
+  );
+
   it("persists a redeemed envelope under a fresh handle after revocation", async () => {
     let nextHandle = 0;
     const writes: {

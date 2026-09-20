@@ -1,8 +1,9 @@
-import { NativeModules, Platform } from "react-native";
+import { AppState, NativeModules, Platform } from "react-native";
 import type {
   SharedSupabaseSessionBridge,
   SharedSupabaseSessionLock,
 } from "./shared-supabase-session";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export interface SharedSupabaseSessionNativeModule {
   readSession(): Promise<string | null>;
@@ -31,11 +32,53 @@ export interface SharedSupabaseSessionBridgeAndLock extends SharedSupabaseSessio
   purgeSession(): Promise<void>;
 }
 
+const EXPECTED_LOCK_ABANDONMENT_CODES = new Set([
+  "LOCK_NO_ASSERTION",
+  "LOCK_REVOKED",
+  "LOCK_OPEN",
+]);
+
+type LockAbandonmentHandler = (error: unknown) => boolean;
+
+let foregroundWarningReported = false;
+
+export function consumeSharedSupabaseSessionLockAbandonment(
+  error: unknown
+): boolean {
+  const code = nativeErrorCode(error);
+  if (code == null || !EXPECTED_LOCK_ABANDONMENT_CODES.has(code)) {
+    return false;
+  }
+
+  if (AppState.currentState === "active") {
+    if (!foregroundWarningReported) {
+      foregroundWarningReported = true;
+      reportIssue({
+        name: "shared_session.lock_abandoned",
+        area: "auth",
+        level: "warning",
+        error,
+        tags: { code },
+      });
+    }
+  } else {
+    recordBreadcrumb({
+      category: "shared_session",
+      message: "lock abandoned",
+      level: "warning",
+      data: { code },
+    });
+  }
+
+  return true;
+}
+
 export function createSharedSupabaseSessionLock(
   module: SharedSupabaseSessionNativeLockModule,
   setActiveHandle: (handle: string | null) => void = () => undefined,
   afterRelease: () => Promise<void> = async () => undefined,
-  beforeBody: (handle: string) => Promise<void> = async () => undefined
+  beforeBody: (handle: string) => Promise<void> = async () => undefined,
+  handleAbandonment: LockAbandonmentHandler = consumeSharedSupabaseSessionLockAbandonment
 ): SharedSupabaseSessionLock {
   // React Native dispatches this module's methods through one serial native
   // queue. Queue app callers here so a waiting acquire cannot sit ahead of the
@@ -52,7 +95,13 @@ export function createSharedSupabaseSessionLock(
 
       await predecessor;
       try {
-        const handle = await module.acquireSessionLock();
+        let handle: string;
+        try {
+          handle = await module.acquireSessionLock();
+        } catch (error) {
+          if (!handleAbandonment(error)) throw error;
+          return undefined as T;
+        }
         setActiveHandle(handle);
         let bodyCompleted = false;
         let bodyResult: T | undefined;
@@ -144,10 +193,18 @@ export function createSharedSupabaseSessionNativeAdapter(
     }
   };
 
+  const handleAbandonment = consumeSharedSupabaseSessionLockAbandonment;
+
   const flushPendingMutations = async (): Promise<void> => {
     if (pendingMutations.length === 0) return;
 
-    const recoveryHandle = await module.acquireSessionLock();
+    let recoveryHandle: string;
+    try {
+      recoveryHandle = await module.acquireSessionLock();
+    } catch (error) {
+      if (handleAbandonment(error)) return;
+      throw error;
+    }
     activeHandle = recoveryHandle;
     try {
       await flushPendingMutationsWithHandle(recoveryHandle);
@@ -166,7 +223,8 @@ export function createSharedSupabaseSessionNativeAdapter(
       activeHandle = handle;
     },
     flushPendingMutations,
-    flushPendingMutationsWithHandle
+    flushPendingMutationsWithHandle,
+    handleAbandonment
   );
 
   // auth-js saves freshly signed-in sessions (signInWithIdToken and friends)

@@ -9,7 +9,9 @@ jest.mock("@/contexts", () => ({
   useWidget: () => ({ getWidgetDataJson: mockGetWidgetDataJson }),
 }));
 jest.mock("@/contexts/achievement-context", () => ({}));
-jest.mock("@/services/supabase", () => ({ supabase: { auth: {} } }));
+jest.mock("@/services/supabase", () => ({
+  supabase: { auth: { refreshSession: jest.fn() } },
+}));
 jest.mock("@/hooks/useWatchMessageHandler", () => ({
   useWatchMessageHandler: (options: unknown) => mockUseWatchMessageHandler(options),
 }));
@@ -65,5 +67,20 @@ describe("root route module", () => {
 
     expect(reply).toHaveBeenCalledTimes(1);
     expect(reply).toHaveBeenCalledWith({ widgetData: '{"babyId":"baby-1"}' });
+  });
+
+  it("does not warn when a shared-session refresh is intentionally skipped", async () => {
+    mockRefreshWatchCredentialsFromPhone.mockImplementation(
+      async (refresh: () => Promise<void>) => refresh()
+    );
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const onRequestSync = captureRequestSyncHandler();
+    const reply = jest.fn();
+
+    await expect(onRequestSync(reply)).resolves.toBeUndefined();
+
+    expect(reply).toHaveBeenCalledWith({ widgetData: '{"babyId":"baby-1"}' });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

@@ -24,6 +24,7 @@ import {
   type WatchAuthContext,
 } from "@/services/widget-data-service";
 import { syncWidgetPushToken } from "@/services/widget-push-token-service";
+import { consumeSharedSupabaseSessionLockAbandonment } from "@/services/shared-supabase-session-native";
 import {
   acknowledgeExternalTimerCommand,
   readExternalTimerCommands,
@@ -477,6 +478,10 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
     try {
       await updateWidgetData(widgetData, authContext);
     } catch (error) {
+      if (consumeSharedSupabaseSessionLockAbandonment(error)) {
+        lastUpdateRef.current = "";
+        return;
+      }
       console.error("[WidgetContext] Failed to update widget data:", error);
     }
   }, [buildWidgetData, session?.access_token, user?.householdId, user?.id]);

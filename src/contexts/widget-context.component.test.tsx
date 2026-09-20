@@ -33,6 +33,7 @@ let mockTimerState: Omit<MockTimerState, "sleep"> & {
 } = makeTimerState(false);
 let mockTick = 0;
 const mockUseTimeRefresh = jest.fn(() => mockTick);
+const mockConsumeSharedSupabaseSessionLockAbandonment = jest.fn(() => false);
 let mockBaby: { id: string; name: string; birthDate?: string } = {
   id: "baby-1",
   name: "Sofi",
@@ -127,6 +128,11 @@ jest.mock("@/services/widget-data-service", () => ({
   readPushToStartToken: jest.fn().mockResolvedValue(null),
 }));
 
+jest.mock("@/services/shared-supabase-session-native", () => ({
+  consumeSharedSupabaseSessionLockAbandonment: (...args: unknown[]) =>
+    mockConsumeSharedSupabaseSessionLockAbandonment(...args),
+}));
+
 jest.mock("@/services/widget-push-token-service", () => ({
   syncWidgetPushToken: jest.fn(),
 }));
@@ -155,9 +161,12 @@ const CONFIGURED_WAKE_WINDOWS = {
 };
 
 let capturedJson: string | null = null;
+let capturedRefreshWidgetData: (() => Promise<void>) | null = null;
 
 function CaptureWidgetData() {
-  capturedJson = useWidget().getWidgetDataJson();
+  const widget = useWidget();
+  capturedJson = widget.getWidgetDataJson();
+  capturedRefreshWidgetData = widget.refreshWidgetData;
   return null;
 }
 
@@ -196,6 +205,37 @@ describe("WidgetProvider running timer payload", () => {
     mockBaby = { id: "baby-1", name: "Sofi" };
     mockWakeWindowConfig = null;
     capturedJson = null;
+    capturedRefreshWidgetData = null;
+    mockConsumeSharedSupabaseSessionLockAbandonment.mockReset();
+    mockConsumeSharedSupabaseSessionLockAbandonment.mockReturnValue(false);
+  });
+
+  it("keeps the last widget data and retries after shared-session lock abandonment", async () => {
+    const abandonment = Object.assign(new Error("suspending"), {
+      code: "LOCK_REVOKED",
+    });
+    mockConsumeSharedSupabaseSessionLockAbandonment.mockReturnValue(true);
+    (updateWidgetData as jest.Mock)
+      .mockRejectedValueOnce(abandonment)
+      .mockResolvedValue(undefined);
+
+    render(
+      <WidgetProvider>
+        <CaptureWidgetData />
+      </WidgetProvider>
+    );
+
+    await act(async () => {
+      await capturedRefreshWidgetData!();
+    });
+    await act(async () => {
+      await capturedRefreshWidgetData!();
+    });
+
+    expect(updateWidgetData).toHaveBeenCalledTimes(2);
+    expect(mockConsumeSharedSupabaseSessionLockAbandonment).toHaveBeenCalledWith(
+      abandonment
+    );
   });
 
   it("publishes the app clock preference for native prediction labels", () => {

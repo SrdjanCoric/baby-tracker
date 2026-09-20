@@ -26,6 +26,7 @@ vi.mock("react-native", () => ({
     },
   },
   Platform: { OS: "ios" },
+  AppState: { currentState: "background" },
 }));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
@@ -96,6 +97,28 @@ describe("watch language transport", () => {
         userId: authContext.userId,
       })
     );
+  });
+
+  it("keeps the last Watch context when the shared session lock is abandoned", async () => {
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const abandonment = Object.assign(new Error("suspending"), {
+      code: "LOCK_REVOKED",
+    });
+    const refreshSession = vi.fn(async () => {
+      throw abandonment;
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await expect(refreshWatchCredentialsFromPhone(refreshSession)).resolves.toBe(false);
+
+    expect(updateApplicationContext).not.toHaveBeenCalled();
   });
 
   it("republishes a fresh shared session without rotating its refresh-token family", async () => {
