@@ -86,7 +86,9 @@ export function createSharedSupabaseSessionLock(
   let tail: Promise<void> = Promise.resolve();
 
   return {
-    withLock: async <T>(fn: (handle: string) => Promise<T>): Promise<T> => {
+    withLock: async <T>(
+      fn: (handle: string) => Promise<T>
+    ): Promise<T | undefined> => {
       const predecessor = tail;
       let advanceQueue!: () => void;
       tail = new Promise<void>((resolve) => {
@@ -100,7 +102,7 @@ export function createSharedSupabaseSessionLock(
           handle = await module.acquireSessionLock();
         } catch (error) {
           if (!handleAbandonment(error)) throw error;
-          return undefined as T;
+          return undefined;
         }
         setActiveHandle(handle);
         let bodyCompleted = false;
