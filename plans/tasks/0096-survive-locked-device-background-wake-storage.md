@@ -40,6 +40,12 @@ nothing is reported to Sentry at error level for this condition.
 
 ## Clarifications
 
+## Implementation classification
+
+- **Change class**: mixed (production/test code, release configuration, and release-note documentation)
+- **Validation tier**: canonical
+- **TDD applicable**: yes
+
 ## Non-goals
 
 - The shared-session native lock's abandonment errors on the same wake path — Task 0097.
@@ -53,6 +59,34 @@ The error is `NSCocoaErrorDomain 257` / `NSPOSIXErrorDomain 1` on the AsyncStora
 battery, consistent with a push-driven wake while locked. The unhandled rejection is reported through
 `onunhandledrejection`, so the failing call has no catch on its chain. The 4.9.14 → 4.9.16 hotfixes
 did not touch this path. Sentry issue: https://sofibaby.sentry.io/issues/REACT-NATIVE-8
+
+## Deferred (2026-09-20)
+
+Deferred by the owner after the first attempt. Not claimable without an owner decision. Resume once
+a real device is available for the recipe below; the first implementation session's simulator launch
+notes are in `DEBUG_GUIDE.md`.
+
+**Why the simulator and a locked phone cannot reproduce it.** The app declares no data-protection
+entitlement, so its container files use the default class, unreadable only from a reboot until the
+first unlock. Locking an already-unlocked phone does not re-enter that window. All 31 affected users
+hit the error in the days iOS 26.6.1 and 26.6.2 rolled out, when phones rebooted for the update and
+sat locked.
+
+**What launches the app before first unlock.** No background modes and no silent pushes exist, so
+the wake is not push-driven. The two paths this app has are WatchConnectivity (the Watch app
+launches the iPhone app in the background to deliver a message) and widget App Intents.
+
+**Device recipe.**
+1. Install a development build with Sentry or console logging on an iPhone paired with the Watch.
+2. Reboot the iPhone and do not unlock it.
+3. From the Watch, open the Sofi Baby watch app and start a timer, or tap a widget action on the
+   lock screen.
+4. Unlock the iPhone and check Console.app or Sentry for the error-257 storage failure with an app
+   start seconds earlier.
+
+**Fix shape this implies.** On a cold start with protected data unavailable, skip storage and wait
+for iOS to report protected data available, then retry. That seam takes a unit test, so the
+regression test does not need the device.
 
 ## Implementation work
 

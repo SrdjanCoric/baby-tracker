@@ -315,7 +315,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
 - [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
 - [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
-- [ ] 0096 · Survive a background wake while the device is locked (AsyncStorage) → tasks/0096-survive-locked-device-background-wake-storage.md
+- [-] 0096 · Survive a background wake while the device is locked (AsyncStorage) (deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
 - [ ] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/0097-treat-session-lock-abandonment-as-expected.md
 - [ ] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
 - [ ] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
@@ -474,3 +474,9 @@ be claimed in order. Task 0097's three Sentry issues are the three abandon exits
 the shared-session lock, so 0097 changes only the JavaScript consumers and leaves 0088's protocol and
 its open device verification untouched. Task 0095 (already shipped as 4.9.16) is the model for the
 branch naming and the `Base` line these tasks carry.
+
+On 2026-09-20 the owner deferred Task 0096 after its first implementation attempt. The simulator
+cannot reproduce the storage error: the app sets no data-protection entitlement, so its files use
+the default class that is unreadable only between a reboot and the device's first unlock, and
+neither Device → Lock on the simulator nor locking a real phone enters that window. The task file's
+Context records the device recipe. Task 0097 is the next claimable pointer.
