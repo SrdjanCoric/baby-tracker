@@ -27,6 +27,8 @@ type SharedSupabaseSessionNativeLockModule = Pick<
   "acquireSessionLock" | "releaseSessionLock"
 >;
 
+const nativeLockErrors = new WeakSet<object>();
+
 export interface SharedSupabaseSessionBridgeAndLock extends SharedSupabaseSessionBridge {
   lock: SharedSupabaseSessionLock;
   purgeSession(): Promise<void>;
@@ -43,6 +45,9 @@ let foregroundWarningReported = false;
 export function consumeSharedSupabaseSessionLockAbandonment(
   error: unknown
 ): boolean {
+  if (typeof error !== "object" || error === null || !nativeLockErrors.has(error)) {
+    return false;
+  }
   const code = nativeErrorCode(error);
   if (code == null || !EXPECTED_LOCK_ABANDONMENT_CODES.has(code)) {
     return false;
@@ -69,6 +74,12 @@ export function consumeSharedSupabaseSessionLockAbandonment(
   }
 
   return true;
+}
+
+function markNativeLockError(error: unknown): void {
+  if (typeof error === "object" && error !== null) {
+    nativeLockErrors.add(error);
+  }
 }
 
 export function createSharedSupabaseSessionLock(
@@ -98,6 +109,7 @@ export function createSharedSupabaseSessionLock(
         try {
           handle = await module.acquireSessionLock();
         } catch (error) {
+          markNativeLockError(error);
           if (!consumeSharedSupabaseSessionLockAbandonment(error)) throw error;
           return undefined;
         }
@@ -199,6 +211,7 @@ export function createSharedSupabaseSessionNativeAdapter(
     try {
       recoveryHandle = await module.acquireSessionLock();
     } catch (error) {
+      markNativeLockError(error);
       if (consumeSharedSupabaseSessionLockAbandonment(error)) return;
       throw error;
     }

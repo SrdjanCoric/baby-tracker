@@ -99,7 +99,7 @@ describe("watch language transport", () => {
     );
   });
 
-  it("keeps the last Watch context when the shared session lock is abandoned", async () => {
+  it("does not suppress a server error with a native lock code", async () => {
     getApplicationContext.mockResolvedValue({
       widgetData: JSON.stringify(widgetData),
       supabaseUrl: authContext.supabaseUrl,
@@ -116,7 +116,7 @@ describe("watch language transport", () => {
     });
     const { refreshWatchCredentialsFromPhone } = await loadWatchService();
 
-    await expect(refreshWatchCredentialsFromPhone(refreshSession)).resolves.toBe(false);
+    await expect(refreshWatchCredentialsFromPhone(refreshSession)).rejects.toBe(abandonment);
 
     expect(updateApplicationContext).not.toHaveBeenCalled();
   });

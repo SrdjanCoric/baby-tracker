@@ -14,6 +14,7 @@ vi.mock("react-native", () => ({
 vi.mock("@/utils/observability-sink", () => mockObservability);
 
 import {
+  consumeSharedSupabaseSessionLockAbandonment,
   createSharedSupabaseSessionLock,
   createSharedSupabaseSessionNativeAdapter,
 } from "./shared-supabase-session-native";
@@ -25,6 +26,22 @@ function deferred<T>() {
   });
   return { promise, resolve };
 }
+
+describe("shared-session abandonment classification", () => {
+  it("does not consume an untrusted error with a native lock code", () => {
+    mockAppState.currentState = "background";
+    mockObservability.recordBreadcrumb.mockClear();
+    mockObservability.reportIssue.mockClear();
+
+    const serverError = Object.assign(new Error("auth failed"), {
+      code: "LOCK_REVOKED",
+    });
+
+    expect(consumeSharedSupabaseSessionLockAbandonment(serverError)).toBe(false);
+    expect(mockObservability.recordBreadcrumb).not.toHaveBeenCalled();
+    expect(mockObservability.reportIssue).not.toHaveBeenCalled();
+  });
+});
 
 describe("createSharedSupabaseSessionLock", () => {
   it.each(["LOCK_NO_ASSERTION", "LOCK_REVOKED", "LOCK_OPEN"])(
