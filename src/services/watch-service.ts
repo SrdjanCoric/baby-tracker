@@ -4,6 +4,7 @@ import {
   consumeSharedSupabaseSessionLockAbandonment,
   loadSharedSupabaseSessionBridge,
 } from "./shared-supabase-session-native";
+import { isSharedSupabaseSessionLockAbandoned } from "./shared-supabase-session";
 import { reportIssue } from "@/utils/observability-sink";
 
 type WatchPayload = Record<string, unknown>;
@@ -153,7 +154,7 @@ async function publishApplicationContext(context: WatchPayload): Promise<void> {
  * only on this module's process-local cache.
  */
 export async function refreshWatchCredentialsFromPhone(
-  refreshSession: () => Promise<void>
+  refreshSession: () => Promise<void | boolean>
 ): Promise<boolean> {
   const module = await getWatchConnectivityModule();
   const bridge = loadSharedSupabaseSessionBridge();
@@ -173,7 +174,10 @@ export async function refreshWatchCredentialsFromPhone(
   let sessionCapsule = await bridge.readSession();
   if (watchSessionNeedsRefresh(sessionCapsule)) {
     try {
-      await refreshSession();
+      const refreshResult = await refreshSession();
+      if (refreshResult === false || isSharedSupabaseSessionLockAbandoned(refreshResult)) {
+        return false;
+      }
     } catch (error) {
       if (consumeSharedSupabaseSessionLockAbandonment(error)) return false;
       throw error;

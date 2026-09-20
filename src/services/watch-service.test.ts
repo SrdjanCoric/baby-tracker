@@ -121,6 +121,24 @@ describe("watch language transport", () => {
     expect(updateApplicationContext).not.toHaveBeenCalled();
   });
 
+  it("keeps the last Watch context when refresh reports a skipped lock", async () => {
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => false);
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await expect(refreshWatchCredentialsFromPhone(refreshSession)).resolves.toBe(false);
+
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(updateApplicationContext).not.toHaveBeenCalled();
+  });
+
   it("republishes a fresh shared session without rotating its refresh-token family", async () => {
     const freshSessionCapsule = JSON.stringify({
       version: 1,
