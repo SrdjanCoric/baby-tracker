@@ -73,10 +73,11 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-9 · REACT-NATIVE-B · REACT-NATI
 - [x] The native lock wrapper consumes `LOCK_NO_ASSERTION`, `LOCK_REVOKED`, and `LOCK_OPEN`, skips
       the lock body, and leaves `LOCK_TIMEOUT` and unknown codes as rejections. Background
       abandonments record a breadcrumb; foreground abandonments report one warning per app session.
-- [x] Widget refresh clears its published-hash guard only for an expected abandonment so the next
-      foreground or scheduled refresh retries; Watch refresh leaves its last application context in
-      place and returns `false` when credential refresh is abandoned; auth initialization treats a
-      skipped session read as non-fatal.
+- [x] Watch refresh leaves its last application context in place and returns `false` when
+      credential refresh is abandoned; auth initialization treats a skipped session read as
+      non-fatal.
+- [x] Review correction: widget data refresh and Watch data sync do not acquire the shared-session
+      lock, so they do not have a native lock-abandonment result to consume or retry.
 - [x] `app.json` is 4.9.18 and `release-notes.md` has the localized 4.9.18 entry.
 - [x] RED/GREEN proof: `red-lock-abandonment.log` → `green-lock-abandonment.log`,
       `red-widget-abandonment.log` → `green-widget-abandonment.log`,
