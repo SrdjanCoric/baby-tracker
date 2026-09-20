@@ -75,14 +75,17 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-9 · REACT-NATIVE-B · REACT-NATI
       abandonments record a breadcrumb; foreground abandonments report one warning per app session.
 - [x] Watch refresh leaves its last application context in place and returns `false` when
       credential refresh is abandoned; auth initialization treats a skipped session read as
-      non-fatal.
+      non-fatal; `app/_layout.tsx` returns `false` from the Watch refresh callback when auth
+      refresh is skipped.
 - [x] Review correction: widget data refresh and Watch data sync do not acquire the shared-session
       lock, so they do not have a native lock-abandonment result to consume or retry.
 - [x] `app.json` is 4.9.18 and `release-notes.md` has the localized 4.9.18 entry.
 - [x] RED/GREEN proof: `red-lock-abandonment.log` → `green-lock-abandonment.log`,
       `red-widget-abandonment.log` → `green-widget-abandonment.log`,
       `red-watch-abandonment.log` → `green-watch-abandonment.log`, and
-      `red-auth-abandonment.log` → `green-auth-abandonment.log`.
+      `red-auth-abandonment.log` → `green-auth-abandonment.log`, plus
+      `red-app-layout-abandonment.log` → `green-app-layout-abandonment.log` for the Watch
+      callback guard.
 - [x] Validation: `unit.log`, `security.log`, `component-changed.log`, `typecheck.log`, and
       `lint-affected.log` in the task log directory all pass.
 - skipped (minor): TR-6 — the module-level foreground warning flag has no reset hook — skipped at the user's request.
