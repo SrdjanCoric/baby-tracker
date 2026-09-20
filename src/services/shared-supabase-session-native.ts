@@ -235,23 +235,39 @@ export function createSharedSupabaseSessionNativeAdapter(
   // an empty handle the native module rejects.
   const withMutationHandle = async (
     fn: (handle: string) => Promise<void>
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     if (activeHandle != null) {
-      return fn(activeHandle);
+      await fn(activeHandle);
+      return true;
     }
-    return lock.withLock(fn);
+    const completed = await lock.withLock(async (handle) => {
+      await fn(handle);
+      return true;
+    });
+    return completed ?? false;
+  };
+
+  const queuePendingMutation = (pending: PendingMutation): void => {
+    pendingMutations.push(pending);
   };
 
   const bridge: SharedSupabaseSessionBridge = {
     readSession: () => module.readSession(),
     writeSession: async (envelopeJson, expectedRevision = null) => {
       try {
-        await withMutationHandle((handle) =>
+        const completed = await withMutationHandle((handle) =>
           module.writeSession(envelopeJson, expectedRevision, handle)
         );
+        if (!completed) {
+          queuePendingMutation({
+            kind: "write",
+            envelopeJson,
+            expectedRevision,
+          });
+        }
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
-        pendingMutations.push({
+        queuePendingMutation({
           kind: "write",
           envelopeJson,
           expectedRevision,
@@ -260,12 +276,19 @@ export function createSharedSupabaseSessionNativeAdapter(
     },
     removeSession: async (expectedRevision, expectedLineage) => {
       try {
-        await withMutationHandle((handle) =>
+        const completed = await withMutationHandle((handle) =>
           module.removeSession(expectedRevision, expectedLineage, handle)
         );
+        if (!completed) {
+          queuePendingMutation({
+            kind: "remove",
+            expectedRevision,
+            expectedLineage,
+          });
+        }
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
-        pendingMutations.push({
+        queuePendingMutation({
           kind: "remove",
           expectedRevision,
           expectedLineage,

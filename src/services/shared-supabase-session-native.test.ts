@@ -436,6 +436,41 @@ describe("unlocked session mutations", () => {
     expect(module.releaseSessionLock).toHaveBeenCalledWith("handle-1");
   });
 
+  it("queues an unlocked session write when lock acquisition is abandoned", async () => {
+    const writes: { envelope: string; revision: number | null; handle: string }[] = [];
+    let acquireCount = 0;
+    const nativeModule = {
+      readSession: vi.fn(async () => null),
+      writeSession: vi.fn(
+        async (envelope: string, revision: number | null, handle: string) => {
+          writes.push({ envelope, revision, handle });
+        }
+      ),
+      removeSession: vi.fn(async () => undefined),
+      purgeSession: vi.fn(async () => undefined),
+      acquireSessionLock: vi.fn(async () => {
+        acquireCount += 1;
+        if (acquireCount === 1) {
+          throw Object.assign(new Error("suspending"), {
+            code: "LOCK_REVOKED",
+          });
+        }
+        return `handle-${acquireCount}`;
+      }),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const adapter = createSharedSupabaseSessionNativeAdapter(nativeModule);
+
+    await adapter.writeSession("queued-envelope", 9);
+    expect(writes).toEqual([]);
+
+    await adapter.lock.withLock(async () => undefined);
+
+    expect(writes).toEqual([
+      { envelope: "queued-envelope", revision: 9, handle: "handle-2" },
+    ]);
+  });
+
   it("acquires the flock for a session removal issued outside the auth lock", async () => {
     const { module, removals } = makeModule();
     const adapter = createSharedSupabaseSessionNativeAdapter(module);
