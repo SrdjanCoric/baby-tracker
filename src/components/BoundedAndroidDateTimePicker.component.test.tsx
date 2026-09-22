@@ -77,6 +77,11 @@ describe("BoundedAndroidDateTimePicker", () => {
     );
 
     expect(mockPickerMounts).toBe(1);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: initialValue,
+      minimumDate: bounds.minimumDate,
+      maximumDate: bounds.maximumDate,
+    });
 
     const smallProgrammaticChange = new Date(initialValue.getTime() + 60_000);
     rerender(
@@ -88,6 +93,11 @@ describe("BoundedAndroidDateTimePicker", () => {
       />
     );
     expect(mockPickerMounts).toBe(1);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: smallProgrammaticChange,
+      minimumDate: bounds.minimumDate,
+      maximumDate: bounds.maximumDate,
+    });
 
     const smallBoundChange = {
       minimumDate: new Date(bounds.minimumDate.getTime() + 30_000),
@@ -102,6 +112,11 @@ describe("BoundedAndroidDateTimePicker", () => {
       />
     );
     expect(mockPickerMounts).toBe(1);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: smallProgrammaticChange,
+      minimumDate: smallBoundChange.minimumDate,
+      maximumDate: smallBoundChange.maximumDate,
+    });
 
     const largeProgrammaticChange = new Date(initialValue.getTime() + 2 * 60 * 60_000);
     rerender(
@@ -113,6 +128,11 @@ describe("BoundedAndroidDateTimePicker", () => {
       />
     );
     expect(mockPickerMounts).toBe(2);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: largeProgrammaticChange,
+      minimumDate: bounds.minimumDate,
+      maximumDate: bounds.maximumDate,
+    });
 
     const largeBoundChange = {
       minimumDate: bounds.minimumDate,
@@ -127,6 +147,11 @@ describe("BoundedAndroidDateTimePicker", () => {
       />
     );
     expect(mockPickerMounts).toBe(3);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: largeProgrammaticChange,
+      minimumDate: largeBoundChange.minimumDate,
+      maximumDate: largeBoundChange.maximumDate,
+    });
 
     const userSelectedValue = new Date("2026-09-12T22:00:00Z");
     act(() => {
@@ -143,6 +168,11 @@ describe("BoundedAndroidDateTimePicker", () => {
       />
     );
     expect(mockPickerMounts).toBe(3);
+    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
+      date: userSelectedValue,
+      minimumDate: largeBoundChange.minimumDate,
+      maximumDate: largeBoundChange.maximumDate,
+    });
     expect(onChange).toHaveBeenCalledWith(userSelectedValue);
   });
 
