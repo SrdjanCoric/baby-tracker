@@ -14,14 +14,14 @@ when the app leaves the foreground. This event is the same scroll storm in the f
 programmatic date change drives the native number picker one step per 100 ms on the main thread,
 each step posting further work, until Android declares the app unresponsive.
 
-After this task, a programmatic change of the picker's value or bounds on Android never queues a
-scroll animation longer than one frame's worth of steps: the picker jumps to the target value
-instead of animating across a large delta.
+After this task, a programmatic change of the picker's value or bounds on Android with a delta
+larger than 60 seconds never queues a multi-step scroll animation: the picker jumps to the target
+value. Changes within that threshold may animate at most one native step per wheel.
 
 | Condition | Result |
 | --- | --- |
-| Programmatic value or bound change, delta larger than the animation threshold | Jump, no animation |
-| Programmatic change within the threshold | Unchanged (animate) |
+| Programmatic value or bound change, delta larger than 60 seconds | Jump, no animation |
+| Programmatic change within 60 seconds | At most one native step per wheel |
 | User drag or fling | Unchanged |
 | App backgrounded mid-change | Unmount per Task 0095 (unchanged) |
 
