@@ -64,7 +64,7 @@ describe("BoundedAndroidDateTimePicker", () => {
     expect(screen.getByTestId("bounded-android-datetime-picker")).toBeTruthy();
   });
 
-  it("jumps large programmatic changes but preserves small changes and user drags", () => {
+  it("animates a small programmatic value change", () => {
     const onChange = jest.fn();
     const initialValue = new Date("2026-09-12T10:00:00Z");
     const { rerender } = render(
@@ -75,15 +75,8 @@ describe("BoundedAndroidDateTimePicker", () => {
         onChange={onChange}
       />
     );
-
-    expect(mockPickerMounts).toBe(1);
-    expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
-      date: initialValue,
-      minimumDate: bounds.minimumDate,
-      maximumDate: bounds.maximumDate,
-    });
-
     const smallProgrammaticChange = new Date(initialValue.getTime() + 60_000);
+
     rerender(
       <BoundedAndroidDateTimePicker
         value={smallProgrammaticChange}
@@ -92,33 +85,61 @@ describe("BoundedAndroidDateTimePicker", () => {
         onChange={onChange}
       />
     );
+
     expect(mockPickerMounts).toBe(1);
     expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
       date: smallProgrammaticChange,
       minimumDate: bounds.minimumDate,
       maximumDate: bounds.maximumDate,
     });
+  });
 
+  it("animates a small programmatic bound change", () => {
+    const onChange = jest.fn();
+    const value = new Date("2026-09-12T10:00:00Z");
     const smallBoundChange = {
       minimumDate: new Date(bounds.minimumDate.getTime() + 30_000),
       maximumDate: new Date(bounds.maximumDate.getTime() + 30_000),
     };
+    const { rerender } = render(
+      <BoundedAndroidDateTimePicker
+        value={value}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
     rerender(
       <BoundedAndroidDateTimePicker
-        value={smallProgrammaticChange}
+        value={value}
         bounds={smallBoundChange}
         timeFormat="24h"
         onChange={onChange}
       />
     );
+
     expect(mockPickerMounts).toBe(1);
     expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
-      date: smallProgrammaticChange,
+      date: value,
       minimumDate: smallBoundChange.minimumDate,
       maximumDate: smallBoundChange.maximumDate,
     });
+  });
 
+  it("jumps a large programmatic value change", () => {
+    const onChange = jest.fn();
+    const initialValue = new Date("2026-09-12T10:00:00Z");
     const largeProgrammaticChange = new Date(initialValue.getTime() + 2 * 60 * 60_000);
+    const { rerender } = render(
+      <BoundedAndroidDateTimePicker
+        value={initialValue}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
     rerender(
       <BoundedAndroidDateTimePicker
         value={largeProgrammaticChange}
@@ -127,33 +148,61 @@ describe("BoundedAndroidDateTimePicker", () => {
         onChange={onChange}
       />
     );
+
     expect(mockPickerMounts).toBe(2);
     expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
       date: largeProgrammaticChange,
       minimumDate: bounds.minimumDate,
       maximumDate: bounds.maximumDate,
     });
+  });
 
+  it("jumps a large programmatic bound change", () => {
+    const onChange = jest.fn();
+    const value = new Date("2026-09-12T10:00:00Z");
     const largeBoundChange = {
       minimumDate: bounds.minimumDate,
       maximumDate: new Date(bounds.maximumDate.getTime() + 2 * 60 * 60_000),
     };
+    const { rerender } = render(
+      <BoundedAndroidDateTimePicker
+        value={value}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
     rerender(
       <BoundedAndroidDateTimePicker
-        value={largeProgrammaticChange}
+        value={value}
         bounds={largeBoundChange}
         timeFormat="24h"
         onChange={onChange}
       />
     );
-    expect(mockPickerMounts).toBe(3);
+
+    expect(mockPickerMounts).toBe(2);
     expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
-      date: largeProgrammaticChange,
+      date: value,
       minimumDate: largeBoundChange.minimumDate,
       maximumDate: largeBoundChange.maximumDate,
     });
+  });
 
+  it("preserves animation for a user drag", () => {
+    const onChange = jest.fn();
+    const initialValue = new Date("2026-09-12T10:00:00Z");
     const userSelectedValue = new Date("2026-09-12T22:00:00Z");
+    const { rerender } = render(
+      <BoundedAndroidDateTimePicker
+        value={initialValue}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
     act(() => {
       screen.getByTestId("bounded-android-datetime-picker").props.onDateChange(
         userSelectedValue
@@ -162,16 +211,17 @@ describe("BoundedAndroidDateTimePicker", () => {
     rerender(
       <BoundedAndroidDateTimePicker
         value={userSelectedValue}
-        bounds={largeBoundChange}
+        bounds={bounds}
         timeFormat="24h"
         onChange={onChange}
       />
     );
-    expect(mockPickerMounts).toBe(3);
+
+    expect(mockPickerMounts).toBe(1);
     expect(screen.getByTestId("bounded-android-datetime-picker").props).toMatchObject({
       date: userSelectedValue,
-      minimumDate: largeBoundChange.minimumDate,
-      maximumDate: largeBoundChange.maximumDate,
+      minimumDate: bounds.minimumDate,
+      maximumDate: bounds.maximumDate,
     });
     expect(onChange).toHaveBeenCalledWith(userSelectedValue);
   });
