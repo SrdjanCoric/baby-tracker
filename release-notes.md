@@ -1,3 +1,41 @@
+# Sofi Baby 4.9.20
+
+## English
+
+- Large Android sleep time-picker changes now jump to their target instead of freezing the app.
+
+## Srpski
+
+- Velike promene vremena u Android biraču vremena za spavanje sada preskaču na odredište umesto da zamrznu aplikaciju.
+
+## Español (Latinoamérica)
+
+- Los cambios grandes del selector de hora de sueño en Android ahora saltan al destino en lugar de congelar la aplicación.
+
+## Español (España)
+
+- Los cambios grandes del selector de hora de sueño en Android ahora saltan al destino en lugar de bloquear la aplicación.
+
+## Français
+
+- Les grands changements de l’heure de sommeil sur Android atteignent désormais directement leur cible au lieu de bloquer l’application.
+
+## Português (Portugal)
+
+- As grandes alterações da hora de sono no seletor Android passam agora diretamente para o destino em vez de bloquearem a aplicação.
+
+## Português (Brasil)
+
+- Grandes alterações no horário de sono do seletor Android agora saltam para o destino em vez de travarem o aplicativo.
+
+## Deutsch
+
+- Große Änderungen der Schlafzeit im Android-Zeitwähler springen jetzt direkt zum Ziel, statt die App einzufrieren.
+
+## Italiano
+
+- Le grandi modifiche all’orario del sonno nel selettore Android ora raggiungono direttamente la destinazione invece di bloccare l’app.
+
 # Sofi Baby 4.9.18
 
 ## English

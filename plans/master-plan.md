@@ -318,7 +318,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [-] 0096 · Survive a background wake while the device is locked (AsyncStorage) (deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
 - [x] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/done/0097-treat-session-lock-abandonment-as-expected.md
 - [ ] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
-- [ ] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
+- [~] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
 - [ ] 0100 · Fix the Android Fabric addViewAt crash on Home → tasks/0100-fix-android-fabric-addviewat-crash.md
 - [ ] 0101 · Quiet the observability sink offline → tasks/0101-quiet-observability-sink-offline.md
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import DatePicker from "react-native-date-picker";
 import type { TimeFormat } from "@/contexts/time-format-context";
@@ -6,6 +6,26 @@ import type { TimerStartBounds } from "@/utils/timer-start-bounds";
 
 function isForegroundState(state: AppStateStatus): boolean {
   return state !== "background" && state !== "inactive";
+}
+
+// The native datetime wheels advance at minute resolution; allow one step to animate.
+const MAX_ANIMATED_DATE_DELTA_MS = 60 * 1000;
+
+interface PickerSnapshot {
+  value: number;
+  minimumDate: number;
+  maximumDate: number;
+}
+
+function hasLargeProgrammaticChange(
+  previous: PickerSnapshot,
+  next: PickerSnapshot
+): boolean {
+  return [
+    Math.abs(next.value - previous.value),
+    Math.abs(next.minimumDate - previous.minimumDate),
+    Math.abs(next.maximumDate - previous.maximumDate),
+  ].some(delta => delta > MAX_ANIMATED_DATE_DELTA_MS);
 }
 
 interface BoundedAndroidDateTimePickerProps {
@@ -34,6 +54,41 @@ export function BoundedAndroidDateTimePicker({
   const [isForeground, setIsForeground] = useState(() =>
     isForegroundState(AppState.currentState)
   );
+  const previousPickerSnapshot = useRef<PickerSnapshot | undefined>(undefined);
+  const [pickerInstance, setPickerInstance] = useState(0);
+  const userChangePending = useRef(false);
+  const valueTime = value.getTime();
+  const minimumDateTime = bounds.minimumDate.getTime();
+  const maximumDateTime = bounds.maximumDate.getTime();
+  const pickerSnapshot: PickerSnapshot = {
+    value: valueTime,
+    minimumDate: minimumDateTime,
+    maximumDate: maximumDateTime,
+  };
+
+  const isUserChange = userChangePending.current;
+  const isLargeProgrammaticChange = Boolean(
+    !isUserChange &&
+      previousPickerSnapshot.current &&
+      hasLargeProgrammaticChange(previousPickerSnapshot.current, pickerSnapshot)
+  );
+
+  useLayoutEffect(() => {
+    if (isLargeProgrammaticChange) {
+      setPickerInstance(instance => instance + 1);
+    }
+    previousPickerSnapshot.current = {
+      value: valueTime,
+      minimumDate: minimumDateTime,
+      maximumDate: maximumDateTime,
+    };
+    userChangePending.current = false;
+  }, [
+    isLargeProgrammaticChange,
+    maximumDateTime,
+    minimumDateTime,
+    valueTime,
+  ]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener(
@@ -50,6 +105,7 @@ export function BoundedAndroidDateTimePicker({
 
   return (
     <DatePicker
+      key={pickerInstance + (isLargeProgrammaticChange ? 1 : 0)}
       testID="bounded-android-datetime-picker"
       date={value}
       mode="datetime"
@@ -57,7 +113,10 @@ export function BoundedAndroidDateTimePicker({
       maximumDate={bounds.maximumDate}
       locale={timeFormat === "24h" ? "en_GB" : "en_US"}
       is24hourSource="locale"
-      onDateChange={onChange}
+      onDateChange={(nextValue: Date) => {
+        userChangePending.current = true;
+        onChange(nextValue);
+      }}
     />
   );
 }

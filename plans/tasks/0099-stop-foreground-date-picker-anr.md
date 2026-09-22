@@ -36,6 +36,12 @@ instead of animating across a large delta.
 
 ## Clarifications
 
+## Implementation classification
+
+- Change class: mixed (production/test code plus app version and release-note updates).
+- Validation tier: canonical (`npm run test:component` and `npm run test:ci`, with focused picker tests first).
+- TDD applicable: yes; the picker behavior is executable production and component-test code.
+
 ## Non-goals
 
 - The background unmount from Task 0095 stays as is.
