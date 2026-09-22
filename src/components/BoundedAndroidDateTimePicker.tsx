@@ -82,13 +82,16 @@ export function BoundedAndroidDateTimePicker({
       minimumDate: minimumDateTime,
       maximumDate: maximumDateTime,
     };
-    userChangePending.current = false;
   }, [
     isLargeProgrammaticChange,
     maximumDateTime,
     minimumDateTime,
     valueTime,
   ]);
+
+  useLayoutEffect(() => {
+    userChangePending.current = false;
+  });
 
   useEffect(() => {
     const subscription = AppState.addEventListener(

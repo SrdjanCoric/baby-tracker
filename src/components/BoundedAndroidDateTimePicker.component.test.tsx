@@ -146,6 +146,44 @@ describe("BoundedAndroidDateTimePicker", () => {
     expect(onChange).toHaveBeenCalledWith(userSelectedValue);
   });
 
+  it("remounts after an equal-epoch user emission followed by a large jump", () => {
+    const onChange = jest.fn();
+    const initialValue = new Date("2026-09-12T10:00:00Z");
+    const { rerender } = render(
+      <BoundedAndroidDateTimePicker
+        value={initialValue}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
+    act(() => {
+      screen.getByTestId("bounded-android-datetime-picker").props.onDateChange(
+        new Date(initialValue.getTime())
+      );
+    });
+    rerender(
+      <BoundedAndroidDateTimePicker
+        value={new Date(initialValue.getTime())}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
+    rerender(
+      <BoundedAndroidDateTimePicker
+        value={new Date(initialValue.getTime() + 3 * 60 * 60_000)}
+        bounds={bounds}
+        timeFormat="24h"
+        onChange={onChange}
+      />
+    );
+
+    expect(mockPickerMounts).toBe(2);
+  });
+
   // Regression: the native spinner animates a value change with one main-thread
   // runnable per scroll step. Leaving it mounted while the app is backgrounded let
   // that queue keep saturating the main thread, which Android reported as a
