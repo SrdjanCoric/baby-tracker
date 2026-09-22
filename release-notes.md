@@ -2,39 +2,39 @@
 
 ## English
 
-- Large Android sleep time-picker changes now jump to their target instead of freezing the app.
+- Adjusting a sleep time by a large amount on Android no longer freezes the app.
 
 ## Srpski
 
-- Velike promene vremena u Android biraču vremena za spavanje sada preskaču na odredište umesto da zamrznu aplikaciju.
+- Veliko podešavanje vremena spavanja na Androidu više ne zamrzava aplikaciju.
 
 ## Español (Latinoamérica)
 
-- Los cambios grandes del selector de hora de sueño en Android ahora saltan al destino en lugar de congelar la aplicación.
+- Ajustar mucho la hora de sueño en Android ya no congela la aplicación.
 
 ## Español (España)
 
-- Los cambios grandes del selector de hora de sueño en Android ahora saltan al destino en lugar de bloquear la aplicación.
+- Ajustar mucho la hora de sueño en Android ya no bloquea la aplicación.
 
 ## Français
 
-- Les grands changements de l’heure de sommeil sur Android atteignent désormais directement leur cible au lieu de bloquer l’application.
+- Modifier fortement l’heure de sommeil sur Android ne bloque plus l’application.
 
 ## Português (Portugal)
 
-- As grandes alterações da hora de sono no seletor Android passam agora diretamente para o destino em vez de bloquearem a aplicação.
+- Ajustar bastante a hora de sono no Android já não bloqueia a aplicação.
 
 ## Português (Brasil)
 
-- Grandes alterações no horário de sono do seletor Android agora saltam para o destino em vez de travarem o aplicativo.
+- Ajustar bastante o horário de sono no Android não trava mais o aplicativo.
 
 ## Deutsch
 
-- Große Änderungen der Schlafzeit im Android-Zeitwähler springen jetzt direkt zum Ziel, statt die App einzufrieren.
+- Das starke Anpassen der Schlafzeit auf Android lässt die App nicht mehr einfrieren.
 
 ## Italiano
 
-- Le grandi modifiche all’orario del sonno nel selettore Android ora raggiungono direttamente la destinazione invece di bloccare l’app.
+- Modificare di molto l’orario del sonno su Android non blocca più l’app.
 
 # Sofi Baby 4.9.18
 
