@@ -479,4 +479,6 @@ On 2026-09-20 the owner deferred Task 0096 after its first implementation attemp
 cannot reproduce the storage error: the app sets no data-protection entitlement, so its files use
 the default class that is unreadable only between a reboot and the device's first unlock, and
 neither Device → Lock on the simulator nor locking a real phone enters that window. The task file's
-Context records the device recipe. Task 0097 merged to `hotfix/4.9` on 2026-09-21; Task 0098 is the next claimable pointer.
+Context records the device recipe. Task 0097 merged to `hotfix/4.9` on 2026-09-21. The owner then
+claimed Task 0099 ahead of Task 0098 to address the foreground Android picker ANR in the 4.9.20
+hotfix; Task 0098 remains the next claimable pointer after 0099 closes.
