@@ -88,7 +88,7 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-6
 ## Acceptance criteria
 
 - [x] The component test proves the jump-vs-animate table.
-- [ ] `npm run test:component` and `npm run test:ci` pass with no new failures.
+- [x] `npm run test:component` and `npm run test:ci` pass with no new failures.
 - [ ] Device verification passes.
 
 ## Implementation record (2026-09-22)
@@ -103,3 +103,5 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-6
   emulator; the five-fling log is retained at the branch task log directory, with no ANR or fatal
   entry. Queue depth is not available from the emulator's public diagnostics, so the manual device
   checkpoint remains intentionally open.
+- Canonical validation: `npm run test:component` passed 119 suites and 1101 tests; `npm run test:ci`
+  passed all 65 tests with no failures.
