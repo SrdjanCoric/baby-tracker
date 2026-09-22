@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -61,16 +62,19 @@ export function BoundedAndroidDateTimePicker({
     isForegroundState(AppState.currentState)
   );
   const previousPickerSnapshot = useRef<PickerSnapshot | undefined>(undefined);
-  const [pickerInstance, setPickerInstance] = useState(0);
+  const pickerInstance = useRef(0);
   const userChangePending = useRef(false);
   const valueTime = value.getTime();
   const minimumDateTime = bounds.minimumDate.getTime();
   const maximumDateTime = bounds.maximumDate.getTime();
-  const pickerSnapshot: PickerSnapshot = {
-    value: valueTime,
-    minimumDate: minimumDateTime,
-    maximumDate: maximumDateTime,
-  };
+  const pickerSnapshot = useMemo(
+    () => ({
+      value: valueTime,
+      minimumDate: minimumDateTime,
+      maximumDate: maximumDateTime,
+    }),
+    [maximumDateTime, minimumDateTime, valueTime]
+  );
 
   const isUserChange = userChangePending.current;
   const isLargeProgrammaticChange = Boolean(
@@ -78,21 +82,19 @@ export function BoundedAndroidDateTimePicker({
       previousPickerSnapshot.current &&
       hasLargeProgrammaticChange(previousPickerSnapshot.current, pickerSnapshot)
   );
+  const pickerKey = isLargeProgrammaticChange
+    ? pickerInstance.current + 1
+    : pickerInstance.current;
 
   useLayoutEffect(() => {
     if (isLargeProgrammaticChange) {
-      setPickerInstance(instance => instance + 1);
+      pickerInstance.current = pickerKey;
     }
-    previousPickerSnapshot.current = {
-      value: valueTime,
-      minimumDate: minimumDateTime,
-      maximumDate: maximumDateTime,
-    };
+    previousPickerSnapshot.current = pickerSnapshot;
   }, [
     isLargeProgrammaticChange,
-    maximumDateTime,
-    minimumDateTime,
-    valueTime,
+    pickerKey,
+    pickerSnapshot,
   ]);
 
   useLayoutEffect(() => {
@@ -122,7 +124,7 @@ export function BoundedAndroidDateTimePicker({
 
   return (
     <DatePicker
-      key={pickerInstance + (isLargeProgrammaticChange ? 1 : 0)}
+      key={pickerKey}
       testID="bounded-android-datetime-picker"
       date={value}
       mode="datetime"
