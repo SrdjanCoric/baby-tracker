@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import DatePicker from "react-native-date-picker";
 import type { TimeFormat } from "@/contexts/time-format-context";
@@ -93,6 +99,14 @@ export function BoundedAndroidDateTimePicker({
     userChangePending.current = false;
   });
 
+  const handleDateChange = useCallback(
+    (nextValue: Date) => {
+      userChangePending.current = true;
+      onChange(nextValue);
+    },
+    [onChange]
+  );
+
   useEffect(() => {
     const subscription = AppState.addEventListener(
       "change",
@@ -116,10 +130,7 @@ export function BoundedAndroidDateTimePicker({
       maximumDate={bounds.maximumDate}
       locale={timeFormat === "24h" ? "en_GB" : "en_US"}
       is24hourSource="locale"
-      onDateChange={(nextValue: Date) => {
-        userChangePending.current = true;
-        onChange(nextValue);
-      }}
+      onDateChange={handleDateChange}
     />
   );
 }
