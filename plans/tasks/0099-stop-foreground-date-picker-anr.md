@@ -36,6 +36,21 @@ instead of animating across a large delta.
 
 ## Clarifications
 
+- 2026-09-22 diagnosis: the deterministic component loop reproduces the JavaScript large-delta
+  path—changing the value or either bound by more than 60 seconds remounts the Android picker,
+  while a user emission is treated as user input. Source inspection of the pinned 5.0.13 Android
+  implementation also confirmed a separate native clamp path: `WheelChangeListenerImpl.onChange`
+  calls `animateToDate(minDate|maxDate)` and returns without emitting to JavaScript when a fling
+  lands outside the bounds. The wrapper fix covers the JavaScript prop-change path; the native
+  clamp path remains a platform checkpoint rather than an assumption that the wrapper intercepts
+  it.
+- The configured `SofiBaby_Pixel_7_API_35` emulator was used with a release APK and raised
+  animator scales. The app reached the seeded sleep screen and five corrected large hour-wheel
+  flings retained app focus with no ANR, fatal, or React Native error in logcat. `dumpsys gfxinfo`
+  was captured before and after, but Android does not expose the main-message-queue depth through
+  that command, so no queue-depth claim is made. The device checkpoint remains open for a
+  production-device measurement.
+
 ## Implementation classification
 
 - Change class: mixed (production/test code plus app version and release-note updates).
@@ -59,10 +74,10 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-6
 
 - [ ] Identify and reproduce the large-delta trigger on the sleep screen (`diagnose` phases 1–3),
       recorded in the PR.
-- [ ] A programmatic large delta jumps instead of animating; proved in
+- [x] A programmatic large delta jumps instead of animating; proved in
       `src/components/BoundedAndroidDateTimePicker.component.test.tsx`.
 - [ ] The repro no longer floods the main thread; main-thread queue stays under the ANR threshold.
-- [ ] Bump `app.json` and add a release note.
+- [x] Bump `app.json` and add a release note.
 
 ## Human checkpoints
 
@@ -72,6 +87,19 @@ https://sofibaby.sentry.io/issues/REACT-NATIVE-6
 
 ## Acceptance criteria
 
-- [ ] The component test proves the jump-vs-animate table.
+- [x] The component test proves the jump-vs-animate table.
 - [ ] `npm run test:component` and `npm run test:ci` pass with no new failures.
 - [ ] Device verification passes.
+
+## Implementation record (2026-09-22)
+
+- `BoundedAndroidDateTimePicker` remounts for large programmatic value/bound changes, clears its
+  user-change guard after every commit, and keeps the native change callback stable across parent
+  timer ticks. The component test now covers the rendered date and bounds as well as the
+  jump-versus-animate decisions.
+- Focused RED/GREEN proof: `npx jest --runTestsByPath
+  src/components/BoundedAndroidDateTimePicker.component.test.tsx --runInBand` passed all 8 tests
+  after the remediation. The release APK was built and exercised on the configured API 35
+  emulator; the five-fling log is retained at the branch task log directory, with no ANR or fatal
+  entry. Queue depth is not available from the emulator's public diagnostics, so the manual device
+  checkpoint remains intentionally open.
