@@ -13,8 +13,9 @@ pointers. Each task is one feature on its own branch, ending in a PR. Task bodie
 - `implement-next-task` takes the first eligible pointer (or an explicit task argument), builds it
   on its branch — AFK via `tdd`, `[decision]` via `talk-it-through`, `[verify]` paused for manual
   confirmation — runs `task-review`, then opens the PR after approval and flips the pointer to `[>]`.
-- A pointer has five states: `[ ]` todo · `[-]` deferred and not claimable · `[~]` in progress
-  (claimed) · `[>]` done, PR open, awaiting merge · `[x]` merged to `main`. `sync-main` flips
+- A pointer has six states: `[ ]` todo · `[-]` deferred and not claimable · `[p]` postponed by the
+  owner, not claimable, to be resumed later · `[~]` in progress (claimed) · `[>]` done, PR open,
+  awaiting merge · `[x]` merged to `main`. `sync-main` flips
   `[>]→[x]` and moves the task file to `tasks/done/` once the PR merges.
 - Pointers carry their direct prerequisites as an `(after NNNN, …)` suffix (none = no suffix). A
   task is selectable only once every ordinal in its `(after …)` list is **`[x]` (merged)** — so a
@@ -272,17 +273,17 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
 - [x] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/done/0047-discover-post-july-regressions.md
 - [x] 0048 · Attribute feeding stop, Timeline, and Live Activity regressions (after 0047) → tasks/done/0048-attribute-feeding-stop-regressions.md
-- [-] 0049 · Attribute Watch timer and history regressions (deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
+- [p] 0049 · Attribute Watch timer and history regressions (postponed by owner 2026-10-06; deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
 - [x] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/done/0051-sweep-post-release-app-regressions.md
 - [-] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (audit ran 2026-08-01; output withheld from the repository by owner decision; after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 - [x] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/done/0053-resolve-export-report-ranges.md
-- [-] 0054 · Restrict the wake-window reminder RPC to the service role (deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
-- [-] 0055 · Prevent self-assignment of household and owner role (deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
-- [-] 0057 · Bind Live Activity identity to the timer, not the activity type (deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
-- [-] 0058 · Recover a queued activity write that the server denies (deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
-- [-] 0059 · Cover WatchConnectivity delivery failures (deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
-- [-] 0060 · Resolve the Portuguese (Portugal) solid-food label (deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
+- [p] 0054 · Restrict the wake-window reminder RPC to the service role (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
+- [p] 0055 · Prevent self-assignment of household and owner role (postponed by owner 2026-10-06; deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
+- [p] 0057 · Bind Live Activity identity to the timer, not the activity type (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
+- [p] 0058 · Recover a queued activity write that the server denies (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
+- [p] 0059 · Cover WatchConnectivity delivery failures (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
+- [p] 0060 · Resolve the Portuguese (Portugal) solid-food label (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
@@ -308,18 +309,18 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/done/0084-renew-watch-credentials-from-shared-session.md
 - [x] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/done/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
-- [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
-- [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
-- [ ] 0089 · Respect stored sleep type across sleep statistics and charts → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
-- [ ] 0091 · Household caregivers stop/pause timers in-app → tasks/0091-household-caregivers-stop-pause-timers-in-app.md
-- [ ] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
-- [ ] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
-- [ ] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
-- [-] 0096 · Survive a background wake while the device is locked (AsyncStorage) (deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
+- [p] 0087 · Fully terminate deleted accounts (postponed by owner 2026-10-06) → tasks/0087-fully-terminate-deleted-accounts.md
+- [p] 0088 · Release the App Group flock across suspension (0xDEAD10CC) (postponed by owner 2026-10-06; only the device verification is open) → tasks/0088-release-app-group-flock-across-suspension.md
+- [p] 0089 · Respect stored sleep type across sleep statistics and charts (postponed by owner 2026-10-06) → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
+- [x] 0091 · Household caregivers stop/pause timers in-app → tasks/0091-household-caregivers-stop-pause-timers-in-app.md
+- [x] 0092 · Widget and Watch control remote timers (after 0091) → tasks/0092-widget-and-watch-control-remote-timers.md
+- [x] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/0093-end-starter-live-activity-on-remote-stop.md
+- [x] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
+- [p] 0096 · Survive a background wake while the device is locked (AsyncStorage) (postponed by owner 2026-10-06; deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
 - [x] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/done/0097-treat-session-lock-abandonment-as-expected.md
-- [ ] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
-- [~] 0099 · Stop the foreground date-picker ANR on the sleep screen → tasks/0099-stop-foreground-date-picker-anr.md
-- [ ] 0100 · Fix the Android Fabric addViewAt crash on Home → tasks/0100-fix-android-fabric-addviewat-crash.md
+- [p] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang (postponed by owner 2026-10-06) → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
+- [p] 0099 · Stop the foreground date-picker ANR on the sleep screen (postponed by owner 2026-10-06; only the device verification is open) → tasks/0099-stop-foreground-date-picker-anr.md
+- [p] 0100 · Fix the Android Fabric addViewAt crash on Home (postponed by owner 2026-10-06) → tasks/0100-fix-android-fabric-addviewat-crash.md
 - [ ] 0101 · Quiet the observability sink offline → tasks/0101-quiet-observability-sink-offline.md
 
 ## Workflow status
@@ -482,3 +483,9 @@ neither Device → Lock on the simulator nor locking a real phone enters that wi
 Context records the device recipe. Task 0097 merged to `hotfix/4.9` on 2026-09-21. The owner then
 claimed Task 0099 ahead of Task 0098 to address the foreground Android picker ANR in the 4.9.20
 hotfix; Task 0098 remains the next claimable pointer after 0099 closes.
+
+On 2026-10-06 the owner postponed every open task except Task 0101, so 0101 is the only claimable
+pointer. Production is still 4.9.14; 4.9.15 and 4.9.16 reached only the owner's devices, so the
+next 4.9 release is the first to ship the 4.9.15 observability sink to real users, and 0101 must
+land before it. Tasks 0091–0094 are marked `[x]` here because they merged to `main`. Postponed
+tasks return to `[ ]` when the owner resumes them.
