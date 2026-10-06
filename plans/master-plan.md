@@ -314,6 +314,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0103 · Fold the 4.9 hotfix line into main → tasks/0103-fold-hotfix-4-9-into-main.md
 - [ ] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/0104-household-stop-clears-lock-in-save.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104) → tasks/0105-gate-4-10-2-release.md
+- [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
 
 ## Workflow status
 
@@ -472,3 +473,6 @@ task and run in order: 0103 merges `hotfix/4.9` into `main`, 0104 lets any house
 clear the lock in the same server step that saves the activity, and 0105 prepares the release and
 carries Task 0094's open release gates. Each branches off `main` and merges back into `main`.
 Tasks 0087, 0088, and 0089 stay postponed under the owner's 2026-10-06 decision on the 4.9 line.
+Task 0106 was added the same day from Sentry REACT-NATIVE-S and REACT-NATIVE-T. It does not block
+the 4.10.2 release: it may run after 0103 merges, in any order with 0104 and 0105, and 0105 does not
+wait for it.
