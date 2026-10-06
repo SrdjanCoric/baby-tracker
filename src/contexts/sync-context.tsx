@@ -127,7 +127,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
               area: 'sync',
               level: 'warning',
               error,
-              tags: { pending: syncEngineInstance.getPendingCount() },
+              extra: { pending: syncEngineInstance.getPendingCount() },
             });
           }
         }

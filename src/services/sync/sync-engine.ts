@@ -264,7 +264,8 @@ export class SyncEngine {
                 name: 'sync.push_exhausted',
                 area: 'sync',
                 error,
-                tags: { attempts: retryCount, remaining: this.queue.getCount() },
+                tags: { attempts: retryCount },
+                extra: { remaining: this.queue.getCount() },
               });
               throw error;
             }

@@ -16,6 +16,8 @@ interface PendingLockRelease {
   timerInstanceId?: string;
   startedAt?: string;
   queuedAt: string;
+  /** Set once the first failed retry is reported, so later retries stay quiet. */
+  reported?: boolean;
 }
 
 interface PendingTimerStartEdit {
@@ -269,19 +271,18 @@ export function retryPendingLockReleases(): Promise<void> {
         );
       } catch (error) {
         console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
-        const queuedAgeMinutes = Math.round((Date.now() - new Date(release.queuedAt).getTime()) / 60_000);
-        reportIssue({
-          name: "timers.pending_lock_release_failed",
-          area: "timers",
-          level: "warning",
-          error,
-          tags: {
-            activityType: release.activityType,
-            code: errorCode(error),
-            queuedAgeMinutes: Number.isFinite(queuedAgeMinutes) ? queuedAgeMinutes : undefined,
-          },
-        });
-        remaining.push(release);
+        if (!release.reported) {
+          const queuedAgeMinutes = Math.round((Date.now() - new Date(release.queuedAt).getTime()) / 60_000);
+          reportIssue({
+            name: "timers.pending_lock_release_failed",
+            area: "timers",
+            level: "warning",
+            error,
+            tags: { activityType: release.activityType, code: errorCode(error) },
+            extra: { queuedAgeMinutes: Number.isFinite(queuedAgeMinutes) ? queuedAgeMinutes : undefined },
+          });
+        }
+        remaining.push({ ...release, reported: true });
       }
     }
 
@@ -339,12 +340,12 @@ export async function acquireTimerLock(
 
   if (error) {
     console.error("[ActiveTimerService] Failed to acquire lock:", error);
-    reportIssue({
-      name: "timers.lock_acquire_failed",
-      area: "timers",
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock acquire failed",
       level: "warning",
-      error,
-      tags: { activityType, code: errorCode(error) },
+      data: { activityType, code: errorCode(error) },
     });
     throw error;
   }
@@ -404,12 +405,12 @@ export async function releaseTimerLock(
 
   if (error) {
     console.error("[ActiveTimerService] Failed to release lock:", error);
-    reportIssue({
-      name: "timers.lock_release_failed",
-      area: "timers",
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock release failed",
       level: "warning",
-      error,
-      tags: { activityType, code: errorCode(error) },
+      data: { activityType, code: errorCode(error) },
     });
     throw error;
   }
@@ -450,12 +451,12 @@ export async function getActiveTimerLock(
       return null;
     }
     console.error("[ActiveTimerService] Failed to get lock:", error);
-    reportIssue({
-      name: "timers.lock_read_failed",
-      area: "timers",
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock read failed",
       level: "warning",
-      error,
-      tags: { activityType, code: errorCode(error) },
+      data: { activityType, code: errorCode(error) },
     });
     throw error;
   }

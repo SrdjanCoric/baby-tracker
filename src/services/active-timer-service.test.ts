@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  resetObservabilityIssueLimiter,
+  setObservabilitySink,
+} from "@/utils/observability-sink";
 import {
   acquireTimerLock,
   getActiveTimerLock,
@@ -8,6 +12,7 @@ import {
   queuePendingTimerStartEdit,
   releaseTimerLock,
   releaseTimerLockDurably,
+  retryPendingLockReleases,
   retryPendingTimerStartEdits,
   updateTimerStartTime,
 } from "./active-timer-service";
@@ -395,6 +400,77 @@ describe("durable lock release", () => {
     expect(readPending().map(release => release.timerInstanceId)).toEqual([
       "timer-1",
     ]);
+  });
+});
+
+describe("lock failure reporting", () => {
+  const sink = { reportIssue: vi.fn(), addBreadcrumb: vi.fn(), setTag: vi.fn() };
+  const serverError = { code: "500", message: "Internal Server Error" };
+
+  beforeEach(() => {
+    storage.clear();
+    vi.clearAllMocks();
+    resetObservabilityIssueLimiter();
+    setObservabilitySink(sink);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const query = {
+      delete: deleteMock,
+      eq: eqMock,
+      select: selectMock,
+      maybeSingle: maybeSingleMock,
+      then: (resolve: (value: { error: typeof serverError; count: null }) => unknown) =>
+        Promise.resolve({ error: serverError, count: null }).then(resolve),
+    };
+    deleteMock.mockReturnValue(query);
+    eqMock.mockReturnValue(query);
+    selectMock.mockReturnValue(query);
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        id: "lock-1",
+        baby_id: "baby-1",
+        activity_type: "sleep",
+        started_by: "user-1",
+        started_at: "2026-07-15T08:00:00.000Z",
+        timer_data: { timerInstanceId: "timer-1" },
+        users: { display_name: "Caregiver" },
+      },
+      error: null,
+    });
+    fromMock.mockReturnValue(query);
+  });
+
+  afterEach(() => {
+    setObservabilitySink(null);
+    vi.restoreAllMocks();
+  });
+
+  it("leaves reporting a failed release to the caller", async () => {
+    await expect(releaseTimerLock("baby-1", "sleep", "user-1")).rejects.toBe(serverError);
+
+    expect(sink.reportIssue).not.toHaveBeenCalled();
+    expect(sink.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "lock release failed", level: "warning" })
+    );
+  });
+
+  it("reports a queued release that keeps failing only once", async () => {
+    await queuePendingLockRelease("baby-1", "sleep", "user-1", "timer-1");
+
+    await retryPendingLockReleases();
+    await retryPendingLockReleases();
+
+    expect(sink.reportIssue).toHaveBeenCalledTimes(1);
+    expect(sink.reportIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "timers.pending_lock_release_failed",
+        tags: { activityType: "sleep", code: "500" },
+      })
+    );
+    const pending = JSON.parse(storage.get("@pending_lock_releases") ?? "[]") as Array<{
+      timerInstanceId?: string;
+    }>;
+    expect(pending.map(release => release.timerInstanceId)).toEqual(["timer-1"]);
   });
 });
 

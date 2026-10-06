@@ -4,7 +4,7 @@ import {
   type ActiveTimerLock,
   type TimerActivityType,
 } from "./active-timer-service";
-import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
+import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export type TimerLockReconciliationState =
   | "accountless"
@@ -116,7 +116,7 @@ export async function reconcileTimerLock({
       area: "timers",
       level: "warning",
       error,
-      tags: { activityType },
+      tags: { activityType, code: errorCode(error) },
     });
     return { state: "offline" };
   }

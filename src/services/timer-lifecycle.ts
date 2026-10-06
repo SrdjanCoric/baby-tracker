@@ -38,7 +38,7 @@ import {
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
-import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
+import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -391,7 +391,7 @@ export async function restoreTimerLifecycle<
         area: "timers",
         level: "warning",
         error,
-        tags: { activityType: adapter.activityType },
+        tags: { activityType: adapter.activityType, code: errorCode(error) },
       });
       await queuePendingLockRelease(
         baby.id,

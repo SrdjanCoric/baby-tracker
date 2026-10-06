@@ -50,17 +50,28 @@ export function isObservabilitySinkActive(): boolean {
 
 const ISSUE_WINDOW_MS = 60_000;
 const ISSUE_MAX_PER_WINDOW = 5;
-const issueCounters = new Map<string, { windowStart: number; count: number }>();
+const ISSUE_MAX_PER_SESSION = 20;
+const issueCounters = new Map<string, { windowStart: number; count: number; total: number }>();
 
-/** Drop repeats of the same issue beyond a few per minute so a stuck loop cannot flood Sentry. */
+/**
+ * Drop repeats of the same issue beyond a few per minute, and beyond a fixed
+ * total per app session, so a loop that keeps failing for hours cannot flood
+ * Sentry.
+ */
 export function shouldReportIssue(name: string, now = Date.now()): boolean {
   const entry = issueCounters.get(name);
-  if (!entry || now - entry.windowStart >= ISSUE_WINDOW_MS) {
-    issueCounters.set(name, { windowStart: now, count: 1 });
+  if (!entry) {
+    issueCounters.set(name, { windowStart: now, count: 1, total: 1 });
     return true;
   }
-  entry.count += 1;
-  return entry.count <= ISSUE_MAX_PER_WINDOW;
+  entry.total += 1;
+  if (now - entry.windowStart >= ISSUE_WINDOW_MS) {
+    entry.windowStart = now;
+    entry.count = 1;
+  } else {
+    entry.count += 1;
+  }
+  return entry.count <= ISSUE_MAX_PER_WINDOW && entry.total <= ISSUE_MAX_PER_SESSION;
 }
 
 /** Test hook. */

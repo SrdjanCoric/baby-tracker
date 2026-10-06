@@ -78,6 +78,17 @@ describe("observability sink", () => {
     expect(shouldReportIssue("a", start + 60_000)).toBe(true);
   });
 
+  it("caps each issue name per session across windows", () => {
+    const start = 1_000_000;
+    let sent = 0;
+    for (let i = 0; i < 25; i += 1) {
+      // 25 reports spread over 10 minutes: never more than 3 per window.
+      if (shouldReportIssue("a", start + i * 24_000)) sent += 1;
+    }
+    expect(sent).toBe(20);
+    expect(shouldReportIssue("b", start)).toBe(true);
+  });
+
   it("never lets a throwing sink escape", () => {
     setObservabilitySink({
       reportIssue: () => {
