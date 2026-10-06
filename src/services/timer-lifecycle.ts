@@ -25,6 +25,7 @@ import {
   markTimerCompletionDurable,
   resolveTimerIdentity,
   type TimerIdentity,
+  type TimerCompletionRecord,
 } from "./timer-completion-service";
 import {
   reconcileTimerLock,
@@ -155,7 +156,7 @@ export interface RestoreTimerLifecycleOptions<
   isCurrentBabyBinding(): boolean;
   liveActivityIdRef: MutableRef<string | null>;
   refreshLocks(): Promise<unknown> | unknown;
-  persistRecord(input: TCreateInput): Promise<TRecord>;
+  persistRecord(input: TCreateInput, completion: TimerCompletionRecord): Promise<TRecord>;
   dispatchStopTimer(): void;
   dispatchAddRecord(record: TRecord): void;
   onCompletionSecured?(): Promise<unknown> | unknown;
@@ -555,7 +556,8 @@ export async function restoreTimerLifecycle<
                 ...payloadWithIdentity,
                 activityId: completion.activityId,
               }
-            )
+            ),
+            completion
           );
           await markTimerCompletionDurable(completion);
         }

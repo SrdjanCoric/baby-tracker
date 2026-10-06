@@ -593,6 +593,16 @@ function restartApp(simulator, label) {
   );
 }
 
+function removeTimerFailureInjection(status) {
+  psql(status, `
+    DROP TRIGGER IF EXISTS e2e_block_direct_release ON public.active_timers;
+    DROP TRIGGER IF EXISTS e2e_delay_sleep_completion ON public.sleep_sessions;
+    DROP FUNCTION IF EXISTS public.e2e_block_direct_release();
+    DROP FUNCTION IF EXISTS public.e2e_delay_sleep_completion();
+    DROP SEQUENCE IF EXISTS public.e2e_blocked_release_count;
+  `, "remove-direct-release-failure");
+}
+
 async function runSleepHandoff(status, owner, member) {
   console.log("\n=== sleep: offline reconnect and two-caregiver household handoff ===");
   const snapshotTimezone = getMiddaySnapshotTimezone(status);
@@ -616,8 +626,54 @@ async function runSleepHandoff(status, owner, member) {
   });
   await waitForDatabase(status, SLEEP_ACTIVITY, 0, 1);
 
-  maestro(owner, "stop/sleep.yaml");
-  await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+  maestro(member, "assert-sleep-prediction-running.yaml");
+  capture(
+    "xcrun",
+    ["simctl", "launch", member.udid, "com.apple.Preferences"],
+    "background-member-before-owner-stop"
+  );
+  psql(status, `
+    CREATE SEQUENCE public.e2e_blocked_release_count;
+    CREATE FUNCTION public.e2e_block_direct_release() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      IF current_user = 'authenticated' THEN
+        PERFORM nextval('public.e2e_blocked_release_count');
+        RAISE EXCEPTION 'E2E direct timer release blocked';
+      END IF;
+      RETURN OLD;
+    END $$;
+    GRANT USAGE ON SEQUENCE public.e2e_blocked_release_count TO authenticated;
+    CREATE TRIGGER e2e_block_direct_release BEFORE DELETE ON public.active_timers
+      FOR EACH ROW EXECUTE FUNCTION public.e2e_block_direct_release();
+    CREATE FUNCTION public.e2e_delay_sleep_completion() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      PERFORM pg_sleep(3);
+      RETURN NEW;
+    END $$;
+    CREATE TRIGGER e2e_delay_sleep_completion BEFORE INSERT ON public.sleep_sessions
+      FOR EACH ROW EXECUTE FUNCTION public.e2e_delay_sleep_completion();
+  `, "inject-direct-release-failure");
+  try {
+    maestro(owner, "stop/sleep.yaml");
+    await waitForDatabase(status, SLEEP_ACTIVITY, 1, 0);
+    const directReleaseWasBlocked = psql(
+      status,
+      "SELECT is_called FROM public.e2e_blocked_release_count",
+      "verify-direct-release-was-blocked"
+    );
+    if (directReleaseWasBlocked !== "t") {
+      throw new Error("The direct-release failure scenario did not exercise the blocked delete");
+    }
+    capture(
+      "xcrun",
+      ["simctl", "launch", member.udid, appId],
+      "foreground-member-after-owner-stop"
+    );
+    maestro(member, "assert-sleep-prediction-stopped.yaml");
+    maestro(member, "assert-unlocked.yaml", { ACTIVITY_CARD: SLEEP_ACTIVITY.card });
+  } finally {
+    removeTimerFailureInjection(status);
+  }
   psql(
     status,
     `
@@ -891,6 +947,7 @@ async function main() {
 
     ensureLocalApiIsRunning();
     status = readSupabaseStatus();
+    removeTimerFailureInjection(status);
     const runtime = findRuntime();
     ensureSimulators(runtime.identifier);
     if (!cleanEnvironment) reinstallExistingAppForReuse();

@@ -400,6 +400,17 @@ if (timerAuthorization.ok) {
 }
 
 console.log("");
+try {
+  const out = psql(["-f", join(ROOT, "scripts/sql/active-timer-completion-tests.sql")]);
+  console.log(`${GREEN}✓${RESET} atomic timer completion: decision tables, replay, rollback and grants`);
+  process.stdout.write(out);
+} catch (err) {
+  console.log(`${RED}✗ atomic timer completion tests failed${RESET}`);
+  process.stdout.write((err.stdout || "") + (err.stderr || ""));
+  hardFail = true;
+}
+
+console.log("");
 const caregiverInvitations = runCaregiverInvitationTests();
 if (caregiverInvitations.ok) {
   console.log(`${GREEN}✓${RESET} caregiver invitations: owner management, staged compatibility, email cutover, expiry, revocation, single use, and rate limiting`);

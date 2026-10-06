@@ -322,6 +322,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [p] 0099 · Stop the foreground date-picker ANR on the sleep screen (postponed by owner 2026-10-06; only the device verification is open) → tasks/0099-stop-foreground-date-picker-anr.md
 - [p] 0100 · Fix the Android Fabric addViewAt crash on Home (postponed by owner 2026-10-06) → tasks/0100-fix-android-fabric-addviewat-crash.md
 - [x] 0101 · Quiet the observability sink offline → tasks/done/0101-quiet-observability-sink-offline.md
+- [x] 0102 · Clear a household timer lock in the same server step that saves the stopped activity → tasks/done/0102-atomic-timer-completion.md
 
 ## Workflow status
 
@@ -489,3 +490,8 @@ pointer. Production is still 4.9.14; 4.9.15 and 4.9.16 reached only the owner's 
 next 4.9 release is the first to ship the 4.9.15 observability sink to real users, and 0101 must
 land before it. Tasks 0091–0094 are marked `[x]` here because they merged to `main`. Postponed
 tasks return to `[ ]` when the owner resumes them.
+
+On 2026-10-06 the owner added Task 0102 to the 4.9 hotfix line after a household report, reproduced
+on two simulators: a stopped timer's lock can outlive the saved activity, so the other caregiver's
+phone keeps showing the timer as running. 0102 is claimable alongside 0101; neither depends on the
+other. 0101 holds patch 4.9.22 and 0102 takes 4.9.23.

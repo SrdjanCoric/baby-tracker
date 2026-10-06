@@ -76,6 +76,7 @@ JOIN pg_namespace AS n ON n.oid = p.pronamespace
 WHERE n.nspname = 'public'
   AND p.proname IN (
     'merge_record',
+    'merge_record_and_complete_timer',
     'acquire_timer_lock',
     'release_timer_lock',
     'toggle_timer_pause'
@@ -89,6 +90,7 @@ For the current client, confirm the query returns these names, argument names, a
 acquire_timer_lock(p_baby_id uuid, p_activity_type character varying, p_user_id uuid, p_timer_data jsonb, p_started_at timestamp with time zone)
 merge_record(p_table text, p_record jsonb, p_field_clocks jsonb)
 merge_record(p_table text, p_record jsonb, p_field_clocks jsonb, p_operation_id text, p_expected_user_id uuid)
+merge_record_and_complete_timer(p_table text, p_record jsonb, p_field_clocks jsonb, p_operation_id text, p_expected_user_id uuid, p_timer_instance_id text, p_timer_started_at timestamp with time zone)
 release_timer_lock(p_baby_id uuid, p_activity_type character varying, p_user_id uuid)
 toggle_timer_pause(p_baby_id uuid, p_activity_type text, p_user_id uuid, p_timer_data jsonb)
 ```

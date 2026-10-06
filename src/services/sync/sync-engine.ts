@@ -735,12 +735,17 @@ export class SyncEngine {
     if (isCrdtTable(table) && (type === 'CREATE' || type === 'UPDATE' || (type === 'DELETE' && data))) {
       if (!data) throw new Error(`${type} operation requires data`);
       const { field_clocks, ...record } = data;
-      const { error } = await supabase.rpc('merge_record', {
+      const completion = operation.timerCompletion;
+      const { error } = await supabase.rpc(completion ? 'merge_record_and_complete_timer' : 'merge_record', {
         p_table: table,
         p_record: { id: entityId, ...record },
         p_field_clocks: (field_clocks as FieldClocks | undefined) ?? {},
         p_operation_id: operation.id,
         p_expected_user_id: authRun.context.userId,
+        ...(completion ? {
+          p_timer_instance_id: completion.timerInstanceId,
+          p_timer_started_at: completion.startedAt,
+        } : {}),
       });
       if (error) {
         throw new Error(`Failed to merge ${table}: ${error.message}`);

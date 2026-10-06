@@ -1,0 +1,16 @@
+appId: com.sofibaby.app
+---
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "(?i)Sleep prediction"
+    direction: UP
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible: "E2E Baby is sleeping"
+    timeout: 20000
+- assertNotVisible: "Set up sleep predictions"
+- assertVisible: "(?i)Sleep prediction"

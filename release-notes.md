@@ -1,3 +1,41 @@
+# Sofi Baby 4.9.23
+
+## English
+
+- When you stop a timer, it now also clears on the other caregiver’s phone.
+
+## Srpski
+
+- Kada zaustavite tajmer, on se sada uklanja i sa telefona drugog negovatelja.
+
+## Español (Latinoamérica)
+
+- Al detener un temporizador, ahora también desaparece del teléfono de la otra persona que cuida al bebé.
+
+## Español (España)
+
+- Al detener un temporizador, ahora también desaparece del teléfono de la otra persona que cuida al bebé.
+
+## Français
+
+- Lorsque vous arrêtez un minuteur, il disparaît désormais aussi du téléphone de l’autre personne qui s’occupe du bébé.
+
+## Português (Portugal)
+
+- Ao parar um temporizador, este desaparece agora também do telemóvel da outra pessoa que cuida do bebé.
+
+## Português (Brasil)
+
+- Ao parar um temporizador, ele agora também desaparece do celular da outra pessoa que cuida do bebê.
+
+## Deutsch
+
+- Wenn du einen Timer stoppst, verschwindet er jetzt auch auf dem Handy der anderen Betreuungsperson.
+
+## Italiano
+
+- Quando fermi un timer, ora scompare anche dal telefono dell’altra persona che si prende cura del bambino.
+
 # Sofi Baby 4.9.22
 
 ## English
