@@ -8,12 +8,15 @@
  * attached, and `scrubEvent` / `scrubBreadcrumb` strip emails and credential
  * shaped values before anything leaves the device.
  */
+import NetInfo from "@react-native-community/netinfo";
 import * as Sentry from "@sentry/react-native";
 import type { Breadcrumb } from "@sentry/react-native";
 import { scrubBreadcrumb, scrubEvent } from "@/utils/observability-scrub";
 import {
   errorCode,
   errorText,
+  networkOnlineFromNetInfo,
+  setContextTag,
   reportIssue,
   setObservabilitySink,
   type ObservabilityBreadcrumbInput,
@@ -21,7 +24,12 @@ import {
   type ObservabilitySink,
 } from "@/utils/observability-sink";
 
-export { scrubBreadcrumb, scrubEvent, scrubString, scrubValue } from "@/utils/observability-scrub";
+export {
+  scrubBreadcrumb,
+  scrubEvent,
+  scrubString,
+  scrubValue,
+} from "@/utils/observability-scrub";
 
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
 
@@ -33,38 +41,47 @@ let initialized = false;
 
 /**
  * Initialize crash reporting. Safe to call at module evaluation time and
- * idempotent. No-op when `EXPO_PUBLIC_SENTRY_DSN` is unset (E2E, local dev).
+ * idempotent. Connectivity is tracked even when the Sentry DSN is unset.
  */
 export function initObservability(): void {
   if (initialized) return;
   initialized = true;
-  if (!isObservabilityEnabled()) return;
+
+  if (isObservabilityEnabled()) {
+    try {
+      Sentry.init({
+        dsn: SENTRY_DSN,
+        environment: __DEV__ ? "development" : "production",
+        sendDefaultPii: false,
+        attachScreenshot: false,
+        attachViewHierarchy: false,
+        enableNativeNagger: false,
+        // Release health: crash-free sessions per version.
+        enableAutoSessionTracking: true,
+        // Native crashes (SIGSEGV etc.), 0xdead10cc / OOM style terminations,
+        // and main-thread hangs all become events.
+        enableNativeCrashHandling: true,
+        enableWatchdogTerminationTracking: true,
+        enableAppHangTracking: true,
+        appHangTimeoutInterval: 2,
+        maxBreadcrumbs: 100,
+        // Low sampling: we want navigation breadcrumbs and route context on
+        // errors, not a performance product.
+        tracesSampleRate: 0.05,
+        integrations: [Sentry.expoRouterIntegration()],
+        beforeSend: scrubEvent,
+        beforeBreadcrumb: scrubBreadcrumb,
+      });
+      setObservabilitySink(sentrySink);
+    } catch {
+      // Reporting must never take the app down.
+    }
+  }
 
   try {
-    Sentry.init({
-      dsn: SENTRY_DSN,
-      environment: __DEV__ ? "development" : "production",
-      sendDefaultPii: false,
-      attachScreenshot: false,
-      attachViewHierarchy: false,
-      enableNativeNagger: false,
-      // Release health: crash-free sessions per version.
-      enableAutoSessionTracking: true,
-      // Native crashes (SIGSEGV etc.), 0xdead10cc / OOM style terminations,
-      // and main-thread hangs all become events.
-      enableNativeCrashHandling: true,
-      enableWatchdogTerminationTracking: true,
-      enableAppHangTracking: true,
-      appHangTimeoutInterval: 2,
-      maxBreadcrumbs: 100,
-      // Low sampling: we want navigation breadcrumbs and route context on
-      // errors, not a performance product.
-      tracesSampleRate: 0.05,
-      integrations: [Sentry.expoRouterIntegration()],
-      beforeSend: scrubEvent,
-      beforeBreadcrumb: scrubBreadcrumb,
+    NetInfo.addEventListener((state) => {
+      setContextTag("network_online", networkOnlineFromNetInfo(state));
     });
-    setObservabilitySink(sentrySink);
   } catch {
     // Reporting must never take the app down.
   }
@@ -82,14 +99,20 @@ export function setObservabilityUser(user: ObservabilityUser | null): void {
   try {
     Sentry.setUser(user ? { id: user.id } : null);
     Sentry.setTag("signed_in", user ? "true" : "false");
-    Sentry.setTag("has_household", user ? String(user.householdId != null) : "false");
+    Sentry.setTag(
+      "has_household",
+      user ? String(user.householdId != null) : "false"
+    );
     Sentry.setTag("is_owner", user ? String(user.isOwner) : "false");
   } catch {
     // ignore
   }
 }
 
-export function setObservabilityTag(key: string, value: string | boolean | null): void {
+export function setObservabilityTag(
+  key: string,
+  value: string | boolean | null
+): void {
   if (!isObservabilityEnabled()) return;
   try {
     Sentry.setTag(key, value == null ? undefined : String(value));
@@ -157,7 +180,9 @@ function sendIssueToSentry(issue: ObservabilityIssue): void {
   });
 }
 
-function sendBreadcrumbToSentry(breadcrumb: ObservabilityBreadcrumbInput): void {
+function sendBreadcrumbToSentry(
+  breadcrumb: ObservabilityBreadcrumbInput
+): void {
   const data: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(breadcrumb.data ?? {})) {
     if (value != null) data[key] = value;
@@ -173,7 +198,8 @@ function sendBreadcrumbToSentry(breadcrumb: ObservabilityBreadcrumbInput): void 
 const sentrySink: ObservabilitySink = {
   reportIssue: sendIssueToSentry,
   addBreadcrumb: sendBreadcrumbToSentry,
-  setTag: (key, value) => Sentry.setTag(key, value == null ? undefined : String(value)),
+  setTag: (key, value) =>
+    Sentry.setTag(key, value == null ? undefined : String(value)),
 };
 
 /** Wrap the root component so touch and render breadcrumbs are collected. */

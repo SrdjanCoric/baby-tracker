@@ -1,3 +1,50 @@
+# Sofi Baby 4.9.22
+
+## English
+
+- Offline connection interruptions no longer flood diagnostic reports.
+- Reduced duplicate diagnostic reports and improved device-clock checks, with quicker retries after failures.
+
+## Srpski
+
+- Prekidi veze van mreže više ne preplavljuju dijagnostičke izveštaje.
+- Smanjeni su duplirani dijagnostički izveštaji i poboljšane provere sata uređaja, uz brže ponovne pokušaje nakon grešaka.
+
+## Español (Latinoamérica)
+
+- Las interrupciones de conexión sin internet ya no saturan los informes de diagnóstico.
+- Se redujeron los informes de diagnóstico duplicados y se mejoraron las comprobaciones del reloj del dispositivo, con reintentos más rápidos tras los fallos.
+
+## Español (España)
+
+- Las interrupciones de conexión sin internet ya no saturan los informes de diagnóstico.
+- Se han reducido los informes de diagnóstico duplicados y se han mejorado las comprobaciones del reloj del dispositivo, con reintentos más rápidos tras los fallos.
+
+## Français
+
+- Les interruptions de connexion hors ligne ne saturent plus les rapports de diagnostic.
+- Les rapports de diagnostic en double ont été réduits et les vérifications de l’horloge de l’appareil améliorées, avec des tentatives plus rapides après un échec.
+
+## Português (Portugal)
+
+- As interrupções de ligação sem internet já não sobrecarregam os relatórios de diagnóstico.
+- Foram reduzidos os relatórios de diagnóstico duplicados e melhoradas as verificações do relógio do dispositivo, com novas tentativas mais rápidas após falhas.
+
+## Português (Brasil)
+
+- As interrupções de conexão sem internet não sobrecarregam mais os relatórios de diagnóstico.
+- Reduzimos os relatórios de diagnóstico duplicados e melhoramos as verificações do relógio do dispositivo, com novas tentativas mais rápidas após falhas.
+
+## Deutsch
+
+- Verbindungsunterbrechungen im Offline-Modus überfluten nicht mehr die Diagnoseberichte.
+- Doppelte Diagnoseberichte wurden reduziert und die Prüfung der Geräteuhr verbessert, mit schnelleren Wiederholungsversuchen nach Fehlern.
+
+## Italiano
+
+- Le interruzioni di connessione offline non sovraccaricano più i rapporti diagnostici.
+- Ridotti i rapporti diagnostici duplicati e migliorati i controlli dell’orologio del dispositivo, con nuovi tentativi più rapidi dopo gli errori.
+
 # Sofi Baby 4.9.20
 
 ## English

@@ -7,9 +7,16 @@
  * is best-effort and never throws.
  */
 
+import { isTransportFailure } from "@/utils/network-error";
+
 export type ObservabilityIssueLevel = "warning" | "error";
 
-export type ObservabilityTagValue = string | number | boolean | null | undefined;
+export type ObservabilityTagValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined;
 
 export interface ObservabilityIssue {
   /** Stable, dotted identifier, e.g. `sync.push_exhausted`. Groups events. */
@@ -39,6 +46,19 @@ export interface ObservabilitySink {
 }
 
 let activeSink: ObservabilitySink | null = null;
+let networkOnline: boolean | null = null;
+const reportedNetworkIssues = new Set<string>();
+
+export function networkOnlineFromNetInfo(state: {
+  isConnected: boolean | null;
+  isInternetReachable: boolean | null | undefined;
+}): boolean | null {
+  if (state.isConnected === false || state.isInternetReachable === false)
+    return false;
+  if (state.isConnected === true && state.isInternetReachable === true)
+    return true;
+  return null;
+}
 
 export function setObservabilitySink(sink: ObservabilitySink | null): void {
   activeSink = sink;
@@ -51,7 +71,12 @@ export function isObservabilitySinkActive(): boolean {
 const ISSUE_WINDOW_MS = 60_000;
 const ISSUE_MAX_PER_WINDOW = 5;
 const ISSUE_MAX_PER_SESSION = 20;
-const issueCounters = new Map<string, { windowStart: number; count: number; total: number }>();
+const issueCounters = new Map<
+  string,
+  { windowStart: number; count: number; total: number }
+>();
+
+const suppressed = new Map<string, { count: number; lastCrumbAt: number }>();
 
 /**
  * Drop repeats of the same issue beyond a few per minute, and beyond a fixed
@@ -71,12 +96,17 @@ export function shouldReportIssue(name: string, now = Date.now()): boolean {
   } else {
     entry.count += 1;
   }
-  return entry.count <= ISSUE_MAX_PER_WINDOW && entry.total <= ISSUE_MAX_PER_SESSION;
+  return (
+    entry.count <= ISSUE_MAX_PER_WINDOW && entry.total <= ISSUE_MAX_PER_SESSION
+  );
 }
 
 /** Test hook. */
 export function resetObservabilityIssueLimiter(): void {
   issueCounters.clear();
+  suppressed.clear();
+  reportedNetworkIssues.clear();
+  networkOnline = null;
 }
 
 export function errorText(error: unknown): string | undefined {
@@ -94,7 +124,8 @@ export function errorText(error: unknown): string | undefined {
 export function errorCode(error: unknown): string | undefined {
   if (!error || typeof error !== "object") return undefined;
   const code = (error as { code?: unknown }).code;
-  if (typeof code === "string" && code.length > 0 && code.length <= 32) return code;
+  if (typeof code === "string" && code.length > 0 && code.length <= 32)
+    return code;
   if (typeof code === "number") return String(code);
   const status = (error as { status?: unknown }).status;
   if (typeof status === "number") return String(status);
@@ -110,7 +141,31 @@ export function reportIssue(issue: ObservabilityIssue): void {
   const sink = activeSink;
   if (!sink) return;
   try {
-    if (!shouldReportIssue(issue.name)) return;
+    const networkIssue =
+      issue.name === "realtime.channel_error" ||
+      isTransportFailure(issue.error);
+    if (
+      (networkIssue &&
+        (networkOnline === false || reportedNetworkIssues.has(issue.name))) ||
+      !shouldReportIssue(issue.name)
+    ) {
+      const now = Date.now();
+      const entry = suppressed.get(issue.name);
+      const count = (entry?.count ?? 0) + 1;
+      if (!entry || now - entry.lastCrumbAt >= ISSUE_WINDOW_MS) {
+        suppressed.set(issue.name, { count: 0, lastCrumbAt: now });
+        sink.addBreadcrumb({
+          category: issue.area,
+          message: issue.name,
+          level: issue.level ?? "error",
+          data: { suppressed: count },
+        });
+      } else {
+        entry.count = count;
+      }
+      return;
+    }
+    if (networkIssue) reportedNetworkIssues.add(issue.name);
     sink.reportIssue(issue);
   } catch {
     // Reporting must never take the app down.
@@ -118,7 +173,9 @@ export function reportIssue(issue: ObservabilityIssue): void {
 }
 
 /** Record a user-flow or system event so crash reports carry context. No-op until a sink is registered. */
-export function recordBreadcrumb(breadcrumb: ObservabilityBreadcrumbInput): void {
+export function recordBreadcrumb(
+  breadcrumb: ObservabilityBreadcrumbInput
+): void {
   const sink = activeSink;
   if (!sink) return;
   try {
@@ -128,8 +185,10 @@ export function recordBreadcrumb(breadcrumb: ObservabilityBreadcrumbInput): void
   }
 }
 
-/** Set a low-cardinality tag on every subsequent event. No-op until a sink is registered. */
+/** Set a low-cardinality tag; network_online also tracks device connectivity before sink registration. */
 export function setContextTag(key: string, value: ObservabilityTagValue): void {
+  if (key === "network_online")
+    networkOnline = typeof value === "boolean" ? value : null;
   const sink = activeSink;
   if (!sink) return;
   try {

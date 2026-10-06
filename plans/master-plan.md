@@ -321,7 +321,7 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [p] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang (postponed by owner 2026-10-06) → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
 - [p] 0099 · Stop the foreground date-picker ANR on the sleep screen (postponed by owner 2026-10-06; only the device verification is open) → tasks/0099-stop-foreground-date-picker-anr.md
 - [p] 0100 · Fix the Android Fabric addViewAt crash on Home (postponed by owner 2026-10-06) → tasks/0100-fix-android-fabric-addviewat-crash.md
-- [ ] 0101 · Quiet the observability sink offline → tasks/0101-quiet-observability-sink-offline.md
+- [x] 0101 · Quiet the observability sink offline → tasks/done/0101-quiet-observability-sink-offline.md
 
 ## Workflow status
 
