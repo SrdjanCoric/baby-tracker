@@ -311,6 +311,9 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0092 · Widget and Watch control remote timers (after 0091) → tasks/done/0092-widget-and-watch-control-remote-timers.md
 - [x] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/done/0093-end-starter-live-activity-on-remote-stop.md
 - [>] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
+- [ ] 0103 · Fold the 4.9 hotfix line into main → tasks/0103-fold-hotfix-4-9-into-main.md
+- [ ] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/0104-household-stop-clears-lock-in-save.md
+- [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104) → tasks/0105-gate-4-10-2-release.md
 
 ## Workflow status
 
@@ -462,3 +465,10 @@ compatible with app 4.9.11) and decided that no release ships until 0091 through
 and the full household E2E (`npm run e2e:household-timers`) has passed on the combined result; each
 task's PR merges to `main` on unit, component, CI, and SQL proof only, with the E2E acceptance item
 deferred to the 0094 closeout.
+
+On 2026-10-06 the owner added Tasks 0103 through 0105 to bring the 4.9 hotfix line (through 4.9.23)
+into `main` and release the held 4.10 work as 4.10.2. They take priority over every other open
+task and run in order: 0103 merges `hotfix/4.9` into `main`, 0104 lets any household member's stop
+clear the lock in the same server step that saves the activity, and 0105 prepares the release and
+carries Task 0094's open release gates. Each branches off `main` and merges back into `main`.
+Tasks 0087, 0088, and 0089 stay postponed under the owner's 2026-10-06 decision on the 4.9 line.
