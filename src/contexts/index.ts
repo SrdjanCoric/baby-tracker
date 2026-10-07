@@ -36,7 +36,7 @@ export type { AuthUser } from "./auth-context";
 export { HouseholdProvider, useHousehold, householdReducer, initialHouseholdState } from "./household-context";
 export type { HouseholdState, HouseholdAction } from "./household-context";
 
-export { SyncProvider, useSync, syncReducer, initialSyncState, getSyncEngine } from "./sync-context";
+export { SyncProvider, useSync, syncReducer, initialSyncState, getSyncEngine, pauseRemoteChanges } from "./sync-context";
 export type { SyncState, SyncAction } from "./sync-context";
 
 export { NotificationProvider, useNotifications } from "./notification-context";

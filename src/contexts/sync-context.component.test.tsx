@@ -90,3 +90,51 @@ describe("SyncProvider app-state refresh", () => {
     expect(mockTrigger).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("SyncProvider remote change pause", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(AppState, "addEventListener").mockImplementation(
+      () => ({ remove: jest.fn() }) as never
+    );
+  });
+
+  it("holds back listed tables while paused and delivers again after resume", async () => {
+    const { SyncProvider, useSync, pauseRemoteChanges } =
+      require("./sync-context") as typeof import("./sync-context");
+    const sleeps = jest.fn();
+    const timers = jest.fn();
+    function Listener() {
+      const { subscribeToRemoteChanges } = useSync();
+      React.useEffect(() => {
+        const offSleeps = subscribeToRemoteChanges("sleep_sessions", sleeps);
+        const offTimers = subscribeToRemoteChanges("active_timers", timers);
+        return () => {
+          offSleeps();
+          offTimers();
+        };
+      }, [subscribeToRemoteChanges]);
+      return null;
+    }
+    await act(async () => {
+      TestRenderer.create(
+        React.createElement(SyncProvider, null, React.createElement(Listener))
+      );
+    });
+    const emit = (mockRealtime.onRemoteChange.mock.calls[0] as unknown as [
+      (change: unknown) => void,
+    ])[0];
+    const change = (table: string) => ({ table, eventType: "INSERT", new: {} });
+
+    const resume = pauseRemoteChanges(["sleep_sessions"]);
+    emit(change("sleep_sessions"));
+    emit(change("active_timers"));
+    expect(sleeps).not.toHaveBeenCalled();
+    expect(timers).toHaveBeenCalledTimes(1);
+
+    resume();
+    resume();
+    emit(change("sleep_sessions"));
+    expect(sleeps).toHaveBeenCalledTimes(1);
+  });
+});

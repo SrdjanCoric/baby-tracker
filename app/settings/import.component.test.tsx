@@ -16,6 +16,8 @@ const mockDelete = jest.fn();
 const mockPrepare = jest.fn();
 const mockImport = jest.fn();
 const mockRefresh = jest.fn(async () => {});
+const mockResume = jest.fn();
+const mockPause = jest.fn((_tables: string[]) => mockResume);
 const mockDispatch = jest.fn();
 const mockBack = jest.fn();
 const mockDismissAll = jest.fn();
@@ -70,6 +72,7 @@ jest.mock("@/contexts", () => ({
   useBaby: () => ({ selectedBaby: mockBaby }),
   useAuth: () => ({ user: mockUser }),
   useSync: () => mockSync,
+  pauseRemoteChanges: (tables: string[]) => mockPause(tables),
   useSleep: () => ({
     refreshSleeps: mockRefresh,
     wakeWindowConfig: {
@@ -86,6 +89,15 @@ jest.mock("@/contexts", () => ({
   useHealth: () => ({ refreshHealth: mockRefresh }),
 }));
 jest.mock("@/services/import/import-records", () => ({
+  IMPORT_TABLES: {
+    sleep: "sleep_sessions",
+    feeding: "feedings",
+    diaper: "diapers",
+    growth: "growth_measurements",
+    pumping: "pumping_sessions",
+    health: "health_entries",
+    tummyTime: "tummy_time_sessions",
+  },
   prepareImport: (...args: unknown[]) => mockPrepare(...args),
   importRecords: (...args: unknown[]) => mockImport(...args),
 }));
@@ -373,3 +385,43 @@ it.each(["nara", "huckleberry"])(
     ).toBe(false);
   }
 );
+
+it("pauses live activity updates while importing and keeps Done busy until the reload ends", async () => {
+  let finishReload!: () => void;
+  const reload = new Promise<void>((resolve) => {
+    finishReload = resolve;
+  });
+  mockRefresh.mockImplementation(() => reload);
+  render(<ImportScreen />);
+  await pick();
+  await screen.findByText(/import.forBaby/);
+  fireEvent.press(screen.getByTestId("import-save"));
+  await screen.findByText("import.finished");
+  expect(mockPause).toHaveBeenCalledTimes(1);
+  expect([...mockPause.mock.calls[0][0]].sort()).toEqual(
+    [
+      "diapers",
+      "feedings",
+      "growth_measurements",
+      "health_entries",
+      "pumping_sessions",
+      "sleep_sessions",
+      "tummy_time_sessions",
+    ]
+  );
+  expect(mockResume).not.toHaveBeenCalled();
+  expect(
+    screen.getByTestId("import-done").props.accessibilityState
+  ).toMatchObject({ disabled: true, busy: true });
+  fireEvent.press(screen.getByTestId("import-done"));
+  expect(mockBack).not.toHaveBeenCalled();
+
+  await act(async () => {
+    finishReload();
+    await reload;
+  });
+  expect(mockResume).toHaveBeenCalledTimes(1);
+  expect(
+    screen.getByTestId("import-done").props.accessibilityState
+  ).toMatchObject({ disabled: false, busy: false });
+});

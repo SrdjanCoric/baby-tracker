@@ -94,6 +94,30 @@ let syncEngineInstance: SyncEngine | null = new SyncEngine();
 let realTimeSyncInstance: RealTimeSync | null = new RealTimeSync();
 let instanceRefCount = 0;
 
+// Tables whose live changes are held back from screens, counted per caller. Changes are
+// still reconciled into CRDT state; the caller reloads those tables when it resumes.
+const pausedRemoteTables = new Map<SyncableTable, number>();
+
+/**
+ * Stops live changes for the given tables reaching screens until the returned function
+ * is called. Bulk writers such as imports use it so each echoed row does not trigger a
+ * full recalculation; they reload the tables once afterwards.
+ */
+export function pauseRemoteChanges(tables: readonly SyncableTable[]): () => void {
+  for (const table of tables)
+    pausedRemoteTables.set(table, (pausedRemoteTables.get(table) ?? 0) + 1);
+  let resumed = false;
+  return () => {
+    if (resumed) return;
+    resumed = true;
+    for (const table of tables) {
+      const count = (pausedRemoteTables.get(table) ?? 1) - 1;
+      if (count > 0) pausedRemoteTables.set(table, count);
+      else pausedRemoteTables.delete(table);
+    }
+  };
+}
+
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(syncReducer, initialSyncState);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -173,6 +197,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     });
 
     const dispatchChange = (change: RemoteChange) => {
+      if (pausedRemoteTables.has(change.table as SyncableTable)) return;
       const listeners = remoteChangeListenersRef.current.get(change.table as SyncableTable);
       if (listeners) {
         listeners.forEach(callback => callback(change));

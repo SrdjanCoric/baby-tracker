@@ -23,6 +23,7 @@ import {
   useHealth,
   usePumping,
   useSleep,
+  pauseRemoteChanges,
   useSync,
   useTummyTime,
 } from "@/contexts";
@@ -32,6 +33,7 @@ import {
 } from "@/services/import/huckleberry-reader";
 import { readNara } from "@/services/import/nara-reader";
 import {
+  IMPORT_TABLES,
   importRecords,
   prepareImport,
   type ImportPlan,
@@ -175,6 +177,9 @@ export default function ImportScreen() {
     setRunning(true);
     setError(null);
     setAdded(0);
+    // Each saved row echoes back as a live change; recalculating screens per row makes
+    // large imports quadratic, so screens reload once after the import instead.
+    const resumeRemoteChanges = pauseRemoteChanges(Object.values(IMPORT_TABLES));
     try {
       const completed = await importRecords(
         plan,
@@ -199,6 +204,7 @@ export default function ImportScreen() {
         refreshHealth(),
         refreshTummyTimes(),
       ]);
+      resumeRemoteChanges();
       setRunning(false);
     }
   };
@@ -449,6 +455,8 @@ export default function ImportScreen() {
               label={t("common.done")}
               testID="import-done"
               onPress={() => router.back()}
+              disabled={running}
+              busy={running}
             />
           ) : (
             <FooterButton
