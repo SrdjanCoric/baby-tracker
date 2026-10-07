@@ -1,8 +1,8 @@
 # Task 0109: Import a Nara Baby export file
 
 **Branch**: `feature/import-from-nara`
-**Depends on**: 0108
-**Base**: `main` after Task 0108 has merged.
+**Depends on**: 0107
+**Base**: `main` after Task 0107 has merged.
 **Merges into**: `main`, through one PR, after the owner says push.
 **Source**: conversation 2026-10-07 (a Nara user asked for import; Nara became paid on 2026-09-16
 and its free users can export but no longer add entries); a real export shared by that user
@@ -12,7 +12,7 @@ Nara previews and imports their history exactly like a Huckleberry user.
 ## What to build
 
 The import screen lists Nara next to Huckleberry. A Nara export (one CSV per child) follows the
-Huckleberry preview, skip reasons, re-import rules, and screen situations of Tasks 0107 and 0108,
+Huckleberry preview, skip reasons, re-import rules, and screen situations of Task 0107,
 with these differences:
 
 - Columns are found by name; their set and order vary between exports, and a type's columns are

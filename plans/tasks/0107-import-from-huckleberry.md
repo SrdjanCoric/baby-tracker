@@ -1,13 +1,14 @@
-# Task 0107: Import Huckleberry sleep and feeds from an export file
+# Task 0107: Import a Huckleberry export file
 
-**Branch**: `feature/import-huckleberry-sleep-and-feeds`
+**Branch**: `feature/import-from-huckleberry`
 **Depends on**: none
 **Base**: `main`.
 **Merges into**: `main`, through one PR, after the owner says push.
 **Source**: conversation 2026-10-07 (a parent switching apps asked for import; Huckleberry first,
 Nara after) · **User stories**: a parent switching from Huckleberry picks their export file, sees
-what will be added and what will be left out, adds their sleep and feeding history to the selected
-baby, and importing the same file again adds nothing.
+what will be added and what will be left out, adds their sleep, feeding, diaper, growth, pumping,
+medication, and tummy time history to the selected baby, and importing the same file again adds
+nothing.
 
 ## What to build
 
@@ -29,14 +30,20 @@ occurrence.
 | Feed, Start Location Bottle; Start Condition Formula / Breast Milk / Mixed; End Condition amount in ml or oz | Bottle feeding; formula / breast milk / no content type; ml (oz × 29.5735, rounded) |
 | Feed, Start Location Breast; Start Condition right time `H:MMR`, End Condition left time `H:MML`, either may be absent | Breast feeding; start, end, left and right durations; side left, right, or both |
 | Solids, food list in Start Condition | Solid feeding; the list as food text |
+| Diaper, End Condition starting Pee / Poo / Both | Diaper wet / dirty / mixed; stool colour from the Duration column when it is one of the app's colours, `mustard` as yellow, else none |
+| Growth: weight in Start Condition (kg, lb), height in Start Location (cm, in, `ft.in` = decimal feet), head in End Condition (cm, in) | Growth: weight kg, height cm, head cm, each only when present |
+| Pump: left amount in Start Condition, right in End Condition (ml, oz), optional Duration | Pumping: volume = sum in ml; side left, right, or both by which amounts are present; end = start + Duration when present |
+| Meds: name in Start Location, dose in Start Condition | Medication: name; dose amount and unit only when the unit is ml, mg, drops, or tsp |
+| Tummy time, Start and End | Tummy time, start and end |
 
-Records copy the row's Notes unchanged; no text is generated.
+Records copy the row's Notes unchanged; no text is generated. Diaper sizes (`pee:large`), "Diaper
+rash", and per-side pump amounts are not kept.
 
 | Row | Skip reason |
 | --- | --- |
-| Any other Type | not supported, per Type name |
+| Any other Type (Bath, Potty, Temperature, Activity, Note, unknown) | not supported, per Type name |
 | Field missing, unreadable, or end before start | could not read |
-| No End on Sleep or breast Feed | still running |
+| No End on Sleep, breast Feed, or Tummy time | still running |
 | Breaks a hand-entry duration or amount limit | outside app limits |
 | Start later than now | in the future |
 | Same content as an earlier row | duplicate in file |
@@ -70,12 +77,14 @@ Each record's id derives from the baby, the source, and the row's content.
   persisted in batches, never one full rewrite per record.
 - Guests import into device storage only, synced when they sign in, as today.
 - No build containing the import is submitted before Task 0110 is live in production.
+- One task for all Huckleberry types, accepted above the usual planning size limit — owner,
+  2026-10-07.
 
 ## Clarifications
 
 ## Non-goals
 
-- Diaper, growth, pumping, medication, and tummy time rows (Task 0108); Nara (Task 0109).
+- Nara (Task 0109); Huckleberry Temperature rows (no example of their layout is known).
 - Undo; another baby than the selected one; creating a baby; choosing the time zone.
 - Huckleberry's sleep location.
 
@@ -85,7 +94,11 @@ Huckleberry does not document its export. The layout comes from a real export it
 (`archiewood/baby-tracker`, `sources/huckleberry/events.csv`, 3,636 rows, April 2024 – September
 2025, no licence: never copy it into the repository) and the format notes of `refsdal/pjokk` PR 69
 (AGPL: facts only, no code), which cross-checked four other parsers. The reference export has only ml
-amounts and no Solids; oz, Mixed, and Solids come from those notes. Activity records are CRDT rows:
+amounts and no Solids; oz, Mixed, and Solids come from those notes. It has 218 Diaper, 25 Growth,
+1 Pump, 11 Meds, and 19 Tummy time rows, with stool colours yellow, brown, and red, growth in kg,
+cm, and `ft.in`, doses in ml and drops, and one Meds row with no dose; `mustard`, lb, in, and
+"Diaper rash" come from the pjokk notes. The app's stool colours are yellow, brown, green, orange,
+black, white, and red; medication lives in the health records. Activity records are CRDT rows:
 deletes are tombstones, the server merge upserts by id with per-field clocks, and pulled tombstones
 leave the device's record lists but stay in its clock shadow. Diaper, growth, and health records
 cannot yet be created with a caller-chosen id; feeding, sleep, pumping, and tummy time can. The sync
@@ -106,8 +119,9 @@ queue persists as one stored blob. Feedings already store left and right breast 
 
 - [ ] [confirm-security] Approve the file picker package the screen needs.
 - [ ] [verify] Two iOS simulators in one household on local Supabase. On A, import the reference
-      export downloaded from GitHub, then import it again. · Expected: about 1,977 sleeps and 1,385
-      feedings added within 60 seconds; no "could not read"; B shows them after sync; the second
+      export downloaded from GitHub, then import it again. · Expected: about 1,977 sleeps, 1,385
+      feedings, 218 diapers, 25 growth, 1 pumping, 11 medication, and 19 tummy time added within
+      60 seconds; no "could not read"; B shows them after sync; the second
       import adds 0. · Failure: any of those differs. · Reason: the file may not be committed, and
       the check needs simulators.
 

@@ -32,7 +32,7 @@ the existing release workflows:
 
 - Release notes describe changes relative to 4.9.23, the build now in store submission — owner,
   2026-10-06.
-- The import feature (Tasks 0107–0109) ships in 4.10.2 — owner, 2026-10-07.
+- The import feature (Tasks 0107 and 0109) ships in 4.10.2 — owner, 2026-10-07.
 - No 4.10.2 build is submitted until every human checkpoint below passes — the owner's 2026-09-05
   rule that nothing ships before the combined household E2E passes, extended to this merge.
 - No agent connects to production; every production fact comes from the owner — owner rule.
