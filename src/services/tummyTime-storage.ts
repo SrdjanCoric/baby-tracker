@@ -2,6 +2,8 @@
  * Tummy Time storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
 import type { TimerLockReconciliationSnapshot } from "./timer-lock-reconciliation";
@@ -87,11 +89,19 @@ function isToday(date: Date): boolean {
   );
 }
 
+async function readCollection(babyId: string): Promise<StoredTummyTimeEntry[]> {
+  const data = await AsyncStorage.getItem(getTummyTimesKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredTummyTimeEntry[];
+}
+
 export const TummyTimeStorageService = {
   async getAllTummyTimes(babyId: string): Promise<StoredTummyTimeEntry[]> {
-    const data = await AsyncStorage.getItem(getTummyTimesKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredTummyTimeEntry[];
+    const key = getTummyTimesKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getTummyTimeById(babyId: string, tummyTimeId: string): Promise<StoredTummyTimeEntry | null> {
@@ -99,28 +109,37 @@ export const TummyTimeStorageService = {
     return tummyTimes.find(t => t.id === tummyTimeId) ?? null;
   },
 
-  async addTummyTime(input: CreateTummyTimeInput): Promise<StoredTummyTimeEntry> {
-    const tummyTimes = await this.getAllTummyTimes(input.babyId);
-    const id = input.id ?? generateId();
-    const existing = tummyTimes.find(tummyTime => tummyTime.id === id);
-    if (existing) return existing;
+  async addTummyTime(
+    input: CreateTummyTimeInput
+  ): Promise<StoredTummyTimeEntry> {
+    const key = getTummyTimesKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const tummyTimes = await readCollection(input.babyId);
+      const id = input.id ?? generateId();
+      const existing = tummyTimes.find((tummyTime) => tummyTime.id === id);
+      if (existing) return existing;
 
-    const now = new Date().toISOString();
-    const newTummyTime: StoredTummyTimeEntry = {
-      id,
-      babyId: input.babyId,
-      startedAt: input.startedAt.toISOString(),
-      endedAt: input.endedAt?.toISOString(),
-      durationSeconds: input.durationSeconds,
-      notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const now = new Date().toISOString();
+      const newTummyTime: StoredTummyTimeEntry = {
+        id,
+        babyId: input.babyId,
+        startedAt: input.startedAt.toISOString(),
+        endedAt: input.endedAt?.toISOString(),
+        durationSeconds: input.durationSeconds,
+        notes: input.notes,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    tummyTimes.push(newTummyTime);
-    await AsyncStorage.setItem(getTummyTimesKey(input.babyId), JSON.stringify(tummyTimes));
+      tummyTimes.push(newTummyTime);
+      await AsyncStorage.setItem(
+        getTummyTimesKey(input.babyId),
+        JSON.stringify(tummyTimes)
+      );
 
-    return newTummyTime;
+      return newTummyTime;
+    });
   },
 
   async updateTummyTime(
@@ -128,36 +147,56 @@ export const TummyTimeStorageService = {
     tummyTimeId: string,
     input: UpdateTummyTimeInput
   ): Promise<StoredTummyTimeEntry | null> {
-    const tummyTimes = await this.getAllTummyTimes(babyId);
-    const index = tummyTimes.findIndex(t => t.id === tummyTimeId);
+    const key = getTummyTimesKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const tummyTimes = await readCollection(babyId);
+      const index = tummyTimes.findIndex((t) => t.id === tummyTimeId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedTummyTime: StoredTummyTimeEntry = {
-      ...tummyTimes[index],
-      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
-      ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
-      ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedTummyTime: StoredTummyTimeEntry = {
+        ...tummyTimes[index],
+        ...(input.startedAt !== undefined && {
+          startedAt: input.startedAt.toISOString(),
+        }),
+        ...(input.endedAt !== undefined && {
+          endedAt: input.endedAt.toISOString(),
+        }),
+        ...(input.durationSeconds !== undefined && {
+          durationSeconds: input.durationSeconds,
+        }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    tummyTimes[index] = updatedTummyTime;
-    await AsyncStorage.setItem(getTummyTimesKey(babyId), JSON.stringify(tummyTimes));
+      tummyTimes[index] = updatedTummyTime;
+      await AsyncStorage.setItem(
+        getTummyTimesKey(babyId),
+        JSON.stringify(tummyTimes)
+      );
 
-    return updatedTummyTime;
+      return updatedTummyTime;
+    });
   },
 
   async deleteTummyTime(babyId: string, tummyTimeId: string): Promise<boolean> {
-    const tummyTimes = await this.getAllTummyTimes(babyId);
-    const index = tummyTimes.findIndex(t => t.id === tummyTimeId);
+    const key = getTummyTimesKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const tummyTimes = await readCollection(babyId);
+      const index = tummyTimes.findIndex((t) => t.id === tummyTimeId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    tummyTimes.splice(index, 1);
-    await AsyncStorage.setItem(getTummyTimesKey(babyId), JSON.stringify(tummyTimes));
+      tummyTimes.splice(index, 1);
+      await AsyncStorage.setItem(
+        getTummyTimesKey(babyId),
+        JSON.stringify(tummyTimes)
+      );
 
-    return true;
+      return true;
+    });
   },
 
   async getLastTummyTime(babyId: string): Promise<StoredTummyTimeEntry | null> {

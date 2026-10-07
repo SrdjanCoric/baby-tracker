@@ -2,6 +2,8 @@
  * Feeding storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 import { computeSuggestedSide } from "@/utils/feeding-sessions";
@@ -92,11 +94,19 @@ function getActiveTimerKey(babyId: string): string {
   return getUserScopedKey(`${ACTIVE_TIMER_KEY_PREFIX}${babyId}`);
 }
 
+async function readCollection(babyId: string): Promise<StoredFeedingEntry[]> {
+  const data = await AsyncStorage.getItem(getFeedingsKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredFeedingEntry[];
+}
+
 export const FeedingStorageService = {
   async getAllFeedings(babyId: string): Promise<StoredFeedingEntry[]> {
-    const data = await AsyncStorage.getItem(getFeedingsKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredFeedingEntry[];
+    const key = getFeedingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getFeedingById(babyId: string, feedingId: string): Promise<StoredFeedingEntry | null> {
@@ -105,37 +115,44 @@ export const FeedingStorageService = {
   },
 
   async addFeeding(input: CreateFeedingInput): Promise<StoredFeedingEntry> {
-    const feedings = await this.getAllFeedings(input.babyId);
-    const id = input.id ?? generateId();
-    const existing = feedings.find(feeding => feeding.id === id);
-    if (existing) return existing;
+    const key = getFeedingsKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const feedings = await readCollection(input.babyId);
+      const id = input.id ?? generateId();
+      const existing = feedings.find((feeding) => feeding.id === id);
+      if (existing) return existing;
 
-    const now = new Date().toISOString();
-    const newFeeding: StoredFeedingEntry = {
-      id,
-      babyId: input.babyId,
-      type: input.type,
-      side: input.side,
-      lastFinishedSide: input.lastFinishedSide,
-      startedAt: input.startedAt.toISOString(),
-      endedAt: input.endedAt?.toISOString(),
-      durationSeconds: input.durationSeconds,
-      leftDurationSeconds: input.leftDurationSeconds,
-      rightDurationSeconds: input.rightDurationSeconds,
-      amountMl: input.amountMl,
-      contentType: input.contentType,
-      foodType: input.foodType,
-      amount: input.amount,
-      reaction: input.reaction,
-      notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const now = new Date().toISOString();
+      const newFeeding: StoredFeedingEntry = {
+        id,
+        babyId: input.babyId,
+        type: input.type,
+        side: input.side,
+        lastFinishedSide: input.lastFinishedSide,
+        startedAt: input.startedAt.toISOString(),
+        endedAt: input.endedAt?.toISOString(),
+        durationSeconds: input.durationSeconds,
+        leftDurationSeconds: input.leftDurationSeconds,
+        rightDurationSeconds: input.rightDurationSeconds,
+        amountMl: input.amountMl,
+        contentType: input.contentType,
+        foodType: input.foodType,
+        amount: input.amount,
+        reaction: input.reaction,
+        notes: input.notes,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    feedings.push(newFeeding);
-    await AsyncStorage.setItem(getFeedingsKey(input.babyId), JSON.stringify(feedings));
+      feedings.push(newFeeding);
+      await AsyncStorage.setItem(
+        getFeedingsKey(input.babyId),
+        JSON.stringify(feedings)
+      );
 
-    return newFeeding;
+      return newFeeding;
+    });
   },
 
   async updateFeeding(
@@ -143,44 +160,70 @@ export const FeedingStorageService = {
     feedingId: string,
     input: UpdateFeedingInput
   ): Promise<StoredFeedingEntry | null> {
-    const feedings = await this.getAllFeedings(babyId);
-    const index = feedings.findIndex(f => f.id === feedingId);
+    const key = getFeedingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const feedings = await readCollection(babyId);
+      const index = feedings.findIndex((f) => f.id === feedingId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedFeeding: StoredFeedingEntry = {
-      ...feedings[index],
-      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
-      ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
-      ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
-      ...(input.leftDurationSeconds !== undefined && { leftDurationSeconds: input.leftDurationSeconds }),
-      ...(input.rightDurationSeconds !== undefined && { rightDurationSeconds: input.rightDurationSeconds }),
-      ...(input.amountMl !== undefined && { amountMl: input.amountMl }),
-      ...(input.contentType !== undefined && { contentType: input.contentType }),
-      ...(input.foodType !== undefined && { foodType: input.foodType }),
-      ...(input.amount !== undefined && { amount: input.amount }),
-      ...(input.reaction !== undefined && { reaction: input.reaction }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      ...(input.side !== undefined && { side: input.side }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedFeeding: StoredFeedingEntry = {
+        ...feedings[index],
+        ...(input.startedAt !== undefined && {
+          startedAt: input.startedAt.toISOString(),
+        }),
+        ...(input.endedAt !== undefined && {
+          endedAt: input.endedAt.toISOString(),
+        }),
+        ...(input.durationSeconds !== undefined && {
+          durationSeconds: input.durationSeconds,
+        }),
+        ...(input.leftDurationSeconds !== undefined && {
+          leftDurationSeconds: input.leftDurationSeconds,
+        }),
+        ...(input.rightDurationSeconds !== undefined && {
+          rightDurationSeconds: input.rightDurationSeconds,
+        }),
+        ...(input.amountMl !== undefined && { amountMl: input.amountMl }),
+        ...(input.contentType !== undefined && {
+          contentType: input.contentType,
+        }),
+        ...(input.foodType !== undefined && { foodType: input.foodType }),
+        ...(input.amount !== undefined && { amount: input.amount }),
+        ...(input.reaction !== undefined && { reaction: input.reaction }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        ...(input.side !== undefined && { side: input.side }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    feedings[index] = updatedFeeding;
-    await AsyncStorage.setItem(getFeedingsKey(babyId), JSON.stringify(feedings));
+      feedings[index] = updatedFeeding;
+      await AsyncStorage.setItem(
+        getFeedingsKey(babyId),
+        JSON.stringify(feedings)
+      );
 
-    return updatedFeeding;
+      return updatedFeeding;
+    });
   },
 
   async deleteFeeding(babyId: string, feedingId: string): Promise<boolean> {
-    const feedings = await this.getAllFeedings(babyId);
-    const index = feedings.findIndex(f => f.id === feedingId);
+    const key = getFeedingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const feedings = await readCollection(babyId);
+      const index = feedings.findIndex((f) => f.id === feedingId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    feedings.splice(index, 1);
-    await AsyncStorage.setItem(getFeedingsKey(babyId), JSON.stringify(feedings));
+      feedings.splice(index, 1);
+      await AsyncStorage.setItem(
+        getFeedingsKey(babyId),
+        JSON.stringify(feedings)
+      );
 
-    return true;
+      return true;
+    });
   },
 
   async getLastFeeding(babyId: string): Promise<StoredFeedingEntry | null> {

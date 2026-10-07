@@ -2073,5 +2073,51 @@
       "keepAccountData": "Keep account data",
       "confirmDeletion": "The baby and activities stored on this device will be deleted. This cannot be undone."
     }
+  },
+  "import": {
+    "title": "Import from another app",
+    "description": "Bring your history over from another baby tracker. The file is read on this phone and never uploaded.",
+    "sourcesTitle": "Import from",
+    "accountRequired": "Create an account to import",
+    "accountRequiredDescription": "Imported history is saved to your account, so it stays safe and syncs with your household.",
+    "chooseFile": "Choose CSV file",
+    "chooseAnother": "Choose another file",
+    "preview": "Import preview",
+    "forBaby": "For {{baby}}",
+    "toAdd": "To add",
+    "alreadyImported": "Already imported",
+    "skipped": "Skipped",
+    "dateRange": "Date range",
+    "timeZone": "Time zone",
+    "addRecords": "Import records",
+    "progress": "Added {{added}} of {{total}}",
+    "finished": "Import complete",
+    "failed": "Import stopped. Saved records remain. Choose the file again to add the rest.",
+    "failedBeforeSave": "Import could not start. No records were added. Choose the file and try again.",
+    "connectAndSync": "Connect and wait for sync to finish before importing.",
+    "leaveTitle": "Leave import?",
+    "leaveMessage": "Import is running. Saved records will remain; import the file again to add the rest.",
+    "leave": "Leave",
+    "stay": "Stay",
+    "invalidFile": "Choose a Huckleberry CSV with the expected header and at least one row.",
+    "fileTooLarge": "File too large. Choose a file no larger than 10 MB with at most 20,000 rows.",
+    "noBaby": "Select a baby before importing.",
+    "reasons": {
+      "couldNotRead": "Could not read",
+      "stillRunning": "Still running",
+      "outsideLimits": "Outside app limits",
+      "future": "In the future",
+      "duplicateInFile": "Duplicate in file",
+      "unsupported": "Not supported: {{type}}"
+    },
+    "types": {
+      "sleep": "Sleep",
+      "feeding": "Feeding",
+      "diaper": "Diapers",
+      "growth": "Growth",
+      "pumping": "Pumping",
+      "health": "Medication",
+      "tummyTime": "Tummy time"
+    }
   }
 }

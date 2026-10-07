@@ -2073,5 +2073,51 @@
       "keepAccountData": "Kontodaten behalten",
       "confirmDeletion": "Die auf diesem Gerät gespeicherten Baby- und Aktivitätsdaten werden gelöscht. Dies kann nicht rückgängig gemacht werden."
     }
+  },
+  "import": {
+    "title": "Aus anderer App importieren",
+    "description": "Übernimm deinen Verlauf aus einer anderen Baby-App. Die Datei wird auf diesem Telefon gelesen und nie hochgeladen.",
+    "sourcesTitle": "Importieren aus",
+    "accountRequired": "Erstelle ein Konto zum Importieren",
+    "accountRequiredDescription": "Importierter Verlauf wird in deinem Konto gespeichert, bleibt so sicher und wird mit deinem Haushalt synchronisiert.",
+    "chooseFile": "CSV-Datei auswählen",
+    "chooseAnother": "Andere Datei wählen",
+    "preview": "Importvorschau",
+    "forBaby": "Für {{baby}}",
+    "toAdd": "Hinzuzufügen",
+    "alreadyImported": "Bereits importiert",
+    "skipped": "Übersprungen",
+    "dateRange": "Zeitraum",
+    "timeZone": "Zeitzone",
+    "addRecords": "Einträge importieren",
+    "progress": "{{added}} von {{total}} hinzugefügt",
+    "finished": "Import abgeschlossen",
+    "failed": "Import angehalten. Gespeicherte Einträge bleiben erhalten. Wähle die Datei erneut, um den Rest hinzuzufügen.",
+    "failedBeforeSave": "Der Import konnte nicht gestartet werden. Es wurden keine Einträge hinzugefügt. Wähle die Datei aus und versuche es erneut.",
+    "connectAndSync": "Verbinde dich und warte, bis die Synchronisierung abgeschlossen ist.",
+    "leaveTitle": "Import verlassen?",
+    "leaveMessage": "Der Import läuft. Gespeicherte Einträge bleiben erhalten; importiere die Datei erneut, um den Rest hinzuzufügen.",
+    "leave": "Verlassen",
+    "stay": "Bleiben",
+    "invalidFile": "Wähle eine Huckleberry-CSV mit der erwarteten Kopfzeile und mindestens einer Datenzeile.",
+    "fileTooLarge": "Datei zu groß. Wähle eine Datei mit höchstens 10 MB und 20.000 Zeilen.",
+    "noBaby": "Wähle vor dem Import ein Baby aus.",
+    "reasons": {
+      "couldNotRead": "Nicht lesbar",
+      "stillRunning": "Läuft noch",
+      "outsideLimits": "Außerhalb der App-Grenzen",
+      "future": "In der Zukunft",
+      "duplicateInFile": "Duplikat in der Datei",
+      "unsupported": "Nicht unterstützt: {{type}}"
+    },
+    "types": {
+      "sleep": "Schlaf",
+      "feeding": "Füttern",
+      "diaper": "Windeln",
+      "growth": "Wachstum",
+      "pumping": "Abpumpen",
+      "health": "Medikamente",
+      "tummyTime": "Bauchlage"
+    }
   }
 }

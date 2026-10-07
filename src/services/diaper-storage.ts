@@ -2,6 +2,8 @@
  * Diaper storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import type { DiaperType, StoolColor } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 
@@ -59,11 +61,19 @@ function isToday(date: Date): boolean {
   );
 }
 
+async function readCollection(babyId: string): Promise<StoredDiaperEntry[]> {
+  const data = await AsyncStorage.getItem(getDiapersKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredDiaperEntry[];
+}
+
 export const DiaperStorageService = {
   async getAllDiapers(babyId: string): Promise<StoredDiaperEntry[]> {
-    const data = await AsyncStorage.getItem(getDiapersKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredDiaperEntry[];
+    const key = getDiapersKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getDiaperById(babyId: string, diaperId: string): Promise<StoredDiaperEntry | null> {
@@ -72,24 +82,31 @@ export const DiaperStorageService = {
   },
 
   async addDiaper(input: CreateDiaperInput): Promise<StoredDiaperEntry> {
-    const diapers = await this.getAllDiapers(input.babyId);
-    const now = new Date().toISOString();
+    const key = getDiapersKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const diapers = await readCollection(input.babyId);
+      const now = new Date().toISOString();
 
-    const newDiaper: StoredDiaperEntry = {
-      id: generateId(),
-      babyId: input.babyId,
-      type: input.type,
-      stoolColor: input.stoolColor,
-      changedAt: input.changedAt.toISOString(),
-      notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const newDiaper: StoredDiaperEntry = {
+        id: generateId(),
+        babyId: input.babyId,
+        type: input.type,
+        stoolColor: input.stoolColor,
+        changedAt: input.changedAt.toISOString(),
+        notes: input.notes,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    diapers.push(newDiaper);
-    await AsyncStorage.setItem(getDiapersKey(input.babyId), JSON.stringify(diapers));
+      diapers.push(newDiaper);
+      await AsyncStorage.setItem(
+        getDiapersKey(input.babyId),
+        JSON.stringify(diapers)
+      );
 
-    return newDiaper;
+      return newDiaper;
+    });
   },
 
   async updateDiaper(
@@ -97,36 +114,52 @@ export const DiaperStorageService = {
     diaperId: string,
     input: UpdateDiaperInput
   ): Promise<StoredDiaperEntry | null> {
-    const diapers = await this.getAllDiapers(babyId);
-    const index = diapers.findIndex(d => d.id === diaperId);
+    const key = getDiapersKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const diapers = await readCollection(babyId);
+      const index = diapers.findIndex((d) => d.id === diaperId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedDiaper: StoredDiaperEntry = {
-      ...diapers[index],
-      ...(input.type !== undefined && { type: input.type }),
-      ...(input.stoolColor !== undefined && { stoolColor: input.stoolColor }),
-      ...(input.changedAt !== undefined && { changedAt: input.changedAt.toISOString() }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedDiaper: StoredDiaperEntry = {
+        ...diapers[index],
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.stoolColor !== undefined && { stoolColor: input.stoolColor }),
+        ...(input.changedAt !== undefined && {
+          changedAt: input.changedAt.toISOString(),
+        }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    diapers[index] = updatedDiaper;
-    await AsyncStorage.setItem(getDiapersKey(babyId), JSON.stringify(diapers));
+      diapers[index] = updatedDiaper;
+      await AsyncStorage.setItem(
+        getDiapersKey(babyId),
+        JSON.stringify(diapers)
+      );
 
-    return updatedDiaper;
+      return updatedDiaper;
+    });
   },
 
   async deleteDiaper(babyId: string, diaperId: string): Promise<boolean> {
-    const diapers = await this.getAllDiapers(babyId);
-    const index = diapers.findIndex(d => d.id === diaperId);
+    const key = getDiapersKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const diapers = await readCollection(babyId);
+      const index = diapers.findIndex((d) => d.id === diaperId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    diapers.splice(index, 1);
-    await AsyncStorage.setItem(getDiapersKey(babyId), JSON.stringify(diapers));
+      diapers.splice(index, 1);
+      await AsyncStorage.setItem(
+        getDiapersKey(babyId),
+        JSON.stringify(diapers)
+      );
 
-    return true;
+      return true;
+    });
   },
 
   async getLastDiaper(babyId: string): Promise<StoredDiaperEntry | null> {

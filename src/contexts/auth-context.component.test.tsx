@@ -462,6 +462,18 @@ describe("AuthContext", () => {
       } finally { setObservabilitySink(null); }
     });
 
+    it("clears import identity and recovery bookkeeping on sign-out", async () => {
+      const keys = ["@import_ids:@feedings:baby-a:user-a", "@import_batch:@sleeps:baby-a:user-a"];
+      jest.spyOn(AsyncStorage, "getAllKeys").mockResolvedValue(keys);
+      const remove = jest.spyOn(AsyncStorage, "multiRemove").mockResolvedValue(undefined);
+      let signOutFn: (() => Promise<unknown>) | undefined;
+      function Consumer() { const auth = useAuth(); useEffect(() => { signOutFn = auth.signOut; }, [auth.signOut]); return null; }
+      render(<AuthProvider><Consumer /></AuthProvider>);
+      await waitFor(() => expect(signOutFn).toBeDefined());
+      await act(async () => { await signOutFn!(); });
+      expect(remove).toHaveBeenCalledWith(expect.arrayContaining(keys));
+    });
+
     it("should call supabase signOut", async () => {
       let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
 

@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TummyTimeStorageService, StoredTummyTimeEntry } from "./tummyTime-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("getAllTummyTimes", () => {
     it("should return empty array when no tummy times exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.getAllTummyTimes("baby-123");
 
@@ -41,7 +47,7 @@ describe("TummyTimeStorageService", () => {
           updatedAt: "2024-01-17T13:15:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockTummyTimes));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockTummyTimes));
 
       const result = await TummyTimeStorageService.getAllTummyTimes("baby-123");
 
@@ -51,7 +57,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("getTummyTimeById", () => {
     it("should return null when tummy time not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.getTummyTimeById("baby-123", "tt-999");
 
@@ -67,7 +73,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:15:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockTummyTime]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockTummyTime]));
 
       const result = await TummyTimeStorageService.getTummyTimeById("baby-123", "tt-1");
 
@@ -77,7 +83,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("addTummyTime", () => {
     it("should add a new tummy time entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -96,7 +102,7 @@ describe("TummyTimeStorageService", () => {
     });
 
     it("should add tummy time entry with notes", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -119,7 +125,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T09:00:00.000Z",
         updatedAt: "2024-01-17T09:05:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingEntry]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingEntry]));
 
       const input = {
         babyId: "baby-123",
@@ -137,7 +143,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("updateTummyTime", () => {
     it("should return null when tummy time not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.updateTummyTime(
         "baby-123",
@@ -157,7 +163,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:10:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingEntry]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingEntry]));
 
       const result = await TummyTimeStorageService.updateTummyTime(
         "baby-123",
@@ -177,7 +183,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingEntry]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingEntry]));
 
       const result = await TummyTimeStorageService.updateTummyTime(
         "baby-123",
@@ -200,7 +206,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:10:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+      mockCollectionRead.mockResolvedValue(
         JSON.stringify([existingEntry])
       );
       const result = await TummyTimeStorageService.updateTummyTime(
@@ -214,7 +220,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("deleteTummyTime", () => {
     it("should return false when tummy time not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.deleteTummyTime("baby-123", "tt-999");
 
@@ -230,7 +236,7 @@ describe("TummyTimeStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:10:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingEntry]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingEntry]));
 
       const result = await TummyTimeStorageService.deleteTummyTime("baby-123", "tt-1");
 
@@ -243,7 +249,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("getLastTummyTime", () => {
     it("should return null when no tummy times exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.getLastTummyTime("baby-123");
 
@@ -269,7 +275,7 @@ describe("TummyTimeStorageService", () => {
           updatedAt: "2024-01-17T13:10:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(tummyTimes));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(tummyTimes));
 
       const result = await TummyTimeStorageService.getLastTummyTime("baby-123");
 
@@ -279,7 +285,7 @@ describe("TummyTimeStorageService", () => {
 
   describe("getTodaysTummyTimes", () => {
     it("should return empty array when no tummy times exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await TummyTimeStorageService.getTodaysTummyTimes("baby-123");
 
@@ -313,7 +319,7 @@ describe("TummyTimeStorageService", () => {
           updatedAt: todayStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(tummyTimes));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(tummyTimes));
 
       const result = await TummyTimeStorageService.getTodaysTummyTimes("baby-123");
 
@@ -325,7 +331,7 @@ describe("TummyTimeStorageService", () => {
   describe("Active Timer Management", () => {
     describe("getActiveTimer", () => {
       it("should return null when no active timer exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await TummyTimeStorageService.getActiveTimer("baby-123");
 
@@ -337,7 +343,7 @@ describe("TummyTimeStorageService", () => {
         const activeTimer = {
           startedAt: "2024-01-17T13:00:00.000Z",
         };
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(activeTimer));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(activeTimer));
 
         const result = await TummyTimeStorageService.getActiveTimer("baby-123");
 
@@ -372,7 +378,7 @@ describe("TummyTimeStorageService", () => {
   describe("Daily Goal Management", () => {
     describe("getDailyGoal", () => {
       it("should return default goal when not set", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await TummyTimeStorageService.getDailyGoal("baby-123");
 
@@ -381,7 +387,7 @@ describe("TummyTimeStorageService", () => {
       });
 
       it("should return saved goal when exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue("3600");
+        mockCollectionRead.mockResolvedValue("3600");
 
         const result = await TummyTimeStorageService.getDailyGoal("baby-123");
 
@@ -402,7 +408,7 @@ describe("TummyTimeStorageService", () => {
 
     describe("hasCustomGoal", () => {
       it("should return false when no custom goal exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await TummyTimeStorageService.hasCustomGoal("baby-123");
 
@@ -411,7 +417,7 @@ describe("TummyTimeStorageService", () => {
       });
 
       it("should return true when custom goal exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue("true");
+        mockCollectionRead.mockResolvedValue("true");
 
         const result = await TummyTimeStorageService.hasCustomGoal("baby-123");
 
@@ -446,7 +452,7 @@ describe("TummyTimeStorageService", () => {
   describe("Milestone Suggestion Tracking", () => {
     describe("getLastMilestoneCheckDate", () => {
       it("should return null when not set", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await TummyTimeStorageService.getLastMilestoneCheckDate("baby-123");
 
@@ -455,7 +461,7 @@ describe("TummyTimeStorageService", () => {
       });
 
       it("should return saved date when exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue("2024-01-17T13:00:00.000Z");
+        mockCollectionRead.mockResolvedValue("2024-01-17T13:00:00.000Z");
 
         const result = await TummyTimeStorageService.getLastMilestoneCheckDate("baby-123");
 
@@ -477,7 +483,7 @@ describe("TummyTimeStorageService", () => {
 
     describe("getDismissedMilestones", () => {
       it("should return empty array when not set", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await TummyTimeStorageService.getDismissedMilestones("baby-123");
 
@@ -487,7 +493,7 @@ describe("TummyTimeStorageService", () => {
 
       it("should return saved dismissed milestones", async () => {
         const dismissed = ["1-2 months", "2-3 months"];
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(dismissed));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(dismissed));
 
         const result = await TummyTimeStorageService.getDismissedMilestones("baby-123");
 
@@ -497,7 +503,7 @@ describe("TummyTimeStorageService", () => {
 
     describe("dismissMilestone", () => {
       it("should add milestone to dismissed list", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         await TummyTimeStorageService.dismissMilestone("baby-123", "1-2 months");
 
@@ -508,7 +514,7 @@ describe("TummyTimeStorageService", () => {
       });
 
       it("should not duplicate dismissed milestones", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(["1-2 months"]));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(["1-2 months"]));
 
         await TummyTimeStorageService.dismissMilestone("baby-123", "1-2 months");
 
@@ -518,7 +524,7 @@ describe("TummyTimeStorageService", () => {
       });
 
       it("should append to existing dismissed milestones", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(["1-2 months"]));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(["1-2 months"]));
 
         await TummyTimeStorageService.dismissMilestone("baby-123", "2-3 months");
 

@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SyncQueue } from './sync-queue';
@@ -9,7 +10,7 @@ import {
   SyncEngineConfig,
   SyncableTable,
   SyncOperationOwner,
-  LocalStorageMutation,
+  LocalStorageValuesMutation,
 } from './types';
 import { supabase } from '../supabase';
 import { isCrdtTable } from './crdt-sync';
@@ -291,7 +292,7 @@ export class SyncEngine {
 
   async enqueueOperationWithLocalMutation(
     operation: QueuedOperation,
-    mutation: Omit<LocalStorageMutation, 'state' | 'previousShadow'>
+    mutation: Omit<LocalStorageValuesMutation, 'state' | 'previousShadow'>
   ): Promise<void> {
     const authRun = this.captureAuthRun();
     this.bindOperationOwner(operation, authRun.context);
@@ -304,10 +305,94 @@ export class SyncEngine {
     return enqueue;
   }
 
+  async enqueueOperationsWithLocalMutation(
+    operations: QueuedOperation[],
+    mutation: Omit<LocalStorageValuesMutation, "state" | "previousShadow">
+  ): Promise<void> {
+    const authRun = this.captureAuthRun();
+    for (const operation of operations)
+      this.bindOperationOwner(operation, authRun.context);
+    const enqueue = this.enqueueChain.then(async () => {
+      this.assertAuthRun(authRun);
+      const pending = operations.filter(
+        (operation) => !this.processedOperationIds.has(operation.id)
+      );
+      if (!pending.length) return;
+      for (const operation of pending) {
+        operation.id ||= this.generateOperationId();
+        if (!this.validateOperation(operation).valid)
+          throw new Error("Invalid import operation");
+        const householdId = operation.data?.householdId ?? operation.data?.household_id;
+        if (householdId && householdId !== authRun.context.householdId)
+          throw new Error("Cannot enqueue operation for a different household");
+      }
+      const previous = new Map<
+        QueuedOperation,
+        ClockedRecord | null | undefined
+      >();
+      let prepared = false;
+      try {
+        // Recovery only compares storage state; it never replays these snapshots.
+        const [previousHash, nextHash] = await Promise.all([
+          this.hashStorageValue(mutation.previousValue),
+          this.hashStorageValue(mutation.nextValue),
+        ]);
+        for (const operation of pending) {
+          previous.set(operation, await this.getPreviousShadow(operation));
+          if (operation === pending[0]) {
+            // Concurrent sync checkpoints must already see the leader's recovery snapshot.
+            operation.localMutation = { key: mutation.key, previousHash, nextHash, state: 'prepared', previousShadow: previous.get(operation) };
+          }
+          await this.stampOperation(operation);
+          this.assertAuthRun(authRun);
+          operation.localMutationBatch = {
+            leaderId: pending[0].id,
+            previousShadow: previous.get(operation),
+          };
+          await this.queue.enqueue(operation);
+        }
+        await this.persistQueueSerialized();
+        prepared = true;
+        this.assertAuthRun(authRun);
+        await AsyncStorage.setItem(mutation.key, mutation.nextValue);
+      } catch (error) {
+        for (const operation of pending) {
+          this.queue.remove(operation.id);
+          await this.restorePreviousShadow(operation, previous.get(operation));
+        }
+        if (prepared) {
+          try {
+            await this.persistQueueSerialized();
+          } catch {
+            /* Prepared recovery remains safe. */
+          }
+        }
+        this.updateState({ pendingCount: this.queue.getCount() });
+        reportIssue({ name: prepared ? 'sync.local_mutation_apply_failed' : 'sync.enqueue_persist_failed', area: 'sync', error, tags: { table: pending[0].table, type: pending[0].type } });
+        throw error;
+      }
+      for (const operation of pending) {
+        delete operation.localMutation;
+        delete operation.localMutationBatch;
+        this.processedOperationIds.add(operation.id);
+      }
+      try {
+        await this.persistQueueSerialized();
+      } catch (error) {
+        /* Restart resolves the durable prepared snapshot. */
+        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'commit' } });
+      }
+      this.updateState({ pendingCount: this.queue.getCount() });
+      if (this.state.isConnected) void this.handleNetworkChange(true);
+    });
+    this.enqueueChain = enqueue.catch(() => {});
+    return enqueue;
+  }
+
   private async enqueueOperationLocked(
     operation: QueuedOperation,
     authRun: AuthRun,
-    localMutation?: Omit<LocalStorageMutation, 'state' | 'previousShadow'>
+    localMutation?: Omit<LocalStorageValuesMutation, 'state' | 'previousShadow'>
   ): Promise<void> {
     this.assertAuthRun(authRun);
     const authContext = authRun.context;
@@ -363,8 +448,8 @@ export class SyncEngine {
       try {
         this.assertAuthRun(authRun);
         await AsyncStorage.setItem(
-          operation.localMutation.key,
-          operation.localMutation.nextValue
+          localMutation!.key,
+          localMutation!.nextValue
         );
       } catch (error) {
         this.queue.remove(operation.id);
@@ -549,19 +634,48 @@ export class SyncEngine {
     await crdt.restoreShadow(operation.table, operation.entityId, previousShadow);
   }
 
+  private async hashStorageValue(value: string | null): Promise<string> {
+    return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, JSON.stringify(value));
+  }
+
   private async resolvePreparedLocalMutations(): Promise<void> {
     let changed = false;
     for (const operation of this.queue.getAll()) {
       const mutation = operation.localMutation;
-      if (!mutation || mutation.state === 'committed') continue;
-
-      const currentValue = await AsyncStorage.getItem(mutation.key);
-      if (currentValue === mutation.nextValue) {
-        mutation.state = 'committed';
+      if (!mutation) continue;
+      if (mutation.state === 'committed') {
+        delete operation.localMutation;
+        this.processedOperationIds.add(operation.id);
+        for (const sibling of this.queue.getAll()) {
+          if (sibling.localMutationBatch?.leaderId === operation.id) {
+            delete sibling.localMutationBatch;
+            this.processedOperationIds.add(sibling.id);
+          }
+        }
         changed = true;
         continue;
       }
-      if (currentValue === mutation.previousValue) {
+
+      const currentValue = await AsyncStorage.getItem(mutation.key);
+      const currentHash = 'nextHash' in mutation ? await this.hashStorageValue(currentValue) : null;
+      if ('nextHash' in mutation ? currentHash === mutation.nextHash : currentValue === mutation.nextValue) {
+        delete operation.localMutation;
+        this.processedOperationIds.add(operation.id);
+        for (const sibling of this.queue.getAll()) {
+          if (sibling.localMutationBatch?.leaderId === operation.id) {
+            delete sibling.localMutationBatch;
+            this.processedOperationIds.add(sibling.id);
+          }
+        }
+        changed = true;
+        continue;
+      }
+      if ('previousHash' in mutation ? currentHash === mutation.previousHash : currentValue === mutation.previousValue) {
+        for (const sibling of this.queue.getAll()) {
+          if (sibling.id === operation.id || sibling.localMutationBatch?.leaderId !== operation.id) continue;
+          this.queue.remove(sibling.id);
+          await this.restorePreviousShadow(sibling, sibling.localMutationBatch.previousShadow);
+        }
         this.queue.remove(operation.id);
         await this.restorePreviousShadow(operation, mutation.previousShadow);
         changed = true;
@@ -887,6 +1001,10 @@ export class SyncEngine {
   }
 
   private isOperationCommitted(operation: QueuedOperation): boolean {
+    if (operation.localMutationBatch) {
+      const leader = this.queue.getAll().find(item => item.id === operation.localMutationBatch!.leaderId);
+      if (leader?.localMutation?.state !== 'committed') return false;
+    }
     return operation.localMutation?.state === 'committed'
       || (!operation.localMutation && this.processedOperationIds.has(operation.id));
   }

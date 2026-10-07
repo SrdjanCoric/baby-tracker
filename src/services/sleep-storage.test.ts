@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SleepStorageService, StoredSleepEntry } from "./sleep-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("SleepStorageService", () => {
 
   describe("getAllSleeps", () => {
     it("should return empty array when no sleeps exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.getAllSleeps("baby-123");
 
@@ -42,7 +48,7 @@ describe("SleepStorageService", () => {
           updatedAt: "2024-01-17T14:30:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockSleeps));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockSleeps));
 
       const result = await SleepStorageService.getAllSleeps("baby-123");
 
@@ -52,7 +58,7 @@ describe("SleepStorageService", () => {
 
   describe("getSleepById", () => {
     it("should return null when sleep not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.getSleepById("baby-123", "sleep-999");
 
@@ -69,7 +75,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T14:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockSleep]));
 
       const result = await SleepStorageService.getSleepById("baby-123", "sleep-1");
 
@@ -79,7 +85,7 @@ describe("SleepStorageService", () => {
 
   describe("addSleep", () => {
     it("should add a new nap entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -100,7 +106,7 @@ describe("SleepStorageService", () => {
     });
 
     it("should add a new night sleep entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -117,7 +123,7 @@ describe("SleepStorageService", () => {
     });
 
     it("should add sleep entry with notes", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -133,7 +139,7 @@ describe("SleepStorageService", () => {
     });
 
     it("persists a versioned unresolved morning classification", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.addSleep({
         babyId: "baby-123",
@@ -163,7 +169,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T09:00:00.000Z",
         updatedAt: "2024-01-17T10:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingSleep]));
 
       const input = {
         babyId: "baby-123",
@@ -182,7 +188,7 @@ describe("SleepStorageService", () => {
 
   describe("updateSleep", () => {
     it("should return null when sleep not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.updateSleep(
         "baby-123",
@@ -203,7 +209,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T14:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingSleep]));
 
       const result = await SleepStorageService.updateSleep(
         "baby-123",
@@ -224,7 +230,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingSleep]));
 
       const result = await SleepStorageService.updateSleep(
         "baby-123",
@@ -250,7 +256,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T14:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingSleep]));
 
       const result = await SleepStorageService.updateSleep("baby-123", "sleep-1", {
         startedAt: new Date("2024-01-17T12:45:00.000Z"),
@@ -262,7 +268,7 @@ describe("SleepStorageService", () => {
 
   describe("deleteSleep", () => {
     it("should return false when sleep not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.deleteSleep("baby-123", "sleep-999");
 
@@ -279,7 +285,7 @@ describe("SleepStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T14:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingSleep]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingSleep]));
 
       const result = await SleepStorageService.deleteSleep("baby-123", "sleep-1");
 
@@ -292,7 +298,7 @@ describe("SleepStorageService", () => {
 
   describe("getLastSleep", () => {
     it("should return null when no sleeps exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.getLastSleep("baby-123");
 
@@ -320,7 +326,7 @@ describe("SleepStorageService", () => {
           updatedAt: "2024-01-17T14:30:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(sleeps));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(sleeps));
 
       const result = await SleepStorageService.getLastSleep("baby-123");
 
@@ -330,7 +336,7 @@ describe("SleepStorageService", () => {
 
   describe("getTodaysSleeps", () => {
     it("should return empty array when no sleeps exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await SleepStorageService.getTodaysSleeps("baby-123");
 
@@ -366,7 +372,7 @@ describe("SleepStorageService", () => {
           updatedAt: todayStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(sleeps));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(sleeps));
 
       const result = await SleepStorageService.getTodaysSleeps("baby-123");
 
@@ -377,7 +383,7 @@ describe("SleepStorageService", () => {
 
   describe("wake-window continuation allowance", () => {
     it("defaults missing values to 25 minutes while preserving an existing caregiver value", async () => {
-      vi.mocked(AsyncStorage.getItem)
+      mockCollectionRead
         .mockResolvedValueOnce(JSON.stringify({
           enabled: true,
           napCount: 2,
@@ -404,7 +410,7 @@ describe("SleepStorageService", () => {
   describe("Active Timer Management", () => {
     describe("getActiveTimer", () => {
       it("should return null when no active timer exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await SleepStorageService.getActiveTimer("baby-123");
 
@@ -417,7 +423,7 @@ describe("SleepStorageService", () => {
           startedAt: "2024-01-17T13:00:00.000Z",
           type: "nap",
         };
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(activeTimer));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(activeTimer));
 
         const result = await SleepStorageService.getActiveTimer("baby-123");
 

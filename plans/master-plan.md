@@ -331,7 +331,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0102 · Clear a household timer lock in the same server step that saves the stopped activity → tasks/done/0102-atomic-timer-completion.md
 - [x] 0103 · Fold the 4.9 hotfix line into main → tasks/done/0103-fold-hotfix-4-9-into-main.md
 - [x] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/done/0104-household-stop-clears-lock-in-save.md
-- [ ] 0107 · Import a Huckleberry export file → tasks/0107-import-from-huckleberry.md
+- [x] 0107 · Import a Huckleberry export file → tasks/done/0107-import-from-huckleberry.md
 - [ ] 0109 · Import a Nara Baby export file (after 0107) → tasks/0109-import-from-nara.md
 - [ ] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/0110-no-push-for-past-activities.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104, 0109, 0110) → tasks/0105-gate-4-10-2-release.md

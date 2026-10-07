@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import type { HealthType, MeasurementMethod, SymptomType, DosageUnit } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 
@@ -69,11 +71,19 @@ function isToday(date: Date): boolean {
   );
 }
 
+async function readCollection(babyId: string): Promise<StoredHealthEntry[]> {
+  const data = await AsyncStorage.getItem(getHealthKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredHealthEntry[];
+}
+
 export const HealthStorageService = {
   async getAllHealth(babyId: string): Promise<StoredHealthEntry[]> {
-    const data = await AsyncStorage.getItem(getHealthKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredHealthEntry[];
+    const key = getHealthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getHealthById(babyId: string, healthId: string): Promise<StoredHealthEntry | null> {
@@ -82,35 +92,42 @@ export const HealthStorageService = {
   },
 
   async addHealth(input: CreateHealthInput): Promise<StoredHealthEntry> {
-    if (input.dosageAmount !== undefined && input.dosageAmount <= 0) {
-      throw new Error("Dosage amount must be greater than 0");
-    }
+    const key = getHealthKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      if (input.dosageAmount !== undefined && input.dosageAmount <= 0) {
+        throw new Error("Dosage amount must be greater than 0");
+      }
 
-    const entries = await this.getAllHealth(input.babyId);
-    const now = new Date().toISOString();
+      const entries = await readCollection(input.babyId);
+      const now = new Date().toISOString();
 
-    const newHealth: StoredHealthEntry = {
-      id: generateId(),
-      babyId: input.babyId,
-      type: input.type,
-      loggedAt: input.loggedAt.toISOString(),
-      notes: input.notes,
-      medicationName: input.medicationName,
-      dosageAmount: input.dosageAmount,
-      dosageUnit: input.dosageUnit,
-      doseNumber: input.doseNumber,
-      temperatureCelsius: input.temperatureCelsius,
-      measurementMethod: input.measurementMethod,
-      vaccineName: input.vaccineName,
-      symptoms: input.symptoms,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const newHealth: StoredHealthEntry = {
+        id: generateId(),
+        babyId: input.babyId,
+        type: input.type,
+        loggedAt: input.loggedAt.toISOString(),
+        notes: input.notes,
+        medicationName: input.medicationName,
+        dosageAmount: input.dosageAmount,
+        dosageUnit: input.dosageUnit,
+        doseNumber: input.doseNumber,
+        temperatureCelsius: input.temperatureCelsius,
+        measurementMethod: input.measurementMethod,
+        vaccineName: input.vaccineName,
+        symptoms: input.symptoms,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    entries.push(newHealth);
-    await AsyncStorage.setItem(getHealthKey(input.babyId), JSON.stringify(entries));
+      entries.push(newHealth);
+      await AsyncStorage.setItem(
+        getHealthKey(input.babyId),
+        JSON.stringify(entries)
+      );
 
-    return newHealth;
+      return newHealth;
+    });
   },
 
   async updateHealth(
@@ -118,54 +135,75 @@ export const HealthStorageService = {
     healthId: string,
     input: UpdateHealthInput
   ): Promise<StoredHealthEntry | null> {
-    if (input.dosageAmount !== undefined && input.dosageAmount !== null && input.dosageAmount <= 0) {
-      throw new Error("Dosage amount must be greater than 0");
-    }
+    const key = getHealthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      if (
+        input.dosageAmount !== undefined &&
+        input.dosageAmount !== null &&
+        input.dosageAmount <= 0
+      ) {
+        throw new Error("Dosage amount must be greater than 0");
+      }
 
-    const entries = await this.getAllHealth(babyId);
-    const index = entries.findIndex(h => h.id === healthId);
+      const entries = await readCollection(babyId);
+      const index = entries.findIndex((h) => h.id === healthId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedHealth: StoredHealthEntry = {
-      ...entries[index],
-      ...(input.type !== undefined && { type: input.type }),
-      ...(input.loggedAt !== undefined && { loggedAt: input.loggedAt!.toISOString() }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedHealth: StoredHealthEntry = {
+        ...entries[index],
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.loggedAt !== undefined && {
+          loggedAt: input.loggedAt!.toISOString(),
+        }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    const nullableFields = [
-      "notes", "medicationName", "dosageAmount", "dosageUnit",
-      "doseNumber", "temperatureCelsius", "measurementMethod",
-      "vaccineName", "symptoms",
-    ] as const;
+      const nullableFields = [
+        "notes",
+        "medicationName",
+        "dosageAmount",
+        "dosageUnit",
+        "doseNumber",
+        "temperatureCelsius",
+        "measurementMethod",
+        "vaccineName",
+        "symptoms",
+      ] as const;
 
-    for (const field of nullableFields) {
-      if (input[field] !== undefined) {
-        if (input[field] === null) {
-          delete (updatedHealth as unknown as Record<string, unknown>)[field];
-        } else {
-          (updatedHealth as unknown as Record<string, unknown>)[field] = input[field];
+      for (const field of nullableFields) {
+        if (input[field] !== undefined) {
+          if (input[field] === null) {
+            delete (updatedHealth as unknown as Record<string, unknown>)[field];
+          } else {
+            (updatedHealth as unknown as Record<string, unknown>)[field] =
+              input[field];
+          }
         }
       }
-    }
 
-    entries[index] = updatedHealth;
-    await AsyncStorage.setItem(getHealthKey(babyId), JSON.stringify(entries));
+      entries[index] = updatedHealth;
+      await AsyncStorage.setItem(getHealthKey(babyId), JSON.stringify(entries));
 
-    return updatedHealth;
+      return updatedHealth;
+    });
   },
 
   async deleteHealth(babyId: string, healthId: string): Promise<boolean> {
-    const entries = await this.getAllHealth(babyId);
-    const index = entries.findIndex(h => h.id === healthId);
+    const key = getHealthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const entries = await readCollection(babyId);
+      const index = entries.findIndex((h) => h.id === healthId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    entries.splice(index, 1);
-    await AsyncStorage.setItem(getHealthKey(babyId), JSON.stringify(entries));
+      entries.splice(index, 1);
+      await AsyncStorage.setItem(getHealthKey(babyId), JSON.stringify(entries));
 
-    return true;
+      return true;
+    });
   },
 
   async getLastHealth(babyId: string): Promise<StoredHealthEntry | null> {

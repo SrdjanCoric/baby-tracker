@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PumpingStorageService, StoredPumpingEntry } from "./pumping-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("PumpingStorageService", () => {
 
   describe("getAllPumpings", () => {
     it("should return empty array when no pumpings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.getAllPumpings("baby-123");
 
@@ -43,7 +49,7 @@ describe("PumpingStorageService", () => {
           updatedAt: "2024-01-17T13:30:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockPumpings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockPumpings));
 
       const result = await PumpingStorageService.getAllPumpings("baby-123");
 
@@ -53,7 +59,7 @@ describe("PumpingStorageService", () => {
 
   describe("getPumpingById", () => {
     it("should return null when pumping not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.getPumpingById("baby-123", "pumping-999");
 
@@ -71,7 +77,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockPumping]));
 
       const result = await PumpingStorageService.getPumpingById("baby-123", "pumping-1");
 
@@ -81,7 +87,7 @@ describe("PumpingStorageService", () => {
 
   describe("addPumping", () => {
     it("should add a new pumping entry with left side", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -104,7 +110,7 @@ describe("PumpingStorageService", () => {
     });
 
     it("should add a new pumping entry with both sides", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -122,7 +128,7 @@ describe("PumpingStorageService", () => {
     });
 
     it("should add pumping entry with notes", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -149,7 +155,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T09:00:00.000Z",
         updatedAt: "2024-01-17T09:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
 
       const input = {
         babyId: "baby-123",
@@ -169,7 +175,7 @@ describe("PumpingStorageService", () => {
 
   describe("updatePumping", () => {
     it("should return null when pumping not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.updatePumping(
         "baby-123",
@@ -191,7 +197,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
 
       const result = await PumpingStorageService.updatePumping(
         "baby-123",
@@ -214,7 +220,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
 
       const result = await PumpingStorageService.updatePumping(
         "baby-123",
@@ -234,7 +240,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
 
       const result = await PumpingStorageService.updatePumping(
         "baby-123",
@@ -260,7 +266,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+      mockCollectionRead.mockResolvedValue(
         JSON.stringify([existingPumping])
       );
       const result = await PumpingStorageService.updatePumping(
@@ -274,7 +280,7 @@ describe("PumpingStorageService", () => {
 
   describe("deletePumping", () => {
     it("should return false when pumping not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.deletePumping("baby-123", "pumping-999");
 
@@ -292,7 +298,7 @@ describe("PumpingStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:30:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingPumping]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
 
       const result = await PumpingStorageService.deletePumping("baby-123", "pumping-1");
 
@@ -305,7 +311,7 @@ describe("PumpingStorageService", () => {
 
   describe("getLastPumping", () => {
     it("should return null when no pumpings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.getLastPumping("baby-123");
 
@@ -335,7 +341,7 @@ describe("PumpingStorageService", () => {
           updatedAt: "2024-01-17T13:25:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(pumpings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(pumpings));
 
       const result = await PumpingStorageService.getLastPumping("baby-123");
 
@@ -345,7 +351,7 @@ describe("PumpingStorageService", () => {
 
   describe("getTodaysPumpings", () => {
     it("should return empty array when no pumpings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.getTodaysPumpings("baby-123");
 
@@ -383,7 +389,7 @@ describe("PumpingStorageService", () => {
           updatedAt: todayStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(pumpings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(pumpings));
 
       const result = await PumpingStorageService.getTodaysPumpings("baby-123");
 
@@ -394,7 +400,7 @@ describe("PumpingStorageService", () => {
 
   describe("getTodaysTotalVolume", () => {
     it("should return 0 when no pumpings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await PumpingStorageService.getTodaysTotalVolume("baby-123");
 
@@ -432,7 +438,7 @@ describe("PumpingStorageService", () => {
           updatedAt: todayAfternoonStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(pumpings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(pumpings));
 
       const result = await PumpingStorageService.getTodaysTotalVolume("baby-123");
 
@@ -465,7 +471,7 @@ describe("PumpingStorageService", () => {
           updatedAt: todayStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(pumpings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(pumpings));
 
       const result = await PumpingStorageService.getTodaysTotalVolume("baby-123");
 
@@ -476,7 +482,7 @@ describe("PumpingStorageService", () => {
   describe("Active Timer Management", () => {
     describe("getActiveTimer", () => {
       it("should return null when no active timer exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await PumpingStorageService.getActiveTimer("baby-123");
 
@@ -489,7 +495,7 @@ describe("PumpingStorageService", () => {
           startedAt: "2024-01-17T13:00:00.000Z",
           side: "left",
         };
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(activeTimer));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(activeTimer));
 
         const result = await PumpingStorageService.getActiveTimer("baby-123");
 

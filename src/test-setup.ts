@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+import { createHash, randomUUID } from "node:crypto";
 import en from "./i18n/locales/en.json";
 
 function getNestedValue(obj: Record<string, unknown>, path: string): string {
@@ -28,4 +29,12 @@ vi.mock("@/i18n", () => ({
     language: "en",
     changeLanguage: vi.fn(),
   },
+}));
+
+// Native crypto boundary: exercise real SHA-256 semantics in Node tests.
+vi.mock("expo-crypto", () => ({
+  randomUUID: () => randomUUID(),
+  CryptoDigestAlgorithm: { SHA256: "sha256" },
+  digestStringAsync: async (algorithm: string, value: string) =>
+    createHash(algorithm).update(value).digest("hex"),
 }));

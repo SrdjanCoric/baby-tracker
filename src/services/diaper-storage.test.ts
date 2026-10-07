@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DiaperStorageService, StoredDiaperEntry } from "./diaper-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("DiaperStorageService", () => {
 
   describe("getAllDiapers", () => {
     it("should return empty array when no diapers exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.getAllDiapers("baby-123");
 
@@ -40,7 +46,7 @@ describe("DiaperStorageService", () => {
           updatedAt: "2024-01-17T13:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockDiapers));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockDiapers));
 
       const result = await DiaperStorageService.getAllDiapers("baby-123");
 
@@ -50,7 +56,7 @@ describe("DiaperStorageService", () => {
 
   describe("getDiaperById", () => {
     it("should return null when diaper not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.getDiaperById("baby-123", "diaper-999");
 
@@ -67,7 +73,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockDiaper]));
 
       const result = await DiaperStorageService.getDiaperById("baby-123", "diaper-1");
 
@@ -77,7 +83,7 @@ describe("DiaperStorageService", () => {
 
   describe("addDiaper", () => {
     it("should add a new wet diaper entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -96,7 +102,7 @@ describe("DiaperStorageService", () => {
     });
 
     it("should add a new dirty diaper entry with stool color", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -112,7 +118,7 @@ describe("DiaperStorageService", () => {
     });
 
     it("should add a new mixed diaper entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -128,7 +134,7 @@ describe("DiaperStorageService", () => {
     });
 
     it("should add diaper entry with notes", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -151,7 +157,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T09:00:00.000Z",
         updatedAt: "2024-01-17T09:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingDiaper]));
 
       const input = {
         babyId: "baby-123",
@@ -169,7 +175,7 @@ describe("DiaperStorageService", () => {
 
   describe("updateDiaper", () => {
     it("should return null when diaper not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.updateDiaper(
         "baby-123",
@@ -189,7 +195,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingDiaper]));
 
       const result = await DiaperStorageService.updateDiaper(
         "baby-123",
@@ -211,7 +217,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingDiaper]));
 
       const result = await DiaperStorageService.updateDiaper(
         "baby-123",
@@ -231,7 +237,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingDiaper]));
 
       const result = await DiaperStorageService.updateDiaper(
         "baby-123",
@@ -246,7 +252,7 @@ describe("DiaperStorageService", () => {
 
   describe("deleteDiaper", () => {
     it("should return false when diaper not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.deleteDiaper("baby-123", "diaper-999");
 
@@ -262,7 +268,7 @@ describe("DiaperStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingDiaper]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingDiaper]));
 
       const result = await DiaperStorageService.deleteDiaper("baby-123", "diaper-1");
 
@@ -275,7 +281,7 @@ describe("DiaperStorageService", () => {
 
   describe("getLastDiaper", () => {
     it("should return null when no diapers exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.getLastDiaper("baby-123");
 
@@ -302,7 +308,7 @@ describe("DiaperStorageService", () => {
           updatedAt: "2024-01-17T13:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(diapers));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(diapers));
 
       const result = await DiaperStorageService.getLastDiaper("baby-123");
 
@@ -312,7 +318,7 @@ describe("DiaperStorageService", () => {
 
   describe("getTodaysDiapers", () => {
     it("should return empty array when no diapers exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.getTodaysDiapers("baby-123");
 
@@ -347,7 +353,7 @@ describe("DiaperStorageService", () => {
           updatedAt: todayStr,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(diapers));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(diapers));
 
       const result = await DiaperStorageService.getTodaysDiapers("baby-123");
 
@@ -358,7 +364,7 @@ describe("DiaperStorageService", () => {
 
   describe("getTodaysDiaperCounts", () => {
     it("should return zero counts when no diapers exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await DiaperStorageService.getTodaysDiaperCounts("baby-123");
 
@@ -405,7 +411,7 @@ describe("DiaperStorageService", () => {
           updatedAt: today3Str,
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(diapers));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(diapers));
 
       const result = await DiaperStorageService.getTodaysDiaperCounts("baby-123");
 

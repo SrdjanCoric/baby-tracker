@@ -233,6 +233,13 @@ export default function SettingsScreen() {
         {/* Data */}
         <SettingsSection title={t("settings.data")}>
           <SettingsRow
+            icon="📥"
+            label={t("import.title")}
+            onPress={() => router.push("/settings/import")}
+            testID="import-setting"
+          />
+          <SettingsDivider />
+          <SettingsRow
             icon="📤"
             label={t("settings.export")}
             onPress={() => router.push("/settings/export")}

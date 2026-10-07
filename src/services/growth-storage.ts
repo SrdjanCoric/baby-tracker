@@ -2,6 +2,8 @@
  * Growth storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import { getUserScopedKey } from "./storage-prefix";
 
 const GROWTH_KEY_PREFIX = "@growth:";
@@ -44,11 +46,19 @@ function getGrowthKey(babyId: string): string {
   return getUserScopedKey(`${GROWTH_KEY_PREFIX}${babyId}`);
 }
 
+async function readCollection(babyId: string): Promise<StoredGrowthEntry[]> {
+  const data = await AsyncStorage.getItem(getGrowthKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredGrowthEntry[];
+}
+
 export const GrowthStorageService = {
   async getAllMeasurements(babyId: string): Promise<StoredGrowthEntry[]> {
-    const data = await AsyncStorage.getItem(getGrowthKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredGrowthEntry[];
+    const key = getGrowthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getMeasurementById(
@@ -60,25 +70,32 @@ export const GrowthStorageService = {
   },
 
   async addMeasurement(input: CreateGrowthInput): Promise<StoredGrowthEntry> {
-    const measurements = await this.getAllMeasurements(input.babyId);
-    const now = new Date().toISOString();
+    const key = getGrowthKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const measurements = await readCollection(input.babyId);
+      const now = new Date().toISOString();
 
-    const newMeasurement: StoredGrowthEntry = {
-      id: generateId(),
-      babyId: input.babyId,
-      measuredAt: input.measuredAt.toISOString(),
-      weightKg: input.weightKg,
-      heightCm: input.heightCm,
-      headCircumferenceCm: input.headCircumferenceCm,
-      notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const newMeasurement: StoredGrowthEntry = {
+        id: generateId(),
+        babyId: input.babyId,
+        measuredAt: input.measuredAt.toISOString(),
+        weightKg: input.weightKg,
+        heightCm: input.heightCm,
+        headCircumferenceCm: input.headCircumferenceCm,
+        notes: input.notes,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    measurements.push(newMeasurement);
-    await AsyncStorage.setItem(getGrowthKey(input.babyId), JSON.stringify(measurements));
+      measurements.push(newMeasurement);
+      await AsyncStorage.setItem(
+        getGrowthKey(input.babyId),
+        JSON.stringify(measurements)
+      );
 
-    return newMeasurement;
+      return newMeasurement;
+    });
   },
 
   async updateMeasurement(
@@ -86,39 +103,58 @@ export const GrowthStorageService = {
     measurementId: string,
     input: UpdateGrowthInput
   ): Promise<StoredGrowthEntry | null> {
-    const measurements = await this.getAllMeasurements(babyId);
-    const index = measurements.findIndex((m) => m.id === measurementId);
+    const key = getGrowthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const measurements = await readCollection(babyId);
+      const index = measurements.findIndex((m) => m.id === measurementId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedMeasurement: StoredGrowthEntry = {
-      ...measurements[index],
-      ...(input.measuredAt !== undefined && { measuredAt: input.measuredAt.toISOString() }),
-      ...(input.weightKg !== undefined && { weightKg: input.weightKg }),
-      ...(input.heightCm !== undefined && { heightCm: input.heightCm }),
-      ...(input.headCircumferenceCm !== undefined && {
-        headCircumferenceCm: input.headCircumferenceCm,
-      }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedMeasurement: StoredGrowthEntry = {
+        ...measurements[index],
+        ...(input.measuredAt !== undefined && {
+          measuredAt: input.measuredAt.toISOString(),
+        }),
+        ...(input.weightKg !== undefined && { weightKg: input.weightKg }),
+        ...(input.heightCm !== undefined && { heightCm: input.heightCm }),
+        ...(input.headCircumferenceCm !== undefined && {
+          headCircumferenceCm: input.headCircumferenceCm,
+        }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    measurements[index] = updatedMeasurement;
-    await AsyncStorage.setItem(getGrowthKey(babyId), JSON.stringify(measurements));
+      measurements[index] = updatedMeasurement;
+      await AsyncStorage.setItem(
+        getGrowthKey(babyId),
+        JSON.stringify(measurements)
+      );
 
-    return updatedMeasurement;
+      return updatedMeasurement;
+    });
   },
 
-  async deleteMeasurement(babyId: string, measurementId: string): Promise<boolean> {
-    const measurements = await this.getAllMeasurements(babyId);
-    const index = measurements.findIndex((m) => m.id === measurementId);
+  async deleteMeasurement(
+    babyId: string,
+    measurementId: string
+  ): Promise<boolean> {
+    const key = getGrowthKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const measurements = await readCollection(babyId);
+      const index = measurements.findIndex((m) => m.id === measurementId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    measurements.splice(index, 1);
-    await AsyncStorage.setItem(getGrowthKey(babyId), JSON.stringify(measurements));
+      measurements.splice(index, 1);
+      await AsyncStorage.setItem(
+        getGrowthKey(babyId),
+        JSON.stringify(measurements)
+      );
 
-    return true;
+      return true;
+    });
   },
 
   async getLastMeasurement(babyId: string): Promise<StoredGrowthEntry | null> {

@@ -2,6 +2,8 @@
  * Pumping storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import type { BreastSide } from "@/constants/activities";
 import { getUserScopedKey } from "./storage-prefix";
 import type { TimerIdentity } from "./timer-completion-service";
@@ -74,11 +76,19 @@ function isToday(date: Date): boolean {
   );
 }
 
+async function readCollection(babyId: string): Promise<StoredPumpingEntry[]> {
+  const data = await AsyncStorage.getItem(getPumpingsKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredPumpingEntry[];
+}
+
 export const PumpingStorageService = {
   async getAllPumpings(babyId: string): Promise<StoredPumpingEntry[]> {
-    const data = await AsyncStorage.getItem(getPumpingsKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredPumpingEntry[];
+    const key = getPumpingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getPumpingById(babyId: string, pumpingId: string): Promise<StoredPumpingEntry | null> {
@@ -87,29 +97,36 @@ export const PumpingStorageService = {
   },
 
   async addPumping(input: CreatePumpingInput): Promise<StoredPumpingEntry> {
-    const pumpings = await this.getAllPumpings(input.babyId);
-    const id = input.id ?? generateId();
-    const existing = pumpings.find(pumping => pumping.id === id);
-    if (existing) return existing;
+    const key = getPumpingsKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const pumpings = await readCollection(input.babyId);
+      const id = input.id ?? generateId();
+      const existing = pumpings.find((pumping) => pumping.id === id);
+      if (existing) return existing;
 
-    const now = new Date().toISOString();
-    const newPumping: StoredPumpingEntry = {
-      id,
-      babyId: input.babyId,
-      side: input.side,
-      startedAt: input.startedAt.toISOString(),
-      endedAt: input.endedAt?.toISOString(),
-      durationSeconds: input.durationSeconds,
-      volumeMl: input.volumeMl,
-      notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const now = new Date().toISOString();
+      const newPumping: StoredPumpingEntry = {
+        id,
+        babyId: input.babyId,
+        side: input.side,
+        startedAt: input.startedAt.toISOString(),
+        endedAt: input.endedAt?.toISOString(),
+        durationSeconds: input.durationSeconds,
+        volumeMl: input.volumeMl,
+        notes: input.notes,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    pumpings.push(newPumping);
-    await AsyncStorage.setItem(getPumpingsKey(input.babyId), JSON.stringify(pumpings));
+      pumpings.push(newPumping);
+      await AsyncStorage.setItem(
+        getPumpingsKey(input.babyId),
+        JSON.stringify(pumpings)
+      );
 
-    return newPumping;
+      return newPumping;
+    });
   },
 
   async updatePumping(
@@ -117,38 +134,58 @@ export const PumpingStorageService = {
     pumpingId: string,
     input: UpdatePumpingInput
   ): Promise<StoredPumpingEntry | null> {
-    const pumpings = await this.getAllPumpings(babyId);
-    const index = pumpings.findIndex(p => p.id === pumpingId);
+    const key = getPumpingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const pumpings = await readCollection(babyId);
+      const index = pumpings.findIndex((p) => p.id === pumpingId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedPumping: StoredPumpingEntry = {
-      ...pumpings[index],
-      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
-      ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
-      ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
-      ...(input.volumeMl !== undefined && { volumeMl: input.volumeMl }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      ...(input.side !== undefined && { side: input.side }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedPumping: StoredPumpingEntry = {
+        ...pumpings[index],
+        ...(input.startedAt !== undefined && {
+          startedAt: input.startedAt.toISOString(),
+        }),
+        ...(input.endedAt !== undefined && {
+          endedAt: input.endedAt.toISOString(),
+        }),
+        ...(input.durationSeconds !== undefined && {
+          durationSeconds: input.durationSeconds,
+        }),
+        ...(input.volumeMl !== undefined && { volumeMl: input.volumeMl }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        ...(input.side !== undefined && { side: input.side }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    pumpings[index] = updatedPumping;
-    await AsyncStorage.setItem(getPumpingsKey(babyId), JSON.stringify(pumpings));
+      pumpings[index] = updatedPumping;
+      await AsyncStorage.setItem(
+        getPumpingsKey(babyId),
+        JSON.stringify(pumpings)
+      );
 
-    return updatedPumping;
+      return updatedPumping;
+    });
   },
 
   async deletePumping(babyId: string, pumpingId: string): Promise<boolean> {
-    const pumpings = await this.getAllPumpings(babyId);
-    const index = pumpings.findIndex(p => p.id === pumpingId);
+    const key = getPumpingsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const pumpings = await readCollection(babyId);
+      const index = pumpings.findIndex((p) => p.id === pumpingId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    pumpings.splice(index, 1);
-    await AsyncStorage.setItem(getPumpingsKey(babyId), JSON.stringify(pumpings));
+      pumpings.splice(index, 1);
+      await AsyncStorage.setItem(
+        getPumpingsKey(babyId),
+        JSON.stringify(pumpings)
+      );
 
-    return true;
+      return true;
+    });
   },
 
   async getLastPumping(babyId: string): Promise<StoredPumpingEntry | null> {

@@ -2076,5 +2076,51 @@
       "keepAccountData": "Manter dados da conta",
       "confirmDeletion": "O bebê e as atividades salvos neste dispositivo serão excluídos. Essa ação não pode ser desfeita."
     }
+  },
+  "import": {
+    "title": "Importar de outro app",
+    "description": "Traga seu histórico de outro app de acompanhamento do bebê. O arquivo é lido neste celular e nunca é enviado.",
+    "sourcesTitle": "Importar de",
+    "accountRequired": "Crie uma conta para importar",
+    "accountRequiredDescription": "O histórico importado é salvo na sua conta, fica seguro e é sincronizado com sua família.",
+    "chooseFile": "Escolher arquivo CSV",
+    "chooseAnother": "Escolher outro arquivo",
+    "preview": "Prévia da importação",
+    "forBaby": "Para {{baby}}",
+    "toAdd": "A adicionar",
+    "alreadyImported": "Já importados",
+    "skipped": "Ignorados",
+    "dateRange": "Intervalo de datas",
+    "timeZone": "Fuso horário",
+    "addRecords": "Importar registros",
+    "progress": "{{added}} de {{total}} adicionados",
+    "finished": "Importação concluída",
+    "failed": "A importação parou. Os registros salvos permanecem. Escolha o arquivo novamente para adicionar o restante.",
+    "failedBeforeSave": "Não foi possível iniciar a importação. Nenhum registro foi adicionado. Escolha o arquivo e tente novamente.",
+    "connectAndSync": "Conecte-se e espere a sincronização terminar antes de importar.",
+    "leaveTitle": "Sair da importação?",
+    "leaveMessage": "A importação está em andamento. Os registros salvos permanecem; importe o arquivo novamente para adicionar o restante.",
+    "leave": "Sair",
+    "stay": "Ficar",
+    "invalidFile": "Escolha um CSV do Huckleberry com o cabeçalho esperado e pelo menos uma linha.",
+    "fileTooLarge": "Arquivo muito grande. Escolha um arquivo de até 10 MB com no máximo 20.000 linhas.",
+    "noBaby": "Selecione um bebê antes de importar.",
+    "reasons": {
+      "couldNotRead": "Não foi possível ler",
+      "stillRunning": "Ainda em andamento",
+      "outsideLimits": "Fora dos limites do app",
+      "future": "No futuro",
+      "duplicateInFile": "Duplicado no arquivo",
+      "unsupported": "Não suportado: {{type}}"
+    },
+    "types": {
+      "sleep": "Sono",
+      "feeding": "Alimentação",
+      "diaper": "Fraldas",
+      "growth": "Crescimento",
+      "pumping": "Extração",
+      "health": "Medicação",
+      "tummyTime": "Tempo de bruços"
+    }
   }
 }

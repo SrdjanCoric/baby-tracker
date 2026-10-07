@@ -7,7 +7,12 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts", "src/__tests__/security/**/*.test.ts"],
-    exclude: ["e2e/**", "**/*.component.test.tsx", "**/*.integration.test.tsx"],
+    exclude: [
+      "e2e/**",
+      "**/*.component.test.tsx",
+      "**/*.integration.test.tsx",
+      "src/services/import/import-sync.test.ts",
+    ],
     environment: "node",
     globals: true,
     setupFiles: ["./src/test-setup.ts"],

@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FeedingStorageService, StoredFeedingEntry } from "./feeding-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("FeedingStorageService", () => {
 
   describe("getAllFeedings", () => {
     it("should return empty array when no feedings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.getAllFeedings("baby-123");
 
@@ -43,7 +49,7 @@ describe("FeedingStorageService", () => {
           updatedAt: "2024-01-17T10:15:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockFeedings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockFeedings));
 
       const result = await FeedingStorageService.getAllFeedings("baby-123");
 
@@ -53,7 +59,7 @@ describe("FeedingStorageService", () => {
 
   describe("getFeedingById", () => {
     it("should return null when feeding not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.getFeedingById("baby-123", "feeding-999");
 
@@ -71,7 +77,7 @@ describe("FeedingStorageService", () => {
         createdAt: "2024-01-17T10:00:00.000Z",
         updatedAt: "2024-01-17T10:15:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockFeeding]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockFeeding]));
 
       const result = await FeedingStorageService.getFeedingById("baby-123", "feeding-1");
 
@@ -81,7 +87,7 @@ describe("FeedingStorageService", () => {
 
   describe("addFeeding", () => {
     it("should add a new breastfeeding entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -103,7 +109,7 @@ describe("FeedingStorageService", () => {
     });
 
     it("should add a new bottle feeding entry", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -130,7 +136,7 @@ describe("FeedingStorageService", () => {
         createdAt: "2024-01-17T09:00:00.000Z",
         updatedAt: "2024-01-17T09:10:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingFeeding]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingFeeding]));
 
       const input = {
         babyId: "baby-123",
@@ -150,7 +156,7 @@ describe("FeedingStorageService", () => {
 
   describe("updateFeeding", () => {
     it("should return null when feeding not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.updateFeeding(
         "baby-123",
@@ -172,7 +178,7 @@ describe("FeedingStorageService", () => {
         createdAt: "2024-01-17T10:00:00.000Z",
         updatedAt: "2024-01-17T10:15:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingFeeding]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingFeeding]));
 
       const result = await FeedingStorageService.updateFeeding(
         "baby-123",
@@ -196,7 +202,7 @@ describe("FeedingStorageService", () => {
         createdAt: "2024-01-17T10:00:00.000Z",
         updatedAt: "2024-01-17T10:15:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(
+      mockCollectionRead.mockResolvedValue(
         JSON.stringify([existingFeeding])
       );
 
@@ -212,7 +218,7 @@ describe("FeedingStorageService", () => {
 
   describe("deleteFeeding", () => {
     it("should return false when feeding not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.deleteFeeding("baby-123", "feeding-999");
 
@@ -230,7 +236,7 @@ describe("FeedingStorageService", () => {
         createdAt: "2024-01-17T10:00:00.000Z",
         updatedAt: "2024-01-17T10:15:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingFeeding]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingFeeding]));
 
       const result = await FeedingStorageService.deleteFeeding("baby-123", "feeding-1");
 
@@ -243,7 +249,7 @@ describe("FeedingStorageService", () => {
 
   describe("getLastFeeding", () => {
     it("should return null when no feedings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.getLastFeeding("baby-123");
 
@@ -273,7 +279,7 @@ describe("FeedingStorageService", () => {
           updatedAt: "2024-01-17T11:15:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(feedings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(feedings));
 
       const result = await FeedingStorageService.getLastFeeding("baby-123");
 
@@ -283,7 +289,7 @@ describe("FeedingStorageService", () => {
 
   describe("getLastBreastSide", () => {
     it("should return null when no breast feedings exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await FeedingStorageService.getLastBreastSide("baby-123");
 
@@ -302,7 +308,7 @@ describe("FeedingStorageService", () => {
           updatedAt: "2024-01-17T09:10:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(feedings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(feedings));
 
       const result = await FeedingStorageService.getLastBreastSide("baby-123");
 
@@ -332,7 +338,7 @@ describe("FeedingStorageService", () => {
           updatedAt: "2024-01-17T11:15:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(feedings));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(feedings));
 
       const result = await FeedingStorageService.getLastBreastSide("baby-123");
 
@@ -343,7 +349,7 @@ describe("FeedingStorageService", () => {
   describe("Active Timer Management", () => {
     describe("getActiveTimer", () => {
       it("should return null when no active timer exists", async () => {
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+        mockCollectionRead.mockResolvedValue(null);
 
         const result = await FeedingStorageService.getActiveTimer("baby-123");
 
@@ -357,7 +363,7 @@ describe("FeedingStorageService", () => {
           side: "left",
           type: "breast",
         };
-        vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(activeTimer));
+        mockCollectionRead.mockResolvedValue(JSON.stringify(activeTimer));
 
         const result = await FeedingStorageService.getActiveTimer("baby-123");
 

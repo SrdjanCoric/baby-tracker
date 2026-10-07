@@ -55,6 +55,8 @@ const APP_STORAGE_PREFIXES = [
   "@tummyTime_dismissed_milestones:",
   "@activity_sync_cursor:",
   "@sync_queue",
+  "@import_ids:",
+  "@import_batch:",
 ];
 
 function isGuestStorageKey(key: string): boolean {

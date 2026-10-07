@@ -2073,5 +2073,51 @@
       "keepAccountData": "Conserver les données du compte",
       "confirmDeletion": "Le bébé et les activités enregistrés sur cet appareil seront supprimés. Cette action est irréversible."
     }
+  },
+  "import": {
+    "title": "Importer depuis une autre appli",
+    "description": "Récupère ton historique depuis une autre app de suivi de bébé. Le fichier est lu sur ce téléphone et n’est jamais envoyé.",
+    "sourcesTitle": "Importer depuis",
+    "accountRequired": "Crée un compte pour importer",
+    "accountRequiredDescription": "L’historique importé est enregistré dans ton compte : il reste en sécurité et se synchronise avec ton foyer.",
+    "chooseFile": "Choisir un fichier CSV",
+    "chooseAnother": "Choisir un autre fichier",
+    "preview": "Aperçu de l’importation",
+    "forBaby": "Pour {{baby}}",
+    "toAdd": "À ajouter",
+    "alreadyImported": "Déjà importés",
+    "skipped": "Ignorés",
+    "dateRange": "Période",
+    "timeZone": "Fuseau horaire",
+    "addRecords": "Importer les données",
+    "progress": "{{added}} sur {{total}} ajoutés",
+    "finished": "Importation terminée",
+    "failed": "L’importation s’est arrêtée. Les données enregistrées sont conservées. Choisis à nouveau le fichier pour ajouter le reste.",
+    "failedBeforeSave": "L’importation n’a pas pu démarrer. Aucune entrée n’a été ajoutée. Choisissez le fichier et réessayez.",
+    "connectAndSync": "Connecte-toi et attends la fin de la synchronisation avant d’importer.",
+    "leaveTitle": "Quitter l’importation ?",
+    "leaveMessage": "L’importation est en cours. Les données enregistrées sont conservées ; importe à nouveau le fichier pour ajouter le reste.",
+    "leave": "Quitter",
+    "stay": "Rester",
+    "invalidFile": "Choisis un CSV Huckleberry avec l’en-tête attendu et au moins une ligne.",
+    "fileTooLarge": "Fichier trop volumineux. Choisis un fichier de 10 Mo et 20 000 lignes maximum.",
+    "noBaby": "Sélectionne un bébé avant d’importer.",
+    "reasons": {
+      "couldNotRead": "Lecture impossible",
+      "stillRunning": "Encore en cours",
+      "outsideLimits": "Hors des limites de l’appli",
+      "future": "Dans le futur",
+      "duplicateInFile": "Doublon dans le fichier",
+      "unsupported": "Non pris en charge : {{type}}"
+    },
+    "types": {
+      "sleep": "Sommeil",
+      "feeding": "Alimentation",
+      "diaper": "Couches",
+      "growth": "Croissance",
+      "pumping": "Tire-lait",
+      "health": "Médicaments",
+      "tummyTime": "Temps sur le ventre"
+    }
   }
 }

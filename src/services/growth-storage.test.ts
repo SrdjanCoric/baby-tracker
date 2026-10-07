@@ -6,9 +6,15 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GrowthStorageService, StoredGrowthEntry } from "./growth-storage";
 
+const { mockCollectionRead } = vi.hoisted(() => ({
+  mockCollectionRead: vi.fn(),
+}));
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
-    getItem: vi.fn(),
+    getItem: vi.fn(async (key: string) =>
+      key.startsWith("@import_") ? null : mockCollectionRead(key)
+    ),
     setItem: vi.fn(),
     removeItem: vi.fn(),
   },
@@ -21,7 +27,7 @@ describe("GrowthStorageService", () => {
 
   describe("getAllMeasurements", () => {
     it("should return empty array when no measurements exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.getAllMeasurements("baby-123");
 
@@ -42,7 +48,7 @@ describe("GrowthStorageService", () => {
           updatedAt: "2024-01-17T13:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(mockMeasurements));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(mockMeasurements));
 
       const result = await GrowthStorageService.getAllMeasurements("baby-123");
 
@@ -52,7 +58,7 @@ describe("GrowthStorageService", () => {
 
   describe("getMeasurementById", () => {
     it("should return null when measurement not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.getMeasurementById("baby-123", "growth-999");
 
@@ -68,7 +74,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([mockMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([mockMeasurement]));
 
       const result = await GrowthStorageService.getMeasurementById("baby-123", "growth-1");
 
@@ -78,7 +84,7 @@ describe("GrowthStorageService", () => {
 
   describe("addMeasurement", () => {
     it("should add a new weight-only measurement", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -98,7 +104,7 @@ describe("GrowthStorageService", () => {
     });
 
     it("should add a new height-only measurement", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -113,7 +119,7 @@ describe("GrowthStorageService", () => {
     });
 
     it("should add a new head circumference-only measurement", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -129,7 +135,7 @@ describe("GrowthStorageService", () => {
     });
 
     it("should add a complete measurement with all fields", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const input = {
         babyId: "baby-123",
@@ -157,7 +163,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-01T09:00:00.000Z",
         updatedAt: "2024-01-01T09:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingMeasurement]));
 
       const input = {
         babyId: "baby-123",
@@ -175,7 +181,7 @@ describe("GrowthStorageService", () => {
 
   describe("updateMeasurement", () => {
     it("should return null when measurement not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.updateMeasurement(
         "baby-123",
@@ -195,7 +201,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingMeasurement]));
 
       const result = await GrowthStorageService.updateMeasurement(
         "baby-123",
@@ -216,7 +222,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingMeasurement]));
 
       const result = await GrowthStorageService.updateMeasurement(
         "baby-123",
@@ -236,7 +242,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingMeasurement]));
 
       const result = await GrowthStorageService.updateMeasurement(
         "baby-123",
@@ -251,7 +257,7 @@ describe("GrowthStorageService", () => {
 
   describe("deleteMeasurement", () => {
     it("should return false when measurement not found", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.deleteMeasurement("baby-123", "growth-999");
 
@@ -267,7 +273,7 @@ describe("GrowthStorageService", () => {
         createdAt: "2024-01-17T13:00:00.000Z",
         updatedAt: "2024-01-17T13:00:00.000Z",
       };
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify([existingMeasurement]));
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingMeasurement]));
 
       const result = await GrowthStorageService.deleteMeasurement("baby-123", "growth-1");
 
@@ -280,7 +286,7 @@ describe("GrowthStorageService", () => {
 
   describe("getLastMeasurement", () => {
     it("should return null when no measurements exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.getLastMeasurement("baby-123");
 
@@ -306,7 +312,7 @@ describe("GrowthStorageService", () => {
           updatedAt: "2024-01-17T13:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(measurements));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(measurements));
 
       const result = await GrowthStorageService.getLastMeasurement("baby-123");
 
@@ -316,7 +322,7 @@ describe("GrowthStorageService", () => {
 
   describe("getMeasurementHistory", () => {
     it("should return empty array when no measurements exist", async () => {
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+      mockCollectionRead.mockResolvedValue(null);
 
       const result = await GrowthStorageService.getMeasurementHistory("baby-123");
 
@@ -342,7 +348,7 @@ describe("GrowthStorageService", () => {
           updatedAt: "2024-01-01T09:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(measurements));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(measurements));
 
       const result = await GrowthStorageService.getMeasurementHistory("baby-123");
 
@@ -377,7 +383,7 @@ describe("GrowthStorageService", () => {
           updatedAt: "2024-01-01T09:00:00.000Z",
         },
       ];
-      vi.mocked(AsyncStorage.getItem).mockResolvedValue(JSON.stringify(measurements));
+      mockCollectionRead.mockResolvedValue(JSON.stringify(measurements));
 
       const result = await GrowthStorageService.getMeasurementHistory("baby-123", 2);
 

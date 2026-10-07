@@ -41,13 +41,23 @@ export interface SyncOperationOwner {
   userId: string;
 }
 
-export interface LocalStorageMutation {
+export interface LocalStorageValuesMutation {
   key: string;
   previousValue: string | null;
   nextValue: string;
   state: 'prepared' | 'committed';
   previousShadow?: ClockedRecord | null;
 }
+
+export interface LocalStorageHashesMutation {
+  key: string;
+  previousHash: string;
+  nextHash: string;
+  state: 'prepared' | 'committed';
+  previousShadow?: ClockedRecord | null;
+}
+
+export type LocalStorageMutation = LocalStorageValuesMutation | LocalStorageHashesMutation;
 
 export interface QueuedOperation {
   id: string;
@@ -59,6 +69,7 @@ export interface QueuedOperation {
   retryCount: number;
   owner?: SyncOperationOwner;
   localMutation?: LocalStorageMutation;
+  localMutationBatch?: { leaderId: string; previousShadow?: ClockedRecord | null };
   timerCompletion?: { timerInstanceId: string; startedAt: string };
 }
 

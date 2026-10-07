@@ -2,6 +2,8 @@
  * Sleep storage service using AsyncStorage
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { settleImportJournal } from "./import/import-journal";
 import type { SleepType } from "@/constants/activities";
 import type { WakeWindowConfig } from "@/types/wake-windows";
 import { getUserScopedKey } from "./storage-prefix";
@@ -132,11 +134,19 @@ function isToday(date: Date): boolean {
   );
 }
 
+async function readCollection(babyId: string): Promise<StoredSleepEntry[]> {
+  const data = await AsyncStorage.getItem(getSleepsKey(babyId));
+  if (!data) return [];
+  return JSON.parse(data) as StoredSleepEntry[];
+}
+
 export const SleepStorageService = {
   async getAllSleeps(babyId: string): Promise<StoredSleepEntry[]> {
-    const data = await AsyncStorage.getItem(getSleepsKey(babyId));
-    if (!data) return [];
-    return JSON.parse(data) as StoredSleepEntry[];
+    const key = getSleepsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      return readCollection(babyId);
+    });
   },
 
   async getSleepById(babyId: string, sleepId: string): Promise<StoredSleepEntry | null> {
@@ -145,30 +155,37 @@ export const SleepStorageService = {
   },
 
   async addSleep(input: CreateSleepInput): Promise<StoredSleepEntry> {
-    const sleeps = await this.getAllSleeps(input.babyId);
-    const id = input.id ?? generateId();
-    const existing = sleeps.find(sleep => sleep.id === id);
-    if (existing) return existing;
+    const key = getSleepsKey(input.babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const sleeps = await readCollection(input.babyId);
+      const id = input.id ?? generateId();
+      const existing = sleeps.find((sleep) => sleep.id === id);
+      if (existing) return existing;
 
-    const now = new Date().toISOString();
-    const newSleep: StoredSleepEntry = {
-      id,
-      babyId: input.babyId,
-      type: input.type,
-      startedAt: input.startedAt.toISOString(),
-      endedAt: input.endedAt?.toISOString(),
-      durationSeconds: input.durationSeconds,
-      notes: input.notes,
-      morningClassification: input.morningClassification,
-      morningClassificationVersion: input.morningClassificationVersion,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const now = new Date().toISOString();
+      const newSleep: StoredSleepEntry = {
+        id,
+        babyId: input.babyId,
+        type: input.type,
+        startedAt: input.startedAt.toISOString(),
+        endedAt: input.endedAt?.toISOString(),
+        durationSeconds: input.durationSeconds,
+        notes: input.notes,
+        morningClassification: input.morningClassification,
+        morningClassificationVersion: input.morningClassificationVersion,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    sleeps.push(newSleep);
-    await AsyncStorage.setItem(getSleepsKey(input.babyId), JSON.stringify(sleeps));
+      sleeps.push(newSleep);
+      await AsyncStorage.setItem(
+        getSleepsKey(input.babyId),
+        JSON.stringify(sleeps)
+      );
 
-    return newSleep;
+      return newSleep;
+    });
   },
 
   async updateSleep(
@@ -176,43 +193,57 @@ export const SleepStorageService = {
     sleepId: string,
     input: UpdateSleepInput
   ): Promise<StoredSleepEntry | null> {
-    const sleeps = await this.getAllSleeps(babyId);
-    const index = sleeps.findIndex(s => s.id === sleepId);
+    const key = getSleepsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const sleeps = await readCollection(babyId);
+      const index = sleeps.findIndex((s) => s.id === sleepId);
 
-    if (index === -1) return null;
+      if (index === -1) return null;
 
-    const updatedSleep: StoredSleepEntry = {
-      ...sleeps[index],
-      ...(input.startedAt !== undefined && { startedAt: input.startedAt.toISOString() }),
-      ...(input.endedAt !== undefined && { endedAt: input.endedAt.toISOString() }),
-      ...(input.durationSeconds !== undefined && { durationSeconds: input.durationSeconds }),
-      ...(input.notes !== undefined && { notes: input.notes }),
-      ...(input.type !== undefined && { type: input.type }),
-      ...(input.morningClassification !== undefined && {
-        morningClassification: input.morningClassification,
-      }),
-      ...(input.morningClassificationVersion !== undefined && {
-        morningClassificationVersion: input.morningClassificationVersion,
-      }),
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedSleep: StoredSleepEntry = {
+        ...sleeps[index],
+        ...(input.startedAt !== undefined && {
+          startedAt: input.startedAt.toISOString(),
+        }),
+        ...(input.endedAt !== undefined && {
+          endedAt: input.endedAt.toISOString(),
+        }),
+        ...(input.durationSeconds !== undefined && {
+          durationSeconds: input.durationSeconds,
+        }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.morningClassification !== undefined && {
+          morningClassification: input.morningClassification,
+        }),
+        ...(input.morningClassificationVersion !== undefined && {
+          morningClassificationVersion: input.morningClassificationVersion,
+        }),
+        updatedAt: new Date().toISOString(),
+      };
 
-    sleeps[index] = updatedSleep;
-    await AsyncStorage.setItem(getSleepsKey(babyId), JSON.stringify(sleeps));
+      sleeps[index] = updatedSleep;
+      await AsyncStorage.setItem(getSleepsKey(babyId), JSON.stringify(sleeps));
 
-    return updatedSleep;
+      return updatedSleep;
+    });
   },
 
   async deleteSleep(babyId: string, sleepId: string): Promise<boolean> {
-    const sleeps = await this.getAllSleeps(babyId);
-    const index = sleeps.findIndex(s => s.id === sleepId);
+    const key = getSleepsKey(babyId);
+    return withStorageLock(key, async () => {
+      await settleImportJournal(key);
+      const sleeps = await readCollection(babyId);
+      const index = sleeps.findIndex((s) => s.id === sleepId);
 
-    if (index === -1) return false;
+      if (index === -1) return false;
 
-    sleeps.splice(index, 1);
-    await AsyncStorage.setItem(getSleepsKey(babyId), JSON.stringify(sleeps));
+      sleeps.splice(index, 1);
+      await AsyncStorage.setItem(getSleepsKey(babyId), JSON.stringify(sleeps));
 
-    return true;
+      return true;
+    });
   },
 
   async getLastSleep(babyId: string): Promise<StoredSleepEntry | null> {

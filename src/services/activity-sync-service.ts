@@ -1,4 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withStorageLock } from "./activity-storage-lock";
+import { getImportedIds, importJournalKey, settleImportJournal } from "./import/import-journal";
+import { getCrdtSync } from "./sync/crdt-sync-instance";
 import * as Crypto from "expo-crypto";
 import { supabase } from "./supabase";
 import {
@@ -7,7 +10,7 @@ import {
   getUserScopedKeyFor,
 } from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
-import type { LocalStorageMutation, OperationType, QueuedOperation, SyncableTable } from "./sync/types";
+import type { LocalStorageValuesMutation, OperationType, QueuedOperation, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
 import { compareClocks, type FieldClocks } from "./sync/crdt";
 import { dropTombstoned } from "./sync/tombstone";
@@ -36,6 +39,91 @@ export interface ActivityRangeEntryMap {
 }
 
 export type TimelineActivityTable = keyof ActivityRangeEntryMap;
+export function activityCollectionKey(
+  table: TimelineActivityTable,
+  babyId: string
+): string {
+  return getUserScopedKey(
+    `${getActivityRangeDefinition(table).storagePrefix}${babyId}`
+  );
+}
+
+export async function createImportedActivityBatch<
+  T extends TimelineActivityTable,
+>(
+  table: T,
+  babyId: string,
+  entries: ActivityRangeEntryMap[T][],
+  userId?: string,
+  onSaved?: (count: number) => void
+): Promise<number> {
+  const storageUserId = getStorageUserId();
+  const key = activityCollectionKey(table, babyId);
+  const engine = userId ? getSyncEngine() : null;
+  const householdId = engine?.getAuthContext()?.householdId;
+  const assertScope = () => {
+    if (
+      getStorageUserId() !== storageUserId ||
+      (userId && (engine?.getAuthContext()?.userId !== userId ||
+        engine?.getAuthContext()?.householdId !== householdId))
+    ) {
+      throw new Error("Import account changed");
+    }
+  };
+  return withStorageLock(key, async () => {
+    assertScope();
+    await settleImportJournal(key);
+    const previousValue = await AsyncStorage.getItem(key);
+    const current: ActivityRangeEntryMap[T][] = previousValue
+      ? JSON.parse(previousValue)
+      : [];
+    const known = await getImportedIds(key);
+    for (const entry of current) known.add(entry.id);
+    const crdt = await getCrdtSync();
+    const additions: ActivityRangeEntryMap[T][] = [];
+    for (const entry of entries) {
+      if (known.has(entry.id) || (await crdt.getShadow(table, entry.id)))
+        continue;
+      known.add(entry.id);
+      additions.push(entry);
+    }
+    if (!additions.length) return 0;
+    assertScope();
+    await AsyncStorage.setItem(
+      importJournalKey(key),
+      JSON.stringify(additions.map((entry) => entry.id))
+    );
+    const nextValue = JSON.stringify([...current, ...additions]);
+    if (userId) {
+      if (!engine) throw new Error("Import sync queue unavailable");
+      const operations: QueuedOperation[] = additions.map((entry) => ({
+        id: generateId(),
+        type: "CREATE",
+        table,
+        entityId: entry.id,
+        data: Object.fromEntries(
+          Object.entries(entry).map(([field, value]) => [
+            field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
+            value,
+          ])
+        ),
+        timestamp: new Date().toISOString(),
+        retryCount: 0,
+      }));
+      await engine.enqueueOperationsWithLocalMutation(operations, {
+        key,
+        previousValue,
+        nextValue,
+      });
+    } else {
+      assertScope();
+      await AsyncStorage.setItem(key, nextValue);
+    }
+    onSaved?.(additions.length);
+    await settleImportJournal(key);
+    return additions.length;
+  });
+}
 export type ActivityCursorTable = TimelineActivityTable | "milestone_responses";
 
 interface ActivitySyncCursor {
@@ -288,15 +376,6 @@ function mergeWithPendingLocal<T extends { id: string }>(
   }
 
   return merged;
-}
-
-const storageLocks = new Map<string, Promise<void>>();
-
-function withStorageLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const prev = storageLocks.get(key) ?? Promise.resolve();
-  const next = prev.then(fn, fn);
-  storageLocks.set(key, next.then(() => {}, () => {}));
-  return next;
 }
 
 interface ActivityPullScope {
@@ -589,7 +668,7 @@ type ActivityQueueOperation = {
   data: Record<string, unknown> | null;
 };
 
-type LocalMutationInput = Omit<LocalStorageMutation, 'state' | 'previousShadow'>;
+type LocalMutationInput = Omit<LocalStorageValuesMutation, 'state' | 'previousShadow'>;
 type DurableQueueCommit = (mutation: LocalMutationInput) => Promise<void>;
 
 async function updateLocalCollection<T>(

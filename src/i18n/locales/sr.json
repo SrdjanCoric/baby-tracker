@@ -2166,5 +2166,51 @@
       "keepAccountData": "Zadrži podatke naloga",
       "confirmDeletion": "Beba i aktivnosti sačuvane na ovom uređaju biće obrisane. Ova radnja se ne može poništiti."
     }
+  },
+  "import": {
+    "title": "Uvezi iz druge aplikacije",
+    "description": "Prenesi istoriju iz druge aplikacije za praćenje bebe. Datoteka se čita na ovom telefonu i nikada se ne šalje.",
+    "sourcesTitle": "Uvezi iz",
+    "accountRequired": "Kreiraj nalog za uvoz",
+    "accountRequiredDescription": "Uvezena istorija se čuva na tvom nalogu, tako ostaje bezbedna i sinhronizuje se sa domaćinstvom.",
+    "chooseFile": "Izaberi CSV datoteku",
+    "chooseAnother": "Izaberi drugu datoteku",
+    "preview": "Pregled uvoza",
+    "forBaby": "Za {{baby}}",
+    "toAdd": "Za dodavanje",
+    "alreadyImported": "Već uvezeno",
+    "skipped": "Preskočeno",
+    "dateRange": "Period",
+    "timeZone": "Vremenska zona",
+    "addRecords": "Uvezi zapise",
+    "progress": "Dodato {{added}} od {{total}}",
+    "finished": "Uvoz završen",
+    "failed": "Uvoz je zaustavljen. Sačuvani zapisi ostaju. Ponovo izaberi datoteku da dodaš preostale.",
+    "failedBeforeSave": "Uvoz nije mogao da počne. Nijedan zapis nije dodat. Izaberite datoteku i pokušajte ponovo.",
+    "connectAndSync": "Poveži se i sačekaj da se sinhronizacija završi pre uvoza.",
+    "leaveTitle": "Napustiti uvoz?",
+    "leaveMessage": "Uvoz je u toku. Sačuvani zapisi ostaju; ponovo uvezi datoteku da dodaš preostale.",
+    "leave": "Napusti",
+    "stay": "Ostani",
+    "invalidFile": "Izaberi Huckleberry CSV sa očekivanim zaglavljem i bar jednim redom.",
+    "fileTooLarge": "Datoteka je prevelika. Izaberi datoteku do 10 MB sa najviše 20.000 redova.",
+    "noBaby": "Izaberi bebu pre uvoza.",
+    "reasons": {
+      "couldNotRead": "Nije moguće pročitati",
+      "stillRunning": "Još traje",
+      "outsideLimits": "Van ograničenja aplikacije",
+      "future": "U budućnosti",
+      "duplicateInFile": "Duplikat u datoteci",
+      "unsupported": "Nije podržano: {{type}}"
+    },
+    "types": {
+      "sleep": "Spavanje",
+      "feeding": "Hranjenje",
+      "diaper": "Pelene",
+      "growth": "Rast",
+      "pumping": "Izmlazanje",
+      "health": "Lekovi",
+      "tummyTime": "Vreme na stomaku"
+    }
   }
 }

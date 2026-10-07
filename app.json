@@ -98,6 +98,7 @@
       "bundler": "metro"
     },
     "plugins": [
+      "./plugins/with-import-storage",
       "./plugins/with-16kb-pages",
       "./plugins/with-live-activity-controller",
       "./plugins/with-shared-supabase-session",

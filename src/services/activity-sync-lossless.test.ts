@@ -1247,8 +1247,8 @@ describe("lossless activity sync", () => {
     const restarted = makeRealSyncEngine();
     await restarted.initialize();
     syncEngine = restarted;
-    expect(JSON.parse(storage.get("@sync_queue")!).operations[0].localMutation.state)
-      .toBe("committed");
+    expect(JSON.parse(storage.get("@sync_queue")!).operations[0].localMutation)
+      .toBeUndefined();
     await expect(fetchFeedingsFromDatabase("baby-1")).resolves.toHaveLength(1);
     restarted.setOnlineForTesting(true);
     await restarted.sync();
