@@ -315,6 +315,10 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [ ] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/0104-household-stop-clears-lock-in-save.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104) → tasks/0105-gate-4-10-2-release.md
 - [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
+- [ ] 0107 · Import Huckleberry sleep and feeds from an export file → tasks/0107-import-huckleberry-sleep-and-feeds.md
+- [ ] 0108 · Import Huckleberry diapers, growth, pumping, medication, and tummy time (after 0107) → tasks/0108-import-huckleberry-care-rows.md
+- [ ] 0109 · Import a Nara Baby export file (after 0108) → tasks/0109-import-from-nara.md
+- [ ] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/0110-no-push-for-past-activities.md
 
 ## Workflow status
 
@@ -466,6 +470,15 @@ compatible with app 4.9.11) and decided that no release ships until 0091 through
 and the full household E2E (`npm run e2e:household-timers`) has passed on the combined result; each
 task's PR merges to `main` on unit, component, CI, and SQL proof only, with the E2E acceptance item
 deferred to the 0094 closeout.
+
+On 2026-10-07 the owner added Tasks 0107 through 0110 so parents can import their history from
+Huckleberry and then Nara, after a Nara user asked for it (Nara became paid on 2026-09-16). Imports
+never change the app's record shapes or database tables, and all development and testing uses local
+data and the local Supabase stack. 0107 delivers the import screen with Huckleberry sleep and feeds,
+0108 adds the remaining Huckleberry types, and 0109 adds Nara. 0110 stops activity pushes for records
+whose activity ended more than an hour earlier, so an import does not notify other caregivers once
+per record; the owner deploys it before any build containing import is submitted. These tasks do not
+block the 4.10.2 release and run after 0103–0105 unless the owner reorders them.
 
 On 2026-10-06 the owner added Tasks 0103 through 0105 to bring the 4.9 hotfix line (through 4.9.23)
 into `main` and release the held 4.10 work as 4.10.2. They take priority over every other open
