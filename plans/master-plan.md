@@ -333,7 +333,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/done/0104-household-stop-clears-lock-in-save.md
 - [x] 0107 · Import a Huckleberry export file → tasks/done/0107-import-from-huckleberry.md
 - [x] 0109 · Import a Nara Baby export file (after 0107) → tasks/done/0109-import-from-nara.md
-- [ ] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/0110-no-push-for-past-activities.md
+- [x] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/done/0110-no-push-for-past-activities.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104, 0109, 0110) → tasks/0105-gate-4-10-2-release.md
 - [x] 0111 · Make the widget and Watch activity snapshot cost independent of history length → tasks/done/0111-bound-activity-snapshot-cost.md
 - [ ] 0112 · Subscribe each phone only to its own household's live updates → tasks/0112-scope-live-updates-to-household.md

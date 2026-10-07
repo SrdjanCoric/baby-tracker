@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getFcmAccessToken, sendFcmNotification, isFcmTokenInvalid } from "../_shared/fcm.ts";
+import { ACTIVITY_TIME_COLUMNS, getPastActivity } from "./activity-age.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_URL") || "",
@@ -28,10 +29,7 @@ const ACTIVITY_NAMES: Record<string, string> = {
   tummy_time_sessions: "tummy time",
 };
 
-const ALLOWED_TABLES = new Set([
-  "feedings", "sleep_sessions", "diapers",
-  "pumping_sessions", "growth_measurements", "tummy_time_sessions",
-]);
+const ALLOWED_TABLES = new Set(Object.keys(ACTIVITY_TIME_COLUMNS));
 
 function base64UrlEncode(data: Uint8Array): string {
   const base64 = btoa(String.fromCharCode(...data));
@@ -161,6 +159,16 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Missing baby_id or logged_by" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Historical imports must not send a notification for every activity they restore.
+    const pastActivity = getPastActivity(table, record, Date.now());
+    if (pastActivity) {
+      console.log(`Skipping activity notification for past activity: ${table} record ${record.id}`, pastActivity);
+      return new Response(
+        JSON.stringify({ skipped: "past activity" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
