@@ -338,6 +338,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [ ] 0109 · Import a Nara Baby export file (after 0108) → tasks/0109-import-from-nara.md
 - [ ] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/0110-no-push-for-past-activities.md
 - [ ] 0111 · Make the widget and Watch activity snapshot cost independent of history length → tasks/0111-bound-activity-snapshot-cost.md
+- [ ] 0112 · Subscribe each phone only to its own household's live updates → tasks/0112-scope-live-updates-to-household.md
 
 ## Workflow status
 
@@ -505,6 +506,10 @@ restarted the project; moving to Small compute was recommended. Query Performanc
 Watch activity snapshot function using 45% of database time because it reads each baby's whole
 history on every call. The owner added Task 0111 as an independent, server-only fix that may run at
 any time, ahead of every other open task.
+Task 0112, added the same day, scopes each phone's live-update subscription to its own
+household, because Realtime's change polling used 32% of database time and its per-subscriber
+checks grow with every phone online. It is an independent app-only change and may run in any order
+with 0111.
 
 On 2026-10-06 the owner added Tasks 0103 through 0105 to bring the 4.9 hotfix line (through 4.9.23)
 into `main` and release the held 4.10 work as 4.10.2. They take priority over every other open
