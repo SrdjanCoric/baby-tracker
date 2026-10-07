@@ -2102,7 +2102,7 @@
     "leaveMessage": "A importação está em andamento. Os registros salvos permanecem; importe o arquivo novamente para adicionar o restante.",
     "leave": "Sair",
     "stay": "Ficar",
-    "invalidFile": "Escolha um CSV do Huckleberry com o cabeçalho esperado e pelo menos uma linha.",
+    "invalidFile": "Escolha um CSV do Huckleberry ou Nara com os cabeçalhos esperados e pelo menos uma linha.",
     "fileTooLarge": "Arquivo muito grande. Escolha um arquivo de até 10 MB com no máximo 20.000 linhas.",
     "noBaby": "Selecione um bebê antes de importar.",
     "reasons": {

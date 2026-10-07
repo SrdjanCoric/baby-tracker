@@ -65,6 +65,13 @@ const keys = [
 
 describe("import screen translations", () => {
   it.each(Object.entries(locales))(
+    "names both supported file formats in %s",
+    (_language, translations) => {
+      expect(translations.import.invalidFile).toContain("Huckleberry");
+      expect(translations.import.invalidFile).toContain("Nara");
+    }
+  );
+  it.each(Object.entries(locales))(
     "has every screen string in %s",
     (_language, translations) => {
       for (const key of keys) {

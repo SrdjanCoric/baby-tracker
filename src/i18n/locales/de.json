@@ -2099,7 +2099,7 @@
     "leaveMessage": "Der Import läuft. Gespeicherte Einträge bleiben erhalten; importiere die Datei erneut, um den Rest hinzuzufügen.",
     "leave": "Verlassen",
     "stay": "Bleiben",
-    "invalidFile": "Wähle eine Huckleberry-CSV mit der erwarteten Kopfzeile und mindestens einer Datenzeile.",
+    "invalidFile": "Wähle eine Huckleberry- oder Nara-CSV mit den erwarteten Spaltenüberschriften und mindestens einer Zeile.",
     "fileTooLarge": "Datei zu groß. Wähle eine Datei mit höchstens 10 MB und 20.000 Zeilen.",
     "noBaby": "Wähle vor dem Import ein Baby aus.",
     "reasons": {

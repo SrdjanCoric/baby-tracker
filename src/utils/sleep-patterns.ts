@@ -1,6 +1,7 @@
 import type { StoredSleepEntry } from "@/services/sleep-storage";
 import { unionCompletedSleepIntervals } from "@/utils/sleep-intervals";
 import { getCompletedSleepDayWindow } from "@/utils/sleep-summary-window";
+import { zonedWallTime } from "@/utils/zoned-time";
 
 export interface DayBlock {
   topPx: number;
@@ -137,25 +138,77 @@ export function splitSleepAtDayBoundary(
   return result;
 }
 
+function sleepClock(timeZone?: string) {
+  // Invalid export zones retain the device-time behavior used by older readers.
+  const wall = zonedWallTime(timeZone);
+  const parts = (date: Date) =>
+    wall
+      ? wall(date)
+      : {
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          second: date.getSeconds(),
+        };
+  return {
+    hour: (date: Date) => parts(date).hour,
+    nextBoundary: (from: Date, dayStartHour: number, dayEndHour: number) => {
+      if (!wall)
+        return getNextTypeBoundary(from, dayStartHour, dayEndHour);
+      let candidate = from;
+      while (true) {
+        const { minute, second } = parts(candidate);
+        candidate = new Date(
+          candidate.getTime() +
+            (60 - minute) * 60000 -
+            second * 1000 -
+            candidate.getMilliseconds()
+        );
+        const next = parts(candidate);
+        // Advance in actual time so repeated or skipped hours follow zone transitions.
+        if (
+          (next.minute === 0 && (next.hour === dayStartHour || next.hour === dayEndHour)) ||
+          classifySleepType(next.hour, dayStartHour, dayEndHour) !==
+            classifySleepType(parts(from).hour, dayStartHour, dayEndHour)
+        )
+          return candidate;
+      }
+    },
+  };
+}
+
 export function splitSleepTimeRange(
   startedAt: Date,
   endedAt: Date,
   dayStartHour: number,
-  dayEndHour: number
-): { startedAt: Date; endedAt: Date; type: "nap" | "night"; durationSeconds: number }[] {
-  const result: { startedAt: Date; endedAt: Date; type: "nap" | "night"; durationSeconds: number }[] = [];
+  dayEndHour: number,
+  timeZone?: string
+): {
+  startedAt: Date;
+  endedAt: Date;
+  type: "nap" | "night";
+  durationSeconds: number;
+}[] {
+  const result: {
+    startedAt: Date;
+    endedAt: Date;
+    type: "nap" | "night";
+    durationSeconds: number;
+  }[] = [];
 
+  const clock = sleepClock(timeZone);
   let segStart = startedAt;
   while (segStart < endedAt) {
-    const nextBoundary = getNextTypeBoundary(segStart, dayStartHour, dayEndHour);
+    const nextBoundary = clock.nextBoundary(segStart, dayStartHour, dayEndHour);
     const segEnd = nextBoundary < endedAt ? nextBoundary : endedAt;
-    const durationSeconds = Math.floor((segEnd.getTime() - segStart.getTime()) / 1000);
+    const durationSeconds = Math.floor(
+      (segEnd.getTime() - segStart.getTime()) / 1000
+    );
 
     if (durationSeconds > 0) {
       result.push({
         startedAt: new Date(segStart),
         endedAt: new Date(segEnd),
-        type: classifySleepType(segStart.getHours(), dayStartHour, dayEndHour),
+        type: classifySleepType(clock.hour(segStart), dayStartHour, dayEndHour),
         durationSeconds,
       });
     }
@@ -172,10 +225,21 @@ export function classifySleepByTimeRange(
   startedAt: Date,
   endedAt: Date,
   dayStartHour: number,
-  dayEndHour: number
+  dayEndHour: number,
+  timeZone?: string
 ): "nap" | "night" {
-  const startType = classifySleepType(startedAt.getHours(), dayStartHour, dayEndHour);
-  const segments = splitSleepTimeRange(startedAt, endedAt, dayStartHour, dayEndHour);
+  const startType = classifySleepType(
+    sleepClock(timeZone).hour(startedAt),
+    dayStartHour,
+    dayEndHour
+  );
+  const segments = splitSleepTimeRange(
+    startedAt,
+    endedAt,
+    dayStartHour,
+    dayEndHour,
+    timeZone
+  );
 
   let napSeconds = 0;
   let nightSeconds = 0;
@@ -188,7 +252,10 @@ export function classifySleepByTimeRange(
   const otherSeconds = otherType === "nap" ? napSeconds : nightSeconds;
   const startSeconds = startType === "nap" ? napSeconds : nightSeconds;
 
-  if (otherSeconds > RECLASSIFY_THRESHOLD_SECONDS && otherSeconds > startSeconds) {
+  if (
+    otherSeconds > RECLASSIFY_THRESHOLD_SECONDS &&
+    otherSeconds > startSeconds
+  ) {
     return otherType;
   }
   return startType;

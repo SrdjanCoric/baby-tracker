@@ -136,6 +136,60 @@ it("previews the selected baby, types, time zone and counts; cancel saves nothin
   expect(screen.queryByTestId("import-save")).toBeNull();
 });
 
+it("lists Nara beside Huckleberry and previews, imports, and refreshes its records", async () => {
+  mockRead.mockResolvedValue(
+    "Type,Start Date/time (Epoch),_activityKey,Note,Time Zone,[Bottle Feed] Type,[Bottle Feed] Formula Volume,[Bottle Feed] Formula Volume Unit\nBottle Feed,1705060800123,synthetic-ui,synthetic note,Europe/Belgrade,Formula,80,ML"
+  );
+  render(<ImportScreen />);
+  expect(screen.getByText("Huckleberry")).toBeTruthy();
+  expect(screen.getByText("Nara Baby")).toBeTruthy();
+  fireEvent.press(screen.getByTestId("import-nara"));
+  await screen.findByText(/import.forBaby/);
+  expect(screen.getByText(/Test Baby/)).toBeTruthy();
+  expect(screen.getByText("Europe/Belgrade")).toBeTruthy();
+  expect(screen.getByText(/import.types.feeding/)).toBeTruthy();
+  expect(mockPrepare).toHaveBeenCalledWith(
+    expect.objectContaining({
+      source: "nara",
+      records: [
+        expect.objectContaining({
+          kind: "feeding",
+          input: expect.objectContaining({
+            amountMl: 80,
+            notes: "synthetic note",
+          }),
+        }),
+      ],
+    }),
+    "baby-a",
+    "user-a"
+  );
+  expect(mockImport).not.toHaveBeenCalled();
+  fireEvent.press(screen.getByTestId("import-save"));
+  await screen.findByText("import.finished");
+  expect(mockImport).toHaveBeenCalledTimes(1);
+  expect(mockRefresh).toHaveBeenCalledTimes(7);
+  expect(mockDelete).toHaveBeenCalled();
+});
+
+it("rejects a Huckleberry file chosen for Nara without preparing or saving", async () => {
+  render(<ImportScreen />);
+  fireEvent.press(screen.getByTestId("import-nara"));
+  await screen.findByText("import.invalidFile");
+  expect(mockPrepare).not.toHaveBeenCalled();
+  expect(mockImport).not.toHaveBeenCalled();
+});
+
+it.each([
+  { isConnected: false, pendingCount: 0, status: "offline" },
+  { isConnected: true, pendingCount: 3, status: "pending" },
+])("blocks Nara import until connected and synced", (sync) => {
+  mockSync = sync;
+  render(<ImportScreen />);
+  fireEvent.press(screen.getByTestId("import-nara"));
+  expect(mockPick).not.toHaveBeenCalled();
+});
+
 it.each(["wrong.txt", "broken.csv"])(
   "does not preview invalid file %s",
   async (name) => {
@@ -292,3 +346,30 @@ it("does not claim any records were saved when preparation fails", async () => {
   await screen.findByText("import.failedBeforeSave");
   expect(screen.queryByText("import.failed")).toBeNull();
 });
+
+it.each(["nara", "huckleberry"])(
+  "shows loading only on the chosen %s source and disables both rows",
+  async (source) => {
+    let resolvePick!: (result: { canceled: true }) => void;
+    mockPick.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolvePick = resolve;
+        })
+    );
+    render(<ImportScreen />);
+    fireEvent.press(screen.getByTestId(`import-${source}`));
+    for (const name of ["nara", "huckleberry"]) {
+      const button = screen.getByTestId(`import-${name}`);
+      expect(button.props.accessibilityState.disabled).toBe(true);
+      const spinner = within(button).queryByLabelText("common.loading");
+      if (name === source) expect(spinner).toBeTruthy();
+      else expect(spinner).toBeNull();
+    }
+    await act(async () => resolvePick({ canceled: true }));
+    expect(screen.queryByLabelText("common.loading")).toBeNull();
+    expect(
+      screen.getByTestId("import-nara").props.accessibilityState.disabled
+    ).toBe(false);
+  }
+);

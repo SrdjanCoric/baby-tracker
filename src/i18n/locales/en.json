@@ -2099,7 +2099,7 @@
     "leaveMessage": "Import is running. Saved records will remain; import the file again to add the rest.",
     "leave": "Leave",
     "stay": "Stay",
-    "invalidFile": "Choose a Huckleberry CSV with the expected header and at least one row.",
+    "invalidFile": "Choose a Huckleberry or Nara CSV with the expected headers and at least one row.",
     "fileTooLarge": "File too large. Choose a file no larger than 10 MB with at most 20,000 rows.",
     "noBaby": "Select a baby before importing.",
     "reasons": {

@@ -4,6 +4,7 @@ import {
   type MorningClassificationState,
 } from "../types/sleep";
 import { unionCompletedSleepIntervals } from "./sleep-intervals";
+import { zonedWallTime } from "./zoned-time";
 import {
   WAKE_WINDOW_PROGRESSIONS,
   getSleepAgeGroupForBaby,
@@ -88,9 +89,10 @@ export function resolveMorningSleep<T extends MorningSleepSession>(
   sleeps: readonly T[],
   dayStartHour: number,
   referenceDate: Date = new Date(),
-  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES
+  continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES,
+  timeZone?: string
 ): MorningSleepResolution<T> {
-  const dayStart = hourToDate(dayStartHour, referenceDate);
+  const dayStart = hourToDate(dayStartHour, referenceDate, timeZone);
   const anchor = new Date(dayStart.getTime() - 183 * 60 * 1000);
   const nowMs = referenceDate.getTime();
   const validSleeps = sleeps.filter((sleep) => !sleep.deleted);
@@ -215,7 +217,8 @@ export function classifyNewMorningSleep<T extends MorningSleepSession>(
   candidate: MorningSleepSession,
   dayStartHour: number,
   continuationAllowanceMinutes: number = SLEEP_MERGE_THRESHOLD_MINUTES,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  timeZone?: string
 ): MorningClassificationState {
   const versionedCandidate: MorningSleepSession = {
     ...candidate,
@@ -226,7 +229,8 @@ export function classifyNewMorningSleep<T extends MorningSleepSession>(
     [...sleeps, versionedCandidate],
     dayStartHour,
     referenceDate,
-    continuationAllowanceMinutes
+    continuationAllowanceMinutes,
+    timeZone
   );
 
   return resolution.pendingConfirmations.includes(versionedCandidate)
@@ -234,11 +238,87 @@ export function classifyNewMorningSleep<T extends MorningSleepSession>(
     : "automatic";
 }
 
-function hourToDate(fractionalHour: number, referenceDate: Date): Date {
-  const date = new Date(referenceDate);
-  date.setHours(0, 0, 0, 0);
+/** Imported history settles undecided mornings: wakings before 05:00 are night feeds. */
+export const IMPORTED_NIGHT_WAKING_END_HOUR = 5;
+/** Imported history settles undecided mornings: wakings from 08:00 start the day. */
+export const IMPORTED_DAY_WAKING_HOUR = 8;
+/** Shortest awake time treated as starting the day; night feeds often take an hour. */
+export const IMPORTED_NIGHT_WAKING_MINUTES = 90;
+
+/**
+ * Settles an imported sleep's morning state so history never asks the parent to confirm.
+ * Returns null for sleeps outside the morning window; callers store those without a
+ * classification version, which later zone or day-start changes treat as legacy, never pending.
+ */
+export function classifyImportedMorningSleep<T extends MorningSleepSession>(
+  sleeps: readonly T[],
+  candidate: MorningSleepSession,
+  options: {
+    dayStartHour: number;
+    continuationAllowanceMinutes: number;
+    firstWakeWindowMinutes?: number;
+    referenceDate?: Date;
+    timeZone?: string;
+  }
+): "confirmed_first_nap" | "confirmed_night_continuation" | null {
+  const versionedCandidate: MorningSleepSession = {
+    ...candidate,
+    morningClassification: "automatic",
+    morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
+  };
+  const resolution = resolveMorningSleep(
+    [...sleeps, versionedCandidate],
+    options.dayStartHour,
+    options.referenceDate ??
+      new Date(candidate.endedAt ?? candidate.startedAt),
+    options.continuationAllowanceMinutes,
+    options.timeZone
+  );
+  if (resolution.continuations.includes(versionedCandidate))
+    return "confirmed_night_continuation";
+  if (!resolution.pendingConfirmations.includes(versionedCandidate))
+    return null;
+
+  const startedAt = new Date(candidate.startedAt).getTime();
+  const wokeAt = Math.max(
+    ...sleeps
+      .filter((sleep) => !sleep.deleted && sleep.endedAt)
+      .map((sleep) => new Date(sleep.endedAt!).getTime())
+      .filter((endedAt) => endedAt <= startedAt)
+  );
+  if (!Number.isFinite(wokeAt)) return "confirmed_first_nap";
+  const wall = zonedWallTime(options.timeZone);
+  const wokeHour = wall ? wall(new Date(wokeAt)).hour : new Date(wokeAt).getHours();
+  if (wokeHour < IMPORTED_NIGHT_WAKING_END_HOUR)
+    return "confirmed_night_continuation";
+  if (wokeHour >= IMPORTED_DAY_WAKING_HOUR) return "confirmed_first_nap";
+  return minutesBetween(new Date(wokeAt), new Date(startedAt)) <
+    Math.max(options.firstWakeWindowMinutes ?? 0, IMPORTED_NIGHT_WAKING_MINUTES)
+    ? "confirmed_night_continuation"
+    : "confirmed_first_nap";
+}
+
+function hourToDate(
+  fractionalHour: number,
+  referenceDate: Date,
+  timeZone?: string
+): Date {
   const hours = Math.floor(fractionalHour);
   const minutes = Math.round((fractionalHour - hours) * 60);
+  const wall = zonedWallTime(timeZone);
+  if (wall) {
+    const { year, month, day } = wall(referenceDate);
+    const target = Date.UTC(year, month - 1, day, hours, minutes);
+    let guess = target;
+    // Two passes settle the zone offset, including across a daylight-saving change.
+    for (let pass = 0; pass < 2; pass++) {
+      const seen = wall(new Date(guess));
+      guess = target - (Date.UTC(seen.year, seen.month - 1, seen.day, seen.hour, seen.minute, seen.second) - guess);
+    }
+    return new Date(guess);
+  }
+  const date = new Date(referenceDate);
+  date.setHours(0, 0, 0, 0);
   date.setHours(hours, minutes, 0, 0);
   return date;
 }

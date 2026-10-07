@@ -17,7 +17,11 @@ import { getCrdtSync } from "../sync/crdt-sync-instance";
 import { DEFAULT_SYNC_CONFIG } from "../sync/types";
 import { getSyncEngine } from "@/contexts/sync-context";
 import { supabase } from "../supabase";
-import { classifyNewMorningSleep } from "@/utils/sleepPredictions";
+import { classifyImportedMorningSleep } from "@/utils/sleepPredictions";
+import {
+  getSleepAgeGroupForBaby,
+  WAKE_WINDOW_PROGRESSIONS,
+} from "@/utils/sleepGoals";
 import { MORNING_CLASSIFICATION_VERSION } from "@/types/sleep";
 import type { StoredSleepEntry } from "../sleep-storage";
 
@@ -97,10 +101,14 @@ export async function prepareImport(
   const candidates: PreparedRecord[] = [];
   for (const record of preview.records) {
     const fingerprint = await sourceFingerprint(record.content);
+    const id = await importId(babyId, fingerprint, preview.source);
     candidates.push({
-      id: await importId(babyId, fingerprint),
+      id,
       fingerprint,
-      legacyId: await importId(babyId, record.content),
+      legacyId:
+        preview.source === "nara"
+          ? id
+          : await importId(babyId, record.content, preview.source),
       record,
     });
   }
@@ -133,7 +141,9 @@ export async function prepareImport(
           .eq("baby_id", babyId)
           .in(
             "id",
-            batch.flatMap((item) => [item.id, item.legacyId])
+            batch.flatMap((item) =>
+              item.id === item.legacyId ? [item.id] : [item.id, item.legacyId]
+            )
           );
         if (result.error) throw new Error("Import history unavailable");
         for (const entry of result.data ?? []) known.add(entry.id);
@@ -143,7 +153,8 @@ export async function prepareImport(
           known.has(item.id) ||
           known.has(item.legacyId) ||
           (await crdt.getShadow(table, item.id)) ||
-          (await crdt.getShadow(table, item.legacyId))
+          (item.legacyId !== item.id &&
+            (await crdt.getShadow(table, item.legacyId)))
         )
           plan.alreadyImported++;
         else plan.records.push(item);
@@ -158,7 +169,11 @@ export async function importRecords(
   plan: ImportPlan,
   onProgress?: (added: number, total: number) => void,
   shouldStop?: () => boolean,
-  sleepOptions: { dayStartHour?: number; napContinuationMinutes?: number } = {}
+  sleepOptions: {
+    dayStartHour?: number;
+    napContinuationMinutes?: number;
+    birthDate?: string | Date;
+  } = {}
 ): Promise<{ added: number; alreadyImported: number }> {
   assertScope(plan);
   assertImportReady(plan.userId);
@@ -202,17 +217,34 @@ export async function importRecords(
           activityCollectionKey(table, plan.babyId)
         );
         const sleeps: StoredSleepEntry[] = raw ? JSON.parse(raw) : [];
+        const zones = new Map(
+          entries.map((entry, index) => [entry, batch[index].record.timeZone])
+        );
         for (const entry of [...(entries as StoredSleepEntry[])].sort((a, b) =>
           a.startedAt.localeCompare(b.startedAt)
         )) {
-          entry.morningClassification = classifyNewMorningSleep(
-            sleeps,
-            entry,
-            sleepOptions.dayStartHour ?? 6,
-            sleepOptions.napContinuationMinutes ?? 25,
-            new Date(entry.endedAt ?? entry.startedAt)
-          );
-          entry.morningClassificationVersion = MORNING_CLASSIFICATION_VERSION;
+          const ageGroup = sleepOptions.birthDate
+            ? getSleepAgeGroupForBaby(
+                new Date(sleepOptions.birthDate),
+                new Date(entry.startedAt)
+              )
+            : null;
+          const morning = classifyImportedMorningSleep(sleeps, entry, {
+            dayStartHour: sleepOptions.dayStartHour ?? 6,
+            continuationAllowanceMinutes:
+              sleepOptions.napContinuationMinutes ?? 25,
+            firstWakeWindowMinutes: ageGroup
+              ? WAKE_WINDOW_PROGRESSIONS[ageGroup.label]?.windows[0]
+              : undefined,
+            referenceDate: new Date(entry.endedAt ?? entry.startedAt),
+            timeZone: zones.get(entry),
+          });
+          // History is never left for the parent to confirm. Other sleeps stay unlabelled,
+          // sent as explicit nulls so the server's version default cannot make them pending.
+          entry.morningClassification = morning;
+          entry.morningClassificationVersion = morning
+            ? MORNING_CLASSIFICATION_VERSION
+            : null;
           sleeps.push(entry);
         }
       }

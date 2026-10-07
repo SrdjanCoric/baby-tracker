@@ -86,14 +86,14 @@ none of those projects' logic.
 
 ## Implementation work
 
-- [ ] Every table row and listed difference holds, including a file with the reference export's
+- [x] Every table row and listed difference holds, including a file with the reference export's
       42 columns and no Breastfeed, Combo Feed, or Pump columns — proven in
       `src/services/import/nara-reader.test.ts`.
-- [ ] Nara imports once, and a second import adds nothing — proven in
+- [x] Nara imports once, and a second import adds nothing — proven in
       `src/services/import/import-records.test.ts`.
-- [ ] Nara appears on the import screen and previews like Huckleberry — proven in
+- [x] Nara appears on the import screen and previews like Huckleberry — proven in
       `app/settings/import.component.test.tsx`.
-- [ ] New screen text exists in all nine languages — proven in `src/i18n/import-locales.test.ts`.
+- [x] New screen text exists in all nine languages — proven in `src/i18n/import-locales.test.ts`.
 
 ## Human checkpoints
 
@@ -111,4 +111,44 @@ none of those projects' logic.
 ## Acceptance criteria
 
 - [ ] `npm run check` passes, with Docker running.
-- [ ] No fixture contains rows copied from the reference export.
+- [x] No fixture contains rows copied from the reference export.
+
+## Implementation evidence
+
+- Classification: `code`; validation tier: `canonical`; `tddApplicable: true`.
+  The owner instructed continuation past the skill's task-size check on 2026-10-07.
+- Branch: `feature/import-from-nara`, from the current local `main` after fetching its remote.
+  Logs: `/tmp/agent-workflows/e2f8af45fd34/b17db71b31c2`.
+- Observed RED → GREEN cycles: named-column/bottle reading (4 tests); sleep, diaper, and growth
+  mapping (11 added tests); breast, Combo Feed, and pumping mapping (13 failing cases resolved);
+  generic-only bottles and malformed values (4 failing cases resolved); source-scoped stable
+  identities (1 failing case resolved); import screen (4 added cases); nine locale messages
+  (9 failing cases resolved). The corresponding `*-red.log` and `*-green.log` files retain proof.
+- Focused validation: 148 tests across `huckleberry-reader.test.ts`, `nara-reader.test.ts`,
+  `import-records.test.ts`, and `import-locales.test.ts` passed (`unit.log`, 4.59s).
+  All 18 import screen component tests passed (`screen-green.log`, 1.49s runner time).
+  `npm run typecheck`, affected-file ESLint with zero warnings, and `git diff --check` passed.
+- Identity sensitivity: temporarily forcing the Huckleberry namespace made the Nara source
+  isolation assertion fail; the original source was restored (`identity-source-mutation.log`).
+- Coverage: reader tests prove each mapping, unit conversion, exact note preservation, epoch
+  milliseconds, named/reordered/absent columns, all skip categories, duplicate keys, exported
+  time zones, and CSV limits. Persistence tests run reader → import preparation → real storage
+  services with isolated in-memory storage, proving all supported record shapes, split-record
+  uniqueness, source/baby isolation, and re-import after parent edits and deletion. Component tests
+  prove Nara selection, preview, save, provider refresh, wrong-source rejection, and sync gating.
+  Locale tests prove the updated error message names both formats in all nine languages.
+- Derived facts: reuse the existing Huckleberry CSV parser and skip conventions; use the existing
+  `classifySleepByTimeRange` day/night classification and default hours. Volume-only pumping retains
+  the existing Huckleberry mapper's optional duration. Multiple exported time zones are displayed
+  together through the existing preview's `timeZone` string. Record parts distinguish breast and
+  split bottle outputs; single-output identity remains stable when its content type changes.
+- Boundaries: only the reference export's header was inspected; all test values are synthetic.
+  Additional field names and side encoding were checked against the primary sources
+  [field matrix](https://github.com/GrekMaR/nara-baby-exporter/blob/master/schema/FIELD_MAPPING.md),
+  [published sample header](https://github.com/GrekMaR/nara-baby-exporter/blob/master/examples/sample_nara_export.csv),
+  and [Nara field consumer](https://github.com/TheOnlySteel/Babytracker/blob/main/scripts/nara-map.mjs).
+  No external logic or private export rows were copied. The storage-path tests above exercise
+  these shapes through the importer rather than asserting reader output alone.
+- Questions/behavior clarifications: none. Unnamed additions: none. Out-of-scope work: none.
+- Still deferred to `finish-task`: the full `npm run check` acceptance gate and the two declared
+  human verification checkpoints. No simulator import or production access occurred here.

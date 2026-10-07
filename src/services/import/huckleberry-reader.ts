@@ -20,6 +20,13 @@ import {
   isValidStoolColor,
   type DosageUnit,
 } from "@/constants/activities";
+import {
+  LENGTH_CM,
+  toStoredPrecision,
+  unitFactor,
+  VOLUME_ML,
+  WEIGHT_KG,
+} from "./import-units";
 import type { CreateSleepInput } from "../sleep-storage";
 import type { CreateFeedingInput } from "../feeding-storage";
 import type { CreateDiaperInput } from "../diaper-storage";
@@ -43,6 +50,8 @@ type RecordOf<K, I> = {
   kind: K;
   content: string;
   input: Omit<I, "babyId" | "id">;
+  /** Zone the source recorded the activity in; used for classification, never saved. */
+  timeZone?: string;
 };
 export type HuckleberryRecord =
   | RecordOf<"sleep", CreateSleepInput>
@@ -54,6 +63,7 @@ export type HuckleberryRecord =
   | RecordOf<"tummyTime", CreateTummyTimeInput>;
 
 export interface HuckleberryPreview {
+  source: "huckleberry" | "nara";
   records: HuckleberryRecord[];
   skipped: Record<string, number>;
   timeZone: string;
@@ -67,7 +77,7 @@ export class ImportFileError extends Error {
   }
 }
 
-function parseCsv(csv: string): string[][] {
+export function parseCsv(csv: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = "";
@@ -160,10 +170,21 @@ function quantity(
   units: Record<string, number>
 ): number | undefined {
   if (!value) return undefined;
-  const match = /^(\d+(?:\.\d+)?)\s*([a-z.]+)$/.exec(value.trim());
-  if (!match || units[match[2]] === undefined)
-    throw new RowError("couldNotRead");
-  return Number(match[1]) * units[match[2]];
+  const match = /^(\d+(?:\.\d+)?)\s*([a-z][a-z. _]*)$/i.exec(value.trim());
+  const factor = match ? unitFactor(units, match[2]) : undefined;
+  if (!match || factor === undefined) throw new RowError("couldNotRead");
+  return Number(match[1]) * factor;
+}
+
+function weight(value: string): number | undefined {
+  const poundsAndOunces = /^(\d+)\s*lbs?\s*(\d+(?:\.\d+)?)\s*oz$/i.exec(
+    value.trim()
+  );
+  if (!poundsAndOunces) return quantity(value, WEIGHT_KG);
+  return (
+    (Number(poundsAndOunces[1]) + Number(poundsAndOunces[2]) / 16) *
+    WEIGHT_KG.lb
+  );
 }
 
 function minutes(value: string, suffix = ""): number | undefined {
@@ -173,9 +194,8 @@ function minutes(value: string, suffix = ""): number | undefined {
   return Number(match[1]) * 3600 + Number(match[2]) * 60;
 }
 
-const VOLUME_UNITS = { ml: 1, oz: 29.5735 };
 function volume(value: string): number | undefined {
-  const amount = quantity(value, VOLUME_UNITS);
+  const amount = quantity(value, VOLUME_ML);
   return amount === undefined ? undefined : Math.round(amount);
 }
 
@@ -299,9 +319,16 @@ function mapRow(
       };
     }
     case "Growth": {
-      const weightKg = quantity(condition, { kg: 1, lb: 0.45359237 });
-      const heightCm = quantity(location, { cm: 1, in: 2.54, "ft.in": 30.48 });
-      const headCircumferenceCm = quantity(endCondition, { cm: 1, in: 2.54 });
+      const weightKg = toStoredPrecision(weight(condition), 3);
+      // "ft.in" is Huckleberry's decimal feet.
+      const heightCm = toStoredPrecision(
+        quantity(location, { ...LENGTH_CM, "ft.in": 30.48 }),
+        2
+      );
+      const headCircumferenceCm = toStoredPrecision(
+        quantity(endCondition, LENGTH_CM),
+        2
+      );
       if (
         weightKg === undefined &&
         heightCm === undefined &&
@@ -326,8 +353,8 @@ function mapRow(
       };
     }
     case "Pump": {
-      const left = quantity(condition, VOLUME_UNITS);
-      const right = quantity(endCondition, VOLUME_UNITS);
+      const left = quantity(condition, VOLUME_ML);
+      const right = quantity(endCondition, VOLUME_ML);
       if (left === undefined && right === undefined)
         throw new RowError("couldNotRead");
       const volumeMl = Math.round((left ?? 0) + (right ?? 0));
@@ -407,6 +434,7 @@ export function readHuckleberry(
     throw new ImportFileError("invalidFile");
   }
   const preview: HuckleberryPreview = {
+    source: "huckleberry",
     records: [],
     skipped: {},
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,

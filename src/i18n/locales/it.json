@@ -2103,7 +2103,7 @@
     "leaveMessage": "L’importazione è in corso. I dati salvati restano; importa di nuovo il file per aggiungere il resto.",
     "leave": "Esci",
     "stay": "Resta",
-    "invalidFile": "Scegli un CSV Huckleberry con l’intestazione prevista e almeno una riga.",
+    "invalidFile": "Scegli un CSV di Huckleberry o Nara con le intestazioni previste e almeno una riga.",
     "fileTooLarge": "File troppo grande. Scegli un file di massimo 10 MB e 20.000 righe.",
     "noBaby": "Seleziona un bambino prima di importare.",
     "reasons": {

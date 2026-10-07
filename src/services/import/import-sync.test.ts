@@ -315,6 +315,21 @@ it("sends every imported type once through the real local merge RPC, with attrib
       deleted: false,
     });
     expect(Object.keys(result.data.field_clocks).length).toBeGreaterThan(0);
+    if (item.record.kind === "growth")
+      expect(result.data).toMatchObject({
+        weight_kg: 5,
+        height_cm: 65,
+        head_cm: 40,
+      });
+    if (item.record.kind === "pumping")
+      expect(result.data).toMatchObject({ amount_ml: 50, side: "both" });
+    // An unlabelled imported sleep must not take the column's version default,
+    // which would turn history into morning confirmations.
+    if (item.record.kind === "sleep")
+      expect(result.data).toMatchObject({
+        morning_classification: null,
+        morning_classification_version: null,
+      });
   }
   const medication = plan.records.find(
     (item) => item.record.kind === "health"

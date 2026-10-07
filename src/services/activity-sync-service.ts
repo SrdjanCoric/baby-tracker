@@ -48,6 +48,14 @@ export function activityCollectionKey(
   );
 }
 
+// Columns whose names differ from the app's field names; other fields map to snake_case.
+const IMPORTED_COLUMN_NAMES: Partial<
+  Record<TimelineActivityTable, Record<string, string>>
+> = {
+  growth_measurements: { headCircumferenceCm: "head_cm" },
+  pumping_sessions: { volumeMl: "amount_ml" },
+};
+
 export async function createImportedActivityBatch<
   T extends TimelineActivityTable,
 >(
@@ -103,7 +111,8 @@ export async function createImportedActivityBatch<
         entityId: entry.id,
         data: Object.fromEntries(
           Object.entries(entry).map(([field, value]) => [
-            field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
+            IMPORTED_COLUMN_NAMES[table]?.[field] ??
+              field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
             value,
           ])
         ),

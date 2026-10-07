@@ -30,6 +30,7 @@ import {
   ImportFileError,
   readHuckleberry,
 } from "@/services/import/huckleberry-reader";
+import { readNara } from "@/services/import/nara-reader";
 import {
   importRecords,
   prepareImport,
@@ -51,7 +52,10 @@ export default function ImportScreen() {
   const { refreshHealth } = useHealth();
   const { refreshTummyTimes } = useTummyTime();
   const [plan, setPlan] = useState<ImportPlan | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingSource, setLoadingSource] = useState<
+    "huckleberry" | "nara" | null
+  >(null);
+  const loading = loadingSource !== null;
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<
     "invalidFile" | "fileTooLarge" | "failed" | "connectAndSync" | null
@@ -77,7 +81,7 @@ export default function ImportScreen() {
   useEffect(() => {
     request.current++;
     stop.current = true;
-    setLoading(false);
+    setLoadingSource(null);
     setPlan(null);
     setResult(null);
     setError(null);
@@ -113,11 +117,11 @@ export default function ImportScreen() {
     ]);
   });
 
-  const choose = async () => {
+  const choose = async (source: "huckleberry" | "nara") => {
     if (!selectedBaby || blocked || loading || running) return;
     const babyId = selectedBaby.id;
     const token = ++request.current;
-    setLoading(true);
+    setLoadingSource(source);
     setPlan(null);
     setResult(null);
     setError(null);
@@ -139,7 +143,7 @@ export default function ImportScreen() {
         throw new ImportFileError("invalidFile");
       if (size > 10 * 1024 * 1024) throw new ImportFileError("fileTooLarge");
       const csv = asset.file ? await asset.file.text() : await cached!.text();
-      const preview = readHuckleberry(csv, {
+      const preview = (source === "nara" ? readNara : readHuckleberry)(csv, {
         dayStartHour: wakeWindowConfig?.dayStartHour,
         dayEndHour: wakeWindowConfig?.dayEndHour,
       });
@@ -161,7 +165,7 @@ export default function ImportScreen() {
       } catch {
         /* Cache cleanup must not discard a valid preview. */
       }
-      if (request.current === token) setLoading(false);
+      if (request.current === token) setLoadingSource(null);
     }
   };
 
@@ -179,6 +183,7 @@ export default function ImportScreen() {
         {
           dayStartHour: wakeWindowConfig?.dayStartHour,
           napContinuationMinutes: wakeWindowConfig?.napContinuationMinutes,
+          birthDate: selectedBaby?.birthDate,
         }
       );
       setResult(completed);
@@ -308,35 +313,38 @@ export default function ImportScreen() {
 
         {!plan && (
           <Section title={t("import.sourcesTitle")}>
-            <Pressable
-              testID="import-huckleberry"
-              onPress={() => {
-                void choose();
-              }}
-              disabled={blocked || loading || running}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: blocked || loading || running }}
-              className={`flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary ${
-                blocked ? "opacity-50" : ""
-              }`}
-            >
-              <Text className="text-xl mr-3">{"\u{1F4C4}"}</Text>
-              <View className="flex-1">
-                <Text className="text-base text-content-primary dark:text-content-dark-primary">
-                  Huckleberry
-                </Text>
-                <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5">
-                  {t("import.chooseFile")}
-                </Text>
-              </View>
-              {loading ? (
-                <ActivityIndicator accessibilityLabel={t("common.loading")} />
-              ) : (
-                <Text className="text-content-tertiary dark:text-content-dark-tertiary">
-                  {"\u{203A}"}
-                </Text>
-              )}
-            </Pressable>
+            {(["huckleberry", "nara"] as const).map((source) => (
+              <Pressable
+                key={source}
+                testID={`import-${source}`}
+                onPress={() => {
+                  void choose(source);
+                }}
+                disabled={blocked || loading || running}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: blocked || loading || running }}
+                className={`flex-row items-center py-4 px-4 active:bg-surface-secondary dark:active:bg-surface-dark-secondary ${
+                  blocked ? "opacity-50" : ""
+                }`}
+              >
+                <Text className="text-xl mr-3">{"\u{1F4C4}"}</Text>
+                <View className="flex-1">
+                  <Text className="text-base text-content-primary dark:text-content-dark-primary">
+                    {source === "nara" ? "Nara Baby" : "Huckleberry"}
+                  </Text>
+                  <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-0.5">
+                    {t("import.chooseFile")}
+                  </Text>
+                </View>
+                {loadingSource === source ? (
+                  <ActivityIndicator accessibilityLabel={t("common.loading")} />
+                ) : (
+                  <Text className="text-content-tertiary dark:text-content-dark-tertiary">
+                    {"\u{203A}"}
+                  </Text>
+                )}
+              </Pressable>
+            ))}
           </Section>
         )}
 

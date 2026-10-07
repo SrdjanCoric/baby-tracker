@@ -2192,7 +2192,7 @@
     "leaveMessage": "Uvoz je u toku. Sačuvani zapisi ostaju; ponovo uvezi datoteku da dodaš preostale.",
     "leave": "Napusti",
     "stay": "Ostani",
-    "invalidFile": "Izaberi Huckleberry CSV sa očekivanim zaglavljem i bar jednim redom.",
+    "invalidFile": "Izaberi Huckleberry ili Nara CSV sa očekivanim zaglavljima i bar jednim redom.",
     "fileTooLarge": "Datoteka je prevelika. Izaberi datoteku do 10 MB sa najviše 20.000 redova.",
     "noBaby": "Izaberi bebu pre uvoza.",
     "reasons": {

@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HUCKLEBERRY_HEADER, readHuckleberry } from "./huckleberry-reader";
+import { readNara } from "./nara-reader";
+import { findPendingMorningConfirmations } from "@/utils/sleepPredictions";
 import { importRecords, prepareImport } from "./import-records";
 import { FeedingStorageService } from "../feeding-storage";
 import { setStorageUserId } from "../storage-prefix";
@@ -74,7 +76,126 @@ beforeEach(() => {
 });
 
 describe("import identity and persistence", () => {
-  it("classifies new morning sleeps against earlier imported nights across batch boundaries", async () => {
+  it("imports Nara's split records once and preserves edits and deletions on a changed export", async () => {
+    const header = [
+      "Type",
+      "Start Date/time (Epoch)",
+      "_activityKey",
+      "Note",
+      "[Combo Feed] Left Duration (Seconds)",
+      "[Combo Feed] Right Duration (Seconds)",
+      "[Combo Feed] Type",
+      "[Combo Feed] Breast Milk Volume",
+      "[Combo Feed] Breast Milk Volume Unit",
+      "[Combo Feed] Formula Volume",
+      "[Combo Feed] Formula Volume Unit",
+    ];
+    const source = (note: string, volume = "50") =>
+      readNara(
+        `${header.join(",")}\nCombo Feed,1705060800123,synthetic-combo,${note},120,240,Breast Milk Formula,40,ML,${volume},ML`
+      );
+    const plan = await prepareImport(source("original"), "baby-a");
+    expect(plan.records).toHaveLength(3);
+    expect(new Set(plan.records.map((record) => record.id)).size).toBe(3);
+    expect(await importRecords(plan)).toEqual({ added: 3, alreadyImported: 0 });
+    const entries = await FeedingStorageService.getAllFeedings("baby-a");
+    expect(entries).toHaveLength(3);
+    expect(entries.find((entry) => entry.type === "breast")).toMatchObject({
+      durationSeconds: 360,
+      leftDurationSeconds: 120,
+      rightDurationSeconds: 240,
+    });
+    expect(
+      entries
+        .filter((entry) => entry.type === "bottle")
+        .map((entry) => entry.amountMl)
+        .sort()
+    ).toEqual([40, 50]);
+    await FeedingStorageService.updateFeeding("baby-a", plan.records[0].id, {
+      notes: "parent edit",
+    });
+    await FeedingStorageService.deleteFeeding("baby-a", plan.records[1].id);
+    const second = await prepareImport(
+      source("changed in source", "60"),
+      "baby-a"
+    );
+    expect(second.records).toEqual([]);
+    expect(second.alreadyImported).toBe(3);
+    expect(await importRecords(second)).toEqual({
+      added: 0,
+      alreadyImported: 3,
+    });
+    expect(
+      (await FeedingStorageService.getAllFeedings("baby-a")).find(
+        (entry) => entry.id === plan.records[0].id
+      )?.notes
+    ).toBe("parent edit");
+    expect(await FeedingStorageService.getAllFeedings("baby-a")).toHaveLength(
+      2
+    );
+  });
+  it("keeps Nara IDs stable across column order and single-bottle content changes, scoped to baby and source", async () => {
+    const first = readNara(
+      "Type,Start Date/time (Epoch),_activityKey,[Bottle Feed] Type\nBottle Feed,1705060800123,synthetic-bottle,Formula"
+    );
+    const changed = readNara(
+      "[Bottle Feed] Type,_activityKey,Type,Start Date/time (Epoch)\nBreast Milk,synthetic-bottle,Bottle Feed,1705060800123"
+    );
+    const plan = await prepareImport(first, "baby-a");
+    expect((await prepareImport(changed, "baby-a")).records[0].id).toBe(
+      plan.records[0].id
+    );
+    expect((await prepareImport(first, "baby-b")).records[0].id).not.toBe(
+      plan.records[0].id
+    );
+    const sameContent = { ...first, source: "huckleberry" as const };
+    expect((await prepareImport(sameContent, "baby-a")).records[0].id).not.toBe(
+      plan.records[0].id
+    );
+    expect(plan.records[0].id).toMatch(
+      /^[a-f0-9]{8}-[a-f0-9]{4}-5[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
+    );
+  });
+  it("imports Nara's empty bottle amount and other records through the normal storage shapes", async () => {
+    const source = readNara(
+      [
+        "Type,Start Date/time (Epoch),_activityKey,Note,[Bottle Feed] Type,[Sleep] End Date/time (Epoch),[Diaper] Type,[Growth] Weight,[Growth] Weight Unit,[Pump] Total Volume,[Pump] Total Volume Unit,[Pump] Duration (Seconds)",
+        "Bottle Feed,1705060800123,bottle,empty amount,Formula,,,,,,,",
+        "Sleep,1705060800123,sleep,sleep note,,1705064400123,,,,,,",
+        "Diaper,1705060800123,diaper,diaper note,,,Dry,,,,,",
+        "Growth,1705060800123,growth,growth note,,,,5,KG,,,",
+        "Pump,1705060800123,pump,pump note,,,,,,40,ML,600",
+      ].join("\n")
+    );
+    expect(source.skipped).toEqual({});
+    expect(
+      await importRecords(await prepareImport(source, "baby-a"))
+    ).toMatchObject({ added: 5 });
+    expect(
+      (await FeedingStorageService.getAllFeedings("baby-a"))[0]
+    ).toMatchObject({
+      type: "bottle",
+      contentType: "formula",
+      notes: "empty amount",
+    });
+    expect(
+      (await FeedingStorageService.getAllFeedings("baby-a"))[0].amountMl
+    ).toBeUndefined();
+    expect(
+      (await SleepStorageService.getAllSleeps("baby-a"))[0].durationSeconds
+    ).toBe(3600);
+    expect((await DiaperStorageService.getAllDiapers("baby-a"))[0].type).toBe(
+      "dry"
+    );
+    expect(
+      (await GrowthStorageService.getAllMeasurements("baby-a"))[0].weightKg
+    ).toBe(5);
+    expect(
+      (await PumpingStorageService.getAllPumpings("baby-a"))[0]
+    ).toMatchObject({ volumeMl: 40, side: "both", durationSeconds: 600 });
+    expect((await prepareImport(source, "baby-a")).alreadyImported).toBe(5);
+  });
+  it("settles morning sleeps against earlier imported nights across batch boundaries", async () => {
     const rows = ["Sleep,2024-03-12 05:00,2024-03-12 05:20,,,,,morning"];
     for (let i = 0; i < 49; i++) {
       const day = new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10);
@@ -90,7 +211,75 @@ describe("import identity and persistence", () => {
       (await SleepStorageService.getAllSleeps("baby-a")).find(
         (entry) => entry.notes === "morning"
       )?.morningClassification
-    ).toBe("unresolved");
+    ).toBe("confirmed_night_continuation");
+  });
+  it.each([
+    ["Asia/Tokyo", 9],
+    ["America/Phoenix", -7],
+  ] as const)(
+    "settles imported Nara morning sleeps in the exported zone (%s)",
+    async (timeZone, offsetHours) => {
+      const at = (day: number, hour: number, minute = 0) =>
+        Date.UTC(2024, 2, day, hour - offsetHours, minute);
+      const sleep = (key: string, start: number, end: number) =>
+        `Sleep,${start},${key},${key},${timeZone},${end}`;
+      const plan = await prepareImport(
+        readNara(
+          [
+            "Type,Start Date/time (Epoch),_activityKey,Note,Time Zone,[Sleep] End Date/time (Epoch)",
+            sleep("night", at(11, 20), at(12, 4)),
+            sleep("morning", at(12, 5), at(12, 5, 20)),
+          ].join("\n")
+        ),
+        "baby-a"
+      );
+      await importRecords(plan);
+      const sleeps = await SleepStorageService.getAllSleeps("baby-a");
+      expect(
+        sleeps.find((entry) => entry.notes === "morning")?.morningClassification
+      ).toBe("confirmed_night_continuation");
+      expect(sleeps.every((entry) => !("timeZone" in entry))).toBe(true);
+    }
+  );
+  it("never leaves imported history waiting for a morning confirmation", async () => {
+    const rows: string[] = [];
+    const day = (offset: number) =>
+      new Date(Date.UTC(2024, 0, 10 + offset)).toISOString().slice(0, 10);
+    const mornings = [
+      ["04:58", "06:40", "07:30"],
+      ["05:10", "05:40", "07:00"],
+      ["05:10", "06:50", "07:30"],
+    ];
+    mornings.forEach(([woke, start, end], index) => {
+      rows.push(`Sleep,${day(index)} 20:00,${day(index + 1)} ${woke},,,,,night ${index}`);
+      rows.push(`Sleep,${day(index + 1)} ${start},${day(index + 1)} ${end},,,,,morning ${index}`);
+      rows.push(`Sleep,${day(index + 1)} 13:00,${day(index + 1)} 14:00,,,,,nap ${index}`);
+    });
+    const plan = await prepareImport(
+      readHuckleberry([HUCKLEBERRY_HEADER.join(","), ...rows].join("\n")),
+      "baby-a"
+    );
+    await importRecords(plan, undefined, undefined, {
+      dayStartHour: 8,
+      birthDate: "2023-10-01",
+    });
+    const sleeps = await SleepStorageService.getAllSleeps("baby-a");
+    const state = (note: string) =>
+      sleeps.find((entry) => entry.notes === note)?.morningClassification;
+    expect(["morning 0", "morning 1", "morning 2"].map(state)).toEqual([
+      "confirmed_night_continuation",
+      "confirmed_night_continuation",
+      "confirmed_first_nap",
+    ]);
+    for (const note of ["night 0", "nap 0", "nap 2"])
+      expect(sleeps.find((entry) => entry.notes === note)).toMatchObject({
+        morningClassification: null,
+        morningClassificationVersion: null,
+      });
+    for (const dayStartHour of [5, 6, 7, 8, 9, 10])
+      expect(
+        findPendingMorningConfirmations(sleeps, dayStartHour, 25)
+      ).toEqual([]);
   });
   it("persists every supported record using the normal device collection shapes", async () => {
     const source = readHuckleberry(
@@ -110,9 +299,14 @@ describe("import identity and persistence", () => {
       {
         notes: "sleep note",
         durationSeconds: 3600,
-        morningClassificationVersion: 1,
       }
     );
+    expect(
+      (await SleepStorageService.getAllSleeps("baby-a"))[0]
+    ).toMatchObject({
+      morningClassification: null,
+      morningClassificationVersion: null,
+    });
     expect(
       (await DiaperStorageService.getAllDiapers("baby-a"))[0]
     ).toMatchObject({ type: "mixed", stoolColor: "yellow" });
@@ -603,4 +797,37 @@ describe("durable queue batches", () => {
     expect(await (await getCrdtSync()).getShadow("feedings", "two")).toBeNull();
     restarted.destroy();
   });
+});
+
+it("checks only current Nara IDs remotely while retaining Huckleberry legacy IDs", async () => {
+  scope.engine = new SyncEngine({ debounceMs: 60000 });
+  await scope.engine.initialize();
+  scope.engine.setAuthContext({ userId: "user-a", householdId: "household-a" });
+  setStorageUserId("user-a");
+  await scope.engine.handleNetworkChange(true);
+  const queried: string[][] = [];
+  const query = {
+    select: () => query,
+    eq: () => query,
+    in: async (_column: string, ids: string[]) => {
+      queried.push(ids);
+      return { data: [], error: null };
+    },
+  };
+  vi.mocked(supabase.from).mockReturnValue(query as never);
+  try {
+    const source = readNara(
+      "Type,Start Date/time (Epoch),_activityKey,[Bottle Feed] Type\nBottle Feed,1705060800123,synthetic-id,Formula"
+    );
+    const nara = await prepareImport(source, "baby-a", "user-a");
+    expect(queried[0]).toEqual([nara.records[0].id]);
+    const huckleberry = await prepareImport(preview(), "baby-a", "user-a");
+    expect(queried[1]).toEqual([
+      huckleberry.records[0].id,
+      huckleberry.records[0].legacyId,
+    ]);
+    expect(huckleberry.records[0].legacyId).not.toBe(huckleberry.records[0].id);
+  } finally {
+    scope.engine.destroy();
+  }
 });

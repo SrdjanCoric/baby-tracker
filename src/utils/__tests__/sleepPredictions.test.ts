@@ -4,6 +4,7 @@ import {
   getMorningThreshold,
   resolveMorningSleep,
   classifyNewMorningSleep,
+  classifyImportedMorningSleep,
   findPendingMorningConfirmations,
   processSleepData,
   computeSleepModel,
@@ -410,6 +411,46 @@ describe("classifyNewMorningSleep", () => {
     )).toBe(expected);
   });
 
+  it.each([
+    ["Asia/Tokyo", 9],
+    ["America/Phoenix", -7],
+  ] as const)("reads the morning in the sleep's own time zone (%s)", (
+    timeZone,
+    offsetHours
+  ) => {
+    const at = (day: number, hour: number, minute = 0) =>
+      new Date(Date.UTC(2024, 2, day, hour - offsetHours, minute));
+    const overnight = makeSleep(
+      at(11, 20).toISOString(),
+      at(12, 4).toISOString(),
+      { type: "night" }
+    );
+    const candidate = { startedAt: at(12, 5), endedAt: at(12, 5, 20) };
+
+    expect(classifyNewMorningSleep(
+      [overnight],
+      candidate,
+      6,
+      25,
+      candidate.endedAt,
+      timeZone
+    )).toBe("unresolved");
+    expect(classifyNewMorningSleep(
+      [overnight],
+      candidate,
+      6,
+      25,
+      candidate.endedAt,
+      "invalid/zone"
+    )).toBe(classifyNewMorningSleep(
+      [overnight],
+      candidate,
+      6,
+      25,
+      candidate.endedAt
+    ));
+  });
+
   it("marks an ambiguous new sleep unresolved after it has started", () => {
     const overnight = makeSleep(
       ld(2026, 7, 24, 21, 0).toISOString(),
@@ -428,6 +469,90 @@ describe("classifyNewMorningSleep", () => {
       25,
       ld(2026, 7, 25, 8, 31)
     )).toBe("unresolved");
+  });
+});
+
+describe("classifyImportedMorningSleep", () => {
+  const overnightUntil = (hour: number, minute = 0) =>
+    makeSleep(
+      ld(2026, 7, 24, 20, 0).toISOString(),
+      ld(2026, 7, 25, hour, minute).toISOString(),
+      { type: "night" }
+    );
+  const classify = (
+    sleeps: StoredSleepEntry[],
+    start: [number, number],
+    end: [number, number],
+    dayStartHour: number,
+    firstWakeWindowMinutes?: number
+  ) =>
+    classifyImportedMorningSleep(
+      sleeps,
+      {
+        startedAt: ld(2026, 7, 25, ...start),
+        endedAt: ld(2026, 7, 25, ...end),
+      },
+      { dayStartHour, continuationAllowanceMinutes: 25, firstWakeWindowMinutes }
+    );
+
+  it.each([
+    ["a sleep after waking before 05:00, however long awake", 3, 0, [4, 40], [7, 0], 6, 30, "confirmed_night_continuation"],
+    ["a short waking from 05:00 under the 90-minute minimum", 5, 0, [5, 40], [7, 0], 6, 30, "confirmed_night_continuation"],
+    ["a waking longer than the minimum and the age window", 5, 0, [6, 40], [7, 30], 8, 60, "confirmed_first_nap"],
+    ["a waking within a longer age window", 5, 0, [6, 40], [7, 30], 8, 150, "confirmed_night_continuation"],
+    ["a waking within the minimum without a birth date", 5, 0, [6, 20], [7, 30], 8, undefined, "confirmed_night_continuation"],
+    ["a waking past the minimum without a birth date", 5, 0, [6, 40], [7, 30], 8, undefined, "confirmed_first_nap"],
+    ["a sleep inside the continuation allowance", 5, 30, [5, 40], [7, 0], 6, 30, "confirmed_night_continuation"],
+    ["a short waking from 08:00 as the first nap", 8, 0, [8, 30], [9, 30], 9, 150, "confirmed_first_nap"],
+  ] as const)("settles %s", (
+    _name,
+    wakeHour,
+    wakeMinute,
+    start,
+    end,
+    dayStartHour,
+    firstWakeWindowMinutes,
+    expected
+  ) => {
+    expect(classify(
+      [overnightUntil(wakeHour, wakeMinute)],
+      [...start],
+      [...end],
+      dayStartHour,
+      firstWakeWindowMinutes
+    )).toBe(expected);
+  });
+
+  it("leaves sleeps outside the morning window unlabelled", () => {
+    expect(classify([overnightUntil(5, 0)], [13, 0], [14, 0], 6, 60)).toBeNull();
+    expect(classifyImportedMorningSleep(
+      [],
+      {
+        startedAt: ld(2026, 7, 24, 20, 0),
+        endedAt: ld(2026, 7, 25, 5, 0),
+      },
+      { dayStartHour: 6, continuationAllowanceMinutes: 25 }
+    )).toBeNull();
+  });
+
+  it("reads the 05:00 waking in the sleep's own time zone", () => {
+    const at = (day: number, hour: number, minute = 0) =>
+      new Date(Date.UTC(2024, 2, day, hour - 9, minute));
+    const overnight = makeSleep(
+      at(11, 20).toISOString(),
+      at(12, 4, 30).toISOString(),
+      { type: "night" }
+    );
+    expect(classifyImportedMorningSleep(
+      [overnight],
+      { startedAt: at(12, 6, 10), endedAt: at(12, 7, 30) },
+      {
+        dayStartHour: 7,
+        continuationAllowanceMinutes: 25,
+        firstWakeWindowMinutes: 30,
+        timeZone: "Asia/Tokyo",
+      }
+    )).toBe("confirmed_night_continuation");
   });
 });
 

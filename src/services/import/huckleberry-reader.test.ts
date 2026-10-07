@@ -464,3 +464,46 @@ it.each([
     expect(result.skipped).toEqual({ outsideLimits: 1 });
   }
 );
+
+describe("Huckleberry unit spellings", () => {
+  const read = (type: string, cells: string[]) =>
+    readHuckleberry(
+      [
+        HUCKLEBERRY_HEADER.join(","),
+        [type, "2024-01-12 12:00", "", ...cells, "note"].join(","),
+      ].join("\n")
+    );
+  it.each([
+    ["11 lb 8 oz", { weightKg: 5.216 }],
+    ["11lbs 8oz", { weightKg: 5.216 }],
+    ["8.5 LBS", { weightKg: 3.856 }],
+    ["5.2 KG", { weightKg: 5.2 }],
+    ["5200 g", { weightKg: 5.2 }],
+  ])("reads weight %s", (weight, expected) => {
+    const result = read("Growth", ["", weight, "", ""]);
+    expect(result.skipped).toEqual({});
+    expect(result.records[0].input).toMatchObject(expected);
+  });
+  it.each([
+    ["25.5 IN", { heightCm: 64.77 }],
+    ["655 mm", { heightCm: 65.5 }],
+    ["2.1 ft.in", { heightCm: 64.01 }],
+  ])("reads height %s", (height, expected) => {
+    const result = read("Growth", ["", "", height, ""]);
+    expect(result.skipped).toEqual({});
+    expect(result.records[0].input).toMatchObject(expected);
+  });
+  it.each(["4 fl oz", "4 FL OZ", "4oz", "4 OZ"])(
+    "reads bottle volume %s",
+    (amount) => {
+      const result = read("Feed", ["", "Formula", "Bottle", amount]);
+      expect(result.skipped).toEqual({});
+      expect(result.records[0].input).toMatchObject({ amountMl: 118 });
+    }
+  );
+  it("still reports an unknown unit as unreadable", () => {
+    expect(read("Growth", ["", "5 stone", "", ""]).skipped).toEqual({
+      couldNotRead: 1,
+    });
+  });
+});

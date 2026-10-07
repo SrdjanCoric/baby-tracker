@@ -2101,7 +2101,7 @@
     "leaveMessage": "A importação está em curso. Os registos guardados permanecem; importa o ficheiro novamente para adicionar os restantes.",
     "leave": "Sair",
     "stay": "Ficar",
-    "invalidFile": "Escolhe um CSV do Huckleberry com o cabeçalho esperado e pelo menos uma linha.",
+    "invalidFile": "Escolhe um CSV do Huckleberry ou Nara com os cabeçalhos esperados e pelo menos uma linha.",
     "fileTooLarge": "Ficheiro demasiado grande. Escolhe um ficheiro até 10 MB com um máximo de 20.000 linhas.",
     "noBaby": "Seleciona um bebé antes de importar.",
     "reasons": {
