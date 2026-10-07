@@ -1,8 +1,8 @@
 # Task 0105: Prepare and gate the 4.10.2 release
 
 **Branch**: `feature/gate-4-10-2-release`
-**Depends on**: 0103, 0104
-**Base**: `main` after Task 0104 has merged.
+**Depends on**: 0103, 0104, 0109, 0110
+**Base**: `main` after Tasks 0104, 0109, and 0110 have merged.
 **Merges into**: `main`, through one PR, after the owner says push.
 **Source**: conversation 2026-10-06; open release gates of Task 0094 · **User stories**: the 4.10
 household timer features reach users only after the combined build is proven end to end and
@@ -17,18 +17,22 @@ the existing release workflows:
   user-visible changes since 4.9.23: any household caregiver can stop, pause, and resume a timer;
   household timers can be controlled from the widget and the Watch; the starter's Live Activity ends
   when someone else stops the timer; a household member's iPhone shows a Live Activity when another
-  member starts a timer; stopping another caregiver's timer works on the first tap.
+  member starts a timer; stopping another caregiver's timer works on the first tap; parents can
+  import their history from a Huckleberry or Nara export file.
 - The release checklist's production verification lists the migrations the 4.10.2 build requires
-  (through 069). It lists the exact signatures of every server function the build calls, including
+  (066 through the newest migration on the release commit). It lists the exact signatures of every server function the build calls, including
   the Live Activity token registration functions and the atomic completion function. It lists the
   production setup Live Activity mirroring needs: the updated `send-widget-push` and
   `end-live-activity` functions, the `active_timers` INSERT and DELETE webhooks with the
-  service-role bearer, and APNs credentials.
+  service-role bearer, and APNs credentials. It lists the updated `send-activity-notification`
+  function that skips pushes for activities that ended more than an hour ago, which must be
+  deployed before the build is submitted.
 
 ## Decided
 
 - Release notes describe changes relative to 4.9.23, the build now in store submission — owner,
   2026-10-06.
+- The import feature (Tasks 0107–0109) ships in 4.10.2 — owner, 2026-10-07.
 - No 4.10.2 build is submitted until every human checkpoint below passes — the owner's 2026-09-05
   rule that nothing ships before the combined household E2E passes, extended to this merge.
 - No agent connects to production; every production fact comes from the owner — owner rule.
@@ -61,7 +65,7 @@ webhook is a table trigger, so it is expected to fire there too, but only a devi
 ## Human checkpoints
 
 - [ ] [confirm-db] Owner runs the checklist's read-only production queries and confirms migrations
-      066–069 and every listed function signature are present, the two functions are deployed, the
+      066 through the newest migration and every listed function signature are present, the two functions are deployed, the
       INSERT and DELETE webhooks exist with the service-role bearer, and APNs credentials are set.
 - [ ] [verify] Combined household E2E on the release commit: `npm run e2e:household-timers:clean`. ·
       Expected: every scenario passes. · Failure: any step. · Reason: simulators, Maestro, Docker.

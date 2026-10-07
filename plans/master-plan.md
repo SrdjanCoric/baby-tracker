@@ -331,14 +331,14 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0102 · Clear a household timer lock in the same server step that saves the stopped activity → tasks/done/0102-atomic-timer-completion.md
 - [x] 0103 · Fold the 4.9 hotfix line into main → tasks/done/0103-fold-hotfix-4-9-into-main.md
 - [x] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/done/0104-household-stop-clears-lock-in-save.md
-- [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104) → tasks/0105-gate-4-10-2-release.md
-- [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
 - [ ] 0107 · Import Huckleberry sleep and feeds from an export file → tasks/0107-import-huckleberry-sleep-and-feeds.md
 - [ ] 0108 · Import Huckleberry diapers, growth, pumping, medication, and tummy time (after 0107) → tasks/0108-import-huckleberry-care-rows.md
 - [ ] 0109 · Import a Nara Baby export file (after 0108) → tasks/0109-import-from-nara.md
 - [ ] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/0110-no-push-for-past-activities.md
+- [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104, 0109, 0110) → tasks/0105-gate-4-10-2-release.md
 - [x] 0111 · Make the widget and Watch activity snapshot cost independent of history length → tasks/done/0111-bound-activity-snapshot-cost.md
 - [ ] 0112 · Subscribe each phone only to its own household's live updates → tasks/0112-scope-live-updates-to-household.md
+- [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
 
 ## Workflow status
 
@@ -510,6 +510,9 @@ Task 0112, added the same day, scopes each phone's live-update subscription to i
 household, because Realtime's change polling used 32% of database time and its per-subscriber
 checks grow with every phone online. It is an independent app-only change and may run in any order
 with 0111.
+On 2026-10-07 the owner reordered the open tasks to implement imports before the 4.10.2 release:
+0107 through 0110 come first, then 0105, which now also waits for 0109 and 0110 and ships the
+import feature in 4.10.2, then 0112. Task 0106 moves to the end of the list.
 
 On 2026-10-06 the owner added Tasks 0103 through 0105 to bring the 4.9 hotfix line (through 4.9.23)
 into `main` and release the held 4.10 work as 4.10.2. They take priority over every other open
