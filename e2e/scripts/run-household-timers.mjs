@@ -631,10 +631,10 @@ function verifyCaregiverCompletions(status) {
     `,
     "verify-sleep-caregivers"
   );
-  const expected = `${memberEmail}:1,${ownerEmail}:1`;
+  const expected = `${memberEmail}:2`;
   if (result !== expected) {
     throw new Error(
-      `Expected exactly one sleep completion from each caregiver; received ${result || "none"}`
+      `Expected exactly two sleep completions from the member; received ${result || "none"}`
     );
   }
 }
@@ -704,6 +704,41 @@ function removeTimerFailureInjection(status) {
     DROP FUNCTION IF EXISTS public.e2e_delay_sleep_completion();
     DROP SEQUENCE IF EXISTS public.e2e_blocked_release_count;
   `, "remove-direct-release-failure");
+}
+
+function injectTimerFailure(status) {
+  psql(status, `
+    CREATE SEQUENCE public.e2e_blocked_release_count;
+    CREATE FUNCTION public.e2e_block_direct_release() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      IF current_user = 'authenticated' THEN
+        PERFORM nextval('public.e2e_blocked_release_count');
+        RAISE EXCEPTION 'E2E direct timer release blocked';
+      END IF;
+      RETURN OLD;
+    END $$;
+    GRANT USAGE ON SEQUENCE public.e2e_blocked_release_count TO authenticated;
+    CREATE TRIGGER e2e_block_direct_release BEFORE DELETE ON public.active_timers
+      FOR EACH ROW EXECUTE FUNCTION public.e2e_block_direct_release();
+    CREATE FUNCTION public.e2e_delay_sleep_completion() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      PERFORM pg_sleep(3);
+      RETURN NEW;
+    END $$;
+    CREATE TRIGGER e2e_delay_sleep_completion BEFORE INSERT ON public.sleep_sessions
+      FOR EACH ROW EXECUTE FUNCTION public.e2e_delay_sleep_completion();
+  `, "inject-direct-release-failure");
+}
+
+function verifyDirectReleaseWasBlocked(status) {
+  const directReleaseWasBlocked = psql(
+    status,
+    "SELECT is_called FROM public.e2e_blocked_release_count",
+    "verify-direct-release-was-blocked"
+  );
+  if (directReleaseWasBlocked !== "t") {
+    throw new Error("The direct-release failure scenario did not exercise the blocked delete");
+  }
 }
 
 async function runSleepHandoff(status, owner, member) {
@@ -800,48 +835,28 @@ async function runSleepHandoff(status, owner, member) {
   maestro(member, "assert-sleep-prediction-running.yaml");
   capture(
     "xcrun",
-    ["simctl", "launch", member.udid, "com.apple.Preferences"],
-    "background-member-before-owner-stop"
+    ["simctl", "launch", owner.udid, "com.apple.Preferences"],
+    "background-owner-before-member-stop"
   );
-  psql(status, `
-    CREATE SEQUENCE public.e2e_blocked_release_count;
-    CREATE FUNCTION public.e2e_block_direct_release() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN
-      IF current_user = 'authenticated' THEN
-        PERFORM nextval('public.e2e_blocked_release_count');
-        RAISE EXCEPTION 'E2E direct timer release blocked';
-      END IF;
-      RETURN OLD;
-    END $$;
-    GRANT USAGE ON SEQUENCE public.e2e_blocked_release_count TO authenticated;
-    CREATE TRIGGER e2e_block_direct_release BEFORE DELETE ON public.active_timers
-      FOR EACH ROW EXECUTE FUNCTION public.e2e_block_direct_release();
-    CREATE FUNCTION public.e2e_delay_sleep_completion() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN
-      PERFORM pg_sleep(3);
-      RETURN NEW;
-    END $$;
-    CREATE TRIGGER e2e_delay_sleep_completion BEFORE INSERT ON public.sleep_sessions
-      FOR EACH ROW EXECUTE FUNCTION public.e2e_delay_sleep_completion();
-  `, "inject-direct-release-failure");
+  injectTimerFailure(status);
+  let blockedStopSleepId;
   try {
-    maestro(owner, "stop/sleep.yaml");
+    maestro(member, "stop/dashboard-sleep.yaml", { CARD_STATE: "locked-active" });
     await waitForDatabase(status, SLEEP_ACTIVITY, 2, 0);
-    const directReleaseWasBlocked = psql(
-      status,
-      "SELECT is_called FROM public.e2e_blocked_release_count",
-      "verify-direct-release-was-blocked"
-    );
-    if (directReleaseWasBlocked !== "t") {
-      throw new Error("The direct-release failure scenario did not exercise the blocked delete");
-    }
+    blockedStopSleepId = psql(status, `
+      SELECT id FROM sleep_sessions
+      WHERE baby_id = '${primaryBabyId}'::uuid AND deleted = false
+      ORDER BY ended_at DESC LIMIT 1;
+    `, "member-blocked-stop-sleep-id");
+    verifyHouseholdTimerStop(status, 2, `${memberEmail},${memberEmail}`);
+    verifyDirectReleaseWasBlocked(status);
     capture(
       "xcrun",
-      ["simctl", "launch", member.udid, appId],
-      "foreground-member-after-owner-stop"
+      ["simctl", "launch", owner.udid, appId],
+      "foreground-owner-after-member-stop"
     );
-    maestro(member, "assert-sleep-prediction-stopped.yaml");
-    maestro(member, "assert-unlocked.yaml", { ACTIVITY_CARD: SLEEP_ACTIVITY.card });
+    maestro(owner, "assert-sleep-prediction-stopped.yaml");
+    maestro(owner, "assert-unlocked.yaml", { ACTIVITY_CARD: SLEEP_ACTIVITY.card });
   } finally {
     removeTimerFailureInjection(status);
   }
@@ -855,10 +870,7 @@ async function runSleepHandoff(status, owner, member) {
         duration_seconds = 1200,
         morning_classification = 'automatic',
         morning_classification_version = 1
-      FROM users AS caregiver
-      WHERE sleep.baby_id = '${primaryBabyId}'::uuid
-        AND sleep.logged_by = caregiver.id
-        AND caregiver.email = '${ownerEmail}';
+      WHERE sleep.id = '${blockedStopSleepId}'::uuid;
     `,
     "prepare-widget-completed-nap"
   );
@@ -872,14 +884,9 @@ async function runSleepHandoff(status, owner, member) {
         'sleepType', s.type
       )::text
       FROM sleep_sessions s
-      JOIN users u ON u.id = s.logged_by
-      WHERE s.baby_id = '${primaryBabyId}'::uuid
-        AND s.deleted = false
-        AND u.email = '${ownerEmail}'
-      ORDER BY s.started_at DESC
-      LIMIT 1;
+      WHERE s.id = '${blockedStopSleepId}'::uuid;
     `,
-    "owner-completed-sleep"
+    "member-completed-sleep"
   ));
   const completedWidget = await fetchWidgetActivitySnapshot({
     apiUrl: status.API_URL,
@@ -913,7 +920,7 @@ async function runSleepHandoff(status, owner, member) {
     completedSleep,
   });
   verifyCaregiverCompletions(status);
-  restartApp(member, "refresh-member-after-owner-stop");
+  restartApp(member, "refresh-member-after-member-stop");
   maestro(member, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
   });
@@ -927,16 +934,22 @@ async function runSleepHandoff(status, owner, member) {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,
     LOCK_STATE: "locked-active",
   });
-  await runConcurrentTimerStops([
-    () => maestroAsync(owner, "stop/dashboard-sleep.yaml", {
-      CARD_STATE: "own-active",
-    }),
-    () => maestroAsync(member, "stop/dashboard-sleep.yaml", {
-      CARD_STATE: "locked-active",
-    }),
-  ]);
-  await waitForDatabase(status, SLEEP_ACTIVITY, 3, 0);
-  verifyHouseholdTimerStop(status, 3);
+  injectTimerFailure(status);
+  try {
+    await runConcurrentTimerStops([
+      () => maestroAsync(owner, "stop/dashboard-sleep.yaml", {
+        CARD_STATE: "own-active",
+      }),
+      () => maestroAsync(member, "stop/dashboard-sleep.yaml", {
+        CARD_STATE: "locked-active",
+      }),
+    ]);
+    await waitForDatabase(status, SLEEP_ACTIVITY, 3, 0);
+    verifyHouseholdTimerStop(status, 3);
+    verifyDirectReleaseWasBlocked(status);
+  } finally {
+    removeTimerFailureInjection(status);
+  }
   restartApp(owner, "verify-owner-after-simultaneous-stop");
   maestro(owner, "assert-unlocked.yaml", {
     ACTIVITY_CARD: SLEEP_ACTIVITY.card,

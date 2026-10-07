@@ -1,6 +1,8 @@
 \set ON_ERROR_STOP on
 BEGIN;
 
+\ir baby-activity-snapshot-oracle.sql
+
 DO $$
 DECLARE
   v_function_oid oid;
@@ -210,7 +212,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     'Europe/Belgrade'
   );
@@ -231,7 +233,7 @@ BEGIN
     RAISE EXCEPTION 'authorized owner received an invalid base snapshot: %', v_snapshot;
   END IF;
 
-  IF public.get_baby_activity_snapshot(
+  IF pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000002',
     'Europe/Belgrade'
   ) IS NOT NULL THEN
@@ -254,7 +256,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     'Europe/Belgrade'
   );
@@ -276,16 +278,16 @@ SELECT pg_catalog.set_config(
 SET LOCAL ROLE authenticated;
 DO $$
 BEGIN
-  IF public.get_baby_activity_snapshot(
+  IF pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     'Europe/Belgrade'
-  ) IS NOT NULL OR public.get_baby_activity_snapshot(
+  ) IS NOT NULL OR pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000002',
     'Europe/Belgrade'
-  ) IS NOT NULL OR public.get_baby_activity_snapshot(
+  ) IS NOT NULL OR pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000099',
     'Europe/Belgrade'
-  ) IS NOT NULL OR public.get_baby_activity_snapshot(
+  ) IS NOT NULL OR pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000003',
     'Invalid/Timezone'
   ) IS NOT NULL THEN
@@ -337,7 +339,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     'America/New_York'
   );
@@ -361,7 +363,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     'America/New_York'
   );
@@ -664,7 +666,7 @@ DECLARE
   v_no_overnight_automatic_snapshot jsonb;
   v_no_overnight_null_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -699,7 +701,7 @@ BEGIN
     RAISE EXCEPTION 'snapshot fields diverged from shipped meanings or included tombstones: %', v_snapshot;
   END IF;
 
-  v_sibling_snapshot := public.get_baby_activity_snapshot(
+  v_sibling_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000004',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -717,7 +719,7 @@ BEGIN
     RAISE EXCEPTION 'historical night anchor changed the current nap count or wake slot: %', v_sibling_snapshot;
   END IF;
 
-  v_legacy_morning_snapshot := public.get_baby_activity_snapshot(
+  v_legacy_morning_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000005',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -728,7 +730,7 @@ BEGIN
     RAISE EXCEPTION 'mixed legacy and current early-morning sleeps stopped acting as night continuations: %', v_legacy_morning_snapshot;
   END IF;
 
-  v_nap_rule_snapshot := public.get_baby_activity_snapshot(
+  v_nap_rule_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000006',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -739,7 +741,7 @@ BEGIN
     RAISE EXCEPTION 'morning continuation or 15-minute nap minimum diverged from shipped rules: %', v_nap_rule_snapshot;
   END IF;
 
-  v_no_overnight_automatic_snapshot := public.get_baby_activity_snapshot(
+  v_no_overnight_automatic_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000007',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -751,7 +753,7 @@ BEGIN
     RAISE EXCEPTION 'no-overnight automatic morning diverged from shipped resolution: %', v_no_overnight_automatic_snapshot;
   END IF;
 
-  v_no_overnight_null_snapshot := public.get_baby_activity_snapshot(
+  v_no_overnight_null_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000008',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -798,7 +800,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -830,7 +832,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -879,7 +881,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -903,7 +905,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -964,7 +966,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -987,7 +989,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -1023,7 +1025,7 @@ DO $$
 DECLARE
   v_snapshot jsonb;
 BEGIN
-  v_snapshot := public.get_baby_activity_snapshot(
+  v_snapshot := pg_temp.checked_snapshot(
     '8a000000-0000-0000-0000-000000000001',
     pg_catalog.current_setting('test.snapshot_timezone')
   );
@@ -1047,7 +1049,7 @@ SET LOCAL ROLE authenticated;
 SELECT pg_catalog.format(
   'MEASURE: baby activity snapshot payload_bytes=%s',
   pg_catalog.octet_length(
-    public.get_baby_activity_snapshot(
+    pg_temp.checked_snapshot(
       '8a000000-0000-0000-0000-000000000001',
       pg_catalog.current_setting('test.snapshot_timezone')
     )::text
@@ -1059,4 +1061,83 @@ SELECT public.get_baby_activity_snapshot(
   pg_catalog.current_setting('test.snapshot_timezone')
 );
 RESET ROLE;
+-- The history fixture uses the real schema and the same oracle as the smaller behavior cases.
+\ir baby-activity-snapshot-history-fixture.sql
+SELECT pg_temp.add_history(0,6);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS week_equivalent;
+RESET ROLE;
+SELECT pg_temp.add_history(7,729);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE zone text;
+BEGIN
+  FOREACH zone IN ARRAY ARRAY['UTC','Europe/Belgrade','America/New_York'] LOOP
+    PERFORM pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002', zone);
+  END LOOP;
+END $$;
+RESET ROLE;
+-- Latest records remain visible long after every day/morning window has passed.
+SELECT set_config('widget.snapshot_now','2031-10-07T12:00:00Z',true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE snapshot jsonb; kind text;
+BEGIN
+  snapshot := pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC');
+  FOREACH kind IN ARRAY ARRAY['feeding','sleep','diaper','pumping','tummyTime'] LOOP
+    IF snapshot->'activities'->kind->>'lastTime' IS NULL THEN
+      RAISE EXCEPTION 'old latest % disappeared',kind;
+    END IF;
+  END LOOP;
+  IF snapshot->'activities'->'growth'->'lastMeasurement' = 'null'::jsonb THEN
+    RAISE EXCEPTION 'old latest growth disappeared';
+  END IF;
+END $$;
+RESET ROLE;
+
+-- The same populated history is compared across midnight and both DST transitions.
+DO $$
+DECLARE instant text;
+BEGIN
+  FOREACH instant IN ARRAY ARRAY['2025-03-09T07:30:00Z','2025-11-02T06:30:00Z','2026-10-07T00:30:00Z'] LOOP
+    PERFORM set_config('widget.snapshot_now',instant,true);
+    SET LOCAL ROLE authenticated;
+    PERFORM pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','America/New_York');
+    RESET ROLE;
+  END LOOP;
+END $$;
+SELECT set_config('widget.snapshot_now','2026-10-07T12:00:00Z',true);
+
+-- A valid overnight anchor need not have a recent start time.
+INSERT INTO public.sleep_sessions (baby_id,type,started_at,ended_at,duration_seconds)
+VALUES ('87000000-0000-0000-0000-000000000002','night','2024-01-01','2026-10-07T05:30:00Z',3600);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS old_overnight_equivalent;
+RESET ROLE;
+
+INSERT INTO public.active_timers (baby_id,activity_type,started_by,started_at,timer_data)
+SELECT '87000000-0000-0000-0000-000000000002', kind,
+  '87000000-0000-0000-0000-000000000001', '2026-10-07T09:00:00Z',
+  jsonb_build_object('timerInstanceId','cost-' || kind, 'isPaused',false,'accumulatedSeconds',120)
+FROM unnest(ARRAY['feeding','sleep','pumping','tummy_time']) kind;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS running_timers_equivalent;
+RESET ROLE;
+UPDATE public.active_timers SET timer_data = timer_data || '{"isPaused":true}'::jsonb
+WHERE baby_id='87000000-0000-0000-0000-000000000002';
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS paused_timers_equivalent;
+RESET ROLE;
+DO $$
+DECLARE relation text;
+BEGIN
+  FOREACH relation IN ARRAY ARRAY['feedings','sleep_sessions','diapers','pumping_sessions','growth_measurements','tummy_time_sessions'] LOOP
+    EXECUTE format('UPDATE public.%I SET deleted = true WHERE baby_id = $1',relation)
+      USING '87000000-0000-0000-0000-000000000002'::uuid;
+  END LOOP;
+END $$;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS deleted_history_equivalent;
+RESET ROLE;
+\echo 'PASS: snapshot 061 equivalence includes two years, old latest/overnight, DST, all timers and deleted history'
 ROLLBACK;

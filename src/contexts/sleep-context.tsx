@@ -1590,7 +1590,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
           userId: user.id,
           lock,
           requestedStopTime: requestedEndTime,
-          persistRecord: input => createSleepInDatabase(input, user.id),
+          persistRecord: (input, completion) => createSleepInDatabase(input, user.id, {
+            timerInstanceId: completion.timerInstanceId,
+            startedAt: completion.startedAt,
+          }),
           dispatchAddRecord: record =>
             dispatch({ type: "ADD_SLEEP", payload: record }),
           refreshLocks,

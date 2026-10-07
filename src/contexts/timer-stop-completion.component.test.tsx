@@ -25,7 +25,14 @@ const mockSync = {
   subscribeToRemoteChanges: () => jest.fn(),
   registerForegroundRefreshLoader: () => jest.fn(),
 };
-const mockActiveTimers = { removeLock: jest.fn(), refreshLocks: jest.fn() };
+const mockActiveTimers = {
+  removeLock: jest.fn(),
+  refreshLocks: jest.fn(),
+  getLockForActivity: (_babyId: string, type: string) => {
+    const lock = mockLocks.get(type);
+    return lock ? { ...lock, id: `lock-${type}`, babyId: "baby-1", activityType: type } : null;
+  },
+};
 const mockRpc = jest.fn(
   async (name: string, params: Record<string, unknown>) => {
     const record = params.p_record as Record<string, unknown>;
@@ -41,8 +48,7 @@ const mockRpc = jest.fn(
       )[String(params.p_table)];
       const lock = mockLocks.get(type);
       if (
-        lock?.startedBy === params.p_expected_user_id &&
-        lock.timerData.timerInstanceId === params.p_timer_instance_id
+        lock?.timerData.timerInstanceId === params.p_timer_instance_id
       ) {
         mockLocks.delete(type);
       }
@@ -99,12 +105,12 @@ jest.mock("@/services/active-timer-service", () => ({
       type: string,
       user: string,
       timerData: Record<string, unknown>,
-      startedAt?: string
+      startedAt?: Date
     ) => {
       mockLocks.set(type, {
         startedBy: user,
         timerData,
-        startedAt: startedAt ?? new Date().toISOString(),
+        startedAt: (startedAt ?? new Date()).toISOString(),
       });
       return { success: true };
     }
@@ -240,6 +246,7 @@ it.each(["online", "offline"])(
       mockRpc.mock.calls.map(([, params]) => params.p_timer_instance_id)
     ).toEqual(identities);
     for (const [, params] of mockRpc.mock.calls) {
+      expect(params.p_expected_user_id).toBe("user-1");
       expect(params.p_timer_started_at).toBe(start.toISOString());
       expect(params.p_record).not.toHaveProperty("timerCompletion");
     }
@@ -249,5 +256,65 @@ it.each(["online", "offline"])(
       pumping.activeTimer,
       tummy.activeTimer,
     ]).toEqual([null, null, null, null]);
+  }
+);
+
+it.each(["online", "offline"])(
+  "clears another member's four matching locks when the queued %s save lands despite direct release failure",
+  async (mode) => {
+    render(
+      <FeedingProvider>
+        <SleepProvider>
+          <PumpingProvider>
+            <TummyTimeProvider>
+              <Harness />
+            </TummyTimeProvider>
+          </PumpingProvider>
+        </SleepProvider>
+      </FeedingProvider>
+    );
+    await waitFor(() =>
+      expect([feeding?.isLoading, sleep?.isLoading, pumping?.isLoading, tummy?.isLoading])
+        .toEqual([false, false, false, false])
+    );
+    const start = new Date(Date.now() - 5 * 60 * 1000);
+    await act(async () => {
+      await feeding.startBreastfeeding("left", start);
+      await sleep.startSleep("nap", start);
+      await pumping.startPumping("both", start);
+      await tummy.startTummyTime(start);
+    });
+    // Use the locks produced by the providers, changing only their household starter.
+    for (const lock of mockLocks.values()) lock.startedBy = "user-2";
+    const identities = [...mockLocks.values()].map(lock => lock.timerData.timerInstanceId);
+    mockEngine.setOnlineForTesting(mode === "online");
+    await act(async () => {
+      await feeding.stopRemoteBreastfeeding(new Date());
+      await sleep.stopRemoteSleep(new Date());
+      await pumping.stopRemotePumping(new Date());
+      await tummy.stopRemoteTummyTime(new Date());
+    });
+    expect(releaseTimerLockDurably).toHaveBeenCalledTimes(4);
+    if (mode === "offline") {
+      expect(mockLocks.size).toBe(4);
+      expect(mockEngine.getPendingCount()).toBe(4);
+    }
+    await act(async () => {
+      mockEngine.setOnlineForTesting(true);
+      await mockEngine.sync();
+    });
+    expect(mockRecords.size).toBe(4);
+    expect(mockLocks.size).toBe(0);
+    expect(mockEngine.getPendingCount()).toBe(0);
+    expect(mockRpc.mock.calls.map(([name]) => name))
+      .toEqual(Array(4).fill("merge_record_and_complete_timer"));
+    expect(mockRpc.mock.calls.map(([, params]) => params.p_timer_instance_id))
+      .toEqual(identities);
+    for (const [, params] of mockRpc.mock.calls) {
+      expect(params.p_expected_user_id).toBe("user-1");
+      expect(params.p_timer_started_at).toBe(start.toISOString());
+      expect(params.p_record).toMatchObject({ logged_by: "user-1" });
+      expect(params.p_record).not.toHaveProperty("timerCompletion");
+    }
   }
 );

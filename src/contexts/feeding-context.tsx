@@ -879,7 +879,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           userId: user.id,
           lock,
           requestedStopTime: requestedEndTime,
-          persistRecord: input => createFeedingInDatabase(input, user.id),
+          persistRecord: (input, completion) => createFeedingInDatabase(input, user.id, {
+            timerInstanceId: completion.timerInstanceId,
+            startedAt: completion.startedAt,
+          }),
           dispatchAddRecord: record =>
             dispatch({ type: "ADD_FEEDING", payload: record }),
           refreshLocks,

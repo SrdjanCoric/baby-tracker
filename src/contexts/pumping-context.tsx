@@ -763,7 +763,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           userId: user.id,
           lock,
           requestedStopTime: requestedEndTime,
-          persistRecord: input => createPumpingInDatabase(input, user.id),
+          persistRecord: (input, completion) => createPumpingInDatabase(input, user.id, {
+            timerInstanceId: completion.timerInstanceId,
+            startedAt: completion.startedAt,
+          }),
           dispatchAddRecord: record =>
             dispatch({ type: "ADD_PUMPING", payload: record }),
           refreshLocks,

@@ -718,7 +718,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
         userId: user.id,
         lock,
         requestedStopTime: requestedEndTime,
-        persistRecord: input => createTummyTimeInDatabase(input, user.id),
+        persistRecord: (input, completion) => createTummyTimeInDatabase(input, user.id, {
+          timerInstanceId: completion.timerInstanceId,
+          startedAt: completion.startedAt,
+        }),
         dispatchAddRecord: record => dispatch({ type: "ADD_TUMMY_TIME", payload: record }),
         refreshLocks,
       });

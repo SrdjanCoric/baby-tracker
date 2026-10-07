@@ -177,7 +177,7 @@ export interface StopRemoteTimerLifecycleOptions<
   userId: string;
   lock: ActiveTimerLock;
   requestedStopTime?: Date;
-  persistRecord(input: TCreateInput): Promise<TRecord>;
+  persistRecord(input: TCreateInput, completion: TimerCompletionRecord): Promise<TRecord>;
   dispatchAddRecord(record: TRecord): void;
   refreshLocks?(): Promise<unknown> | unknown;
 }
@@ -342,7 +342,8 @@ export async function stopRemoteTimerLifecycle<
         new Date(lock.startedAt),
         new Date(completion.stoppedAt),
         { ...payload, ...identity, activityId: completion.activityId }
-      )
+      ),
+      completion
     );
     await markTimerCompletionDurable(completion);
   }

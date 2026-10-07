@@ -1193,7 +1193,13 @@ describe("stopRemoteTimerLifecycle", () => {
         activityId: "deterministic-activity",
       })
     );
-    expect(persistRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
+    expect(persistRecord).toHaveBeenCalledWith(
+      { id: "deterministic-activity" },
+      expect.objectContaining({
+        timerInstanceId: "timer-remote",
+        startedAt: "2026-08-05T12:00:00.000Z",
+      })
+    );
     expect(dispatchAddRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
     expect(releaseTimerLockDurably).toHaveBeenCalledWith(
       "baby-1",

@@ -481,3 +481,23 @@ test("household timer runner addresses two named simulators independently", () =
     { name: "SofiBaby Member", udid: "MEMBER-UDID" },
   ]);
 });
+test("blocked member stop keeps the morning anchor and selects the completed nap by id", () => {
+  const runner = fs.readFileSync(new URL("./run-household-timers.mjs", import.meta.url), "utf8");
+  assert.match(runner, /blockedStopSleepId = psql[\s\S]*?ORDER BY ended_at DESC/);
+  const nap = runner.slice(runner.indexOf("UPDATE sleep_sessions AS sleep", runner.indexOf("let blockedStopSleepId")), runner.indexOf("const completedWidget"));
+  assert.match(nap, /WHERE sleep.id = '\$\{blockedStopSleepId\}'::uuid/);
+  assert.match(nap, /WHERE s.id = '\$\{blockedStopSleepId\}'::uuid/);
+  assert.doesNotMatch(nap, /caregiver.email|u.email/);
+  assert.match(nap, /member-completed-sleep/);
+  assert.match(runner, /const expected = `\$\{memberEmail\}:2`/);
+  assert.match(runner, /refresh-member-after-member-stop/);
+});
+
+test("simultaneous stops exercise blocked direct release for the owner and clean up", () => {
+  const runner = fs.readFileSync(new URL("./run-household-timers.mjs", import.meta.url), "utf8");
+  const scenario = runner.slice(runner.indexOf('restartApp(owner, "prepare-owner-simultaneous-stop")'), runner.indexOf("function collectDiagnostics"));
+  assert.ok(/injectTimerFailure\(status\);\s*try/.test(scenario), "inject before simultaneous stop");
+  assert.ok(/verifyDirectReleaseWasBlocked\(status\)/.test(scenario), "prove a direct release was blocked");
+  assert.ok(/finally \{\s*removeTimerFailureInjection\(status\)/.test(scenario), "clean injection even on failure");
+  assert.ok(/waitForDatabase\(status, SLEEP_ACTIVITY, 3, 0\)/.test(scenario), "prove the lock is removed");
+});

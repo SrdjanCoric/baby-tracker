@@ -478,12 +478,12 @@ describe("external timer stops through production providers", () => {
       createPumpingInDatabase: jest.Mock;
       createTummyTimeInDatabase: jest.Mock;
     };
-    for (const createRecord of [
-      activitySync.createFeedingInDatabase,
-      activitySync.createSleepInDatabase,
-      activitySync.createPumpingInDatabase,
-      activitySync.createTummyTimeInDatabase,
-    ]) {
+    for (const [createRecord, timerInstanceId] of [
+      [activitySync.createFeedingInDatabase, "remote-feeding"],
+      [activitySync.createSleepInDatabase, "remote-sleep"],
+      [activitySync.createPumpingInDatabase, "remote-pumping"],
+      [activitySync.createTummyTimeInDatabase, "remote-tummy"],
+    ] as const) {
       expect(createRecord).toHaveBeenCalledWith(
         expect.objectContaining({
           babyId: "baby-1",
@@ -491,7 +491,8 @@ describe("external timer stops through production providers", () => {
           endedAt: new Date(stoppedAt),
           durationSeconds: 300,
         }),
-        "user-1"
+        "user-1",
+        { timerInstanceId, startedAt }
       );
     }
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
@@ -581,7 +582,8 @@ describe("external timer stops through production providers", () => {
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
       }),
-      "user-1"
+      "user-1",
+      { timerInstanceId: "remote-widget-feeding", startedAt }
     );
     expect(activitySync.createSleepInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -590,7 +592,8 @@ describe("external timer stops through production providers", () => {
         startedAt: new Date(startedAt),
         endedAt: new Date(stoppedAt),
       }),
-      "user-1"
+      "user-1",
+      { timerInstanceId: "remote-watch-sleep", startedAt }
     );
     expect(mockRemoveLock).toHaveBeenCalledTimes(0);
     expect(mockRefreshLocks).toHaveBeenCalledTimes(2);

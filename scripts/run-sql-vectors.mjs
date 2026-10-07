@@ -162,6 +162,16 @@ function runBabyActivitySnapshotTests() {
   }
 }
 
+function runBabyActivitySnapshotCostTests() {
+  const file = join(ROOT, "scripts/sql/baby-activity-snapshot-cost-tests.sql");
+  try {
+    const out = psql(["-f", file]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 function runActivitySyncCursorTests() {
   const file = join(ROOT, "scripts/sql/activity-sync-cursor-tests.sql");
   try {
@@ -294,6 +304,96 @@ async function runIdempotencyConcurrencyTest() {
     return { ok, detail: `notes=${notes} acknowledgements=${count}` };
   } finally {
     psql(["-c", cleanup]);
+  }
+}
+
+async function runHouseholdTimerCompletionConcurrencyTest() {
+  const member = "c2222222-2222-2222-2222-222222222222";
+  const types = [
+    ["sleep", "sleep_sessions"],
+    ["feeding", "feedings"],
+    ["pumping", "pumping_sessions"],
+    ["tummy_time", "tummy_time_sessions"],
+  ];
+  const startedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const endedAt = new Date(new Date(startedAt).getTime() + 300_000).toISOString();
+  const operationId = "household-concurrent-completion";
+  psql(["-q", "-c", `
+    INSERT INTO auth.users (id, email) VALUES
+      ('${CC.user}', 'completion-concurrent-owner@test.dev'),
+      ('${member}', 'completion-concurrent-member@test.dev');
+    UPDATE public.users SET household_id = (SELECT household_id FROM public.users WHERE id = '${CC.user}')
+      WHERE id = '${member}';
+    INSERT INTO public.babies (id, household_id, name)
+      SELECT '${CC.baby}', household_id, 'Concurrent Completion Baby'
+      FROM public.users WHERE id = '${CC.user}';
+  `]);
+  try {
+    for (const [activity, table] of types) {
+      const timerId = `concurrent-${activity}`;
+      const record = {
+        id: CC.feeding,
+        baby_id: CC.baby,
+        started_at: startedAt,
+        ended_at: endedAt,
+        duration_seconds: 300,
+        ...(activity === "sleep" ? { type: "nap" } : {}),
+        ...(activity === "feeding" ? { type: "breast" } : {}),
+      };
+      psql(["-q", "-c", `
+        INSERT INTO public.active_timers (baby_id, activity_type, started_by, started_at, timer_data)
+        VALUES ('${CC.baby}', '${activity}', '${CC.user}', '${startedAt}',
+          ${sqlLiteral({ timerInstanceId: timerId })});
+      `]);
+      const worker = (user, holdSeconds) => {
+        const call = `SELECT public.merge_record_and_complete_timer('${table}',
+          ${sqlLiteral({ ...record, logged_by: user })}, '{}'::jsonb,
+          '${operationId}-${activity}', '${user}', '${timerId}', '${startedAt}');`;
+        return {
+          call,
+          run: () => execFileAsync("psql", [DB_URL, "-X", "-v", "ON_ERROR_STOP=1", "-q", "-c", `
+            BEGIN;
+            SET LOCAL ROLE authenticated;
+            SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
+            ${call}
+            SELECT pg_sleep(${holdSeconds});
+            COMMIT;
+          `]),
+        };
+      };
+      const memberWorker = worker(member, 0.4);
+      const ownerWorker = worker(CC.user, 0);
+      // Match the existing merge concurrency seam: keep one write transaction open while the other runs.
+      const results = await Promise.allSettled([memberWorker.run(), ownerWorker.run()]);
+      for (const result of results) if (result.status === "rejected") throw result.reason;
+      // An offline replay from either caregiver has the same operation identity.
+      for (const [user, completion] of [[CC.user, ownerWorker], [member, memberWorker]]) {
+        psql(["-q", "-c", `
+          BEGIN;
+          SET LOCAL ROLE authenticated;
+          SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
+          ${completion.call}
+          COMMIT;
+        `]);
+      }
+      const state = psql(["-At", "-F", "\t", "-c", `
+        SELECT (SELECT count(*) FROM public.${table} WHERE id = '${CC.feeding}'),
+          (SELECT count(*) FROM public.active_timers WHERE baby_id = '${CC.baby}' AND activity_type = '${activity}'),
+          (SELECT count(*) FROM public.sync_operation_acknowledgements
+            WHERE user_id IN ('${CC.user}', '${member}') AND operation_id = '${operationId}-${activity}');
+      `]).trim();
+      if (state !== "1\t0\t2") return { ok: false, detail: `${activity}: rows/locks/acks=${state}` };
+    }
+    return { ok: true, detail: "all four types: one record, no lock, both caregivers acknowledged; replay unchanged" };
+  } finally {
+    for (const [, table] of types) psql(["-q", "-c", `DELETE FROM public.${table} WHERE id = '${CC.feeding}';`]);
+    psql(["-q", "-c", `
+      DELETE FROM public.active_timers WHERE baby_id = '${CC.baby}';
+      DELETE FROM public.sync_operation_acknowledgements
+        WHERE user_id IN ('${CC.user}', '${member}') AND operation_id LIKE '${operationId}-%';
+      DELETE FROM public.babies WHERE id = '${CC.baby}';
+      DELETE FROM auth.users WHERE id IN ('${CC.user}', '${member}');
+    `]);
   }
 }
 
@@ -459,6 +559,17 @@ if (babyActivitySnapshot.ok) {
 }
 
 console.log("");
+const snapshotCost = runBabyActivitySnapshotCostTests();
+if (snapshotCost.ok) {
+  console.log(`${GREEN}✓${RESET} baby activity snapshot: bounded history cost and index plans`);
+  process.stdout.write(snapshotCost.out);
+} else {
+  console.log(`${RED}✗ baby activity snapshot cost tests failed${RESET}`);
+  process.stdout.write(snapshotCost.out);
+  hardFail = true;
+}
+
+console.log("");
 const activitySyncCursor = runActivitySyncCursorTests();
 if (activitySyncCursor.ok) {
   console.log(`${GREEN}✓${RESET} activity sync cursors: update triggers and composite index plans`);
@@ -508,6 +619,20 @@ try {
   }
 } catch (err) {
   console.log(`${RED}✗ timer completion replay test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  hardFail = true;
+}
+
+console.log("");
+try {
+  const householdCompletion = await runHouseholdTimerCompletionConcurrencyTest();
+  if (householdCompletion.ok) {
+    console.log(`${GREEN}✓${RESET} household completion concurrency: ${householdCompletion.detail}`);
+  } else {
+    console.log(`${RED}✗ household completion concurrency: ${householdCompletion.detail}`);
+    hardFail = true;
+  }
+} catch (err) {
+  console.log(`${RED}✗ household completion concurrency error${RESET}\n${(err.stdout || "") + (err.stderr || "") || err.message}`);
   hardFail = true;
 }
 
