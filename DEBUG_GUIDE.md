@@ -1,11 +1,39 @@
 # Debug Guide: Watch/Widget/Live Activity Sync (Simulators)
 
+## Reliable iOS simulator launch
+
+Run these commands from the repository root when the goal is to get a stable Baby Tracker app
+screen before testing background or lock behavior:
+
+```bash
+# Build and install the bundled app; wait for “Build Succeeded” and “Installing on iPhone 17”.
+npx expo run:ios --configuration Release --device "iPhone 17" --no-install --no-bundler
+
+# Launch the installed app directly, without Expo reopening a development-client URL.
+xcrun simctl terminate booted com.sofibaby.app 2>/dev/null || true
+xcrun simctl launch booted com.sofibaby.app
+```
+
+Confirm that the Home screen is visible before starting a test. The routine launch command must
+not use `npx expo prebuild --platform ios --clean`; reserve that for an intentional native
+regeneration. `npm run ios` assumes that Metro on port 8081 belongs to this checkout. If another
+project already owns that port, it can load the wrong JavaScript bundle; use a separate Metro port
+for a debug-client session instead:
+
+```bash
+npx expo start --dev-client --localhost --port 8082
+npx expo run:ios --device "iPhone 17" --port 8082 --no-install
+```
+
+For the simulator lock check, use **Device → Lock** and verify the lock screen is visible. With no
+simulator passcode configured, wake/unlock it and confirm the Baby Tracker Home screen returns.
+The simulator proves the app survives the lifecycle transition, but it does not faithfully emulate
+iOS protected-data denial; the storage-error acceptance check still requires a device.
+
 ## Setup
 
 ### 1. Launch iPhone Simulator
-```bash
-npx expo prebuild --platform ios --clean && npx expo run:ios
-```
+Follow the [Reliable iOS simulator launch](#reliable-ios-simulator-launch) procedure above.
 
 ### 2. Launch Watch Simulator
 - Open Xcode

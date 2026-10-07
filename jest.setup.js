@@ -2,6 +2,10 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
+jest.mock("@react-native-community/netinfo", () =>
+  require("@react-native-community/netinfo/jest/netinfo-mock.js")
+);
+
 jest.mock("@/services/sync", () => ({
   SyncEngine: jest.fn(),
   SyncQueue: jest.fn(),
@@ -213,5 +217,6 @@ jest.mock("@sentry/react-native", () => ({
   setTag: jest.fn(),
   addBreadcrumb: jest.fn(),
   captureException: jest.fn(),
+  captureMessage: jest.fn(),
   expoRouterIntegration: jest.fn(() => ({ name: "ExpoRouter" })),
 }));

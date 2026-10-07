@@ -22,7 +22,7 @@ import {
 } from "./live-activity-service";
 import {
   queuePendingTimerStartEdit,
-  releaseTimerLock,
+  releaseTimerLockDurably,
   updateTimerStartTime,
 } from "./active-timer-service";
 
@@ -46,6 +46,7 @@ vi.mock("./active-timer-service", () => ({
   queuePendingLockRelease: vi.fn(),
   queuePendingTimerStartEdit: vi.fn(),
   releaseTimerLock: vi.fn(),
+  releaseTimerLockDurably: vi.fn(),
   updateTimerStartTime: vi.fn(),
 }));
 
@@ -1123,7 +1124,7 @@ describe("stopRemoteTimerLifecycle", () => {
     vi.clearAllMocks();
   });
 
-  it("saves a stopper-owned record from lock data before releasing the lock", async () => {
+  it("saves a stopper-owned record from lock data and durably releases the lock", async () => {
     const buildRecord = vi.fn(() => ({ id: "deterministic-activity" }));
     const persistRecord = vi.fn(async () => ({ id: "deterministic-activity" }));
     const dispatchAddRecord = vi.fn();
@@ -1162,7 +1163,7 @@ describe("stopRemoteTimerLifecycle", () => {
       stoppedAt: "2026-08-05T12:05:00.000Z",
       status: "pending",
     });
-    vi.mocked(releaseTimerLock).mockResolvedValue(true);
+    vi.mocked(releaseTimerLockDurably).mockResolvedValue(true);
 
     await expect(
       stopRemoteTimerLifecycle({
@@ -1194,7 +1195,7 @@ describe("stopRemoteTimerLifecycle", () => {
     );
     expect(persistRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
     expect(dispatchAddRecord).toHaveBeenCalledWith({ id: "deterministic-activity" });
-    expect(releaseTimerLock).toHaveBeenCalledWith(
+    expect(releaseTimerLockDurably).toHaveBeenCalledWith(
       "baby-1",
       "sleep",
       "stopper-1",

@@ -5,6 +5,7 @@ import {
   queuePendingLockRelease,
   queuePendingTimerStartEdit,
   releaseTimerLock,
+  releaseTimerLockDurably,
   updateTimerStartTime,
   type TimerActivityType,
   type ActiveTimerLock,
@@ -26,6 +27,7 @@ import {
   markTimerCompletionDurable,
   resolveTimerIdentity,
   type TimerIdentity,
+  type TimerCompletionRecord,
 } from "./timer-completion-service";
 import {
   reconcileTimerLock,
@@ -39,6 +41,7 @@ import {
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
+import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -155,7 +158,7 @@ export interface RestoreTimerLifecycleOptions<
   isCurrentBabyBinding(): boolean;
   liveActivityIdRef: MutableRef<string | null>;
   refreshLocks(): Promise<unknown> | unknown;
-  persistRecord(input: TCreateInput): Promise<TRecord>;
+  persistRecord(input: TCreateInput, completion: TimerCompletionRecord): Promise<TRecord>;
   dispatchStopTimer(): void;
   dispatchAddRecord(record: TRecord): void;
   onCompletionSecured?(): Promise<unknown> | unknown;
@@ -343,25 +346,25 @@ export async function stopRemoteTimerLifecycle<
     );
     await markTimerCompletionDurable(completion);
   }
+  const releaseLockPromise = releaseTimerLockDurably(
+    babyId,
+    adapter.activityType,
+    userId,
+    identity.timerInstanceId,
+    lock.startedAt
+  ).catch(error => {
+    reportIssue({
+      name: "timers.lock_release_queued",
+      area: "timers",
+      level: "warning",
+      error,
+      tags: { activityType: adapter.activityType, code: errorCode(error) },
+    });
+  });
+
   dispatchAddRecord(record);
 
-  try {
-    await releaseTimerLock(
-      babyId,
-      adapter.activityType,
-      userId,
-      identity.timerInstanceId,
-      lock.startedAt
-    );
-  } catch {
-    await queuePendingLockRelease(
-      babyId,
-      adapter.activityType,
-      userId,
-      identity.timerInstanceId,
-      lock.startedAt
-    );
-  }
+  await releaseLockPromise;
   await refreshLocks?.();
   return record;
 }
@@ -429,6 +432,12 @@ export async function editRunningTimerStartTime<
       );
     } catch (error) {
       if (!isRetryableTimerWriteError(error)) throw error;
+      recordBreadcrumb({
+        category: "timers",
+        message: "start edit queued",
+        level: "warning",
+        data: { activityType: adapter.activityType },
+      });
       await queuePendingTimerStartEdit(
         baby.id,
         adapter.activityType,
@@ -566,7 +575,16 @@ export async function restoreTimerLifecycle<
         identity.timerInstanceId,
         startedAt
       );
-    } catch {
+    } catch (error) {
+      // The other device keeps seeing this timer as running until the queued
+      // release succeeds, so surface how often that happens.
+      reportIssue({
+        name: "timers.lock_release_queued",
+        area: "timers",
+        level: "warning",
+        error,
+        tags: { activityType: adapter.activityType, code: errorCode(error) },
+      });
       await queuePendingLockRelease(
         baby.id,
         adapter.activityType,
@@ -763,7 +781,8 @@ export async function restoreTimerLifecycle<
                 ...payloadWithIdentity,
                 activityId: completion.activityId,
               }
-            )
+            ),
+            completion
           );
           await markTimerCompletionDurable(completion);
         }
@@ -860,6 +879,12 @@ export async function restoreTimerLifecycle<
     } catch (error) {
       if (!isCurrentBabyBinding()) return;
       console.error(`${errorLabel} Failed to restore from server:`, error);
+      reportIssue({
+        name: "timers.restore_failed",
+        area: "timers",
+        error,
+        tags: { activityType: adapter.activityType },
+      });
     }
   }
 }

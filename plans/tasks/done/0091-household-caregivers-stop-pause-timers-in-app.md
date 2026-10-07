@@ -32,8 +32,8 @@ Superseded design (do not resurrect, from the pre-2026 version of the plan file)
 
 ## Human checkpoints
 
-- [x] [confirm-security] Apply migration 065 server-first: widen active-timer UPDATE/DELETE and the release/pause RPCs to authenticated household members while strengthening the direct-update trigger so only the starter may change `started_at` and nobody may change timer identity. RPC signatures, INSERT, and acquisition stay unchanged; outsiders and unauthenticated callers remain denied (owner approved 2026-09-01).
-- [x] [confirm-db] Run the new migration against the shared Supabase project (owner applied migration 065 to the shared project on 2026-09-05; `pg_policies` showed no household policies before and the RPC bodies are the 065 versions after).
+- [x] [confirm-security] Apply migration 066 server-first: widen active-timer UPDATE/DELETE and the release/pause RPCs to authenticated household members while strengthening the direct-update trigger so only the starter may change `started_at` and nobody may change timer identity. RPC signatures, INSERT, and acquisition stay unchanged; outsiders and unauthenticated callers remain denied (owner approved 2026-09-01).
+- [x] [confirm-db] Run the new migration against the shared Supabase project (owner applied migration 066 to the shared project on 2026-09-05; `pg_policies` showed no household policies before and the RPC bodies are the 066 versions after).
 - [x] [decision] Mixed-version rollout: accept the transient duplicate risk from overlapping stops involving an older app during rollout. Do not add a `started_at` compatibility query: it is race-prone, can suppress legitimate records, adds a network dependency to stopping, and would revive the superseded duplicate-guard design (owner approved 2026-09-01).
 
 ## Review decisions
@@ -60,9 +60,9 @@ Superseded design (do not resurrect, from the pre-2026 version of the plan file)
 
 ## Completion record
 
-**Built:** migration 065 widens `active_timers` UPDATE/DELETE policies and the `release_timer_lock` / `toggle_timer_pause` RPCs from starter-only to household membership, and extends the 062 identity guard so only the starter may change `started_at`. Client service drops `started_by` filters and scopes `updateTimerData` to `timer_data->>timerInstanceId`. `src/services/timer-lifecycle.ts` gains remote-stop and vanished-owned-lock handling shared by all four activity contexts. Timer completions derive a deterministic activity ID from `timerInstanceId` (`src/services/timer-completion-service.ts`). Dashboard cards for another caregiver's timer expose stop and pause/resume controls with attribution kept (`app/(tabs)/index.tsx`, `DashboardCard.tsx`).
+**Built:** migration 066 widens `active_timers` UPDATE/DELETE policies and the `release_timer_lock` / `toggle_timer_pause` RPCs from starter-only to household membership, and extends the 062 identity guard so only the starter may change `started_at`. Client service drops `started_by` filters and scopes `updateTimerData` to `timer_data->>timerInstanceId`. `src/services/timer-lifecycle.ts` gains remote-stop and vanished-owned-lock handling shared by all four activity contexts. Timer completions derive a deterministic activity ID from `timerInstanceId` (`src/services/timer-completion-service.ts`). Dashboard cards for another caregiver's timer expose stop and pause/resume controls with attribution kept (`app/(tabs)/index.tsx`, `DashboardCard.tsx`).
 
-**Decisions:** deterministic ID replaces the superseded release-return-value / `started_at` pre-check dedup; mixed-version duplicate risk accepted for rollout; migration 065 applied server-first by the owner on 2026-09-05 before any client ships. Branch rebased onto `main` on 2026-09-05 after hotfixes #263 and #264; the only conflict was additive test blocks in `src/services/active-timer-service.test.ts`, both kept.
+**Decisions:** deterministic ID replaces the superseded release-return-value / `started_at` pre-check dedup; mixed-version duplicate risk accepted for rollout; migration 066 applied server-first by the owner on 2026-09-05 before any client ships. Branch rebased onto `main` on 2026-09-05 after hotfixes #263 and #264; the only conflict was additive test blocks in `src/services/active-timer-service.test.ts`, both kept.
 
 **README:** "Timers" paragraph on household-wide timer locks updated to describe household stop/pause/resume, starter-only start-time edits, and remote stop saving one record. `write-well` audit: 2 passes, 2 findings fixed.
 

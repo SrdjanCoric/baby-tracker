@@ -23,6 +23,38 @@
       "upstream": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
       "owner": "Srdjan Coric",
       "expiresOn": "2026-10-31"
+    },
+    {
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "dependencyPaths": [
+        "node_modules/braces"
+      ],
+      "exposure": "Reviewed callers are micromatch glob parsing and chokidar file watching in build/development tooling. The app has no direct braces import. Glob patterns and watched project paths are repository-controlled; this exception does not cover passing untrusted runtime input to these tools.",
+      "reason": "No patched braces release exists. Owner approved temporary risk acceptance on 2026-10-06 rather than maintaining a local security patch; revisit before expiry or when upstream ships a fix.",
+      "upstream": "https://github.com/micromatch/braces/issues/70",
+      "owner": "Srdjan Coric",
+      "expiresOn": "2026-10-31",
+      "allowedDependents": [
+        "chokidar",
+        "micromatch"
+      ]
+    },
+    {
+      "advisory": "GHSA-86w9-cpqp-85rv",
+      "package": "node-forge",
+      "dependencyPaths": [
+        "node_modules/node-forge"
+      ],
+      "exposure": "Reviewed callers are Expo CLI and @expo/code-signing-certificates for development/build certificate and signing operations; the app has no direct node-forge import. Use trusted developer/project key and certificate inputs during this exception window; this exception does not cover arbitrary untrusted signatures or certificates.",
+      "reason": "No patched node-forge release exists. Owner approved temporary risk acceptance on 2026-10-06 rather than maintaining a local cryptography patch; upstream RSA validation fix PR 1152 remains open. Revisit before expiry or when upstream ships a fix.",
+      "upstream": "https://github.com/digitalbazaar/forge/pull/1152",
+      "owner": "Srdjan Coric",
+      "expiresOn": "2026-10-31",
+      "allowedDependents": [
+        "@expo/cli",
+        "@expo/code-signing-certificates"
+      ]
     }
   ]
 }

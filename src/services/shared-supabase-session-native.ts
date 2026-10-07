@@ -1,8 +1,9 @@
-import { NativeModules, Platform } from "react-native";
+import { AppState, NativeModules, Platform } from "react-native";
 import type {
   SharedSupabaseSessionBridge,
   SharedSupabaseSessionLock,
 } from "./shared-supabase-session";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 export interface SharedSupabaseSessionNativeModule {
   readSession(): Promise<string | null>;
@@ -26,9 +27,59 @@ type SharedSupabaseSessionNativeLockModule = Pick<
   "acquireSessionLock" | "releaseSessionLock"
 >;
 
+const nativeLockErrors = new WeakSet<object>();
+
 export interface SharedSupabaseSessionBridgeAndLock extends SharedSupabaseSessionBridge {
   lock: SharedSupabaseSessionLock;
   purgeSession(): Promise<void>;
+}
+
+const EXPECTED_LOCK_ABANDONMENT_CODES = new Set([
+  "LOCK_NO_ASSERTION",
+  "LOCK_REVOKED",
+  "LOCK_OPEN",
+]);
+
+let foregroundWarningReported = false;
+
+export function consumeSharedSupabaseSessionLockAbandonment(
+  error: unknown
+): boolean {
+  if (typeof error !== "object" || error === null || !nativeLockErrors.has(error)) {
+    return false;
+  }
+  const code = nativeErrorCode(error);
+  if (code == null || !EXPECTED_LOCK_ABANDONMENT_CODES.has(code)) {
+    return false;
+  }
+
+  if (AppState.currentState === "active") {
+    if (!foregroundWarningReported) {
+      foregroundWarningReported = true;
+      reportIssue({
+        name: "shared_session.lock_abandoned",
+        area: "auth",
+        level: "warning",
+        error,
+        tags: { code },
+      });
+    }
+  } else {
+    recordBreadcrumb({
+      category: "shared_session",
+      message: "lock abandoned",
+      level: "warning",
+      data: { code },
+    });
+  }
+
+  return true;
+}
+
+function markNativeLockError(error: unknown): void {
+  if (typeof error === "object" && error !== null) {
+    nativeLockErrors.add(error);
+  }
 }
 
 export function createSharedSupabaseSessionLock(
@@ -43,7 +94,9 @@ export function createSharedSupabaseSessionLock(
   let tail: Promise<void> = Promise.resolve();
 
   return {
-    withLock: async <T>(fn: (handle: string) => Promise<T>): Promise<T> => {
+    withLock: async <T>(
+      fn: (handle: string) => Promise<T>
+    ): Promise<T | undefined> => {
       const predecessor = tail;
       let advanceQueue!: () => void;
       tail = new Promise<void>((resolve) => {
@@ -52,7 +105,14 @@ export function createSharedSupabaseSessionLock(
 
       await predecessor;
       try {
-        const handle = await module.acquireSessionLock();
+        let handle: string;
+        try {
+          handle = await module.acquireSessionLock();
+        } catch (error) {
+          markNativeLockError(error);
+          if (!consumeSharedSupabaseSessionLockAbandonment(error)) throw error;
+          return undefined;
+        }
         setActiveHandle(handle);
         let bodyCompleted = false;
         let bodyResult: T | undefined;
@@ -147,7 +207,14 @@ export function createSharedSupabaseSessionNativeAdapter(
   const flushPendingMutations = async (): Promise<void> => {
     if (pendingMutations.length === 0) return;
 
-    const recoveryHandle = await module.acquireSessionLock();
+    let recoveryHandle: string;
+    try {
+      recoveryHandle = await module.acquireSessionLock();
+    } catch (error) {
+      markNativeLockError(error);
+      if (consumeSharedSupabaseSessionLockAbandonment(error)) return;
+      throw error;
+    }
     activeHandle = recoveryHandle;
     try {
       await flushPendingMutationsWithHandle(recoveryHandle);
@@ -175,23 +242,39 @@ export function createSharedSupabaseSessionNativeAdapter(
   // an empty handle the native module rejects.
   const withMutationHandle = async (
     fn: (handle: string) => Promise<void>
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     if (activeHandle != null) {
-      return fn(activeHandle);
+      await fn(activeHandle);
+      return true;
     }
-    return lock.withLock(fn);
+    const completed = await lock.withLock(async (handle) => {
+      await fn(handle);
+      return true;
+    });
+    return completed ?? false;
+  };
+
+  const queuePendingMutation = (pending: PendingMutation): void => {
+    pendingMutations.push(pending);
   };
 
   const bridge: SharedSupabaseSessionBridge = {
     readSession: () => module.readSession(),
     writeSession: async (envelopeJson, expectedRevision = null) => {
       try {
-        await withMutationHandle((handle) =>
+        const completed = await withMutationHandle((handle) =>
           module.writeSession(envelopeJson, expectedRevision, handle)
         );
+        if (!completed) {
+          queuePendingMutation({
+            kind: "write",
+            envelopeJson,
+            expectedRevision,
+          });
+        }
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
-        pendingMutations.push({
+        queuePendingMutation({
           kind: "write",
           envelopeJson,
           expectedRevision,
@@ -200,12 +283,19 @@ export function createSharedSupabaseSessionNativeAdapter(
     },
     removeSession: async (expectedRevision, expectedLineage) => {
       try {
-        await withMutationHandle((handle) =>
+        const completed = await withMutationHandle((handle) =>
           module.removeSession(expectedRevision, expectedLineage, handle)
         );
+        if (!completed) {
+          queuePendingMutation({
+            kind: "remove",
+            expectedRevision,
+            expectedLineage,
+          });
+        }
       } catch (error) {
         if (nativeErrorCode(error) !== "LOCK_REVOKED") throw error;
-        pendingMutations.push({
+        queuePendingMutation({
           kind: "remove",
           expectedRevision,
           expectedLineage,

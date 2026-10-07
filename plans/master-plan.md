@@ -13,8 +13,9 @@ pointers. Each task is one feature on its own branch, ending in a PR. Task bodie
 - `implement-next-task` takes the first eligible pointer (or an explicit task argument), builds it
   on its branch — AFK via `tdd`, `[decision]` via `talk-it-through`, `[verify]` paused for manual
   confirmation — runs `task-review`, then opens the PR after approval and flips the pointer to `[>]`.
-- A pointer has five states: `[ ]` todo · `[-]` deferred and not claimable · `[~]` in progress
-  (claimed) · `[>]` done, PR open, awaiting merge · `[x]` merged to `main`. `sync-main` flips
+- A pointer has six states: `[ ]` todo · `[-]` deferred and not claimable · `[p]` postponed by the
+  owner, not claimable, to be resumed later · `[~]` in progress (claimed) · `[>]` done, PR open,
+  awaiting merge · `[x]` merged to `main`. `sync-main` flips
   `[>]→[x]` and moves the task file to `tasks/done/` once the PR merges.
 - Pointers carry their direct prerequisites as an `(after NNNN, …)` suffix (none = no suffix). A
   task is selectable only once every ordinal in its `(after …)` list is **`[x]` (merged)** — so a
@@ -217,6 +218,16 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
   suspended Watch, raw activity history, all-baby snapshots, and new push triggers for every manual
   activity edit remain out of scope.
 
+- **Production hotfixes come off the `hotfix/4.9` integration line, never off `main`**: `main`
+  carries the unreleased 4.10 work. `hotfix/4.9` starts at the 4.9.16 production tip (commit
+  `6385378`) and holds this plan for the 4.9 line. Every Sentry-driven fix branches
+  `hotfix/4.9.N-<slug>` off `hotfix/4.9`, is built and shipped from that task branch, bumps the
+  patch version, and is fast-forwarded back into `hotfix/4.9` after it ships so the next fix stacks
+  on it. Each fix starts with the `diagnose` skill — reproduce locally before proposing a fix — and
+  lands the smallest regression test at the lowest reliable seam. Folding `hotfix/4.9` into `main`
+  is a separate task once 4.10 is production-ready.
+Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main`.
+
 ---
 
 ## Tasks
@@ -268,17 +279,17 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0045 · Prove onboarding recovery after network failure (after 0044) → tasks/done/0045-prove-onboarding-network-recovery.md
 - [x] 0047 · Discover and confirm all post-July 5 regressions before fixes → tasks/done/0047-discover-post-july-regressions.md
 - [x] 0048 · Attribute feeding stop, Timeline, and Live Activity regressions (after 0047) → tasks/done/0048-attribute-feeding-stop-regressions.md
-- [-] 0049 · Attribute Watch timer and history regressions (deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
+- [p] 0049 · Attribute Watch timer and history regressions (postponed by owner 2026-10-06; deferred by owner; after 0047) → tasks/0049-attribute-watch-regressions.md
 - [x] 0050 · Fix incomplete-day and fragmented-night sleep summaries (after 0047) → tasks/done/0050-fix-sleep-summary-averages.md
 - [x] 0051 · Sweep adjacent app regressions introduced after July 5 (after 0047, 0048, 0050) → tasks/done/0051-sweep-post-release-app-regressions.md
 - [-] 0052 · Sweep adjacent native and sync regressions introduced after July 5 (audit ran 2026-08-01; output withheld from the repository by owner decision; after 0051) → tasks/0052-sweep-post-release-native-sync-regressions.md
 - [x] 0053 · Include the full selected range in exports and reports (after 0051) → tasks/done/0053-resolve-export-report-ranges.md
-- [-] 0054 · Restrict the wake-window reminder RPC to the service role (deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
-- [-] 0055 · Prevent self-assignment of household and owner role (deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
-- [-] 0057 · Bind Live Activity identity to the timer, not the activity type (deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
-- [-] 0058 · Recover a queued activity write that the server denies (deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
-- [-] 0059 · Cover WatchConnectivity delivery failures (deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
-- [-] 0060 · Resolve the Portuguese (Portugal) solid-food label (deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
+- [p] 0054 · Restrict the wake-window reminder RPC to the service role (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0054-restrict-wake-window-reminder-rpc.md
+- [p] 0055 · Prevent self-assignment of household and owner role (postponed by owner 2026-10-06; deferred by owner 2026-08-04; after 0054) → tasks/0055-prevent-household-and-owner-self-assignment.md
+- [p] 0057 · Bind Live Activity identity to the timer, not the activity type (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0057-bind-live-activity-to-timer-identity.md
+- [p] 0058 · Recover a queued activity write that the server denies (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0058-recover-denied-queued-activity-writes.md
+- [p] 0059 · Cover WatchConnectivity delivery failures (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0059-cover-watchconnectivity-delivery-failures.md
+- [p] 0060 · Resolve the Portuguese (Portugal) solid-food label (postponed by owner 2026-10-06; deferred by owner 2026-08-04) → tasks/0060-resolve-pt-pt-solid-food-label.md
 - [x] 0061 · Localize the Apple Watch app and the iOS widget → tasks/done/0061-localize-watch-and-widget.md
 - [x] 0062 · Fix the Timeline daily sleep total → tasks/done/0062-fix-timeline-daily-sleep-total.md
 - [x] 0063 · Guarantee an exit from an activity screen opened by the widget → tasks/done/0063-guarantee-exit-from-widget-opened-activity-screens.md
@@ -304,14 +315,21 @@ Sleep`, `Avg Night Sleep`, and `Avg Naps/Day` divide by days with any sleep, and
 - [x] 0084 · Watch renews its Supabase credential from the shared session (after 0083) → tasks/done/0084-renew-watch-credentials-from-shared-session.md
 - [x] 0085 · Preserve locally-known timers across Watch summary refreshes (after 0082, 0084) → tasks/done/0085-preserve-local-timers-across-watch-refreshes.md
 - [x] 0086 · Cut redundant client sync traffic → tasks/done/0086-cut-redundant-client-sync-traffic.md
-- [ ] 0087 · Fully terminate deleted accounts → tasks/0087-fully-terminate-deleted-accounts.md
-- [~] 0088 · Release the App Group flock across suspension (0xDEAD10CC) → tasks/0088-release-app-group-flock-across-suspension.md
-- [ ] 0089 · Respect stored sleep type across sleep statistics and charts → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
+- [p] 0087 · Fully terminate deleted accounts (postponed by owner 2026-10-06) → tasks/0087-fully-terminate-deleted-accounts.md
+- [p] 0088 · Release the App Group flock across suspension (0xDEAD10CC) (postponed by owner 2026-10-06; only the device verification is open) → tasks/0088-release-app-group-flock-across-suspension.md
+- [p] 0089 · Respect stored sleep type across sleep statistics and charts (postponed by owner 2026-10-06) → tasks/0089-respect-stored-sleep-type-in-sleep-statistics.md
 - [x] 0091 · Household caregivers stop/pause timers in-app → tasks/done/0091-household-caregivers-stop-pause-timers-in-app.md
 - [x] 0092 · Widget and Watch control remote timers (after 0091) → tasks/done/0092-widget-and-watch-control-remote-timers.md
 - [x] 0093 · End starter's Live Activity on remote stop (after 0091) → tasks/done/0093-end-starter-live-activity-on-remote-stop.md
 - [>] 0094 · Live Activity push-to-start for household members (after 0093) → tasks/0094-live-activity-push-to-start-for-household.md
-- [ ] 0103 · Fold the 4.9 hotfix line into main → tasks/0103-fold-hotfix-4-9-into-main.md
+- [p] 0096 · Survive a background wake while the device is locked (AsyncStorage) (postponed by owner 2026-10-06; deferred by owner 2026-09-20: reproduction needs a real device rebooted and not yet unlocked; not claimable without an owner decision) → tasks/0096-survive-locked-device-background-wake-storage.md
+- [x] 0097 · Treat shared-session lock abandonment as an expected outcome → tasks/done/0097-treat-session-lock-abandonment-as-expected.md
+- [p] 0098 · Diagnose and fix the 45-second fully-blocked iOS hang (postponed by owner 2026-10-06) → tasks/0098-diagnose-and-fix-45s-ios-app-hang.md
+- [p] 0099 · Stop the foreground date-picker ANR on the sleep screen (postponed by owner 2026-10-06; only the device verification is open) → tasks/0099-stop-foreground-date-picker-anr.md
+- [p] 0100 · Fix the Android Fabric addViewAt crash on Home (postponed by owner 2026-10-06) → tasks/0100-fix-android-fabric-addviewat-crash.md
+- [x] 0101 · Quiet the observability sink offline → tasks/done/0101-quiet-observability-sink-offline.md
+- [x] 0102 · Clear a household timer lock in the same server step that saves the stopped activity → tasks/done/0102-atomic-timer-completion.md
+- [x] 0103 · Fold the 4.9 hotfix line into main → tasks/done/0103-fold-hotfix-4-9-into-main.md
 - [ ] 0104 · Clear the lock in the save step when any household member stops a timer (after 0103) → tasks/0104-household-stop-clears-lock-in-save.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104) → tasks/0105-gate-4-10-2-release.md
 - [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
@@ -465,7 +483,7 @@ On 2026-09-01 the owner prioritized household shared timer control (brief:
 that file). Tasks 0091 through 0094 take priority over every other open task; 0087, 0089, and 0090
 are deferred until 0091–0094 close, without an explicit owner decision required to resume them
 afterward. 0092 and 0093 touch disjoint surfaces and may proceed in parallel once 0091 merges.
-On 2026-09-05 the owner applied migration 065 to the shared Supabase project (server-first, backward
+On 2026-09-05 the owner applied migration 066 to the shared Supabase project (server-first, backward
 compatible with app 4.9.11) and decided that no release ships until 0091 through 0094 have all merged
 and the full household E2E (`npm run e2e:household-timers`) has passed on the combined result; each
 task's PR merges to `main` on unit, component, CI, and SQL proof only, with the E2E acceptance item
@@ -489,3 +507,32 @@ Tasks 0087, 0088, and 0089 stay postponed under the owner's 2026-10-06 decision 
 Task 0106 was added the same day from Sentry REACT-NATIVE-S and REACT-NATIVE-T. It does not block
 the 4.10.2 release: it may run after 0103 merges, in any order with 0104 and 0105, and 0105 does not
 wait for it.
+
+Tasks 0096 through 0101 were added on 2026-09-19 from a Sentry triage of production 4.9.14–4.9.16
+(org `sofibaby`, project `react-native`). They are ordered by users affected and severity and are
+all cut from `hotfix/4.9` per the decision above; none depends on another and each may
+be claimed in order. Task 0097's three Sentry issues are the three abandon exits Task 0088 added to
+the shared-session lock, so 0097 changes only the JavaScript consumers and leaves 0088's protocol and
+its open device verification untouched. Task 0095 (already shipped as 4.9.16) is the model for the
+branch naming and the `Base` line these tasks carry.
+
+On 2026-09-20 the owner deferred Task 0096 after its first implementation attempt. The simulator
+cannot reproduce the storage error: the app sets no data-protection entitlement, so its files use
+the default class that is unreadable only between a reboot and the device's first unlock, and
+neither Device → Lock on the simulator nor locking a real phone enters that window. The task file's
+Context records the device recipe. Task 0097 merged to `hotfix/4.9` on 2026-09-21. The owner then
+claimed Task 0099 ahead of Task 0098 to address the foreground Android picker ANR in the 4.9.20
+hotfix; Task 0098 remains the next claimable pointer after 0099 closes.
+
+On 2026-10-06 the owner postponed every open task except Task 0101, so 0101 is the only claimable
+pointer. Production is still 4.9.14; 4.9.15 and 4.9.16 reached only the owner's devices, so the
+next 4.9 release is the first to ship the 4.9.15 observability sink to real users, and 0101 must
+land before it. Tasks 0091–0094 are marked `[x]` here because they merged to `main`. Postponed
+tasks return to `[ ]` when the owner resumes them.
+
+On 2026-10-06 the owner added Task 0102 to the 4.9 hotfix line after a household report, reproduced
+on two simulators: a stopped timer's lock can outlive the saved activity, so the other caregiver's
+phone keeps showing the timer as running. 0102 is claimable alongside 0101; neither depends on the
+other. 0101 holds patch 4.9.22 and 0102 takes 4.9.23.
+
+On 2026-10-07, on `main` after Task 0103: these notes describe the `hotfix/4.9` plan; 0094 stays `[>]`, and 0103–0106 take priority.

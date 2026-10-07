@@ -483,9 +483,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
         liveActivityIdRef,
         refreshLocks,
-        persistRecord: (input) =>
+        persistRecord: (input, completion) =>
           user?.householdId && user.id
-            ? createFeedingInDatabase(input, user.id)
+            ? createFeedingInDatabase(input, user.id, {
+                timerInstanceId: completion.timerInstanceId,
+                startedAt: completion.startedAt,
+              })
             : FeedingStorageService.addFeeding(input),
         dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
         dispatchAddRecord: (record) =>
@@ -827,7 +830,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             console.log(
               "[FeedingContext] stopBreastfeeding: saving to database"
             );
-            feeding = await createFeedingInDatabase(feedingInput, user.id);
+            feeding = await createFeedingInDatabase(feedingInput, user.id, {
+              timerInstanceId: completion.timerInstanceId,
+              startedAt: completion.startedAt,
+            });
           } else {
             console.log(
               "[FeedingContext] stopBreastfeeding: saving to local storage"

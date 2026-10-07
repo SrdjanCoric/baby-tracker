@@ -4,6 +4,7 @@ import {
   NativeModules,
   Platform,
 } from "react-native";
+import { errorCode, reportIssue } from "@/utils/observability-sink";
 import NetInfo from "@react-native-community/netinfo";
 import { supabase } from "@/services/supabase";
 import {
@@ -95,7 +96,14 @@ export function startLiveActivityPushTokenSync(userId: string): () => void {
         clearTimeout(retry);
         retry = undefined;
       })
-      .catch(() => {
+      .catch((error) => {
+        reportIssue({
+          name: "push.live_activity_token_sync_failed",
+          area: "push",
+          level: "warning",
+          error,
+          tags: { code: errorCode(error) },
+        });
         if (!disposed && !retry) {
           retry = setTimeout(() => {
             retry = undefined;

@@ -160,7 +160,8 @@ const CONFIGURED_WAKE_WINDOWS = {
 let capturedJson: string | null = null;
 
 function CaptureWidgetData() {
-  capturedJson = useWidget().getWidgetDataJson();
+  const widget = useWidget();
+  capturedJson = widget.getWidgetDataJson();
   return null;
 }
 

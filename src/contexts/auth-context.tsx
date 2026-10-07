@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as WebBrowser from "expo-web-browser";
@@ -28,7 +28,9 @@ import { clearWidgetData, purgeLegacyAppGroupAccessToken, purgeStaleSharedSessio
 import { removeLiveActivityPushTokens } from "@/services/live-activity-push-token-service";
 import { clearWatchContext } from "@/services/watch-service";
 import { AUTH_CONFIG } from "@/constants/auth";
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
+import { isSharedSupabaseSessionLockAbandoned } from "@/services/shared-supabase-session";
 
 const APP_STORAGE_PREFIXES = [
   "@babies",
@@ -179,11 +181,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error("[GoogleSignIn] Failed to configure:", error);
+      reportIssue({ name: "auth.google_configure_failed", area: "auth", level: "warning", error });
     }
   }, []);
 
   useEffect(() => {
+    let retryOnActive = false;
+    let initializationInFlight = false;
+
     const initializeAuth = async () => {
+      if (initializationInFlight) return;
+      initializationInFlight = true;
+      const isRetry = retryOnActive;
+      let deferredForActive = false;
       try {
         // TR-6: purge a Keychain capsule left by a previous owner on the first
         // launch after a reinstall (iOS keeps Keychain items across uninstall).
@@ -212,7 +222,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const sessionResult = await supabase.auth.getSession();
+        if (isSharedSupabaseSessionLockAbandoned(sessionResult)) {
+          retryOnActive = true;
+          deferredForActive = true;
+          return;
+        }
+        const currentSession = sessionResult?.data?.session ?? null;
 
         // TR-5: `getSession()` triggers the iOS storage adapter's migration of
         // the AsyncStorage session into the shared Keychain capsule, so by this
@@ -231,22 +247,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setStorageUserId(null);
         }
+        if (isRetry) {
+          await supabase.auth.startAutoRefresh();
+          retryOnActive = false;
+        }
       } catch (error) {
         console.error("Error initializing auth:", error);
+        reportIssue({ name: "auth.initialize_failed", area: "auth", error });
         setStorageUserId(null);
       } finally {
-        setIsLoading(false);
+        initializationInFlight = false;
+        if (!deferredForActive) setIsLoading(false);
       }
     };
 
     initializeAuth();
 
+    const appStateSubscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && retryOnActive) {
+        void initializeAuth();
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      recordBreadcrumb({ category: "auth", message: event, data: { hasSession: Boolean(newSession?.user) } });
       if (event === "TOKEN_REFRESHED") {
         if (newSession?.user) {
           setSession(newSession);
         } else {
           console.error("Token refresh failed - session expired");
+          reportIssue({ name: "auth.session_expired", area: "auth", level: "warning" });
           setStorageUserId(null);
           setUser(null);
           setSession(null);
@@ -292,8 +322,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .then(profile => {
             setUser(prev => prev ? { ...prev, ...profile } : prev);
           })
-          .catch(() => {
-            // Profile fetch failed - user is still authenticated, just missing profile data
+          .catch((error) => {
+            // Profile fetch failed - user is still authenticated, just missing profile data,
+            // which means household sync never configures for this session.
+            reportIssue({ name: "auth.profile_fetch_failed", area: "auth", error, tags: { event } });
           });
       } else {
         setStorageUserId(null);
@@ -310,6 +342,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
+      appStateSubscription.remove();
     };
   }, []);
 
@@ -442,6 +475,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await removeLiveActivityPushTokens(user?.id);
     } catch (error) {
       console.error("Failed to remove Live Activity push tokens during sign-out:", error);
+      reportIssue({
+        name: "push.live_activity_token_remove_failed",
+        area: "push",
+        level: "warning",
+        error,
+      });
     }
     const { error } = await supabase.auth.signOut();
     await clearWatchContext();
@@ -497,8 +536,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUserProfile = useCallback(async () => {
     let userId = user?.id;
     if (!userId) {
-      const { data } = await supabase.auth.getSession();
-      userId = data.session?.user?.id;
+      const sessionResult = await supabase.auth.getSession();
+      userId = sessionResult?.data?.session?.user?.id;
     }
     if (!userId) return { displayName: null, householdId: null, isOwner: false };
 

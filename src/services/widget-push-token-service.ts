@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import { supabase } from "@/services/supabase";
 import { readWidgetPushToken } from "@/services/widget-data-service";
+import { errorCode, reportIssue } from "@/utils/observability-sink";
 
 let lastSyncedToken: string | null = null;
 let lastSyncedUserId: string | null = null;
@@ -35,6 +36,7 @@ export async function syncWidgetPushToken(): Promise<void> {
     lastSyncedUserId = user.id;
   } else {
     console.error("[WidgetPushToken] Failed to sync token:", error.message);
+    reportIssue({ name: "push.widget_token_sync_failed", area: "push", error, tags: { code: errorCode(error) } });
   }
 }
 

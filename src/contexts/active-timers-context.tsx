@@ -23,6 +23,7 @@ import {
 import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
+import { reportIssue } from "@/utils/observability-sink";
 
 interface ActiveTimersState {
   locks: ActiveTimerLock[];
@@ -202,6 +203,7 @@ export function ActiveTimersProvider({
       });
     } catch (error) {
       console.error("[ActiveTimersContext] Failed to load locks:", error);
+      reportIssue({ name: "timers.load_locks_failed", area: "timers", level: "warning", error });
       dispatch({ type: "SET_LOADING", isLoading: false });
       if (throwOnError) throw error;
     }

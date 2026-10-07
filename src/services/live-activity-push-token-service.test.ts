@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(), read: vi.fn(), acknowledge: vi.fn(), end: vi.fn(), rpc: vi.fn(), from: vi.fn(),
@@ -13,6 +13,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("@react-native-community/netinfo", () => ({ default: { addEventListener: mocks.network } }));
 vi.mock("@/services/supabase", () => ({ supabase: { rpc: mocks.rpc, from: mocks.from } }));
+import { resetObservabilityIssueLimiter, setObservabilitySink } from "@/utils/observability-sink";
 import { refreshLiveActivityPushTokens, removeLiveActivityPushTokens, startLiveActivityPushTokenSync } from "./live-activity-push-token-service";
 
 describe("native Live Activity token transport", () => {
@@ -25,6 +26,36 @@ describe("native Live Activity token transport", () => {
     mocks.acknowledge.mockResolvedValue(undefined);
     mocks.start.mockResolvedValue(null);
   });
+
+  afterEach(() => setObservabilitySink(null));
+
+  it.each(["register_live_activity_start_token", "register_live_activity_push_token"])(
+    "reports one failed %s sync without exposing token identity",
+    async (operation) => {
+      const sink = { reportIssue: vi.fn(), addBreadcrumb: vi.fn(), setTag: vi.fn() };
+      resetObservabilityIssueLimiter();
+      setObservabilitySink(sink);
+      const error = { code: "42883", message: "function does not exist" };
+      mocks.rpc.mockResolvedValue({ data: null, error });
+      mocks.read.mockResolvedValue(operation === "register_live_activity_push_token" ? [{
+        activityId: "private-activity", babyId: "private-baby", timerInstanceId: "private-run",
+        userId: "member", token: "private-token", ended: false,
+      }] : []);
+      mocks.start.mockResolvedValue(operation === "register_live_activity_start_token"
+        ? { deviceId: "private-device", token: "private-token" } : null);
+      const query: any = { select: () => query, eq: () => query,
+        limit: async () => ({ data: [{ id: "private-run" }], error: null }) };
+      mocks.from.mockReturnValue(query);
+      const stop = startLiveActivityPushTokenSync("member");
+      try {
+        await vi.waitFor(() => expect(sink.reportIssue).toHaveBeenCalledTimes(1));
+        expect(sink.reportIssue).toHaveBeenCalledWith({
+          name: "push.live_activity_token_sync_failed", area: "push", level: "warning",
+          error, tags: { code: "42883" },
+        });
+      } finally { stop(); }
+    }
+  );
 
   it("reconciles a registered mirror after a realtime refresh even without token rotation", async () => {
     const record = { activityId: "mirror", babyId: "baby", timerInstanceId: "run", userId: "member", token: "token", ended: false };

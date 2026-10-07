@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SyncEngine } from "./sync-engine";
 import { CrdtSync, type ShadowStore } from "./crdt-sync";
@@ -19,6 +20,11 @@ vi.mock("@react-native-community/netinfo", () => ({
     addEventListener: vi.fn().mockReturnValue(() => {}),
   },
 }));
+
+vi.mock("expo-crypto", () => ({ randomUUID: () => "11111111-1111-1111-1111-111111111111" }));
+
+let activityEngine: SyncEngine | null = null;
+vi.mock("@/contexts/sync-context", () => ({ getSyncEngine: () => activityEngine }));
 
 const rpc = vi.fn().mockResolvedValue({ data: {}, error: null });
 const insert = vi.fn().mockResolvedValue({ error: null });
@@ -203,4 +209,172 @@ describe("SyncEngine CRDT push path", () => {
     expect(rpc).not.toHaveBeenCalled();
     expect(insert).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("queued timer completion", () => {
+  beforeEach(() => {
+    rpc.mockReset().mockResolvedValue({ data: {}, error: null });
+    vi.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
+    vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+  });
+
+  it.each([
+    "sleep_sessions",
+    "feedings",
+    "pumping_sessions",
+    "tummy_time_sessions",
+  ])(
+    "routes %s completion through the atomic RPC without stamping metadata",
+    async (table) => {
+      const engine = makeEngine();
+      const operation = {
+        ...op("CREATE", table, "activity-1", {
+          id: "activity-1",
+          baby_id: "b1",
+        }),
+        timerCompletion: {
+          timerInstanceId: "timer-1",
+          startedAt: "2026-10-06T08:00:00.000Z",
+        },
+      };
+      await engine.enqueueOperation(operation);
+      engine.setOnlineForTesting(true);
+      await engine.sync();
+      expect(rpc).toHaveBeenCalledWith(
+        "merge_record_and_complete_timer",
+        expect.objectContaining({
+          p_table: table,
+          p_timer_instance_id: "timer-1",
+          p_timer_started_at: "2026-10-06T08:00:00.000Z",
+          p_operation_id: operation.id,
+          p_expected_user_id: "u1",
+        }),
+      );
+      expect(rpc.mock.calls[0][1].p_record.timerCompletion).toBeUndefined();
+      expect(
+        rpc.mock.calls[0][1].p_field_clocks.timerCompletion,
+      ).toBeUndefined();
+      expect(engine.getPendingCount()).toBe(0);
+      engine.destroy();
+    },
+  );
+
+  it("retains completion identity and operation id across failed delivery and restart", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+    vi.mocked(AsyncStorage.getItem).mockImplementation(
+      async (key) => storage.get(key) ?? null,
+    );
+    vi.mocked(AsyncStorage.removeItem).mockImplementation(async (key) => {
+      storage.delete(key);
+    });
+    vi.mocked(NetInfo.fetch).mockResolvedValue({
+      isConnected: false,
+      isInternetReachable: false,
+    } as Awaited<ReturnType<typeof NetInfo.fetch>>);
+    const engine = new SyncEngine({ maxRetries: 1 });
+    engine.setAuthContext({ householdId: "h1", userId: "u1" });
+    engine.setCrdtSync(
+      new CrdtSync({
+        deviceId: "devTest",
+        clockStorage: new MemoryClockStorage(),
+        shadowStore: new MemoryShadowStore(),
+      }),
+    );
+    await engine.enqueueOperation({
+      ...op("CREATE", "sleep_sessions", "activity-1", {
+        id: "activity-1",
+        baby_id: "b1",
+      }),
+      timerCompletion: {
+        timerInstanceId: "timer-1",
+        startedAt: "2026-10-06T08:00:00.000Z",
+      },
+    } as QueuedOperation);
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "connection lost after commit" },
+    });
+    engine.setOnlineForTesting(true);
+    await expect(engine.sync()).rejects.toThrow("connection lost after commit");
+    expect(engine.getPendingCount()).toBe(1);
+    const firstCall = rpc.mock.calls[0];
+    engine.destroy();
+    rpc.mockClear().mockResolvedValue({ data: null, error: null });
+    const restored = makeEngine();
+    await restored.initialize();
+    restored.setOnlineForTesting(true);
+    await restored.sync();
+    expect(rpc).toHaveBeenCalledWith(...firstCall);
+    expect(firstCall[0]).toBe("merge_record_and_complete_timer");
+    expect(firstCall[1].p_timer_instance_id).toBe("timer-1");
+    expect(restored.getPendingCount()).toBe(0);
+    restored.destroy();
+    vi.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
+    vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+  });
+});
+
+describe("activity saves enqueue timer identity", () => {
+  beforeEach(() => {
+    rpc.mockReset().mockResolvedValue({ data: {}, error: null });
+    vi.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
+    vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
+  });
+
+  it.each(["sleep", "feeding", "pumping", "tummy_time"])(
+    "keeps %s completion metadata through the real activity save",
+    async (activity) => {
+      const saves = await import("../activity-sync-service");
+      const engine = makeEngine();
+      activityEngine = engine;
+      const start = new Date("2026-10-06T08:00:00.000Z");
+      const input = {
+        id: "activity-1",
+        babyId: "b1",
+        startedAt: start,
+        endedAt: new Date(start.getTime() + 300_000),
+        durationSeconds: 300,
+      };
+      const identity = {
+        timerInstanceId: "timer-1",
+        startedAt: start.toISOString(),
+      };
+      if (activity === "sleep")
+        await saves.createSleepInDatabase(
+          { ...input, type: "nap" },
+          "u1",
+          identity,
+        );
+      if (activity === "feeding")
+        await saves.createFeedingInDatabase(
+          { ...input, type: "breast", side: "left" },
+          "u1",
+          identity,
+        );
+      if (activity === "pumping")
+        await saves.createPumpingInDatabase(
+          { ...input, side: "both", volumeMl: 100 },
+          "u1",
+          identity,
+        );
+      if (activity === "tummy_time")
+        await saves.createTummyTimeInDatabase(input, "u1", identity);
+      expect(engine.getPendingCount()).toBe(1);
+      engine.setOnlineForTesting(true);
+      await engine.sync();
+      expect(rpc).toHaveBeenCalledWith(
+        "merge_record_and_complete_timer",
+        expect.objectContaining({
+          p_timer_instance_id: identity.timerInstanceId,
+          p_timer_started_at: identity.startedAt,
+          p_record: expect.objectContaining({ started_at: identity.startedAt }),
+        }),
+      );
+      engine.destroy();
+      activityEngine = null;
+    },
+  );
 });

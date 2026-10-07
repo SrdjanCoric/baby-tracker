@@ -346,6 +346,39 @@ test("household timer cleanup restores a stopped or paused local API", () => {
   assert.equal(getLocalApiRecoveryAction("exited", false), "start");
 });
 
+test("household timer runner removes stale failure injection before resetting scenario data", () => {
+  const runner = fs.readFileSync(
+    new URL("./run-household-timers.mjs", import.meta.url),
+    "utf8"
+  );
+  const cleanup = runner.match(
+    /function removeTimerFailureInjection\(status\) \{([\s\S]*?)\n\}/
+  );
+  assert.ok(cleanup, "failure injection must have reusable cleanup");
+  for (const statement of [
+    "DROP TRIGGER IF EXISTS e2e_block_direct_release ON public.active_timers",
+    "DROP TRIGGER IF EXISTS e2e_delay_sleep_completion ON public.sleep_sessions",
+    "DROP FUNCTION IF EXISTS public.e2e_block_direct_release()",
+    "DROP FUNCTION IF EXISTS public.e2e_delay_sleep_completion()",
+    "DROP SEQUENCE IF EXISTS public.e2e_blocked_release_count",
+  ]) {
+    assert.ok(
+      cleanup[1].includes(statement),
+      `missing idempotent cleanup: ${statement}`
+    );
+  }
+  const main = runner.slice(runner.indexOf("async function main()"));
+  assert.match(
+    main,
+    /status = readSupabaseStatus\(\);\s*removeTimerFailureInjection\(status\);/
+  );
+  assert.ok(
+    main.indexOf("removeTimerFailureInjection(status)") <
+      main.indexOf("resetScenarioData(status)")
+  );
+  assert.match(runner, /finally \{\s*removeTimerFailureInjection\(status\);/);
+});
+
 test("E2E Babel transform pins Supabase configuration without changing other environment variables", () => {
   const result = babel.transformSync(
     `

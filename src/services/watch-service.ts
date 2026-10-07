@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import type { WidgetData, WatchData, WatchAuthContext } from "./widget-data-service";
 import { loadSharedSupabaseSessionBridge } from "./shared-supabase-session-native";
+import { isSharedSupabaseSessionLockAbandoned } from "./shared-supabase-session";
+import { reportIssue } from "@/utils/observability-sink";
 
 type WatchPayload = Record<string, unknown>;
 
@@ -149,7 +151,7 @@ async function publishApplicationContext(context: WatchPayload): Promise<void> {
  * only on this module's process-local cache.
  */
 export async function refreshWatchCredentialsFromPhone(
-  refreshSession: () => Promise<void>
+  refreshSession: () => Promise<void | boolean>
 ): Promise<boolean> {
   const module = await getWatchConnectivityModule();
   const bridge = loadSharedSupabaseSessionBridge();
@@ -168,7 +170,10 @@ export async function refreshWatchCredentialsFromPhone(
   }
   let sessionCapsule = await bridge.readSession();
   if (watchSessionNeedsRefresh(sessionCapsule)) {
-    await refreshSession();
+    const refreshResult = await refreshSession();
+    if (refreshResult === false || isSharedSupabaseSessionLockAbandoned(refreshResult)) {
+      return false;
+    }
     sessionCapsule = await bridge.readSession();
   }
   if (!sessionCapsule) return false;
@@ -231,6 +236,7 @@ export async function syncToWatch(data: WidgetData, watchData?: WatchData, authC
     console.log("[WatchService] Synced data to watch");
   } catch (error) {
     console.error("[WatchService] Failed to sync to watch:", error);
+    reportIssue({ name: "watch.sync_failed", area: "watch", level: "warning", error });
   }
 }
 
@@ -252,11 +258,13 @@ export async function sendMessageToWatch(
         },
         (error) => {
           console.error("[WatchService] Failed to send message:", error);
+          reportIssue({ name: "watch.send_failed", area: "watch", level: "warning", error, tags: { stage: "reply" } });
           resolve(null);
         }
       );
     } catch (error) {
       console.error("[WatchService] Failed to send message:", error);
+      reportIssue({ name: "watch.send_failed", area: "watch", level: "warning", error, tags: { stage: "send" } });
       resolve(null);
     }
   });
@@ -272,6 +280,7 @@ export async function isWatchReachable(): Promise<boolean> {
     return await module.getReachability();
   } catch (error) {
     console.error("[WatchService] Failed to check reachability:", error);
+    reportIssue({ name: "watch.reachability_failed", area: "watch", level: "warning", error });
     return false;
   }
 }

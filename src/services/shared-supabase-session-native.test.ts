@@ -1,11 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 
+const mockAppState = vi.hoisted(() => ({ currentState: "background" }));
+const mockObservability = vi.hoisted(() => ({
+  recordBreadcrumb: vi.fn(),
+  reportIssue: vi.fn(),
+}));
+
 vi.mock("react-native", () => ({
   NativeModules: {},
   Platform: { OS: "ios" },
+  AppState: mockAppState,
 }));
+vi.mock("@/utils/observability-sink", () => mockObservability);
 
 import {
+  consumeSharedSupabaseSessionLockAbandonment,
   createSharedSupabaseSessionLock,
   createSharedSupabaseSessionNativeAdapter,
 } from "./shared-supabase-session-native";
@@ -18,7 +27,95 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+describe("shared-session abandonment classification", () => {
+  it("does not consume an untrusted error with a native lock code", () => {
+    mockAppState.currentState = "background";
+    mockObservability.recordBreadcrumb.mockClear();
+    mockObservability.reportIssue.mockClear();
+
+    const serverError = Object.assign(new Error("auth failed"), {
+      code: "LOCK_REVOKED",
+    });
+
+    expect(consumeSharedSupabaseSessionLockAbandonment(serverError)).toBe(false);
+    expect(mockObservability.recordBreadcrumb).not.toHaveBeenCalled();
+    expect(mockObservability.reportIssue).not.toHaveBeenCalled();
+  });
+});
+
 describe("createSharedSupabaseSessionLock", () => {
+  it.each(["LOCK_NO_ASSERTION", "LOCK_REVOKED", "LOCK_OPEN"])(
+    "consumes %s without invoking the body while in the background",
+    async (code) => {
+      mockAppState.currentState = "background";
+      mockObservability.recordBreadcrumb.mockClear();
+      mockObservability.reportIssue.mockClear();
+      const nativeModule = {
+        acquireSessionLock: vi.fn(async () => {
+          throw Object.assign(new Error(code), { code });
+        }),
+        releaseSessionLock: vi.fn(async () => undefined),
+      };
+      const body = vi.fn(async () => "body result");
+      const lock = createSharedSupabaseSessionLock(nativeModule);
+
+      await expect(lock.withLock(body)).resolves.toBeUndefined();
+
+      expect(body).not.toHaveBeenCalled();
+      expect(mockObservability.recordBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "shared_session",
+          data: { code },
+        })
+      );
+      expect(mockObservability.reportIssue).not.toHaveBeenCalled();
+    }
+  );
+
+  it("reports one foreground warning for repeated abandonments and never an error", async () => {
+    mockAppState.currentState = "active";
+    mockObservability.recordBreadcrumb.mockClear();
+    mockObservability.reportIssue.mockClear();
+    const nativeModule = {
+      acquireSessionLock: vi.fn(async () => {
+        throw Object.assign(new Error("abandoned"), {
+          code: "LOCK_REVOKED",
+        });
+      }),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const lock = createSharedSupabaseSessionLock(nativeModule);
+
+    await expect(lock.withLock(async () => "first")).resolves.toBeUndefined();
+    await expect(lock.withLock(async () => "second")).resolves.toBeUndefined();
+
+    expect(mockObservability.recordBreadcrumb).not.toHaveBeenCalled();
+    expect(mockObservability.reportIssue).toHaveBeenCalledTimes(1);
+    expect(mockObservability.reportIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "shared_session.lock_abandoned",
+        level: "warning",
+        tags: { code: "LOCK_REVOKED" },
+      })
+    );
+  });
+
+  it.each(["LOCK_TIMEOUT", "LOCK_UNKNOWN"])(
+    "keeps %s as a rejection",
+    async (code) => {
+      mockAppState.currentState = "background";
+      const nativeModule = {
+        acquireSessionLock: vi.fn(async () => {
+          throw Object.assign(new Error(code), { code });
+        }),
+        releaseSessionLock: vi.fn(async () => undefined),
+      };
+      const lock = createSharedSupabaseSessionLock(nativeModule);
+
+      await expect(lock.withLock(async () => "body result")).rejects.toThrow(code);
+    }
+  );
+
   it("persists a redeemed envelope under a fresh handle after revocation", async () => {
     let nextHandle = 0;
     const writes: {
@@ -354,6 +451,41 @@ describe("unlocked session mutations", () => {
     ]);
     expect(module.acquireSessionLock).toHaveBeenCalledTimes(1);
     expect(module.releaseSessionLock).toHaveBeenCalledWith("handle-1");
+  });
+
+  it("queues an unlocked session write when lock acquisition is abandoned", async () => {
+    const writes: { envelope: string; revision: number | null; handle: string }[] = [];
+    let acquireCount = 0;
+    const nativeModule = {
+      readSession: vi.fn(async () => null),
+      writeSession: vi.fn(
+        async (envelope: string, revision: number | null, handle: string) => {
+          writes.push({ envelope, revision, handle });
+        }
+      ),
+      removeSession: vi.fn(async () => undefined),
+      purgeSession: vi.fn(async () => undefined),
+      acquireSessionLock: vi.fn(async () => {
+        acquireCount += 1;
+        if (acquireCount === 1) {
+          throw Object.assign(new Error("suspending"), {
+            code: "LOCK_REVOKED",
+          });
+        }
+        return `handle-${acquireCount}`;
+      }),
+      releaseSessionLock: vi.fn(async () => undefined),
+    };
+    const adapter = createSharedSupabaseSessionNativeAdapter(nativeModule);
+
+    await adapter.writeSession("queued-envelope", 9);
+    expect(writes).toEqual([]);
+
+    await adapter.lock.withLock(async () => undefined);
+
+    expect(writes).toEqual([
+      { envelope: "queued-envelope", revision: 9, handle: "handle-2" },
+    ]);
   });
 
   it("acquires the flock for a session removal issued outside the auth lock", async () => {

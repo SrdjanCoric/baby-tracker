@@ -223,3 +223,84 @@ test("an exception requires an exact ISO calendar expiry date", () => {
     },
   ]);
 });
+
+const dependentException = {
+  advisory: "GHSA-aaaa-bbbb-cccc",
+  package: "example-package",
+  dependencyPaths: ["node_modules/example-package"],
+  allowedDependents: ["build-tool"],
+  exposure: "Build tooling only.",
+  reason: "Temporary reviewed exception.",
+  upstream: "https://github.com/example/package/issues/123",
+  owner: "@mobile-maintainers",
+  expiresOn: "2026-08-01",
+};
+const dependentLock = {
+  packages: {
+    "": { name: "app", devDependencies: { "build-tool": "1.0.0" } },
+    "node_modules/build-tool": { dependencies: { "example-package": "1.0.0" } },
+    "node_modules/example-package": { version: "1.0.0" },
+  },
+};
+
+test("reviewed dependents permit the existing build-tool exception", () => {
+  const result = evaluateDependencyAudit({
+    audit: auditWith(highAdvisory), exceptions: [dependentException],
+    lockfile: dependentLock, now: new Date("2026-07-15"),
+  });
+  assert.equal(result.ok, true);
+});
+
+test("a new runtime dependent sharing the vulnerable install folder fails approval", () => {
+  const lockfile = JSON.parse(JSON.stringify(dependentLock));
+  lockfile.packages[""].dependencies = { "runtime-client": "1.0.0" };
+  lockfile.packages["node_modules/runtime-client"] = {
+    dependencies: { "example-package": "1.0.0" },
+  };
+  const result = evaluateDependencyAudit({
+    audit: auditWith(highAdvisory), exceptions: [dependentException],
+    lockfile, now: new Date("2026-07-15"),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.unapproved.length, 1);
+  assert.match(result.invalidExceptions[0].problem, /dependents changed.*build-tool, runtime-client/);
+});
+
+test("a direct app dependency and a missing lockfile cannot inherit the dependent exception", () => {
+  const lockfile = JSON.parse(JSON.stringify(dependentLock));
+  lockfile.packages[""].dependencies = { "example-package": "1.0.0" };
+  for (const currentLock of [lockfile, undefined]) {
+    const result = evaluateDependencyAudit({
+      audit: auditWith(highAdvisory), exceptions: [dependentException],
+      lockfile: currentLock, now: new Date("2026-07-15"),
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.unapproved.length, 1);
+  }
+});
+
+test("dependents resolve nested copies separately from the reviewed hoisted package", () => {
+  const lockfile = JSON.parse(JSON.stringify(dependentLock));
+  lockfile.packages["node_modules/runtime-client"] = {
+    dependencies: { "example-package": "2.0.0" },
+  };
+  lockfile.packages["node_modules/runtime-client/node_modules/example-package"] = { version: "2.0.0" };
+  const result = evaluateDependencyAudit({
+    audit: auditWith(highAdvisory), exceptions: [dependentException],
+    lockfile, now: new Date("2026-07-15"),
+  });
+  assert.equal(result.ok, true);
+});
+
+
+test("a new peer dependent on the reviewed package fails approval", () => {
+  const lockfile = JSON.parse(JSON.stringify(dependentLock));
+  lockfile.packages["node_modules/runtime-client"] = {
+    peerDependencies: { "example-package": "^1.0.0" },
+  };
+  const result = evaluateDependencyAudit({
+    audit: auditWith(highAdvisory), exceptions: [dependentException],
+    lockfile, now: new Date("2026-07-15"),
+  });
+  assert.equal(result.ok, false);
+});

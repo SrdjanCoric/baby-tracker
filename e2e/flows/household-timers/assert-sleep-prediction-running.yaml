@@ -1,0 +1,16 @@
+appId: com.sofibaby.app
+---
+- scrollUntilVisible:
+    element:
+      text: "(?i)Sleep prediction"
+    direction: UP
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Set up sleep predictions"
+    commands:
+      - tapOn: "Set up"
+      - tapOn: "Save"
+- extendedWaitUntil:
+    visible: "E2E Baby is sleeping"
+    timeout: 20000

@@ -1,6 +1,7 @@
 jest.unmock("@/contexts/auth-context");
 
 import React, { useEffect } from "react";
+import { resetObservabilityIssueLimiter, setObservabilitySink } from "@/utils/observability-sink";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { render, screen, waitFor, act, fireEvent } from "@testing-library/react-native";
 import { Text, View } from "react-native";
@@ -436,6 +437,31 @@ describe("AuthContext", () => {
   });
 
   describe("signOut", () => {
+    it("reports failed Live Activity token removal once and completes sign-out", async () => {
+      const sink = { reportIssue: jest.fn(), addBreadcrumb: jest.fn(), setTag: jest.fn() };
+      resetObservabilityIssueLimiter();
+      setObservabilitySink(sink);
+      const error = new Error("token cleanup failed");
+      mockRemoveLiveActivityPushTokens.mockRejectedValueOnce(error);
+      let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
+      function Consumer() {
+        const auth = useAuth();
+        useEffect(() => { signOutFn = auth.signOut; }, [auth.signOut]);
+        return null;
+      }
+      try {
+        render(<AuthProvider><Consumer /></AuthProvider>);
+        await waitFor(() => expect(signOutFn).toBeDefined());
+        await act(async () => { expect(await signOutFn!()).toEqual({ error: null }); });
+        expect(mockSignOut).toHaveBeenCalledTimes(1);
+        expect(sink.reportIssue).toHaveBeenCalledTimes(1);
+        expect(sink.reportIssue).toHaveBeenCalledWith({
+          name: "push.live_activity_token_remove_failed", area: "push",
+          level: "warning", error,
+        });
+      } finally { setObservabilitySink(null); }
+    });
+
     it("should call supabase signOut", async () => {
       let signOutFn: (() => Promise<{ error: Error | null }>) | undefined;
 

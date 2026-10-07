@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Push-to-start tokens identify an installation, not one running activity.
--- Per-activity update/end tokens remain in live_activity_push_tokens (066).
+-- Per-activity update/end tokens remain in live_activity_push_tokens (067).
 CREATE TABLE public.live_activity_start_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,

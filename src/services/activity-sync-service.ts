@@ -7,7 +7,7 @@ import {
   getUserScopedKeyFor,
 } from "./storage-prefix";
 import { getSyncEngine } from "@/contexts/sync-context";
-import type { LocalStorageMutation, OperationType, SyncableTable } from "./sync/types";
+import type { LocalStorageMutation, OperationType, QueuedOperation, SyncableTable } from "./sync/types";
 import { reconcilePulled } from "./sync/crdt-sync-instance";
 import { compareClocks, type FieldClocks } from "./sync/crdt";
 import { dropTombstoned } from "./sync/tombstone";
@@ -582,6 +582,7 @@ async function commitPulledMilestoneResponses(
 }
 
 type ActivityQueueOperation = {
+  timerCompletion?: QueuedOperation["timerCompletion"];
   type: OperationType;
   table: SyncableTable;
   entityId: string;
@@ -751,6 +752,7 @@ async function queueSyncOperation(
       table: operation.table,
       entityId: operation.entityId,
       data: operation.data,
+      ...(operation.timerCompletion ? { timerCompletion: operation.timerCompletion } : {}),
       timestamp: new Date().toISOString(),
       retryCount: 0,
     };
@@ -804,7 +806,8 @@ export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredF
 
 export async function createFeedingInDatabase(
   input: CreateFeedingInput,
-  userId: string
+  userId: string,
+  timerCompletion?: QueuedOperation["timerCompletion"]
 ): Promise<StoredFeedingEntry> {
   const now = new Date().toISOString();
   const id = input.id ?? generateId();
@@ -849,6 +852,7 @@ export async function createFeedingInDatabase(
       : ({
           type: 'CREATE',
           table: 'feedings',
+          timerCompletion,
           entityId: id,
           data: {
             id,
@@ -1126,7 +1130,8 @@ export async function fetchSleepFromDatabase(babyId: string): Promise<StoredSlee
 
 export async function createSleepInDatabase(
   input: CreateSleepInput,
-  userId: string
+  userId: string,
+  timerCompletion?: QueuedOperation["timerCompletion"]
 ): Promise<StoredSleepEntry> {
   const now = new Date().toISOString();
   const id = input.id ?? generateId();
@@ -1164,6 +1169,7 @@ export async function createSleepInDatabase(
       : ({
           type: 'CREATE',
           table: 'sleep_sessions',
+          timerCompletion,
           entityId: id,
           data: {
             id,
@@ -1292,7 +1298,8 @@ export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPu
 
 export async function createPumpingInDatabase(
   input: CreatePumpingInput,
-  userId: string
+  userId: string,
+  timerCompletion?: QueuedOperation["timerCompletion"]
 ): Promise<StoredPumpingEntry> {
   const now = new Date().toISOString();
   const id = input.id ?? generateId();
@@ -1329,6 +1336,7 @@ export async function createPumpingInDatabase(
       : ({
           type: 'CREATE',
           table: 'pumping_sessions',
+          timerCompletion,
           entityId: id,
           data: {
             id,
@@ -1585,7 +1593,8 @@ export async function fetchTummyTimeFromDatabase(babyId: string): Promise<Stored
 
 export async function createTummyTimeInDatabase(
   input: CreateTummyTimeInput,
-  userId: string
+  userId: string,
+  timerCompletion?: QueuedOperation["timerCompletion"]
 ): Promise<StoredTummyTimeEntry> {
   const now = new Date().toISOString();
   const id = input.id ?? generateId();
@@ -1620,6 +1629,7 @@ export async function createTummyTimeInDatabase(
       : ({
           type: 'CREATE',
           table: 'tummy_time_sessions',
+          timerCompletion,
           entityId: id,
           data: {
             id,

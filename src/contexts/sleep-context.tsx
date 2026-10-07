@@ -696,9 +696,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
         liveActivityIdRef,
         refreshLocks,
-        persistRecord: (input) =>
+        persistRecord: (input, completion) =>
           user?.householdId && user.id
-            ? createSleepInDatabase(input, user.id)
+            ? createSleepInDatabase(input, user.id, {
+                timerInstanceId: completion.timerInstanceId,
+                startedAt: completion.startedAt,
+              })
             : SleepStorageService.addSleep(input),
         dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
         dispatchAddRecord: (record) =>
@@ -1524,7 +1527,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         let lastSleep: StoredSleepEntry;
         try {
           if (user?.householdId && user?.id) {
-            lastSleep = await createSleepInDatabase(sleepInput, user.id);
+            lastSleep = await createSleepInDatabase(sleepInput, user.id, {
+              timerInstanceId: completion.timerInstanceId,
+              startedAt: completion.startedAt,
+            });
           } else {
             lastSleep = await SleepStorageService.addSleep(sleepInput);
           }

@@ -17,6 +17,7 @@ import {
   buildSharedSessionEnvelope,
   createSharedSupabaseClientOptions,
   decodeSupabaseSessionLineage,
+  isSharedSupabaseSessionLockAbandoned,
   type SharedSupabaseSessionBridge,
   type SharedSupabaseSessionLock,
 } from "./shared-supabase-session";
@@ -66,6 +67,12 @@ function envelopeJson(
 
 function immediateLock(): SharedSupabaseSessionLock {
   return { withLock: <T>(fn: (handle: string) => Promise<T>) => fn("test-handle") };
+}
+
+function abandonedLock(): SharedSupabaseSessionLock {
+  return {
+    withLock: async <T>(): Promise<T> => undefined as T,
+  };
 }
 
 function deferred<T>() {
@@ -305,6 +312,32 @@ describe("SharedSupabaseAuthStorage", () => {
       appLock: immediateLock(),
     });
     expect(lock).toBeTypeOf("function");
+  });
+
+  it("returns a safe auth result when the shared lock is abandoned", async () => {
+    const authOptions = createSharedSupabaseClientOptions({
+      isIOS: true,
+      bridge: makeBridge(),
+      sessionKey: SESSION_KEY,
+      legacyStorage: asyncStorage,
+      appLock: abandonedLock(),
+    });
+    const client = createClient("https://ref.supabase.co", "anon-key", {
+      auth: {
+        ...authOptions,
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+      },
+    });
+
+    const result = await client.auth.getUser();
+
+    expect(result).toMatchObject({
+      data: { user: null, session: null },
+      error: null,
+    });
+    expect(isSharedSupabaseSessionLockAbandoned(result)).toBe(true);
   });
 
   it("holds the shared POSIX lock across Supabase refresh read, redeem, and write", async () => {

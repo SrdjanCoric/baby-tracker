@@ -1,3 +1,4 @@
+import { posix } from "node:path";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL, URL } from "node:url";
@@ -45,6 +46,47 @@ function dependencyPathsMatch(exception, finding) {
   );
 }
 
+export function packageDependents(lockfile, packageName, nodes) {
+  if (!lockfile?.packages) return null;
+  const dependents = new Set();
+  for (const [location, entry] of Object.entries(lockfile.packages)) {
+    const dependencies = {
+      ...entry.peerDependencies,
+      ...entry.dependencies,
+      ...entry.optionalDependencies,
+      ...(location === "" ? entry.devDependencies : {}),
+    };
+    if (!(packageName in dependencies)) continue;
+    let directory = location;
+    while (true) {
+      const candidate = posix.join(directory, "node_modules", packageName);
+      if (lockfile.packages[candidate]) {
+        if (nodes.includes(candidate)) {
+          dependents.add(entry.name ?? (location ? location.split("node_modules/").at(-1) : "<root>"));
+        }
+        break;
+      }
+      if (!directory || directory === ".") break;
+      directory = posix.dirname(directory);
+    }
+  }
+  return [...dependents].sort();
+}
+
+function dependentProblem(exception, finding, lockfile) {
+  if (exception.allowedDependents === undefined) return null;
+  if (!Array.isArray(exception.allowedDependents) ||
+      exception.allowedDependents.length === 0 ||
+      exception.allowedDependents.some(name => typeof name !== "string" || !name.trim())) {
+    return "allowedDependents must be a nonempty list of package names";
+  }
+  const current = packageDependents(lockfile, finding.package, finding.nodes);
+  if (!current) return "lockfile packages are required to verify allowed dependents";
+  const reviewed = [...new Set(exception.allowedDependents)].sort();
+  if (reviewed.length === current.length && reviewed.every((name, index) => name === current[index])) return null;
+  return `dependents changed; reviewed: ${reviewed.join(", ")}; current: ${current.join(", ")}`;
+}
+
 function isCompleteException(exception) {
   return missingExceptionFields(exception).length === 0;
 }
@@ -61,6 +103,7 @@ function isIsoCalendarDate(value) {
 export function evaluateDependencyAudit({
   audit,
   exceptions,
+  lockfile,
   now = new Date(),
 }) {
   const reportedFindings = Object.values(audit.vulnerabilities ?? {}).flatMap(
@@ -100,7 +143,8 @@ export function evaluateDependencyAudit({
       (exception) =>
         exception.advisory === finding.advisory &&
         exception.package === finding.package &&
-        dependencyPathsMatch(exception, finding)
+        dependencyPathsMatch(exception, finding) &&
+        !dependentProblem(exception, finding, lockfile)
     )
   );
   const unapproved = findings.filter(
@@ -159,6 +203,14 @@ export function evaluateDependencyAudit({
         },
       ];
     });
+  const changedDependentExceptions = validExceptions.flatMap(exception => {
+    const finding = findings.find(candidate =>
+      exception.advisory === candidate.advisory && exception.package === candidate.package
+    );
+    if (!finding) return [];
+    const problem = dependentProblem(exception, finding, lockfile);
+    return problem ? [{ advisory: exception.advisory, package: exception.package, problem }] : [];
+  });
   const staleExceptions = validExceptions
     .filter(
       (exception) =>
@@ -178,6 +230,7 @@ export function evaluateDependencyAudit({
     ...invalidDateExceptions,
     ...expiredExceptions,
     ...changedPathExceptions,
+    ...changedDependentExceptions,
     ...staleExceptions,
   ];
 
@@ -250,6 +303,7 @@ function main() {
   );
   const result = evaluateDependencyAudit({
     audit: runAudit(),
+    lockfile: JSON.parse(readFileSync(new URL("../package-lock.json", import.meta.url), "utf8")),
     exceptions: policy.exceptions,
   });
 

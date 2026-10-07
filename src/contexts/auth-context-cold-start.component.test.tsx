@@ -2,7 +2,7 @@ jest.unmock("@/contexts/auth-context");
 
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react-native";
-import { Text, View } from "react-native";
+import { AppState, Text, View, type AppStateStatus } from "react-native";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 
 const mockUser: User = {
@@ -32,12 +32,23 @@ type AuthStateCallback = (
 let authStateCallback: AuthStateCallback | null = null;
 
 const mockGetSession = jest.fn();
+const mockStartAutoRefresh = jest.fn().mockResolvedValue(undefined);
 const mockProfileSingle = jest.fn();
+const mockReportIssue = jest.fn();
+const mockPurgeLegacyAppGroupAccessToken = jest.fn().mockResolvedValue(undefined);
+const mockPurgeStaleSharedSessionOnFirstLaunch = jest.fn().mockResolvedValue(undefined);
+let appStateHandler: ((state: AppStateStatus) => void) | null = null;
+
+jest.mock("@/utils/observability-sink", () => ({
+  recordBreadcrumb: jest.fn(),
+  reportIssue: (...args: unknown[]) => mockReportIssue(...args),
+}));
 
 jest.mock("@/services/supabase", () => ({
   supabase: {
     auth: {
       getSession: () => mockGetSession(),
+      startAutoRefresh: () => mockStartAutoRefresh(),
       onAuthStateChange: (callback: AuthStateCallback) => {
         authStateCallback = callback;
         return {
@@ -60,6 +71,12 @@ jest.mock("@/services/supabase", () => ({
       update: jest.fn().mockReturnThis(),
     }),
   },
+}));
+
+jest.mock("@/services/widget-data-service", () => ({
+  clearWidgetData: jest.fn().mockResolvedValue(undefined),
+  purgeLegacyAppGroupAccessToken: () => mockPurgeLegacyAppGroupAccessToken(),
+  purgeStaleSharedSessionOnFirstLaunch: () => mockPurgeStaleSharedSessionOnFirstLaunch(),
 }));
 
 jest.mock("expo-apple-authentication", () => ({
@@ -100,6 +117,7 @@ jest.mock("@/services/watch-service", () => ({
 }));
 
 import { AuthProvider, useAuth } from "./auth-context";
+import { SHARED_SUPABASE_SESSION_LOCK_ABANDONED } from "@/services/shared-supabase-session";
 
 function TestConsumer() {
   const auth = useAuth();
@@ -115,6 +133,14 @@ describe("AuthContext cold start with stored session", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     authStateCallback = null;
+    appStateHandler = null;
+    jest.spyOn(AppState, "addEventListener").mockImplementation((
+      _type,
+      listener
+    ) => {
+      appStateHandler = listener as (state: AppStateStatus) => void;
+      return { remove: jest.fn() } as never;
+    });
     mockGetSession.mockResolvedValue({
       data: { session: mockSession },
       error: null,
@@ -127,6 +153,47 @@ describe("AuthContext cold start with stored session", () => {
       },
       error: null,
     });
+    mockReportIssue.mockClear();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("retries a skipped session read when the app becomes active", async () => {
+    mockGetSession
+      .mockResolvedValueOnce({
+        data: { session: null },
+        error: null,
+        [SHARED_SUPABASE_SESSION_LOCK_ABANDONED]: true,
+      })
+      .mockResolvedValueOnce({
+        data: { session: mockSession },
+        error: null,
+      });
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() => expect(mockGetSession).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId("loading").props.children).toBe("loading");
+    expect(mockPurgeLegacyAppGroupAccessToken).not.toHaveBeenCalled();
+
+    await act(async () => {
+      appStateHandler?.("active");
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("loading").props.children).toBe("ready")
+    );
+
+    expect(mockGetSession).toHaveBeenCalledTimes(2);
+    expect(mockStartAutoRefresh).toHaveBeenCalledTimes(1);
+    expect(mockPurgeLegacyAppGroupAccessToken).toHaveBeenCalledTimes(1);
+    expect(mockReportIssue).not.toHaveBeenCalled();
   });
 
   it("keeps householdId when a late auth event re-delivers the same session", async () => {

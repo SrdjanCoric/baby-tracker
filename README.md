@@ -152,7 +152,7 @@ When the latest completed sleep is the current evening's stored `night` session,
 
 Deno-based serverless functions for direct APNs push delivery, feeding reminders, wake window alerts, and Live Activity management. All push notifications use direct APNs (not Expo Push API).
 
-Household Live Activity mirroring requires migrations 066 and 067, the updated `send-widget-push`
+Household Live Activity mirroring requires migrations 067 and 068, the updated `send-widget-push`
 function, APNs credentials, and an app binary with the Live Activity token bridge. Configure
 `active_timers` INSERT and DELETE webhooks with the service-role bearer. INSERT supplies the new
 record; DELETE must include `old_record.timer_data.timerInstanceId` to end the matching activities.
@@ -176,7 +176,7 @@ src/
 └── types/                  # TypeScript definitions
 supabase/
 ├── functions/              # Edge Functions (Deno)
-└── migrations/             # PostgreSQL migrations through 067
+└── migrations/             # PostgreSQL migrations through 068
 localization/native/        # Nine locale files the Watch app and widget render from;
                             # npm run native:strings rebuilds targets/*/GeneratedStrings.swift
 targets/

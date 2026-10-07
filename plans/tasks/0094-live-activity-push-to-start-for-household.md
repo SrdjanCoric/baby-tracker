@@ -42,10 +42,10 @@ block the authorized PR, merge, or implementation closeout. No production releas
 ## Implementation notes (2026-09-05)
 
 - Classification remains `mixed`, `validation-tier: canonical`, `tddApplicable: true`.
-- Migration 067 adds owner-scoped, per-installation start-token storage and an authenticated
+- Migration 068 adds owner-scoped, per-installation start-token storage and an authenticated
   registration RPC. Rotation replaces the same device row; registration is capped at eight devices
   per account, serialized on the user row. Account deletion cascades; sign-out removes registered
-  start and update/end tokens. Migration 066's update/end storage and registration RPC are unchanged.
+  start and update/end tokens. Migration 067's update/end storage and registration RPC are unchanged.
 - The managed Swift observer persists the installation identity and latest start token, retains the
   App Group key used by Watch, and emits changes through the existing authenticated sync lifecycle.
   iOS versions below 17.2 return no start token. Remote activity attributes carry recipient `userId`
@@ -81,8 +81,8 @@ block the authorized PR, merge, or implementation closeout. No production releas
   tests. Direct iPhoneOS Swift typecheck of the controller, attributes, and token store also passed
   using the installed React Native emitter headers through a temporary header map.
 - `npm run typecheck`, targeted ESLint, and `git diff --check`: passed.
-- Local migration 067 applied and `scripts/sql/live-activity-push-token-tests.sql` passed. The local
-  database had stale extra INSERT/UPDATE grants on the 066 table; its committed permissions were
+- Local migration 068 applied and `scripts/sql/live-activity-push-token-tests.sql` passed. The local
+  database had stale extra INSERT/UPDATE grants on the 067 table; its committed permissions were
   restored only inside the rolled-back test transaction. No shared database was accessed.
 - Logs: `/tmp/agent-workflows/e2f8af45fd34/7d63e66a2c3f` (`unit.log`, `component.log`, `swift.log`,
   `bridge-typecheck.log`, `typecheck.log`, `lint.log`, `sql-green.log`, plus RED evidence).
@@ -112,7 +112,7 @@ block the authorized PR, merge, or implementation closeout. No production releas
   `e2e/artifacts/household-timers/2026-09-06T05-00-17-958Z/native-proof/report.md`.
   Clean gate artifacts: `e2e/artifacts/household-timers/2026-09-06T04-43-16-338Z`.
 - README updated in iOS Native Integrations, Edge Functions, and the migration count. It documents
-  iOS 17.2 push-to-start, mirrored end delivery, migrations 066/067, and authenticated INSERT/DELETE
+  iOS 17.2 push-to-start, mirrored end delivery, migrations 067/068, and authenticated INSERT/DELETE
   webhooks. The affected prose passed the complete write-well audit in two passes.
 - Locked/background APNs delivery remains unverified. The local runtime has no APNs credentials or
   timer push webhook. Both simulators obtained ActivityKit start tokens, but this does not prove

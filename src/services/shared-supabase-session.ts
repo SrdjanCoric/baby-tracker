@@ -15,7 +15,21 @@ export interface SharedSupabaseSessionBridge {
 }
 
 export interface SharedSupabaseSessionLock {
-  withLock<T>(fn: (handle: string) => Promise<T>): Promise<T>;
+  withLock<T>(fn: (handle: string) => Promise<T>): Promise<T | undefined>;
+}
+
+export const SHARED_SUPABASE_SESSION_LOCK_ABANDONED = Symbol(
+  "shared-supabase-session-lock-abandoned"
+);
+
+export function isSharedSupabaseSessionLockAbandoned(
+  result: unknown
+): boolean {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    SHARED_SUPABASE_SESSION_LOCK_ABANDONED in result
+  );
 }
 
 export interface SharedSupabaseSessionEnvelope {
@@ -140,23 +154,30 @@ export function createSharedSupabaseClientOptions(
 
   const { bridge, appLock, sessionKey, legacyStorage } = options;
   const legacy = legacyStorage as SupabaseAuthStorage;
+  const lockAbandonedResult = {
+    data: { user: null, session: null },
+    error: null,
+    [SHARED_SUPABASE_SESSION_LOCK_ABANDONED]: true,
+  };
   let transactionObservation:
     | { revision: number; lineage: string }
     | null
     | undefined;
-  const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = (
-    _name,
-    _acquireTimeoutMillis,
-    fn
-  ) =>
-    appLock.withLock(async () => {
+  const lock: NonNullable<SharedSupabaseClientOptions["lock"]> = async <T>(
+    _name: string,
+    _acquireTimeoutMillis: number,
+    fn: () => Promise<T>
+  ): Promise<T> => {
+    const result = await appLock.withLock(async () => {
       transactionObservation = undefined;
       try {
-        return await fn();
+        return { value: await fn() };
       } finally {
         transactionObservation = undefined;
       }
     });
+    return result === undefined ? (lockAbandonedResult as T) : result.value;
+  };
 
   const recordObservation = (
     envelope: SharedSupabaseSessionEnvelope | null

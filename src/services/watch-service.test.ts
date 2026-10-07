@@ -26,6 +26,7 @@ vi.mock("react-native", () => ({
     },
   },
   Platform: { OS: "ios" },
+  AppState: { currentState: "background" },
 }));
 vi.mock("react-native-watch-connectivity", () => ({
   updateApplicationContext,
@@ -96,6 +97,46 @@ describe("watch language transport", () => {
         userId: authContext.userId,
       })
     );
+  });
+
+  it("does not suppress a server error with a native lock code", async () => {
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const abandonment = Object.assign(new Error("suspending"), {
+      code: "LOCK_REVOKED",
+    });
+    const refreshSession = vi.fn(async () => {
+      throw abandonment;
+    });
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await expect(refreshWatchCredentialsFromPhone(refreshSession)).rejects.toBe(abandonment);
+
+    expect(updateApplicationContext).not.toHaveBeenCalled();
+  });
+
+  it("keeps the last Watch context when refresh reports a skipped lock", async () => {
+    getApplicationContext.mockResolvedValue({
+      widgetData: JSON.stringify(widgetData),
+      supabaseUrl: authContext.supabaseUrl,
+      supabaseAnonKey: authContext.supabaseAnonKey,
+      userId: authContext.userId,
+      householdId: authContext.householdId,
+      sessionCapsule: sharedSessionCapsule,
+    });
+    const refreshSession = vi.fn(async () => false);
+    const { refreshWatchCredentialsFromPhone } = await loadWatchService();
+
+    await expect(refreshWatchCredentialsFromPhone(refreshSession)).resolves.toBe(false);
+
+    expect(refreshSession).toHaveBeenCalledTimes(1);
+    expect(updateApplicationContext).not.toHaveBeenCalled();
   });
 
   it("republishes a fresh shared session without rotating its refresh-token family", async () => {

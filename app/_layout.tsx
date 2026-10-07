@@ -31,6 +31,7 @@ import {
   refreshWatchCredentialsFromPhone,
   startWatchMessageListening,
 } from "@/services/watch-service";
+import { isSharedSupabaseSessionLockAbandoned } from "@/services/shared-supabase-session";
 import {
   appendExternalTimerCommand,
   createRoutedExternalTimerCommand,
@@ -163,8 +164,11 @@ export function WatchMessageHandler({ children }: { children: React.ReactNode })
       }
       try {
         await refreshWatchCredentialsFromPhone(async () => {
-          const { error } = await supabase.auth.refreshSession();
+          const result = await supabase.auth.refreshSession();
+          if (!result || isSharedSupabaseSessionLockAbandoned(result)) return false;
+          const { error } = result;
           if (error) throw error;
+          return true;
         });
       } catch (error) {
         console.warn(

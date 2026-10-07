@@ -384,9 +384,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
         liveActivityIdRef,
         refreshLocks,
-        persistRecord: (input) =>
+        persistRecord: (input, completion) =>
           user?.householdId && user.id
-            ? createPumpingInDatabase(input, user.id)
+            ? createPumpingInDatabase(input, user.id, {
+                timerInstanceId: completion.timerInstanceId,
+                startedAt: completion.startedAt,
+              })
             : PumpingStorageService.addPumping(input),
         dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
         dispatchAddRecord: (record) =>
@@ -714,7 +717,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         let pumping: StoredPumpingEntry;
         try {
           if (user?.householdId && user?.id) {
-            pumping = await createPumpingInDatabase(pumpingInput, user.id);
+            pumping = await createPumpingInDatabase(pumpingInput, user.id, {
+              timerInstanceId: completion.timerInstanceId,
+              startedAt: completion.startedAt,
+            });
           } else {
             pumping = await PumpingStorageService.addPumping(pumpingInput);
           }

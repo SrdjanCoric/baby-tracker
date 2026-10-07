@@ -367,9 +367,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       isCurrentBabyBinding: () => isCurrentBabyBinding(bindingToken),
       liveActivityIdRef,
       refreshLocks,
-      persistRecord: input =>
+      persistRecord: (input, completion) =>
         householdId && userId
-          ? createTummyTimeInDatabase(input, userId)
+          ? createTummyTimeInDatabase(input, userId, {
+              timerInstanceId: completion.timerInstanceId,
+              startedAt: completion.startedAt,
+            })
           : TummyTimeStorageService.addTummyTime(input),
       dispatchStopTimer: () => dispatch({ type: "STOP_TIMER" }),
       dispatchAddRecord: record => dispatch({ type: "ADD_TUMMY_TIME", payload: record }),
@@ -676,7 +679,10 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       let tummyTime: StoredTummyTimeEntry;
       try {
         if (user?.householdId && user?.id) {
-          tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id);
+          tummyTime = await createTummyTimeInDatabase(tummyTimeInput, user.id, {
+            timerInstanceId: completion.timerInstanceId,
+            startedAt: completion.startedAt,
+          });
         } else {
           tummyTime = await TummyTimeStorageService.addTummyTime(tummyTimeInput);
         }

@@ -1071,7 +1071,11 @@ describe("external timer stops through production providers", () => {
         leftDurationSeconds: undefined,
         rightDurationSeconds: 600,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
   });
 
@@ -1118,7 +1122,11 @@ describe("external timer stops through production providers", () => {
         leftDurationSeconds: 2100,
         rightDurationSeconds: 1500,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
   });
 
@@ -1197,7 +1205,11 @@ describe("external timer stops through production providers", () => {
           endedAt: resumedStopAt,
           durationSeconds: 91,
         }),
-        "user-1"
+        "user-1",
+        expect.objectContaining({
+          timerInstanceId: expect.any(String),
+          startedAt: expect.any(String),
+        })
       );
     }
     const liveElapsedAtStop = liveActivities.startTimerLiveActivity.mock.calls.map(
@@ -1458,7 +1470,11 @@ describe("external timer stops through production providers", () => {
           endedAt: new Date(pausedAt),
           durationSeconds: 180,
         }),
-        "user-1"
+        "user-1",
+        expect.objectContaining({
+          timerInstanceId: expect.any(String),
+          startedAt: expect.any(String),
+        })
       );
     }
   });
@@ -1571,7 +1587,11 @@ describe("external timer stops through production providers", () => {
           endedAt: new Date(pausedAt),
           durationSeconds: 180,
         }),
-        "user-1"
+        "user-1",
+        expect.objectContaining({
+          timerInstanceId: expect.any(String),
+          startedAt: expect.any(String),
+        })
       );
     }
   });
@@ -1778,7 +1798,11 @@ describe("external timer stops through production providers", () => {
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(feedingState?.activeTimer).toBeNull();
     expect(feedingState?.feedings).toHaveLength(1);
@@ -1929,7 +1953,11 @@ describe("external timer stops through production providers", () => {
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(sleepState?.activeTimer).toBeNull();
     expect(sleepState?.sleeps).toHaveLength(1);
@@ -2044,7 +2072,11 @@ describe("external timer stops through production providers", () => {
         durationSeconds: 300,
         volumeMl: 0,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(pumpingState?.activeTimer).toBeNull();
     expect(pumpingState?.pumpings).toHaveLength(1);
@@ -2161,7 +2193,11 @@ describe("external timer stops through production providers", () => {
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(tummyTimeState?.activeTimer).toBeNull();
     expect(tummyTimeState?.tummyTimes).toHaveLength(1);
@@ -3118,7 +3154,11 @@ describe("external timer stops through production providers", () => {
         startedAt: new Date(startedAt),
         volumeMl: 120,
       },
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(savedPumping).toEqual(
       expect.objectContaining({
@@ -3148,7 +3188,11 @@ describe("external timer stops through production providers", () => {
     await waitFor(() => expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledTimes(1));
     expect(activitySync.createTummyTimeInDatabase).toHaveBeenCalledWith(
       expect.objectContaining({ durationSeconds: 30 }),
-      "user-1"
+      "user-1",
+      expect.objectContaining({
+        timerInstanceId: expect.any(String),
+        startedAt: expect.any(String),
+      })
     );
     expect(tummyTimeState?.activeTimer).toBeNull();
     expect(tummyTimeState?.tummyTimes).toHaveLength(1);
@@ -3415,7 +3459,8 @@ describe("external timer stops through production providers", () => {
         lastFinishedSide: "left",
         leftDurationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      { timerInstanceId: "timer-loser", startedAt }
     );
     expect(feedingState?.activeTimer).toBeNull();
     expect(feedingState?.feedings).toEqual([
@@ -3463,7 +3508,8 @@ describe("external timer stops through production providers", () => {
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      { timerInstanceId: "timer-loser", startedAt }
     );
     expect(sleepState?.activeTimer).toBeNull();
     expect(sleepState?.sleeps).toEqual([
@@ -3510,6 +3556,10 @@ describe("external timer stops through production providers", () => {
       side: "both",
     }));
     expect(input.volumeMl).toBeUndefined();
+    expect(activitySync.createPumpingInDatabase.mock.calls[0][2]).toEqual({
+      timerInstanceId: "timer-loser",
+      startedAt,
+    });
     expect(pumpingState?.activeTimer).toBeNull();
     expect(pumpingState?.pumpings).toEqual([
       expect.objectContaining({ id: derivedLoserActivityId, volumeMl: undefined })
@@ -3548,7 +3598,8 @@ describe("external timer stops through production providers", () => {
         endedAt: new Date(stoppedAt),
         durationSeconds: 300,
       }),
-      "user-1"
+      "user-1",
+      { timerInstanceId: "timer-loser", startedAt }
     );
     expect(tummyTimeState?.activeTimer).toBeNull();
     expect(tummyTimeState?.tummyTimes).toEqual([

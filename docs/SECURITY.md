@@ -24,7 +24,7 @@ The application relies on Supabase RLS policies for data access control:
 
 ### Live Activity Push Tokens
 
-Migration 066 protects `live_activity_push_tokens` with RLS: authenticated users can
+Migration 067 protects `live_activity_push_tokens` with RLS: authenticated users can
 read and delete only their own rows and have no direct insert or update access.
 The `register_live_activity_push_token` security-definer RPC verifies the caller's
 user ID, household membership, and active timer instance before registering or
@@ -35,7 +35,7 @@ and a ten-second delivery budget. Anonymous callers cannot invoke the RPC. The s
 webhook reads tokens for the exact baby and timer instance; token rows survive
 timer deletion for delivery and expire after 24 hours.
 
-Push-to-start registrations live separately in `live_activity_start_tokens` (migration 067),
+Push-to-start registrations live separately in `live_activity_start_tokens` (migration 068),
 one row per account and installation (`user_id`, `device_id`). RLS permits authenticated users
 to SELECT and DELETE only their own rows; direct INSERT/UPDATE and anonymous access are denied.
 The `register_live_activity_start_token(text,text,boolean,uuid)` SECURITY DEFINER RPC uses an

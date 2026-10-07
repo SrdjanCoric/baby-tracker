@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import type { ActivityType, BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import { loadExtensionStorage } from "@/services/extension-storage";
+import { reportIssue } from "@/utils/observability-sink";
 import { loadSharedSupabaseSessionBridge } from "@/services/shared-supabase-session-native";
 import {
   decodeWidgetActivitySnapshotJson,
@@ -206,6 +207,7 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
       }
     } catch (error) {
       console.error("[WidgetDataService] Failed to update widget data:", error);
+    reportIssue({ name: "widget.update_failed", area: "widget", level: "warning", error, tags: { what: "update_widget_data" } });
     }
 
     try {
@@ -226,6 +228,7 @@ export async function updateWidgetData(data: WidgetData, authContext?: WatchAuth
       await syncToWatch(data, watchData, authContext);
     } catch (error) {
       console.error("[WidgetDataService] Failed to sync to watch:", error);
+    reportIssue({ name: "widget.watch_sync_failed", area: "widget", level: "warning", error, tags: { what: "sync_to_watch" } });
     }
   }
 }
@@ -411,6 +414,7 @@ export async function reloadWidgets(): Promise<void> {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to reload widgets:", error);
+    reportIssue({ name: "widget.reload_failed", area: "widget", level: "warning", error, tags: { what: "reload_widgets" } });
   }
 }
 
@@ -427,6 +431,7 @@ export async function writeSupabaseConfigToAppGroup(
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to write Supabase config to App Group:", error);
+    reportIssue({ name: "widget.app_group_write_failed", area: "widget", level: "warning", error, tags: { what: "write_supabase_config_to_app_group" } });
   }
 }
 
@@ -457,6 +462,7 @@ export async function writeAuthToAppGroup(params: {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to write auth to App Group:", error);
+    reportIssue({ name: "widget.app_group_write_failed", area: "widget", level: "warning", error, tags: { what: "write_auth_to_app_group" } });
   }
 }
 
@@ -470,6 +476,7 @@ export async function readWidgetPushToken(): Promise<string | null> {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to read widget push token:", error);
+    reportIssue({ name: "widget.app_group_read_failed", area: "widget", level: "warning", error, tags: { what: "read_widget_push_token" } });
   }
   return null;
 }
@@ -484,6 +491,7 @@ export async function readLiveActivityPushToken(): Promise<string | null> {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to read live activity push token:", error);
+    reportIssue({ name: "widget.app_group_read_failed", area: "widget", level: "warning", error, tags: { what: "read_live_activity_push_token" } });
   }
   return null;
 }
@@ -500,6 +508,7 @@ export async function readPushToStartToken(): Promise<string | null> {
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to read push-to-start token:", error);
+    reportIssue({ name: "widget.app_group_read_failed", area: "widget", level: "warning", error, tags: { what: "read_push_to_start_token" } });
   }
   return null;
 }
@@ -581,5 +590,6 @@ export async function clearWidgetData(
     }
   } catch (error) {
     console.error("[WidgetDataService] Failed to clear widget data:", error);
+    reportIssue({ name: "widget.clear_failed", area: "widget", level: "warning", error, tags: { what: "clear_widget_data" } });
   }
 }

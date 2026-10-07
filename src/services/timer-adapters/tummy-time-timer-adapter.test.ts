@@ -363,7 +363,12 @@ describe("tummy time timer adapter", () => {
       new Date("2026-08-05T12:01:00.000Z")
     );
     expect(persistRecord).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "accepted-activity" })
+      expect.objectContaining({ id: "accepted-activity" }),
+      expect.objectContaining({
+        activityId: "accepted-activity",
+        activityType: "tummy_time",
+        timerInstanceId: "timer-1",
+      })
     );
     expect(decodeTimerData).not.toHaveBeenCalled();
   });

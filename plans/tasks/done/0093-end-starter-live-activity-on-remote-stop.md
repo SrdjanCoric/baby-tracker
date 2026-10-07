@@ -26,7 +26,7 @@ Verify the current APNS Live Activity payload requirements (`apns-push-type: liv
 
 ## Human checkpoints
 
-- [ ] [confirm-db] Release prerequisite: apply migration 066 to the shared Supabase project before deploying the function and app. Shared deployment remains pending; the master plan permits this task to merge on local SQL and automated proof.
+- [ ] [confirm-db] Release prerequisite: apply migration 067 to the shared Supabase project before deploying the function and app. Shared deployment remains pending; the master plan permits this task to merge on local SQL and automated proof.
 - [ ] [verify] Release prerequisite, deferred to 0094 combined acceptance under the master-plan decision: two real devices: A starts a timer (Live Activity visible), backgrounds the app and locks the phone; B stops the timer from their app. Expected: A's Live Activity ends within seconds without opening the app. Failure: Live Activity keeps ticking until A foregrounds. Reason: this repository's CI does not exercise APNS delivery; physical background delivery remains a release-owner check.
 
 ## Acceptance criteria
@@ -38,7 +38,7 @@ Verify the current APNS Live Activity payload requirements (`apns-push-type: liv
 
 ## Implementation evidence (2026-09-05, pre-review)
 
-- Chose a sibling `live_activity_push_tokens` table in migration 066, keyed per user and native
+- Chose a sibling `live_activity_push_tokens` table in migration 067, keyed per user and native
   activity, indexed by baby and timer instance. Multiple devices and future mirrored activities can
   share a timer instance. There is deliberately no foreign key to `active_timers`, because its
   asynchronous DELETE webhook still needs the tokens.
@@ -101,7 +101,7 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
 
 ### Deployment prerequisites still pending
 
-- Apply migration 066 to the shared project only at the declared `[confirm-db]` checkpoint, then
+- Apply migration 067 to the shared project only at the declared `[confirm-db]` checkpoint, then
   deploy the updated `send-widget-push` function and an app binary containing the native bridge.
 - The existing timer webhook is not defined in version-controlled migrations. At deployment, verify
   its `active_timers` DELETE payload includes `old_record.timer_data.timerInstanceId` and its
@@ -127,7 +127,7 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
   tokens can rotate at the cap. Delivery runs at most eight requests concurrently within ten seconds.
 - README updated: iOS Native Integrations explains remote end pushes and foreground fallback;
   Edge Functions lists migration, webhook, native binary, and physical-device release requirements;
-  Project Structure reflects migration 066. Affected prose passed the full write-well audit in one pass.
+  Project Structure reflects migration 067. Affected prose passed the full write-well audit in one pass.
 - Review remediation proof: 19 focused unit tests, 22 auth component tests, Swift token/selection
   harness, controller syntax, app and edge-module type checks, affected ESLint, and rollback-only local
   SQL registration/ownership/cap tests passed. Logs remain under
@@ -147,7 +147,7 @@ Logs: `/tmp/agent-workflows/e2f8af45fd34/a0416957a610`.
 - Remaining canonical stages run separately after the import failure: `npm run test:ci` passed
   65 tests; `npm run test:widget:swift` passed all harnesses and production Widget/Watch type checks.
   Evidence: `canonical-ci.log`, `canonical-swift.log`.
-- `npm run test:sql:setup` applied the complete local migration chain through 066;
+- `npm run test:sql:setup` applied the complete local migration chain through 067;
   `npm run test:sql` passed the complete SQL suite. This reset only the local test database.
   Evidence: `sql-setup.log`, `canonical-sql.log`.
 - The changed ActivityKit bridge passed `swiftc -typecheck` against the installed iOS SDK and

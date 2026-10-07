@@ -5,6 +5,7 @@
 
 import type { AppError, ErrorCategory, ErrorSeverity } from "@/types/error";
 import i18n from "@/i18n";
+import { isNetworkErrorMessage } from "@/utils/network-error";
 
 interface CreateAppErrorOptions {
   message: string;
@@ -15,16 +16,6 @@ interface CreateAppErrorOptions {
   context?: Record<string, unknown>;
   isRecoverable?: boolean;
 }
-
-const NETWORK_ERROR_PATTERNS = [
-  /network/i,
-  /fetch/i,
-  /internet/i,
-  /connection/i,
-  /offline/i,
-  /ECONNREFUSED/i,
-  /ENOTFOUND/i,
-];
 
 const AUTH_ERROR_PATTERNS = [
   /401/,
@@ -93,7 +84,7 @@ export function getErrorMessage(error: unknown): string {
 
   const message = error.message.toLowerCase();
 
-  if (NETWORK_ERROR_PATTERNS.some((p) => p.test(error.message))) {
+  if (isNetworkErrorMessage(error.message)) {
     return i18n.t("errors.connectionError");
   }
 
@@ -127,7 +118,7 @@ export function getErrorMessage(error: unknown): string {
 export function getErrorCategory(error: Error): ErrorCategory {
   const message = error.message;
 
-  if (NETWORK_ERROR_PATTERNS.some((p) => p.test(message))) {
+  if (isNetworkErrorMessage(message)) {
     return "network";
   }
 
@@ -161,7 +152,7 @@ export function isAuthError(error: Error): boolean {
 export function isRecoverableError(error: Error): boolean {
   const message = error.message;
 
-  if (NETWORK_ERROR_PATTERNS.some((p) => p.test(message))) {
+  if (isNetworkErrorMessage(message)) {
     return true;
   }
 

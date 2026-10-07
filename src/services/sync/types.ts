@@ -59,6 +59,7 @@ export interface QueuedOperation {
   retryCount: number;
   owner?: SyncOperationOwner;
   localMutation?: LocalStorageMutation;
+  timerCompletion?: { timerInstanceId: string; startedAt: string };
 }
 
 export interface SyncQueuePersistence {

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
+import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
 
 const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
 const PENDING_TIMER_START_EDITS_KEY = "@pending_timer_start_edits";
@@ -15,6 +16,8 @@ interface PendingLockRelease {
   timerInstanceId?: string;
   startedAt?: string;
   queuedAt: string;
+  /** Set once the first failed retry is reported, so later retries stay quiet. */
+  reported?: boolean;
 }
 
 interface PendingTimerStartEdit {
@@ -49,7 +52,8 @@ async function getPendingTimerStartEdits(): Promise<PendingTimerStartEdit[]> {
   if (!raw) return [];
   try {
     return JSON.parse(raw) as PendingTimerStartEdit[];
-  } catch {
+  } catch (error) {
+    reportIssue({ name: "timers.pending_queue_corrupt", area: "timers", error, tags: { queue: "start_edits" } });
     return [];
   }
 }
@@ -128,6 +132,12 @@ export function retryPendingTimerStartEdits(): Promise<void> {
             edit,
             error
           );
+          reportIssue({
+            name: "timers.pending_start_edit_rejected",
+            area: "timers",
+            error,
+            tags: { activityType: edit.activityType, code: errorCode(error) },
+          });
         }
       }
     }
@@ -229,7 +239,8 @@ async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
   if (!raw) return [];
   try {
     return JSON.parse(raw) as PendingLockRelease[];
-  } catch {
+  } catch (error) {
+    reportIssue({ name: "timers.pending_queue_corrupt", area: "timers", error, tags: { queue: "lock_releases" } });
     return [];
   }
 }
@@ -260,7 +271,19 @@ export function retryPendingLockReleases(): Promise<void> {
         );
       } catch (error) {
         console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
-        remaining.push(release);
+        let forwarded = false;
+        if (!release.reported) {
+          const queuedAgeMinutes = Math.round((Date.now() - new Date(release.queuedAt).getTime()) / 60_000);
+          forwarded = reportIssue({
+            name: "timers.pending_lock_release_failed",
+            area: "timers",
+            level: "warning",
+            error,
+            tags: { activityType: release.activityType, code: errorCode(error) },
+            extra: { queuedAgeMinutes: Number.isFinite(queuedAgeMinutes) ? queuedAgeMinutes : undefined },
+          });
+        }
+        remaining.push({ ...release, reported: release.reported || forwarded });
       }
     }
 
@@ -318,8 +341,16 @@ export async function acquireTimerLock(
 
   if (error) {
     console.error("[ActiveTimerService] Failed to acquire lock:", error);
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock acquire failed",
+      level: "warning",
+      data: { activityType, code: errorCode(error) },
+    });
     throw error;
   }
+  recordBreadcrumb({ category: "timers", message: "lock acquire", data: { activityType } });
 
   invalidateActiveTimerSnapshot(babyId);
 
@@ -377,10 +408,22 @@ export async function releaseTimerLock(
 
   if (error) {
     console.error("[ActiveTimerService] Failed to release lock:", error);
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock release failed",
+      level: "warning",
+      data: { activityType, code: errorCode(error) },
+    });
     throw error;
   }
 
   invalidateActiveTimerSnapshot(babyId);
+  recordBreadcrumb({
+    category: "timers",
+    message: "lock release",
+    data: { activityType, released: (count ?? 0) > 0 },
+  });
   return (count ?? 0) > 0;
 }
 
@@ -412,6 +455,13 @@ export async function getActiveTimerLock(
       return null;
     }
     console.error("[ActiveTimerService] Failed to get lock:", error);
+    // The caller that swallows this error reports it, so one failure counts once.
+    recordBreadcrumb({
+      category: "timers",
+      message: "lock read failed",
+      level: "warning",
+      data: { activityType, code: errorCode(error) },
+    });
     throw error;
   }
 

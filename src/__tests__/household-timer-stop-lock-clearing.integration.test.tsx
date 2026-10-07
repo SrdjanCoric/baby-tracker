@@ -1,4 +1,6 @@
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { resetObservabilityIssueLimiter, setObservabilitySink } from "@/utils/observability-sink";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Text, Pressable } from "react-native";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
@@ -6,6 +8,8 @@ import type { RemoteChange } from "@/services/sync/real-time-sync";
 /* ---------------- fake supabase backing store ---------------- */
 type Row = Record<string, unknown>;
 let timerRows: Row[] = [];
+let mockDeleteError: unknown = null;
+let mockBeforeDelete: (() => Promise<void>) | null = null;
 const mockRealtimeEmit: { current: ((c: RemoteChange) => Promise<void>) | null } = { current: null };
 let selectDelayMs = 0;
 let mockGate: { promise: Promise<void>; release: () => void } | null = null;
@@ -29,6 +33,8 @@ function mockMakeQuery(table: string) {
     const match = (row: Row) =>
       filters.every(([col, val]) => String(row[col]) === String(val));
     if (mode === "delete") {
+      await mockBeforeDelete?.();
+      if (mockDeleteError) return { data: null, error: mockDeleteError, count: null };
       const removed = timerRows.filter(match);
       timerRows = timerRows.filter(r => !match(r));
       for (const r of removed) {
@@ -108,6 +114,7 @@ jest.mock("expo-crypto", () => ({
 }));
 
 import { ActiveTimersProvider, useActiveTimers } from "@/contexts/active-timers-context";
+import { getTimerCompletion } from "@/services/timer-completion-service";
 import { stopRemoteTimerLifecycle } from "@/services/timer-lifecycle";
 import { getActiveTimerSnapshotForBaby } from "@/services/active-timer-service";
 
@@ -192,11 +199,98 @@ function seedLock() {
  */
 describe("household stop from second caregiver", () => {
   beforeEach(() => {
+    mockDeleteError = null;
+    mockBeforeDelete = null;
+    resetObservabilityIssueLimiter();
+    void AsyncStorage.clear();
     records.length = 0;
     stopCalls = 0;
     selectDelayMs = 0;
     mockRealtimeEmit.current = null;
     seedLock();
+  });
+
+  afterEach(() => setObservabilitySink(null));
+
+  it("saves and marks a member completion durable before queueing and deleting its lock", async () => {
+    let finishPersist!: () => void;
+    const persistGate = new Promise<void>(resolve => { finishPersist = resolve; });
+    let saved = false;
+    const deleteEvidence: Array<{ saved: boolean; status?: string; pending: unknown }> = [];
+    mockBeforeDelete = async () => {
+      deleteEvidence.push({
+        saved,
+        status: (await getTimerCompletion("baby-1", "sleep", "instance-1"))?.status,
+        pending: JSON.parse(await AsyncStorage.getItem("@pending_lock_releases") ?? "[]"),
+      });
+    };
+    const persistRecord = jest.fn(async (input: { id: string }) => {
+      await persistGate;
+      records.push(input);
+      saved = true;
+      return input;
+    });
+    const stopping = stopRemoteTimerLifecycle({
+      adapter: makeAdapter() as any, babyId: "baby-1", userId: "user-b",
+      lock: { babyId: "baby-1", activityType: "sleep", startedBy: "user-a",
+        startedAt: "2026-09-07T10:00:00.000Z", timerData: { timerInstanceId: "instance-1" } } as any,
+      persistRecord,
+      dispatchAddRecord: () => undefined,
+    });
+    try {
+      await waitFor(() => expect(persistRecord).toHaveBeenCalledTimes(1));
+      expect(deleteEvidence).toEqual([]);
+      expect(timerRows).toHaveLength(1);
+      expect(JSON.parse(await AsyncStorage.getItem("@pending_lock_releases") ?? "[]")).toEqual([]);
+    } finally {
+      finishPersist();
+      await stopping;
+    }
+    expect(deleteEvidence).toEqual([{
+      saved: true, status: "completed",
+      pending: [expect.objectContaining({
+        babyId: "baby-1", activityType: "sleep", userId: "user-b", timerInstanceId: "instance-1",
+      })],
+    }]);
+    expect(timerRows).toHaveLength(0);
+    expect(JSON.parse(await AsyncStorage.getItem("@pending_lock_releases") ?? "[]")).toEqual([]);
+  });
+
+  it("keeps the member's lock available for retry when saving the stopped record fails", async () => {
+    const error = new Error("record storage failed");
+    const beforeDelete = jest.fn(async () => undefined);
+    mockBeforeDelete = beforeDelete;
+    await expect(stopRemoteTimerLifecycle({
+      adapter: makeAdapter() as any, babyId: "baby-1", userId: "user-b",
+      lock: { babyId: "baby-1", activityType: "sleep", startedBy: "user-a",
+        startedAt: "2026-09-07T10:00:00.000Z", timerData: { timerInstanceId: "instance-1" } } as any,
+      persistRecord: async () => { throw error; },
+      dispatchAddRecord: () => undefined,
+    })).rejects.toBe(error);
+    expect(beforeDelete).not.toHaveBeenCalled();
+    expect(timerRows).toEqual([expect.objectContaining({ id: "lock-1", started_by: "user-a" })]);
+    expect(JSON.parse(await AsyncStorage.getItem("@pending_lock_releases") ?? "[]")).toEqual([]);
+    expect((await getTimerCompletion("baby-1", "sleep", "instance-1"))?.status).toBe("pending");
+  });
+
+  it("retains a failed member release and reports it exactly once", async () => {
+    const sink = { reportIssue: jest.fn(), addBreadcrumb: jest.fn(), setTag: jest.fn() };
+    setObservabilitySink(sink);
+    mockDeleteError = { code: "42501", message: "permission denied" };
+    await stopRemoteTimerLifecycle({
+      adapter: makeAdapter() as any, babyId: "baby-1", userId: "user-b",
+      lock: { babyId: "baby-1", activityType: "sleep", startedBy: "user-a",
+        startedAt: "2026-09-07T10:00:00.000Z", timerData: { timerInstanceId: "instance-1" } } as any,
+      persistRecord: async (input: { id: string }) => input,
+      dispatchAddRecord: () => undefined,
+    });
+    const pending = JSON.parse(await AsyncStorage.getItem("@pending_lock_releases") ?? "[]");
+    expect(pending).toEqual([expect.objectContaining({ userId: "user-b", timerInstanceId: "instance-1" })]);
+    expect(sink.reportIssue).toHaveBeenCalledTimes(1);
+    expect(sink.reportIssue).toHaveBeenCalledWith(expect.objectContaining({
+      name: "timers.lock_release_queued", error: mockDeleteError,
+      tags: { activityType: "sleep", code: "42501" },
+    }));
   });
 
   it("clears the card when the provider's own refresh is in flight", async () => {
