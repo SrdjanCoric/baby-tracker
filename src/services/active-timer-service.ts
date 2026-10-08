@@ -1,13 +1,23 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/services/supabase";
 import i18n from "@/i18n";
-import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
+import { isTimerAccessUnavailable } from "./timer-access-error";
+import { withTimerAccess } from "./timer-access";
+import {
+  errorCode,
+  recordBreadcrumb,
+  reportIssue,
+} from "@/utils/observability-sink";
 
+const PENDING_TIMER_WRITE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const PENDING_LOCK_RELEASES_KEY = "@pending_lock_releases";
 const PENDING_TIMER_START_EDITS_KEY = "@pending_timer_start_edits";
 let pendingLockReleaseMutation = Promise.resolve();
 let pendingTimerStartEditMutation = Promise.resolve();
-const activeTimerSnapshotFlights = new Map<string, Promise<readonly ActiveTimerLock[]>>();
+const activeTimerSnapshotFlights = new Map<
+  string,
+  Promise<readonly ActiveTimerLock[]>
+>();
 
 interface PendingLockRelease {
   babyId: string;
@@ -30,9 +40,14 @@ interface PendingTimerStartEdit {
   queuedAt: string;
 }
 
-function withPendingLockReleaseMutation<T>(operation: () => Promise<T>): Promise<T> {
+function withPendingLockReleaseMutation<T>(
+  operation: () => Promise<T>
+): Promise<T> {
   const result = pendingLockReleaseMutation.then(operation, operation);
-  pendingLockReleaseMutation = result.then(() => undefined, () => undefined);
+  pendingLockReleaseMutation = result.then(
+    () => undefined,
+    () => undefined
+  );
   return result;
 }
 
@@ -53,7 +68,12 @@ async function getPendingTimerStartEdits(): Promise<PendingTimerStartEdit[]> {
   try {
     return JSON.parse(raw) as PendingTimerStartEdit[];
   } catch (error) {
-    reportIssue({ name: "timers.pending_queue_corrupt", area: "timers", error, tags: { queue: "start_edits" } });
+    reportIssue({
+      name: "timers.pending_queue_corrupt",
+      area: "timers",
+      error,
+      tags: { queue: "start_edits" },
+    });
     return [];
   }
 }
@@ -67,6 +87,21 @@ export function isRetryableTimerWriteError(error: unknown): boolean {
   return /network|fetch|offline|timeout|connection/i.test(message);
 }
 
+function isExpiredRejectedTimerWrite(
+  error: unknown,
+  queuedAt: string
+): boolean {
+  const terminalRejection =
+    errorCode(error) === "42501" ||
+    (isTimerAccessUnavailable(error) &&
+      error.reason === "signed_out" &&
+      error.accountMismatch);
+  return (
+    terminalRejection &&
+    Date.now() - new Date(queuedAt).getTime() > PENDING_TIMER_WRITE_MAX_AGE_MS
+  );
+}
+
 export function queuePendingTimerStartEdit(
   babyId: string,
   activityType: TimerActivityType,
@@ -77,7 +112,7 @@ export function queuePendingTimerStartEdit(
 ): Promise<void> {
   return withPendingTimerStartEditMutation(async () => {
     const pending = (await getPendingTimerStartEdits()).filter(
-      edit =>
+      (edit) =>
         !(
           edit.babyId === babyId &&
           edit.activityType === activityType &&
@@ -109,7 +144,11 @@ export function retryPendingTimerStartEdits(): Promise<void> {
     const remaining: PendingTimerStartEdit[] = [];
     for (const edit of pending) {
       try {
-        const lock = await getActiveTimerLock(edit.babyId, edit.activityType);
+        const lock = await getActiveTimerLock(
+          edit.babyId,
+          edit.activityType,
+          edit.userId
+        );
         if (
           !lock ||
           lock.startedBy !== edit.userId ||
@@ -124,8 +163,22 @@ export function retryPendingTimerStartEdits(): Promise<void> {
           new Date(edit.startedAt)
         );
       } catch (error) {
-        if (isRetryableTimerWriteError(error)) {
+        if (isExpiredRejectedTimerWrite(error, edit.queuedAt)) continue;
+        if (isTimerAccessUnavailable(error)) {
+          if (error.reason === "signed_out") remaining.push(edit);
+        } else if (
+          isRetryableTimerWriteError(error) ||
+          errorCode(error) === "42501"
+        ) {
           remaining.push(edit);
+          if (errorCode(error) === "42501") {
+            reportIssue({
+              name: "timers.pending_start_edit_rejected",
+              area: "timers",
+              error,
+              tags: { activityType: edit.activityType, code: errorCode(error) },
+            });
+          }
         } else {
           console.error(
             "[ActiveTimerService] Pending start edit was rejected:",
@@ -159,7 +212,7 @@ export function queuePendingLockRelease(
   return withPendingLockReleaseMutation(async () => {
     const pending = await getPendingLockReleases();
     const alreadyQueued = pending.some(
-      release =>
+      (release) =>
         release.babyId === babyId &&
         release.activityType === activityType &&
         release.userId === userId &&
@@ -175,7 +228,10 @@ export function queuePendingLockRelease(
       startedAt,
       queuedAt: new Date().toISOString(),
     });
-    await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(pending));
+    await AsyncStorage.setItem(
+      PENDING_LOCK_RELEASES_KEY,
+      JSON.stringify(pending)
+    );
   });
 }
 
@@ -188,7 +244,7 @@ function removePendingLockRelease(
   return withPendingLockReleaseMutation(async () => {
     const pending = await getPendingLockReleases();
     const remaining = pending.filter(
-      release =>
+      (release) =>
         !(
           release.babyId === babyId &&
           release.activityType === activityType &&
@@ -240,7 +296,12 @@ async function getPendingLockReleases(): Promise<PendingLockRelease[]> {
   try {
     return JSON.parse(raw) as PendingLockRelease[];
   } catch (error) {
-    reportIssue({ name: "timers.pending_queue_corrupt", area: "timers", error, tags: { queue: "lock_releases" } });
+    reportIssue({
+      name: "timers.pending_queue_corrupt",
+      area: "timers",
+      error,
+      tags: { queue: "lock_releases" },
+    });
     return [];
   }
 }
@@ -254,10 +315,15 @@ export function retryPendingLockReleases(): Promise<void> {
     for (const release of pending) {
       try {
         if (!release.timerInstanceId) {
-          const currentLock = await getActiveTimerLock(release.babyId, release.activityType);
+          const currentLock = await getActiveTimerLock(
+            release.babyId,
+            release.activityType,
+            release.userId
+          );
           if (
             !currentLock ||
-            new Date(currentLock.startedAt).getTime() > new Date(release.queuedAt).getTime()
+            new Date(currentLock.startedAt).getTime() >
+              new Date(release.queuedAt).getTime()
           ) {
             continue;
           }
@@ -270,24 +336,45 @@ export function retryPendingLockReleases(): Promise<void> {
           release.startedAt
         );
       } catch (error) {
-        console.error("[ActiveTimerService] Pending lock release still failing:", release, error);
+        if (isExpiredRejectedTimerWrite(error, release.queuedAt)) continue;
+        if (isTimerAccessUnavailable(error)) {
+          if (error.reason === "signed_out") remaining.push(release);
+          continue;
+        }
+        console.error(
+          "[ActiveTimerService] Pending lock release still failing:",
+          release,
+          error
+        );
         let forwarded = false;
         if (!release.reported) {
-          const queuedAgeMinutes = Math.round((Date.now() - new Date(release.queuedAt).getTime()) / 60_000);
+          const queuedAgeMinutes = Math.round(
+            (Date.now() - new Date(release.queuedAt).getTime()) / 60_000
+          );
           forwarded = reportIssue({
             name: "timers.pending_lock_release_failed",
             area: "timers",
             level: "warning",
             error,
-            tags: { activityType: release.activityType, code: errorCode(error) },
-            extra: { queuedAgeMinutes: Number.isFinite(queuedAgeMinutes) ? queuedAgeMinutes : undefined },
+            tags: {
+              activityType: release.activityType,
+              code: errorCode(error),
+            },
+            extra: {
+              queuedAgeMinutes: Number.isFinite(queuedAgeMinutes)
+                ? queuedAgeMinutes
+                : undefined,
+            },
           });
         }
         remaining.push({ ...release, reported: release.reported || forwarded });
       }
     }
 
-    await AsyncStorage.setItem(PENDING_LOCK_RELEASES_KEY, JSON.stringify(remaining));
+    await AsyncStorage.setItem(
+      PENDING_LOCK_RELEASES_KEY,
+      JSON.stringify(remaining)
+    );
   });
 }
 
@@ -337,7 +424,12 @@ export async function acquireTimerLock(
     params.p_started_at = startedAt.toISOString();
   }
 
-  const { data, error } = await supabase.rpc("acquire_timer_lock", params);
+  const { data, error } = await withTimerAccess(
+    babyId,
+    () => supabase.rpc("acquire_timer_lock", params),
+    userId,
+    "acquire_timer_lock"
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to acquire lock:", error);
@@ -350,7 +442,11 @@ export async function acquireTimerLock(
     });
     throw error;
   }
-  recordBreadcrumb({ category: "timers", message: "lock acquire", data: { activityType } });
+  recordBreadcrumb({
+    category: "timers",
+    message: "lock acquire",
+    data: { activityType },
+  });
 
   invalidateActiveTimerSnapshot(babyId);
 
@@ -374,10 +470,9 @@ export async function releaseTimerLock(
   timerInstanceId?: string,
   startedAt?: string
 ): Promise<boolean> {
-  void userId;
   let lockId: string | undefined;
   if (timerInstanceId) {
-    const currentLock = await getActiveTimerLock(babyId, activityType);
+    const currentLock = await getActiveTimerLock(babyId, activityType, userId);
     if (!currentLock) return false;
 
     const currentTimerInstanceId = currentLock.timerData?.timerInstanceId;
@@ -385,26 +480,23 @@ export async function releaseTimerLock(
       if (currentTimerInstanceId !== timerInstanceId) return false;
     } else if (
       !startedAt ||
-      new Date(currentLock.startedAt).getTime() !== new Date(startedAt).getTime()
+      new Date(currentLock.startedAt).getTime() !==
+        new Date(startedAt).getTime()
     ) {
       return false;
     }
     lockId = currentLock.id;
   }
 
-  let query = supabase
-    .from("active_timers")
-    .delete({ count: "exact" });
-
-  if (lockId) {
-    query = query.eq("id", lockId);
-  } else {
-    query = query
-      .eq("baby_id", babyId)
-      .eq("activity_type", activityType);
-  }
-
-  const { error, count } = await query;
+  const { error, count } = await withTimerAccess(
+    babyId,
+    () => {
+      const query = supabase.from("active_timers").delete({ count: "exact" });
+      if (lockId) return query.eq("id", lockId);
+      return query.eq("baby_id", babyId).eq("activity_type", activityType);
+    },
+    userId
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to release lock:", error);
@@ -429,12 +521,16 @@ export async function releaseTimerLock(
 
 export async function getActiveTimerLock(
   babyId: string,
-  activityType: TimerActivityType
+  activityType: TimerActivityType,
+  expectedUserId?: string
 ): Promise<ActiveTimerLock | null> {
-  const { data, error } = await supabase
-    .from("active_timers")
-    .select(
-      `
+  const { data, error } = await withTimerAccess(
+    babyId,
+    () =>
+      supabase
+        .from("active_timers")
+        .select(
+          `
       id,
       baby_id,
       activity_type,
@@ -445,10 +541,12 @@ export async function getActiveTimerLock(
         display_name
       )
     `
-    )
-    .eq("baby_id", babyId)
-    .eq("activity_type", activityType)
-    .maybeSingle();
+        )
+        .eq("baby_id", babyId)
+        .eq("activity_type", activityType)
+        .maybeSingle(),
+    expectedUserId
+  );
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -487,7 +585,7 @@ export function findActiveTimerLock(
   snapshot: readonly ActiveTimerLock[],
   activityType: TimerActivityType
 ): ActiveTimerLock | null {
-  return snapshot.find(lock => lock.activityType === activityType) ?? null;
+  return snapshot.find((lock) => lock.activityType === activityType) ?? null;
 }
 
 /**
@@ -522,10 +620,11 @@ export function getActiveTimerSnapshotForBaby(
 export async function getActiveTimersForBaby(
   babyId: string
 ): Promise<ActiveTimerLock[]> {
-  const { data, error } = await supabase
-    .from("active_timers")
-    .select(
-      `
+  const { data, error } = await withTimerAccess(babyId, () =>
+    supabase
+      .from("active_timers")
+      .select(
+        `
       id,
       baby_id,
       activity_type,
@@ -536,8 +635,9 @@ export async function getActiveTimersForBaby(
         display_name
       )
     `
-    )
-    .eq("baby_id", babyId);
+      )
+      .eq("baby_id", babyId)
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to get locks for baby:", error);
@@ -566,17 +666,21 @@ export async function updateTimerData(
   userId: string,
   timerData: Record<string, unknown>
 ): Promise<boolean> {
-  void userId;
   const timerInstanceId = timerData.timerInstanceId;
   if (typeof timerInstanceId !== "string" || timerInstanceId.length === 0) {
     return false;
   }
-  const { error } = await supabase
-    .from("active_timers")
-    .update({ timer_data: timerData })
-    .eq("baby_id", babyId)
-    .eq("activity_type", activityType)
-    .eq("timer_data->>timerInstanceId", timerInstanceId);
+  const { error } = await withTimerAccess(
+    babyId,
+    () =>
+      supabase
+        .from("active_timers")
+        .update({ timer_data: timerData })
+        .eq("baby_id", babyId)
+        .eq("activity_type", activityType)
+        .eq("timer_data->>timerInstanceId", timerInstanceId),
+    userId
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to update timer data:", error);
@@ -592,12 +696,18 @@ export async function toggleTimerPause(
   userId: string,
   timerData: Record<string, unknown>
 ): Promise<void> {
-  const { error } = await supabase.rpc("toggle_timer_pause", {
-    p_baby_id: babyId,
-    p_activity_type: activityType,
-    p_user_id: userId,
-    p_timer_data: timerData,
-  });
+  const { error } = await withTimerAccess(
+    babyId,
+    () =>
+      supabase.rpc("toggle_timer_pause", {
+        p_baby_id: babyId,
+        p_activity_type: activityType,
+        p_user_id: userId,
+        p_timer_data: timerData,
+      }),
+    userId,
+    "toggle_timer_pause"
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to toggle timer pause:", error);
@@ -612,18 +722,23 @@ export async function updateTimerStartTime(
   startedAt: Date,
   timerData?: Record<string, unknown>
 ): Promise<boolean> {
-  const { error, count } = await supabase
-    .from("active_timers")
-    .update(
-      {
-        started_at: startedAt.toISOString(),
-        ...(timerData ? { timer_data: timerData } : {}),
-      },
-      { count: "exact" }
-    )
-    .eq("baby_id", babyId)
-    .eq("activity_type", activityType)
-    .eq("started_by", userId);
+  const { error, count } = await withTimerAccess(
+    babyId,
+    () =>
+      supabase
+        .from("active_timers")
+        .update(
+          {
+            started_at: startedAt.toISOString(),
+            ...(timerData ? { timer_data: timerData } : {}),
+          },
+          { count: "exact" }
+        )
+        .eq("baby_id", babyId)
+        .eq("activity_type", activityType)
+        .eq("started_by", userId),
+    userId
+  );
 
   if (error) {
     console.error("[ActiveTimerService] Failed to update timer start:", error);

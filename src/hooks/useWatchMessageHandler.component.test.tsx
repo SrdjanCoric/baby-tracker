@@ -25,7 +25,24 @@ const mockGetLockForActivity = jest.fn();
 const mockRefreshLocks = jest.fn();
 
 jest.mock("@/services/supabase", () => ({
-  supabase: { rpc: (...args: unknown[]) => mockTimerRpc(...args) },
+  supabase: {
+    auth: {
+      onAuthStateChange: jest.fn(),
+      getSession: async () => ({
+        data: { session: { user: { id: mockUserId } } },
+        error: null,
+      }),
+    },
+    from: () => {
+      const query: any = {
+        select: () => query,
+        eq: () => query,
+        maybeSingle: async () => ({ data: { id: "baby-a" }, error: null }),
+      };
+      return query;
+    },
+    rpc: (...args: unknown[]) => mockTimerRpc(...args),
+  },
 }));
 
 jest.mock("@/contexts/active-timers-context", () => ({
@@ -35,7 +52,12 @@ jest.mock("@/contexts/active-timers-context", () => ({
   }),
 }));
 
-let registeredHandler: ((message: Record<string, unknown>, replyHandler?: (reply: Record<string, unknown>) => void) => void) | null = null;
+let registeredHandler:
+  | ((
+      message: Record<string, unknown>,
+      replyHandler?: (reply: Record<string, unknown>) => void
+    ) => void)
+  | null = null;
 let mockSelectedBabyId = "baby-a";
 let mockFeedingBabyId = "baby-a";
 let mockSleepBabyId = "baby-a";
@@ -47,7 +69,9 @@ let mockUserId = "user-a";
 
 jest.mock("@/contexts/auth-context", () => ({
   useAuth: () => ({
-    user: mockUserId ? { id: mockUserId, householdId: `household-${mockUserId}` } : null,
+    user: mockUserId
+      ? { id: mockUserId, householdId: `household-${mockUserId}` }
+      : null,
   }),
 }));
 
@@ -62,7 +86,8 @@ jest.mock("@/services/watch-service", () => ({
 jest.mock("@/contexts/baby-context", () => ({
   useBaby: () => ({
     selectedBaby: mockSelectedBabyId ? { id: mockSelectedBabyId } : null,
-    getBabyById: (id: string) => id === "baby-a" || id === "baby-b" ? { id } : undefined,
+    getBabyById: (id: string) =>
+      id === "baby-a" || id === "baby-b" ? { id } : undefined,
     selectBaby: mockSelectBaby,
   }),
 }));
@@ -71,13 +96,24 @@ jest.mock("@/contexts/feeding-context", () => ({
   useFeeding: () => {
     const isBabyB = mockSelectedBabyId === "baby-b";
     return {
-      babyBinding: { babyId: mockFeedingBabyId, status: mockFeedingBindingStatus },
-      startBreastfeeding: isBabyB ? mockStartBreastfeedingB : mockStartBreastfeedingA,
-      stopBreastfeeding: isBabyB ? mockStopBreastfeedingB : mockStopBreastfeedingA,
+      babyBinding: {
+        babyId: mockFeedingBabyId,
+        status: mockFeedingBindingStatus,
+      },
+      startBreastfeeding: isBabyB
+        ? mockStartBreastfeedingB
+        : mockStartBreastfeedingA,
+      stopBreastfeeding: isBabyB
+        ? mockStopBreastfeedingB
+        : mockStopBreastfeedingA,
       changeSide: jest.fn(),
       addFeeding: isBabyB ? mockAddFeedingB : mockAddFeedingA,
-      pauseBreastfeeding: isBabyB ? mockPauseBreastfeedingB : mockPauseBreastfeedingA,
-      resumeBreastfeeding: isBabyB ? mockResumeBreastfeedingB : mockResumeBreastfeedingA,
+      pauseBreastfeeding: isBabyB
+        ? mockPauseBreastfeedingB
+        : mockPauseBreastfeedingA,
+      resumeBreastfeeding: isBabyB
+        ? mockResumeBreastfeedingB
+        : mockResumeBreastfeedingA,
     };
   },
 }));
@@ -95,7 +131,8 @@ jest.mock("@/contexts/sleep-context", () => ({
 jest.mock("@/contexts/diaper-context", () => ({
   useDiaper: () => ({
     babyBinding: { babyId: mockDiaperBabyId, status: "ready" },
-    addDiaper: mockSelectedBabyId === "baby-b" ? mockAddDiaperB : mockAddDiaperA,
+    addDiaper:
+      mockSelectedBabyId === "baby-b" ? mockAddDiaperB : mockAddDiaperA,
   }),
 }));
 
@@ -122,7 +159,8 @@ jest.mock("@/contexts/tummyTime-context", () => ({
 
 jest.mock("@/services/widget-data-service", () => ({
   readPendingWidgetStop: () => mockReadPendingWidgetStop(),
-  clearPendingWidgetStop: (pending: unknown) => mockClearPendingWidgetStop(pending),
+  clearPendingWidgetStop: (pending: unknown) =>
+    mockClearPendingWidgetStop(pending),
   clearPendingWidgetPauseToggle: () => mockClearPendingWidgetPauseToggle(),
 }));
 
@@ -145,7 +183,10 @@ function TestHarness() {
   return null;
 }
 
-function sendMessage(message: Record<string, unknown>, replyHandler?: (reply: Record<string, unknown>) => void) {
+function sendMessage(
+  message: Record<string, unknown>,
+  replyHandler?: (reply: Record<string, unknown>) => void
+) {
   act(() => {
     registeredHandler?.(message, replyHandler);
   });
@@ -153,9 +194,12 @@ function sendMessage(message: Record<string, unknown>, replyHandler?: (reply: Re
 
 function deferredSelection() {
   let resolve: (() => void) | undefined;
-  mockSelectBaby.mockImplementation(() => new Promise<{ id: string }>((selectionResolved) => {
-    resolve = () => selectionResolved({ id: "baby-b" });
-  }));
+  mockSelectBaby.mockImplementation(
+    () =>
+      new Promise<{ id: string }>((selectionResolved) => {
+        resolve = () => selectionResolved({ id: "baby-b" });
+      })
+  );
   return () => resolve?.();
 }
 
@@ -204,17 +248,28 @@ describe("useWatchMessageHandler", () => {
       });
       const reply = jest.fn();
       render(<TestHarness />);
-      sendMessage({
-        action: "pauseTimer", activityType, babyId: "baby-a",
-        timerInstanceId: "remote-timer", eventAt: new Date(now).toISOString(),
-      }, reply);
-      await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: true }));
+      sendMessage(
+        {
+          action: "pauseTimer",
+          activityType,
+          babyId: "baby-a",
+          timerInstanceId: "remote-timer",
+          eventAt: new Date(now).toISOString(),
+        },
+        reply
+      );
+      await waitFor(() =>
+        expect(reply).toHaveBeenCalledWith({ success: true })
+      );
       expect(mockTimerRpc).toHaveBeenCalledWith("toggle_timer_pause", {
         p_baby_id: "baby-a",
-        p_activity_type: activityType === "tummyTime" ? "tummy_time" : activityType,
+        p_activity_type:
+          activityType === "tummyTime" ? "tummy_time" : activityType,
         p_user_id: "user-a",
         p_timer_data: {
-          isPaused: true, pausedAt: new Date(now).toISOString(), accumulatedSeconds: 600,
+          isPaused: true,
+          pausedAt: new Date(now).toISOString(),
+          accumulatedSeconds: 600,
         },
       });
       expect(mockPauseBreastfeedingA).not.toHaveBeenCalled();
@@ -229,21 +284,33 @@ describe("useWatchMessageHandler", () => {
       startedBy: "other-caregiver",
       startedAt: new Date(now - 600_000).toISOString(),
       timerData: {
-        timerInstanceId: "remote-timer", isPaused: true,
-        pausedAt: new Date(now - 60_000).toISOString(), totalPausedMs: 30_000,
+        timerInstanceId: "remote-timer",
+        isPaused: true,
+        pausedAt: new Date(now - 60_000).toISOString(),
+        totalPausedMs: 30_000,
       },
     });
     const reply = jest.fn();
     render(<TestHarness />);
-    sendMessage({
-      action: "resumeTimer", activityType: "sleep", babyId: "baby-a",
-      timerInstanceId: "remote-timer", eventAt: new Date(now).toISOString(),
-    }, reply);
+    sendMessage(
+      {
+        action: "resumeTimer",
+        activityType: "sleep",
+        babyId: "baby-a",
+        timerInstanceId: "remote-timer",
+        eventAt: new Date(now).toISOString(),
+      },
+      reply
+    );
     await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: true }));
     expect(mockTimerRpc).toHaveBeenCalledWith("toggle_timer_pause", {
-      p_baby_id: "baby-a", p_activity_type: "sleep", p_user_id: "user-a",
+      p_baby_id: "baby-a",
+      p_activity_type: "sleep",
+      p_user_id: "user-a",
       p_timer_data: {
-        isPaused: false, accumulatedSeconds: 600, totalPausedMs: 90_000,
+        isPaused: false,
+        accumulatedSeconds: 600,
+        totalPausedMs: 90_000,
         effectiveStartTime: new Date(now - 600_000).toISOString(),
       },
     });
@@ -251,49 +318,100 @@ describe("useWatchMessageHandler", () => {
 
   it("rejects a stale remote pause identity without modifying the replacement timer", async () => {
     mockGetLockForActivity.mockReturnValue({
-      startedBy: "other-caregiver", startedAt: new Date().toISOString(),
+      startedBy: "other-caregiver",
+      startedAt: new Date().toISOString(),
       timerData: { timerInstanceId: "replacement-timer", isPaused: false },
     });
     const reply = jest.fn();
     render(<TestHarness />);
-    sendMessage({
-      action: "pauseTimer", activityType: "feeding", babyId: "baby-a",
-      timerInstanceId: "old-timer",
-    }, reply);
-    await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: false, error: "stale-timer" }));
+    sendMessage(
+      {
+        action: "pauseTimer",
+        activityType: "feeding",
+        babyId: "baby-a",
+        timerInstanceId: "old-timer",
+      },
+      reply
+    );
+    await waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        success: false,
+        error: "stale-timer",
+      })
+    );
     expect(mockTimerRpc).not.toHaveBeenCalled();
   });
 
   it("reports a remote pause RPC failure to the Watch", async () => {
     mockGetLockForActivity.mockReturnValue({
-      startedBy: "other-caregiver", startedAt: new Date(Date.now() - 600_000).toISOString(),
+      startedBy: "other-caregiver",
+      startedAt: new Date(Date.now() - 600_000).toISOString(),
       timerData: { timerInstanceId: "remote-timer", isPaused: false },
     });
     mockTimerRpc.mockResolvedValue({ error: new Error("offline") });
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const reply = jest.fn();
     render(<TestHarness />);
-    sendMessage({
-      action: "pauseTimer", activityType: "sleep", babyId: "baby-a",
-      timerInstanceId: "remote-timer",
-    }, reply);
-    await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: false, error: "action-failed" }));
+    sendMessage(
+      {
+        action: "pauseTimer",
+        activityType: "sleep",
+        babyId: "baby-a",
+        timerInstanceId: "remote-timer",
+      },
+      reply
+    );
+    await waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        success: false,
+        error: "action-failed",
+      })
+    );
     expect(mockRefreshLocks).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 
   it("waits for contexts to bind to the requested baby before running queued activity commands", async () => {
     const resolveSelection = deferredSelection();
-    mockOnRequestSync.mockImplementation((replyHandler) => replyHandler?.({ widgetData: "baby-b-data" }));
+    mockOnRequestSync.mockImplementation((replyHandler) =>
+      replyHandler?.({ widgetData: "baby-b-data" })
+    );
 
     const view = render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
-    sendMessage({ action: "startTimer", activityType: "feeding", babyId: "baby-b", requestId: "start" });
-    sendMessage({ action: "pauseTimer", activityType: "feeding", babyId: "baby-b", requestId: "pause" });
-    sendMessage({ action: "resumeTimer", activityType: "feeding", babyId: "baby-b", requestId: "resume" });
-    sendMessage({ action: "stopTimer", activityType: "feeding", babyId: "baby-b", requestId: "stop" });
-    sendMessage({ action: "logDiaper", diaperType: "wet", babyId: "baby-b", requestId: "diaper" });
+    sendMessage({
+      action: "startTimer",
+      activityType: "feeding",
+      babyId: "baby-b",
+      requestId: "start",
+    });
+    sendMessage({
+      action: "pauseTimer",
+      activityType: "feeding",
+      babyId: "baby-b",
+      requestId: "pause",
+    });
+    sendMessage({
+      action: "resumeTimer",
+      activityType: "feeding",
+      babyId: "baby-b",
+      requestId: "resume",
+    });
+    sendMessage({
+      action: "stopTimer",
+      activityType: "feeding",
+      babyId: "baby-b",
+      requestId: "stop",
+    });
+    sendMessage({
+      action: "logDiaper",
+      diaperType: "wet",
+      babyId: "baby-b",
+      requestId: "diaper",
+    });
     sendMessage({
       action: "logBottleFeeding",
       volumeMl: 90,
@@ -302,7 +420,10 @@ describe("useWatchMessageHandler", () => {
       requestId: "bottle",
     });
     const syncReply = jest.fn();
-    sendMessage({ action: "requestSync", babyId: "baby-b", requestId: "sync" }, syncReply);
+    sendMessage(
+      { action: "requestSync", babyId: "baby-b", requestId: "sync" },
+      syncReply
+    );
 
     await waitFor(() => expect(mockSelectBaby).toHaveBeenCalledTimes(1));
     expect(mockStartBreastfeedingA).not.toHaveBeenCalled();
@@ -326,8 +447,14 @@ describe("useWatchMessageHandler", () => {
     mockTummyTimeBabyId = "baby-b";
     view.rerender(<TestHarness />);
 
-    await waitFor(() => expect(syncReply).toHaveBeenCalledWith({ widgetData: "baby-b-data" }));
-    expect(mockStartBreastfeedingB).toHaveBeenCalledWith("left", undefined, undefined);
+    await waitFor(() =>
+      expect(syncReply).toHaveBeenCalledWith({ widgetData: "baby-b-data" })
+    );
+    expect(mockStartBreastfeedingB).toHaveBeenCalledWith(
+      "left",
+      undefined,
+      undefined
+    );
     expect(mockPauseBreastfeedingB).toHaveBeenCalledTimes(1);
     expect(mockResumeBreastfeedingB).toHaveBeenCalledTimes(1);
     expect(mockStopBreastfeedingB).not.toHaveBeenCalled();
@@ -339,8 +466,12 @@ describe("useWatchMessageHandler", () => {
         source: "watch",
       })
     );
-    expect(mockAddDiaperB).toHaveBeenCalledWith(expect.objectContaining({ babyId: "baby-b", type: "wet" }));
-    expect(mockAddFeedingB).toHaveBeenCalledWith(expect.objectContaining({ babyId: "baby-b", amountMl: 90 }));
+    expect(mockAddDiaperB).toHaveBeenCalledWith(
+      expect.objectContaining({ babyId: "baby-b", type: "wet" })
+    );
+    expect(mockAddFeedingB).toHaveBeenCalledWith(
+      expect.objectContaining({ babyId: "baby-b", amountMl: 90 })
+    );
     expect(mockClearPendingWidgetPauseToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -405,7 +536,12 @@ describe("useWatchMessageHandler", () => {
 
     const firstReply = jest.fn();
     const duplicateReply = jest.fn();
-    const message = { action: "startTimer", activityType: "feeding", babyId: "unknown", requestId: "unknown" };
+    const message = {
+      action: "startTimer",
+      activityType: "feeding",
+      babyId: "unknown",
+      requestId: "unknown",
+    };
     sendMessage(message, firstReply);
     sendMessage(message, duplicateReply);
     view.rerender(<TestHarness />);
@@ -449,24 +585,36 @@ describe("useWatchMessageHandler", () => {
     view.rerender(<TestHarness />);
     await act(async () => resolveSelection());
 
-    await waitFor(() => expect(mockStartBreastfeedingB).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(mockStartBreastfeedingB).toHaveBeenCalledTimes(1)
+    );
   });
 
   it("returns the cached requestSync response for a duplicate request", async () => {
-    mockOnRequestSync.mockImplementation((replyHandler) => replyHandler?.({ widgetData: "same-response" }));
+    mockOnRequestSync.mockImplementation((replyHandler) =>
+      replyHandler?.({ widgetData: "same-response" })
+    );
     render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
     const firstReply = jest.fn();
     const duplicateReply = jest.fn();
-    const message = { action: "requestSync", babyId: "baby-a", requestId: "sync-request" };
+    const message = {
+      action: "requestSync",
+      babyId: "baby-a",
+      requestId: "sync-request",
+    };
     sendMessage(message, firstReply);
-    await waitFor(() => expect(firstReply).toHaveBeenCalledWith({ widgetData: "same-response" }));
+    await waitFor(() =>
+      expect(firstReply).toHaveBeenCalledWith({ widgetData: "same-response" })
+    );
 
     sendMessage(message, duplicateReply);
 
     expect(mockOnRequestSync).toHaveBeenCalledTimes(1);
-    expect(duplicateReply).toHaveBeenCalledWith({ widgetData: "same-response" });
+    expect(duplicateReply).toHaveBeenCalledWith({
+      widgetData: "same-response",
+    });
   });
 
   it("deduplicates a reply-less requestSync when its reply-bearing copy arrives", async () => {
@@ -476,7 +624,11 @@ describe("useWatchMessageHandler", () => {
     render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
-    const message = { action: "requestSync", babyId: "baby-a", requestId: "reply-less-sync" };
+    const message = {
+      action: "requestSync",
+      babyId: "baby-a",
+      requestId: "reply-less-sync",
+    };
     sendMessage(message);
     await waitFor(() => expect(mockOnRequestSync).toHaveBeenCalledTimes(1));
 
@@ -501,7 +653,10 @@ describe("useWatchMessageHandler", () => {
     );
 
     await waitFor(() => {
-      expect(reply).toHaveBeenCalledWith({ success: false, error: "action-failed" });
+      expect(reply).toHaveBeenCalledWith({
+        success: false,
+        error: "action-failed",
+      });
     });
   });
 
@@ -519,7 +674,9 @@ describe("useWatchMessageHandler", () => {
     };
 
     sendMessage(message, firstReply);
-    await waitFor(() => expect(firstReply).toHaveBeenCalledWith({ success: true }));
+    await waitFor(() =>
+      expect(firstReply).toHaveBeenCalledWith({ success: true })
+    );
     sendMessage(message, duplicateReply);
 
     expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1);
@@ -537,14 +694,19 @@ describe("useWatchMessageHandler", () => {
       babyId: "baby-a",
       requestId: "conflicting-request",
     });
-    await waitFor(() => expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1)
+    );
 
-    sendMessage({
-      action: "logDiaper",
-      diaperType: "wet",
-      babyId: "baby-a",
-      requestId: "conflicting-request",
-    }, conflictReply);
+    sendMessage(
+      {
+        action: "logDiaper",
+        diaperType: "wet",
+        babyId: "baby-a",
+        requestId: "conflicting-request",
+      },
+      conflictReply
+    );
 
     expect(conflictReply).toHaveBeenCalledWith({
       success: false,
@@ -560,17 +722,27 @@ describe("useWatchMessageHandler", () => {
     const view = render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
-    const message = { action: "requestSync", babyId: "baby-a", requestId: "shared-request-id" };
+    const message = {
+      action: "requestSync",
+      babyId: "baby-a",
+      requestId: "shared-request-id",
+    };
     const firstReply = jest.fn();
     sendMessage(message, firstReply);
-    await waitFor(() => expect(firstReply).toHaveBeenCalledWith({ widgetData: "data-for-user-a" }));
+    await waitFor(() =>
+      expect(firstReply).toHaveBeenCalledWith({ widgetData: "data-for-user-a" })
+    );
 
     mockUserId = "user-b";
     view.rerender(<TestHarness />);
     const secondReply = jest.fn();
     sendMessage(message, secondReply);
 
-    await waitFor(() => expect(secondReply).toHaveBeenCalledWith({ widgetData: "data-for-user-b" }));
+    await waitFor(() =>
+      expect(secondReply).toHaveBeenCalledWith({
+        widgetData: "data-for-user-b",
+      })
+    );
     expect(mockOnRequestSync).toHaveBeenCalledTimes(2);
   });
 
@@ -608,20 +780,28 @@ describe("useWatchMessageHandler", () => {
 
   it("terminalizes an executing request when the handler is unmounted", async () => {
     let resolveStart: (() => void) | undefined;
-    mockStartBreastfeedingA.mockImplementation(() => new Promise<void>(resolve => {
-      resolveStart = resolve;
-    }));
+    mockStartBreastfeedingA.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveStart = resolve;
+        })
+    );
     const view = render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
     const reply = jest.fn();
-    sendMessage({
-      action: "startTimer",
-      activityType: "feeding",
-      babyId: "baby-a",
-      requestId: "active-during-unmount",
-    }, reply);
-    await waitFor(() => expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1));
+    sendMessage(
+      {
+        action: "startTimer",
+        activityType: "feeding",
+        babyId: "baby-a",
+        requestId: "active-during-unmount",
+      },
+      reply
+    );
+    await waitFor(() =>
+      expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1)
+    );
 
     view.unmount();
 
@@ -636,7 +816,9 @@ describe("useWatchMessageHandler", () => {
 
   it("keeps an in-flight request deduplicated after the completed-response TTL elapses", async () => {
     let resolveStart: (() => void) | undefined;
-    const startPromise = new Promise<void>(resolve => { resolveStart = resolve; });
+    const startPromise = new Promise<void>((resolve) => {
+      resolveStart = resolve;
+    });
     mockStartBreastfeedingA.mockImplementation(() => startPromise);
     render(<TestHarness />);
     await waitFor(() => expect(registeredHandler).not.toBeNull());
@@ -655,7 +837,9 @@ describe("useWatchMessageHandler", () => {
       await act(async () => undefined);
       expect(mockStartBreastfeedingA).toHaveBeenCalledTimes(1);
 
-      act(() => { jest.advanceTimersByTime(30_001); });
+      act(() => {
+        jest.advanceTimersByTime(30_001);
+      });
       sendMessage(message, duplicateReply);
       await act(async () => {
         resolveStart?.();
@@ -678,18 +862,23 @@ describe("useWatchMessageHandler", () => {
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
     const reply = jest.fn();
-    sendMessage({
-      action: "startTimer",
-      activityType: "feeding",
-      babyId: "baby-a",
-      requestId: "rejected-start",
-    }, reply);
+    sendMessage(
+      {
+        action: "startTimer",
+        activityType: "feeding",
+        babyId: "baby-a",
+        requestId: "rejected-start",
+      },
+      reply
+    );
 
-    await waitFor(() => expect(reply).toHaveBeenCalledWith({
-      success: false,
-      error: "timer-start-rejected",
-      lockedByName: "Other caregiver",
-    }));
+    await waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        success: false,
+        error: "timer-start-rejected",
+        lockedByName: "Other caregiver",
+      })
+    );
     expect(mockReadPendingWidgetStop).not.toHaveBeenCalled();
     expect(mockClearPendingWidgetStop).not.toHaveBeenCalled();
   });
@@ -702,12 +891,15 @@ describe("useWatchMessageHandler", () => {
 
     try {
       const timedOutReply = jest.fn();
-      sendMessage({
-        action: "startTimer",
-        activityType: "feeding",
-        babyId: "baby-a",
-        requestId: "stuck-binding",
-      }, timedOutReply);
+      sendMessage(
+        {
+          action: "startTimer",
+          activityType: "feeding",
+          babyId: "baby-a",
+          requestId: "stuck-binding",
+        },
+        timedOutReply
+      );
 
       await act(async () => {
         jest.advanceTimersByTime(5_000);
@@ -721,12 +913,15 @@ describe("useWatchMessageHandler", () => {
       mockFeedingBindingStatus = "ready";
       view.rerender(<TestHarness />);
       const laterReply = jest.fn();
-      sendMessage({
-        action: "logDiaper",
-        diaperType: "wet",
-        babyId: "baby-a",
-        requestId: "after-timeout",
-      }, laterReply);
+      sendMessage(
+        {
+          action: "logDiaper",
+          diaperType: "wet",
+          babyId: "baby-a",
+          requestId: "after-timeout",
+        },
+        laterReply
+      );
       await act(async () => undefined);
 
       expect(mockAddDiaperA).toHaveBeenCalledTimes(1);
@@ -789,12 +984,15 @@ describe("useWatchMessageHandler", () => {
     await waitFor(() => expect(registeredHandler).not.toBeNull());
 
     const failedReply = jest.fn();
-    sendMessage({
-      action: "startTimer",
-      activityType: "feeding",
-      babyId: "baby-b",
-      requestId: "provider-failure",
-    }, failedReply);
+    sendMessage(
+      {
+        action: "startTimer",
+        activityType: "feeding",
+        babyId: "baby-b",
+        requestId: "provider-failure",
+      },
+      failedReply
+    );
 
     await waitFor(() => {
       expect(failedReply).toHaveBeenCalledWith({

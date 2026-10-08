@@ -1,3 +1,4 @@
+import { isTimerAccessUnavailable } from "./timer-access-error";
 import {
   getActiveTimerLock,
   findActiveTimerLock,
@@ -41,7 +42,11 @@ import {
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
 import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
-import { errorCode, recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
+import {
+  errorCode,
+  recordBreadcrumb,
+  reportIssue,
+} from "@/utils/observability-sink";
 
 export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
@@ -127,12 +132,7 @@ export interface EditRunningTimerStartTimeOptions<
   TRecord,
   TCreateInput,
 > {
-  adapter: TimerLifecycleAdapter<
-    TPayload,
-    TActiveTimer,
-    TRecord,
-    TCreateInput
-  >;
+  adapter: TimerLifecycleAdapter<TPayload, TActiveTimer, TRecord, TCreateInput>;
   baby: { id: string; name: string };
   userId?: string;
   activeTimer: TActiveTimer & TimerIdentity;
@@ -158,7 +158,10 @@ export interface RestoreTimerLifecycleOptions<
   isCurrentBabyBinding(): boolean;
   liveActivityIdRef: MutableRef<string | null>;
   refreshLocks(): Promise<unknown> | unknown;
-  persistRecord(input: TCreateInput, completion: TimerCompletionRecord): Promise<TRecord>;
+  persistRecord(
+    input: TCreateInput,
+    completion: TimerCompletionRecord
+  ): Promise<TRecord>;
   dispatchStopTimer(): void;
   dispatchAddRecord(record: TRecord): void;
   onCompletionSecured?(): Promise<unknown> | unknown;
@@ -177,7 +180,10 @@ export interface StopRemoteTimerLifecycleOptions<
   userId: string;
   lock: ActiveTimerLock;
   requestedStopTime?: Date;
-  persistRecord(input: TCreateInput, completion: TimerCompletionRecord): Promise<TRecord>;
+  persistRecord(
+    input: TCreateInput,
+    completion: TimerCompletionRecord
+  ): Promise<TRecord>;
   dispatchAddRecord(record: TRecord): void;
   refreshLocks?(): Promise<unknown> | unknown;
 }
@@ -198,7 +204,9 @@ export interface ObservedTimerPauseChange {
   accumulatedSeconds: number;
 }
 
-export interface SyncObservedOwnedTimerLockOptions<TActiveTimer extends ObservedOwnedTimer> {
+export interface SyncObservedOwnedTimerLockOptions<
+  TActiveTimer extends ObservedOwnedTimer,
+> {
   activityType: TimerActivityType;
   babyId?: string;
   userId?: string;
@@ -206,7 +214,10 @@ export interface SyncObservedOwnedTimerLockOptions<TActiveTimer extends Observed
   locks: readonly ActiveTimerLock[];
   locksLoading: boolean;
   observedTimerInstanceIdRef: { current: string | null };
-  onPauseChange(change: ObservedTimerPauseChange, activeTimer: TActiveTimer): Promise<unknown> | unknown;
+  onPauseChange(
+    change: ObservedTimerPauseChange,
+    activeTimer: TActiveTimer
+  ): Promise<unknown> | unknown;
   onVanished(activeTimer: TActiveTimer): Promise<unknown> | unknown;
 }
 
@@ -223,7 +234,9 @@ function matchesOwnedTimerLock(
     : new Date(lock.startedAt).getTime() === startedAt.getTime();
 }
 
-export async function syncObservedOwnedTimerLock<TActiveTimer extends ObservedOwnedTimer>({
+export async function syncObservedOwnedTimerLock<
+  TActiveTimer extends ObservedOwnedTimer,
+>({
   activityType,
   babyId,
   userId,
@@ -241,25 +254,44 @@ export async function syncObservedOwnedTimerLock<TActiveTimer extends ObservedOw
   if (!userId || locksLoading) return;
 
   const lock = locks.find(
-    candidate => candidate.babyId === babyId && candidate.activityType === activityType
+    (candidate) =>
+      candidate.babyId === babyId && candidate.activityType === activityType
   );
-  if (lock && matchesOwnedTimerLock(lock, userId, activeTimer.timerInstanceId, activeTimer.startTime)) {
+  if (
+    lock &&
+    matchesOwnedTimerLock(
+      lock,
+      userId,
+      activeTimer.timerInstanceId,
+      activeTimer.startTime
+    )
+  ) {
     observedTimerInstanceIdRef.current = activeTimer.timerInstanceId;
     const isPaused = lock.timerData?.isPaused === true;
-    const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
-      ? lock.timerData.totalPausedMs
-      : 0;
-    const pausedAt = isPaused && typeof lock.timerData?.pausedAt === "string"
-      ? new Date(lock.timerData.pausedAt)
-      : undefined;
+    const totalPausedMs =
+      typeof lock.timerData?.totalPausedMs === "number"
+        ? lock.timerData.totalPausedMs
+        : 0;
+    const pausedAt =
+      isPaused && typeof lock.timerData?.pausedAt === "string"
+        ? new Date(lock.timerData.pausedAt)
+        : undefined;
     if (
       activeTimer.isPaused !== isPaused ||
       activeTimer.totalPausedMs !== totalPausedMs ||
       activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
     ) {
-      const accumulatedSeconds = typeof lock.timerData?.accumulatedSeconds === "number"
-        ? lock.timerData.accumulatedSeconds
-        : Math.max(0, Math.floor(((pausedAt ?? new Date()).getTime() - activeTimer.startTime.getTime()) / 1000));
+      const accumulatedSeconds =
+        typeof lock.timerData?.accumulatedSeconds === "number"
+          ? lock.timerData.accumulatedSeconds
+          : Math.max(
+              0,
+              Math.floor(
+                ((pausedAt ?? new Date()).getTime() -
+                  activeTimer.startTime.getTime()) /
+                  1000
+              )
+            );
       await onPauseChange(
         { isPaused, totalPausedMs, pausedAt, accumulatedSeconds },
         activeTimer
@@ -279,7 +311,10 @@ export function calculateTimerDurationSeconds(
   endedAt: Date,
   _totalPausedMs: number
 ): number {
-  return Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000));
+  return Math.max(
+    0,
+    Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000)
+  );
 }
 
 export function parseTimerDate(
@@ -353,7 +388,7 @@ export async function stopRemoteTimerLifecycle<
     userId,
     identity.timerInstanceId,
     lock.startedAt
-  ).catch(error => {
+  ).catch((error) => {
     reportIssue({
       name: "timers.lock_release_queued",
       area: "timers",
@@ -470,7 +505,11 @@ export async function editRunningTimerStartTime<
       adapter.liveActivity.detail(payload),
       startedAt,
       userId && activeTimer.lockState === "owned"
-        ? { babyId: baby.id, timerInstanceId: activeTimer.timerInstanceId, userId }
+        ? {
+            babyId: baby.id,
+            timerInstanceId: activeTimer.timerInstanceId,
+            userId,
+          }
         : undefined
     );
   }
@@ -563,6 +602,11 @@ export async function restoreTimerLifecycle<
     }
     liveActivityIdRef.current = null;
   };
+  const clearRevokedTimer = async (activityId?: string) => {
+    await endAdapterLiveActivity(activityId ?? liveActivityIdRef.current);
+    await adapter.storage.clearActiveTimer(baby.id);
+    dispatchStopTimer();
+  };
   const releaseOrQueueLock = async (
     identity: TimerIdentity,
     startedAt: string
@@ -607,7 +651,11 @@ export async function restoreTimerLifecycle<
       adapter.liveActivity.detail(payload),
       new Date(startedAt),
       user?.id && lockState === "owned"
-        ? { babyId: baby.id, timerInstanceId: identity.timerInstanceId, userId: user.id }
+        ? {
+            babyId: baby.id,
+            timerInstanceId: identity.timerInstanceId,
+            userId: user.id,
+          }
         : undefined
     );
     return acceptStartedLiveActivity(activityId);
@@ -619,6 +667,33 @@ export async function restoreTimerLifecycle<
   const pendingStop = activeTimer
     ? await readPendingTimerStop(adapter.activityType, baby.id)
     : null;
+  if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
+  let timerAccessFailed = false;
+  if (timerSnapshot && user?.id && user.householdId) {
+    try {
+      await timerSnapshot;
+    } catch (error) {
+      if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
+      if (isTimerAccessUnavailable(error)) {
+        if (error.reason === "revoked") {
+          await clearRevokedTimer(activeTimer?.liveActivityId);
+          return;
+        }
+        timerAccessFailed = true;
+      } else if (
+        isRetryableTimerWriteError(error) ||
+        errorCode(error) === "42501"
+      ) {
+        timerAccessFailed = true;
+        reportIssue({
+          name: "timers.restore_failed",
+          area: "timers",
+          error,
+          tags: { activityType: adapter.activityType },
+        });
+      }
+    }
+  }
   if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
   const hasPendingStop = activeTimer
     ? isPendingStopForTimer(
@@ -710,7 +785,7 @@ export async function restoreTimerLifecycle<
       });
     }
 
-    if (user?.id && user.householdId && !hasPendingStop) {
+    if (user?.id && user.householdId && !hasPendingStop && !timerAccessFailed) {
       const persistLockState = async (
         nextLockState: TimerLockReconciliationState
       ) => {
@@ -732,7 +807,14 @@ export async function restoreTimerLifecycle<
         timerData: adapter.timerDataCodec.encode(payloadWithIdentity),
         persistState: persistLockState,
         timerSnapshot,
+      }).catch(async (error) => {
+        if (!isTimerAccessUnavailable(error) || error.reason !== "revoked")
+          throw error;
+        if (!isCurrentBabyBinding() || isRestoreObsolete()) return null;
+        await clearRevokedTimer(activeTimer.liveActivityId);
+        return null;
       });
+      if (!reconciliation) return;
       if (!isCurrentBabyBinding() || isRestoreObsolete()) return;
       if (reconciliation.state !== "offline") await refreshLocks();
 
@@ -775,14 +857,10 @@ export async function restoreTimerLifecycle<
 
         if (!record) {
           record = await persistRecord(
-            adapter.buildRecord(
-              startedAt,
-              new Date(completion.stoppedAt),
-              {
-                ...payloadWithIdentity,
-                activityId: completion.activityId,
-              }
-            ),
+            adapter.buildRecord(startedAt, new Date(completion.stoppedAt), {
+              ...payloadWithIdentity,
+              activityId: completion.activityId,
+            }),
             completion
           );
           await markTimerCompletionDurable(completion);
@@ -812,18 +890,32 @@ export async function restoreTimerLifecycle<
           liveActivityIdRef.current = activeTimer.liveActivityId;
           if (user?.id && lockState === "owned") {
             await bindTimerLiveActivity(activeTimer.liveActivityId, {
-              babyId: baby.id, timerInstanceId: identity.timerInstanceId, userId: user.id,
+              babyId: baby.id,
+              timerInstanceId: identity.timerInstanceId,
+              userId: user.id,
             });
           }
         } else if (!payload.isPaused) {
           if (
-            !(await startAdapterLiveActivity(activeTimer.startedAt, payload, identity, lockState))
+            !(await startAdapterLiveActivity(
+              activeTimer.startedAt,
+              payload,
+              identity,
+              lockState
+            ))
           ) {
             return;
           }
         }
       } else if (!hasPendingStop && !payload.isPaused) {
-        if (!(await startAdapterLiveActivity(activeTimer.startedAt, payload, identity, lockState))) {
+        if (
+          !(await startAdapterLiveActivity(
+            activeTimer.startedAt,
+            payload,
+            identity,
+            lockState
+          ))
+        ) {
           return;
         }
       }
@@ -872,13 +964,27 @@ export async function restoreTimerLifecycle<
         if (!isCurrentBabyBinding()) return;
 
         if (!payload.isPaused) {
-          if (!(await startAdapterLiveActivity(lock.startedAt, payload, identity, "owned"))) {
+          if (
+            !(await startAdapterLiveActivity(
+              lock.startedAt,
+              payload,
+              identity,
+              "owned"
+            ))
+          ) {
             return;
           }
         }
       }
     } catch (error) {
       if (!isCurrentBabyBinding()) return;
+      if (isTimerAccessUnavailable(error)) {
+        if (error.reason === "revoked") {
+          if (isRestoreObsolete()) return;
+          await clearRevokedTimer();
+        }
+        return;
+      }
       console.error(`${errorLabel} Failed to restore from server:`, error);
       reportIssue({
         name: "timers.restore_failed",

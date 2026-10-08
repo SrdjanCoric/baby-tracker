@@ -43,6 +43,9 @@ Covered calls: restoring running timers (`timers.restore_failed`), loading the h
 
 ## Clarifications
 
+- Owner instructed implementation to continue with this task intact despite the workflow’s
+  approximate 600-word task-size gate.
+
 ## Non-goals
 
 - `57014` statement timeouts and `Network request failed` in the same Sentry issues. Timeouts depend
@@ -92,19 +95,19 @@ outage (09:27–09:50 UTC). The 2026-09-27 and 2026-10-06 events did not.
 
 ## Implementation work
 
-- [ ] Reproduce `42501` for each covered call on the local Supabase stack. Use the situations in
+- [x] Reproduce `42501` for each covered call on the local Supabase stack. Use the situations in
       the table: login not ready, token expired, signed out, removed member, deleted baby. Record
       in this file which situation causes it. Proven by a failing test in the timer service and
       lifecycle tests, or by SQL tests against the local database.
-- [ ] Every allowed situation in the table succeeds without `42501`. Proven in those same tests.
-- [ ] A timer call waits for the login to be ready and runs once. With an expired token, the login is
+- [x] Every allowed situation in the table succeeds without `42501`. Proven in those same tests.
+- [x] A timer call waits for the login to be ready and runs once. With an expired token, the login is
       refreshed once before the call runs. Proven in the timer lifecycle and active-timers context tests.
-- [ ] Signed-out users, guests, removed members, and deleted households or babies send no timer
+- [x] Signed-out users, guests, removed members, and deleted households or babies send no timer
       call to the server and report nothing to Sentry. Proven in the same tests.
-- [ ] If a server access rule is the cause: add a new migration so household members can make
+- [x] If a server access rule is the cause: add a new migration so household members can make
       every allowed call, and no one outside the household can. Proven by SQL tests that cover a
       member, a non-member, a removed member, and the anonymous role.
-- [ ] A `42501` that still happens in an allowed case is reported to Sentry once per session, with
+- [x] A `42501` that still happens in an allowed case is reported to Sentry once per session, with
       the failing table or function name in the report. Proven in the observability tests.
 
 ## Human checkpoints
@@ -119,8 +122,57 @@ outage (09:27–09:50 UTC). The 2026-09-27 and 2026-10-06 events did not.
 
 ## Acceptance criteria
 
-- [ ] Every row of the decision table is covered by a passing automated test.
-- [ ] The test that reproduced `42501` fails on `main` and passes on this branch.
-- [ ] Any new migration applies cleanly to the local Supabase stack, and its SQL tests pass.
-- [ ] Lint, type check, and the full unit test suite pass.
+- [x] Every row of the decision table is covered by a passing automated test.
+- [x] The test that reproduced `42501` fails on `main` and passes on this branch.
+- [x] Any new migration applies cleanly to the local Supabase stack, and its SQL tests pass. (No migration needed.)
+- [x] Lint, type check, and the full unit test suite pass.
 - [ ] The [verify] checkpoint is confirmed by the owner.
+
+## Implementation evidence
+
+- Classification: `code`; validation tier: `canonical`; TDD applicable: `true`.
+- Branch: `feature/fix-timer-permission-denied`; base: `main`.
+- Task logs: `/tmp/agent-workflows/e2f8af45fd34/1b4aae972e7a`.
+- Reproduction: anonymous direct `active_timers` SELECT (aggregate restore, lock loading,
+  individual read), DELETE (pending release), and UPDATE (pending start edit) all raise
+  `42501` on local Supabase. A cached UI user does not prove that the SDK has a session;
+  the old service sent these requests without checking it. The regression matrix failed
+  against the unchanged base implementation (`access-red.log`) and now passes.
+- Removed members and outsiders get no visible baby through existing RLS, rather than
+  `42501` on an ordinary lock SELECT. A deleted baby or household also fails the baby
+  preflight. Expired JWTs produce `PGRST303`, not `42501`. These cases are tested separately;
+  the local reproduction does not establish the exact cause of every historical Sentry event.
+- Current authenticated table privileges and owner/member operations pass without adding grants
+  in `timer-permission-session-tests.sql`. Existing authorization tests also pass. The conditional
+  migration work item is satisfied as not applicable: no policy, grant, or migration changed.
+- `timer-access.test.ts` covers readiness, guests/signed-out users, removed/deleted access,
+  each covered read/write, concurrent expiry, refresh failure, mismatched queued account,
+  unexpected denial, preserved pending edits, and the real PostgREST response parser.
+- `timer-lifecycle.test.ts` proves local restore after unexpected `42501`, accountless restore
+  after session loss, and cleanup on revocation during snapshot read or reconciliation.
+  `timer-lock-reconciliation.test.ts` proves confirmed revocation reaches that cleanup.
+- `active-timers-realtime.component.test.tsx` proves initialization waits, one load after
+  readiness, no foreground replay without a household, and discard of a stale response after sign-out. Existing provider integration
+  tests continue to prove shared lock cleanup and external stops across all activity types.
+- `observability-sink.test.ts` proves expected access loss is quiet and unexpected timer
+  `42501` is reported once across issue names per app session, with code/resource tags.
+- RED/GREEN evidence: access gating (7 failing → 8 passing initial tests), observability
+  (2 failing → passing), lifecycle access loss (2 failing → passing), provider readiness
+  (3 failing → passing), reconciliation revocation (1 failing → passing), SDK refresh failure
+  (1 failing → passing). The pending-edit retention mutation produced a failing queue-length
+  assertion, then passed after restoring the preservation condition. Removing the provider binding guard also
+  reproduced stale lock resurrection after sign-out; restoring it made that test pass.
+- Validation: full unit suite **175 files / 3,339 tests**; affected component/integration suites
+  **4 suites / 76 tests**; lint and typecheck pass. SQL session/authorization tests pass in
+  rollback-only transactions. Final canonical bundle/device proof belongs to `finish-task`.
+- Derived facts: Supabase `GoTrueClient.getSession` waits for initialization and its
+  `__loadSession` refreshes expired stored sessions; existing baby SELECT RLS checks current
+  `users.household_id`; the baby's `deleted` field is the existing tombstone visibility rule.
+  Queued writes retain their existing user identity and cannot replay under another account.
+- Boundaries: session/refresh result shapes follow installed `@supabase/auth-js` source;
+  database visibility follows local SQL against the existing policies; PostgREST errors follow
+  installed `PostgrestBuilder` and are exercised through `PostgrestClient` in the access tests;
+  pending queue fields follow the existing queue producers in `active-timer-service.ts`.
+- No new flags, environment variables, heuristics, fallbacks, dependencies, or unrelated fixes.
+  No unresolved implementation decisions. The security approval before merge and owner Android
+  verification remain unchecked; no production database or emulator action was performed here.

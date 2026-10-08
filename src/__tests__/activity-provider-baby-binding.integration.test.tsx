@@ -25,6 +25,13 @@ let mockTimerQueryResult: Promise<{ data: unknown[]; error: null }> = Promise.re
 
 jest.mock("@/services/supabase", () => ({
   supabase: {
+    auth: {
+      onAuthStateChange: jest.fn(),
+      getSession: async () => ({
+        data: { session: mockAuthUser ? { user: { id: mockAuthUser.id } } : null },
+        error: null,
+      }),
+    },
     from: (table: string) => mockSupabaseFrom(table),
   },
 }));
@@ -232,6 +239,7 @@ describe("real activity provider baby binding", () => {
       const query = {
         select: jest.fn(() => query),
         eq: jest.fn(() => query),
+        maybeSingle: async () => ({ data: { id: mockSelectedBaby.id }, error: null }),
         then: mockTimerQueryResult.then.bind(mockTimerQueryResult),
       };
       return query;
@@ -258,7 +266,7 @@ describe("real activity provider baby binding", () => {
     }
 
     render(<RealActivityProviders />);
-    await waitFor(() => expect(mockSupabaseFrom).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockSupabaseFrom.mock.calls.filter(([table]) => table === "active_timers")).toHaveLength(1));
 
     await act(async () => {
       timerQuery.resolve({ data: [], error: null });

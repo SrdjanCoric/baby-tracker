@@ -1,9 +1,15 @@
+import { TimerAccessUnavailableError } from "@/services/timer-access-error";
 import React from "react";
 import { act, render, screen, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
 import type { RemoteChange } from "@/services/sync/real-time-sync";
 
-let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null = null;
+let mockAuth: {
+  user: { id: string; householdId?: string } | null;
+  isLoading: boolean;
+} = { user: { id: "viewer-2", householdId: "family" }, isLoading: false };
+let remoteChangeHandler: ((change: RemoteChange) => Promise<void>) | null =
+  null;
 let registeredRefresh: (() => Promise<void>) | null = null;
 let activeTimersContext: ReturnType<typeof useActiveTimers> | null = null;
 
@@ -16,7 +22,7 @@ jest.mock("./baby-context", () => ({
 }));
 
 jest.mock("./auth-context", () => ({
-  useAuth: () => ({ user: { id: "viewer-2" } }),
+  useAuth: () => mockAuth,
 }));
 
 jest.mock("./sync-context", () => ({
@@ -28,7 +34,10 @@ jest.mock("./sync-context", () => ({
       if (table === "active_timers") remoteChangeHandler = handler;
       return jest.fn();
     },
-    registerForegroundRefreshLoader: (_id: string, loader: () => Promise<void>) => {
+    registerForegroundRefreshLoader: (
+      _id: string,
+      loader: () => Promise<void>
+    ) => {
       registeredRefresh = loader;
       return jest.fn();
     },
@@ -94,6 +103,10 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     registeredRefresh = null;
     activeTimersContext = null;
     jest.clearAllMocks();
+    mockAuth = {
+      user: { id: "viewer-2", householdId: "family" },
+      isLoading: false,
+    };
   });
 
   afterEach(() => {
@@ -101,13 +114,117 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     jest.useRealTimers();
   });
 
+  it("keeps known locks after a signed-out read until the auth binding changes", async () => {
+    const service = jest.requireMock("@/services/active-timer-service");
+    const view = render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(activeTimersContext!.locks).toHaveLength(1));
+    service.getActiveTimerSnapshotForBaby.mockRejectedValueOnce(
+      new TimerAccessUnavailableError("signed_out")
+    );
+    await act(async () => {
+      await activeTimersContext!.refreshLocks();
+    });
+    expect(activeTimersContext!.locks).toHaveLength(1);
+    expect(activeTimersContext!.isLoading).toBe(false);
+    mockAuth = { user: null, isLoading: false };
+    view.rerender(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(activeTimersContext!.locks).toEqual([]));
+  });
+
+  it("waits for auth readiness and loads once after initialization", async () => {
+    mockAuth.isLoading = true;
+    const view = render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    const service = jest.requireMock("@/services/active-timer-service");
+    expect(service.getActiveTimerSnapshotForBaby).not.toHaveBeenCalled();
+    mockAuth = { ...mockAuth, isLoading: false };
+    view.rerender(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() =>
+      expect(service.getActiveTimerSnapshotForBaby).toHaveBeenCalledTimes(1)
+    );
+  });
+
+  it.each([null, { id: "guest" }])(
+    "does not load or replay timers without a household: %s",
+    async (user) => {
+      mockAuth = { user, isLoading: false };
+      render(
+        <ActiveTimersProvider>
+          <ContextProbe />
+        </ActiveTimersProvider>
+      );
+      await waitFor(() => expect(registeredRefresh).not.toBeNull());
+      await act(async () => {
+        await registeredRefresh!();
+      });
+      const service = jest.requireMock("@/services/active-timer-service");
+      expect(service.getActiveTimerSnapshotForBaby).not.toHaveBeenCalled();
+      expect(service.getActiveTimersForBaby).not.toHaveBeenCalled();
+      expect(service.retryPendingLockReleases).not.toHaveBeenCalled();
+      expect(service.retryPendingTimerStartEdits).not.toHaveBeenCalled();
+    }
+  );
+
+  it("does not restore an in-flight household response after signing out", async () => {
+    const service = jest.requireMock("@/services/active-timer-service");
+    let resolveSnapshot!: (locks: unknown[]) => void;
+    service.getActiveTimerSnapshotForBaby.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSnapshot = resolve;
+        })
+    );
+    const view = render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() =>
+      expect(service.getActiveTimerSnapshotForBaby).toHaveBeenCalledTimes(1)
+    );
+    mockAuth = { user: null, isLoading: false };
+    view.rerender(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
+    await act(async () => {
+      resolveSnapshot([
+        { id: "old-lock", babyId: "baby-1", activityType: "sleep" },
+      ]);
+    });
+    expect(activeTimersContext!.locks).toEqual([]);
+  });
+
   it("refreshes Live Activity tokens after a realtime timer DELETE", async () => {
-    render(<ActiveTimersProvider><ContextProbe /></ActiveTimersProvider>);
+    render(
+      <ActiveTimersProvider>
+        <ContextProbe />
+      </ActiveTimersProvider>
+    );
     await waitFor(() => expect(remoteChangeHandler).not.toBeNull());
-    const { refreshLiveActivityPushTokens } = jest.requireMock("@/services/live-activity-push-token-service");
+    const { refreshLiveActivityPushTokens } = jest.requireMock(
+      "@/services/live-activity-push-token-service"
+    );
     await act(async () => {
       await remoteChangeHandler!({
-        eventType: "DELETE", new: null,
+        eventType: "DELETE",
+        new: null,
         old: { id: "lock-1", baby_id: "baby-1", activity_type: "sleep" },
       });
     });
@@ -163,7 +280,9 @@ describe("ActiveTimersProvider Realtime anchor updates", () => {
     };
     expect(activeTimerService.retryPendingLockReleases).toHaveBeenCalled();
     expect(activeTimerService.retryPendingTimerStartEdits).toHaveBeenCalled();
-    expect(activeTimerService.getActiveTimersForBaby).toHaveBeenCalledWith("baby-1");
+    expect(activeTimerService.getActiveTimersForBaby).toHaveBeenCalledWith(
+      "baby-1"
+    );
     expect(
       activeTimerService.retryPendingLockReleases.mock.invocationCallOrder[0]
     ).toBeLessThan(

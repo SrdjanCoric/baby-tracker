@@ -1,3 +1,4 @@
+import { isTimerAccessUnavailable } from "./timer-access-error";
 import {
   acquireTimerLock,
   getActiveTimerLock,
@@ -109,6 +110,7 @@ export async function reconcileTimerLock({
       lockStartedAt: lock?.startedAt ?? acquisition.startedAt,
     };
   } catch (error) {
+    if (isTimerAccessUnavailable(error) && error.reason === "revoked") throw error;
     await persistState("offline");
     console.error("[TimerLockReconciliation] Lock reconciliation failed:", error);
     reportIssue({

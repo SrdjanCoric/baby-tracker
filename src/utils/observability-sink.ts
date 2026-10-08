@@ -47,6 +47,7 @@ export interface ObservabilitySink {
 
 let activeSink: ObservabilitySink | null = null;
 let networkOnline: boolean | null = null;
+const reportedTimerPermissionFailures = new Set<string>();
 const reportedNetworkIssues = new Set<string>();
 
 export function networkOnlineFromNetInfo(state: {
@@ -107,6 +108,7 @@ export function resetObservabilityIssueLimiter(): void {
   suppressed.clear();
   reportedNetworkIssues.clear();
   networkOnline = null;
+  reportedTimerPermissionFailures.clear();
 }
 
 export function errorText(error: unknown): string | undefined {
@@ -140,6 +142,29 @@ export function errorCode(error: unknown): string | undefined {
 export function reportIssue(issue: ObservabilityIssue): boolean {
   const sink = activeSink;
   if (!sink) return false;
+  const code = errorCode(issue.error);
+  const timerPermissionFailure = issue.area === "timers" && code === "42501";
+  if (issue.area === "timers" && code === "TIMER_ACCESS_UNAVAILABLE")
+    return false;
+  let timerResource = "unknown";
+  if (timerPermissionFailure) {
+    const resource =
+      issue.error &&
+      typeof issue.error === "object" &&
+      "timerResource" in issue.error
+        ? issue.error.timerResource
+        : issue.tags?.resource;
+    timerResource = typeof resource === "string" ? resource : "unknown";
+    if (reportedTimerPermissionFailures.has(timerResource)) return false;
+    issue = {
+      ...issue,
+      tags: {
+        ...issue.tags,
+        code,
+        resource: typeof resource === "string" ? resource : undefined,
+      },
+    };
+  }
   try {
     const networkIssue =
       issue.name === "realtime.channel_error" ||
@@ -147,7 +172,9 @@ export function reportIssue(issue: ObservabilityIssue): boolean {
     if (
       (networkIssue &&
         (networkOnline === false || reportedNetworkIssues.has(issue.name))) ||
-      !shouldReportIssue(issue.name)
+      !shouldReportIssue(
+        timerPermissionFailure ? `${issue.name}:${timerResource}` : issue.name
+      )
     ) {
       const now = Date.now();
       const entry = suppressed.get(issue.name);
@@ -167,6 +194,8 @@ export function reportIssue(issue: ObservabilityIssue): boolean {
     }
     if (networkIssue) reportedNetworkIssues.add(issue.name);
     sink.reportIssue(issue);
+    if (timerPermissionFailure)
+      reportedTimerPermissionFailures.add(timerResource);
     return true;
   } catch {
     // Reporting must never take the app down.

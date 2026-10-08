@@ -26,7 +26,8 @@ const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const DB_URL =
-  process.env.SUPABASE_DB_URL || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+  process.env.SUPABASE_DB_URL ||
+  "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 
 const RED = "\x1b[31m";
 const GREEN = "\x1b[32m";
@@ -46,7 +47,7 @@ function psql(args, input) {
 
 function runVectors() {
   const { vectors } = JSON.parse(
-    readFileSync(join(ROOT, "src/services/sync/crdt-vectors.json"), "utf8"),
+    readFileSync(join(ROOT, "src/services/sync/crdt-vectors.json"), "utf8")
   );
 
   const selects = [];
@@ -55,18 +56,21 @@ function runVectors() {
     const ac = sqlLiteral(v.a.fieldClocks);
     const bf = sqlLiteral(v.b.fields);
     const bc = sqlLiteral(v.b.fieldClocks);
-    const expected = sqlLiteral({ fields: v.expected.fields, fieldClocks: v.expected.fieldClocks });
+    const expected = sqlLiteral({
+      fields: v.expected.fields,
+      fieldClocks: v.expected.fieldClocks,
+    });
     const name = "'" + v.name.replaceAll("'", "''") + "'";
     // Forward (a, b) and reverse (b, a) — merge must be commutative.
     selects.push(
       `SELECT ${name} AS name, 'fwd' AS dir, ` +
         `crdt_merge_fields(${af}, ${ac}, ${bf}, ${bc}) = ${expected} AS ok, ` +
-        `crdt_merge_fields(${af}, ${ac}, ${bf}, ${bc})::text AS got`,
+        `crdt_merge_fields(${af}, ${ac}, ${bf}, ${bc})::text AS got`
     );
     selects.push(
       `SELECT ${name} AS name, 'rev' AS dir, ` +
         `crdt_merge_fields(${bf}, ${bc}, ${af}, ${ac}) = ${expected} AS ok, ` +
-        `crdt_merge_fields(${bf}, ${bc}, ${af}, ${ac})::text AS got`,
+        `crdt_merge_fields(${bf}, ${bc}, ${af}, ${ac})::text AS got`
     );
   }
 
@@ -124,9 +128,27 @@ function runActiveTimerAuthorizationTests() {
   }
 }
 
+function runTimerPermissionSessionTests() {
+  try {
+    const out = psql([
+      "-f",
+      join(ROOT, "scripts/sql/timer-permission-session-tests.sql"),
+    ]);
+    return { ok: true, out };
+  } catch (err) {
+    return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
+  }
+}
+
 function runLiveActivityPushTokenTests() {
   try {
-    return { ok: true, out: psql(["-f", join(ROOT, "scripts/sql/live-activity-push-token-tests.sql")]) };
+    return {
+      ok: true,
+      out: psql([
+        "-f",
+        join(ROOT, "scripts/sql/live-activity-push-token-tests.sql"),
+      ]),
+    };
   } catch (err) {
     return { ok: false, out: (err.stdout || "") + (err.stderr || "") };
   }
@@ -193,10 +215,11 @@ const CC = {
 
 function ccWorker(field, value, clock, sleepSeconds) {
   const claims = JSON.stringify({ sub: CC.user });
-  const record = JSON.stringify({ id: CC.feeding, baby_id: CC.baby, [field]: value }).replaceAll(
-    "'",
-    "''",
-  );
+  const record = JSON.stringify({
+    id: CC.feeding,
+    baby_id: CC.baby,
+    [field]: value,
+  }).replaceAll("'", "''");
   const clocks = JSON.stringify({ [field]: clock }).replaceAll("'", "''");
   const sql =
     `BEGIN;` +
@@ -204,7 +227,14 @@ function ccWorker(field, value, clock, sleepSeconds) {
     `SELECT merge_record('feedings', '${record}'::jsonb, '${clocks}'::jsonb);` +
     `SELECT pg_sleep(${sleepSeconds});` +
     `COMMIT;`;
-  return execFileAsync("psql", [DB_URL, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql]);
+  return execFileAsync("psql", [
+    DB_URL,
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-q",
+    "-c",
+    sql,
+  ]);
 }
 
 async function runConcurrencyTest() {
@@ -225,7 +255,12 @@ async function runConcurrencyTest() {
   try {
     // A edits notes (holds lock 0.4s); B edits amount_ml (blocks until A commits).
     await Promise.all([
-      ccWorker("notes", "from-A", "2026-07-04T10:05:00.000Z-0000-device-a", 0.4),
+      ccWorker(
+        "notes",
+        "from-A",
+        "2026-07-04T10:05:00.000Z-0000-device-a",
+        0.4
+      ),
       ccWorker("amount_ml", 222, "2026-07-04T10:05:00.000Z-0000-device-b", 0),
     ]);
     const row = psql([
@@ -259,7 +294,14 @@ function idempotencyWorker(value, clock, sleepSeconds) {
     `'concurrent-same-operation', '${CC.user}'::uuid);` +
     `SELECT pg_sleep(${sleepSeconds});` +
     `COMMIT;`;
-  return execFileAsync("psql", [DB_URL, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql]);
+  return execFileAsync("psql", [
+    DB_URL,
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-q",
+    "-c",
+    sql,
+  ]);
 }
 
 async function runIdempotencyConcurrencyTest() {
@@ -283,8 +325,16 @@ async function runIdempotencyConcurrencyTest() {
   psql(["-c", seed]);
   try {
     await Promise.all([
-      idempotencyWorker("same-op-A", "2026-07-04T10:06:00.000Z-0000-device-a", 0.4),
-      idempotencyWorker("same-op-B", "2026-07-04T10:07:00.000Z-0000-device-b", 0),
+      idempotencyWorker(
+        "same-op-A",
+        "2026-07-04T10:06:00.000Z-0000-device-a",
+        0.4
+      ),
+      idempotencyWorker(
+        "same-op-B",
+        "2026-07-04T10:07:00.000Z-0000-device-b",
+        0
+      ),
     ]);
     const row = psql([
       "-A",
@@ -300,7 +350,8 @@ async function runIdempotencyConcurrencyTest() {
        GROUP BY f.notes`,
     ]).trim();
     const [notes, count] = row.split("\t");
-    const ok = ["same-op-A", "same-op-B"].includes(notes) && Number(count) === 1;
+    const ok =
+      ["same-op-A", "same-op-B"].includes(notes) && Number(count) === 1;
     return { ok, detail: `notes=${notes} acknowledgements=${count}` };
   } finally {
     psql(["-c", cleanup]);
@@ -316,9 +367,14 @@ async function runHouseholdTimerCompletionConcurrencyTest() {
     ["tummy_time", "tummy_time_sessions"],
   ];
   const startedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const endedAt = new Date(new Date(startedAt).getTime() + 300_000).toISOString();
+  const endedAt = new Date(
+    new Date(startedAt).getTime() + 300_000
+  ).toISOString();
   const operationId = "household-concurrent-completion";
-  psql(["-q", "-c", `
+  psql([
+    "-q",
+    "-c",
+    `
     INSERT INTO auth.users (id, email) VALUES
       ('${CC.user}', 'completion-concurrent-owner@test.dev'),
       ('${member}', 'completion-concurrent-member@test.dev');
@@ -327,7 +383,8 @@ async function runHouseholdTimerCompletionConcurrencyTest() {
     INSERT INTO public.babies (id, household_id, name)
       SELECT '${CC.baby}', household_id, 'Concurrent Completion Baby'
       FROM public.users WHERE id = '${CC.user}';
-  `]);
+  `,
+  ]);
   try {
     for (const [activity, table] of types) {
       const timerId = `concurrent-${activity}`;
@@ -340,60 +397,104 @@ async function runHouseholdTimerCompletionConcurrencyTest() {
         ...(activity === "sleep" ? { type: "nap" } : {}),
         ...(activity === "feeding" ? { type: "breast" } : {}),
       };
-      psql(["-q", "-c", `
+      psql([
+        "-q",
+        "-c",
+        `
         INSERT INTO public.active_timers (baby_id, activity_type, started_by, started_at, timer_data)
         VALUES ('${CC.baby}', '${activity}', '${CC.user}', '${startedAt}',
           ${sqlLiteral({ timerInstanceId: timerId })});
-      `]);
+      `,
+      ]);
       const worker = (user, holdSeconds) => {
         const call = `SELECT public.merge_record_and_complete_timer('${table}',
           ${sqlLiteral({ ...record, logged_by: user })}, '{}'::jsonb,
           '${operationId}-${activity}', '${user}', '${timerId}', '${startedAt}');`;
         return {
           call,
-          run: () => execFileAsync("psql", [DB_URL, "-X", "-v", "ON_ERROR_STOP=1", "-q", "-c", `
+          run: () =>
+            execFileAsync("psql", [
+              DB_URL,
+              "-X",
+              "-v",
+              "ON_ERROR_STOP=1",
+              "-q",
+              "-c",
+              `
             BEGIN;
             SET LOCAL ROLE authenticated;
             SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
             ${call}
             SELECT pg_sleep(${holdSeconds});
             COMMIT;
-          `]),
+          `,
+            ]),
         };
       };
       const memberWorker = worker(member, 0.4);
       const ownerWorker = worker(CC.user, 0);
       // Match the existing merge concurrency seam: keep one write transaction open while the other runs.
-      const results = await Promise.allSettled([memberWorker.run(), ownerWorker.run()]);
-      for (const result of results) if (result.status === "rejected") throw result.reason;
+      const results = await Promise.allSettled([
+        memberWorker.run(),
+        ownerWorker.run(),
+      ]);
+      for (const result of results)
+        if (result.status === "rejected") throw result.reason;
       // An offline replay from either caregiver has the same operation identity.
-      for (const [user, completion] of [[CC.user, ownerWorker], [member, memberWorker]]) {
-        psql(["-q", "-c", `
+      for (const [user, completion] of [
+        [CC.user, ownerWorker],
+        [member, memberWorker],
+      ]) {
+        psql([
+          "-q",
+          "-c",
+          `
           BEGIN;
           SET LOCAL ROLE authenticated;
           SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
           ${completion.call}
           COMMIT;
-        `]);
+        `,
+        ]);
       }
-      const state = psql(["-At", "-F", "\t", "-c", `
+      const state = psql([
+        "-At",
+        "-F",
+        "\t",
+        "-c",
+        `
         SELECT (SELECT count(*) FROM public.${table} WHERE id = '${CC.feeding}'),
           (SELECT count(*) FROM public.active_timers WHERE baby_id = '${CC.baby}' AND activity_type = '${activity}'),
           (SELECT count(*) FROM public.sync_operation_acknowledgements
             WHERE user_id IN ('${CC.user}', '${member}') AND operation_id = '${operationId}-${activity}');
-      `]).trim();
-      if (state !== "1\t0\t2") return { ok: false, detail: `${activity}: rows/locks/acks=${state}` };
+      `,
+      ]).trim();
+      if (state !== "1\t0\t2")
+        return { ok: false, detail: `${activity}: rows/locks/acks=${state}` };
     }
-    return { ok: true, detail: "all four types: one record, no lock, both caregivers acknowledged; replay unchanged" };
+    return {
+      ok: true,
+      detail:
+        "all four types: one record, no lock, both caregivers acknowledged; replay unchanged",
+    };
   } finally {
-    for (const [, table] of types) psql(["-q", "-c", `DELETE FROM public.${table} WHERE id = '${CC.feeding}';`]);
-    psql(["-q", "-c", `
+    for (const [, table] of types)
+      psql([
+        "-q",
+        "-c",
+        `DELETE FROM public.${table} WHERE id = '${CC.feeding}';`,
+      ]);
+    psql([
+      "-q",
+      "-c",
+      `
       DELETE FROM public.active_timers WHERE baby_id = '${CC.baby}';
       DELETE FROM public.sync_operation_acknowledgements
         WHERE user_id IN ('${CC.user}', '${member}') AND operation_id LIKE '${operationId}-%';
       DELETE FROM public.babies WHERE id = '${CC.baby}';
       DELETE FROM auth.users WHERE id IN ('${CC.user}', '${member}');
-    `]);
+    `,
+    ]);
   }
 }
 
@@ -415,7 +516,7 @@ function runTimerCompletionReplayTest() {
     duration_seconds: "2026-07-15T08:05:00.000Z-0000-timer-device",
   }).replaceAll("'", "''");
   const claims = JSON.stringify({ sub: CC.user }).replaceAll("'", "''");
-  const operationList = operationIds.map(id => `'${id}'`).join(", ");
+  const operationList = operationIds.map((id) => `'${id}'`).join(", ");
   const sql = `
     INSERT INTO auth.users (id, email) VALUES ('${CC.user}', 'timer-replay@test.dev')
       ON CONFLICT (id) DO NOTHING;
@@ -454,7 +555,10 @@ function runTimerCompletionReplayTest() {
       Number(count) === 1 &&
       new Date(endedAt).toISOString() === "2026-07-15T08:05:00.000Z" &&
       Number(duration) === 300;
-    return { ok, detail: `rows=${count} ended_at=${endedAt} duration=${duration}` };
+    return {
+      ok,
+      detail: `rows=${count} ended_at=${endedAt} duration=${duration}`,
+    };
   } finally {
     psql(["-q", "-c", cleanup]);
   }
@@ -469,7 +573,9 @@ for (const f of vec.failures) {
   console.log(`${RED}✗${RESET} ${f.name} (${f.dir})\n    got: ${f.got}`);
 }
 if (vec.failures.length === 0) {
-  console.log(`${GREEN}✓${RESET} vectors: ${vec.passed}/${vec.total} (fwd + rev)`);
+  console.log(
+    `${GREEN}✓${RESET} vectors: ${vec.passed}/${vec.total} (fwd + rev)`
+  );
 } else {
   console.log(`\n${RED}vectors: ${vec.passed}/${vec.total} passed${RESET}`);
   hardFail = true;
@@ -478,7 +584,9 @@ if (vec.failures.length === 0) {
 console.log("");
 const mr = runMergeRecordTests();
 if (mr.ok) {
-  console.log(`${GREEN}✓${RESET} merge_record: ${mr.out.trim().split("\n").filter(Boolean).length} assertions passed`);
+  console.log(
+    `${GREEN}✓${RESET} merge_record: ${mr.out.trim().split("\n").filter(Boolean).length} assertions passed`
+  );
   process.stdout.write(mr.out);
 } else {
   console.log(`${RED}✗ merge_record tests failed${RESET}`);
@@ -490,7 +598,9 @@ console.log("");
 const tr = runTombstoneReminderTests();
 if (tr.ok) {
   const passed = (tr.out.match(/PASS:/g) || []).length;
-  console.log(`${GREEN}✓${RESET} tombstone reminders: ${passed} assertions passed (sleep reads ignore tombstones)`);
+  console.log(
+    `${GREEN}✓${RESET} tombstone reminders: ${passed} assertions passed (sleep reads ignore tombstones)`
+  );
 } else {
   console.log(`${RED}✗ tombstone reminder tests failed${RESET}`);
   process.stdout.write(tr.out);
@@ -500,7 +610,9 @@ if (tr.ok) {
 console.log("");
 const timerAuthorization = runActiveTimerAuthorizationTests();
 if (timerAuthorization.ok) {
-  console.log(`${GREEN}✓${RESET} active timer authorization: RPC identity, household, ownership, grants, and valid owner flows`);
+  console.log(
+    `${GREEN}✓${RESET} active timer authorization: RPC identity, household, ownership, grants, and valid owner flows`
+  );
 } else {
   console.log(`${RED}✗ active timer authorization tests failed${RESET}`);
   process.stdout.write(timerAuthorization.out);
@@ -508,9 +620,23 @@ if (timerAuthorization.ok) {
 }
 
 console.log("");
+const timerPermissionSession = runTimerPermissionSessionTests();
+if (timerPermissionSession.ok) {
+  console.log(
+    `${GREEN}✓${RESET} timer permission sessions: restored, expired, anonymous, and revoked access`
+  );
+} else {
+  console.log(`${RED}✗ timer permission session tests failed${RESET}`);
+  process.stdout.write(timerPermissionSession.out);
+  hardFail = true;
+}
+
+console.log("");
 const liveActivityTokens = runLiveActivityPushTokenTests();
 if (liveActivityTokens.ok) {
-  console.log(`${GREEN}✓${RESET} Live Activity tokens: rotation, ownership, late registration and cleanup`);
+  console.log(
+    `${GREEN}✓${RESET} Live Activity tokens: rotation, ownership, late registration and cleanup`
+  );
 } else {
   console.log(`${RED}✗ Live Activity token tests failed${RESET}`);
   process.stdout.write(liveActivityTokens.out);
@@ -519,8 +645,13 @@ if (liveActivityTokens.ok) {
 
 console.log("");
 try {
-  const out = psql(["-f", join(ROOT, "scripts/sql/active-timer-completion-tests.sql")]);
-  console.log(`${GREEN}✓${RESET} atomic timer completion: decision tables, replay, rollback and grants`);
+  const out = psql([
+    "-f",
+    join(ROOT, "scripts/sql/active-timer-completion-tests.sql"),
+  ]);
+  console.log(
+    `${GREEN}✓${RESET} atomic timer completion: decision tables, replay, rollback and grants`
+  );
   process.stdout.write(out);
 } catch (err) {
   console.log(`${RED}✗ atomic timer completion tests failed${RESET}`);
@@ -531,7 +662,9 @@ try {
 console.log("");
 const caregiverInvitations = runCaregiverInvitationTests();
 if (caregiverInvitations.ok) {
-  console.log(`${GREEN}✓${RESET} caregiver invitations: owner management, staged compatibility, email cutover, expiry, revocation, single use, and rate limiting`);
+  console.log(
+    `${GREEN}✓${RESET} caregiver invitations: owner management, staged compatibility, email cutover, expiry, revocation, single use, and rate limiting`
+  );
 } else {
   console.log(`${RED}✗ caregiver invitation tests failed${RESET}`);
   process.stdout.write(caregiverInvitations.out);
@@ -541,7 +674,9 @@ if (caregiverInvitations.ok) {
 console.log("");
 const morningClassification = runMorningClassificationTests();
 if (morningClassification.ok) {
-  console.log(`${GREEN}✓${RESET} morning classification: legacy compatibility, partial updates, defaults, and RLS`);
+  console.log(
+    `${GREEN}✓${RESET} morning classification: legacy compatibility, partial updates, defaults, and RLS`
+  );
 } else {
   console.log(`${RED}✗ morning classification tests failed${RESET}`);
   process.stdout.write(morningClassification.out);
@@ -551,7 +686,9 @@ if (morningClassification.ok) {
 console.log("");
 const babyActivitySnapshot = runBabyActivitySnapshotTests();
 if (babyActivitySnapshot.ok) {
-  console.log(`${GREEN}✓${RESET} baby activity snapshot: authenticated invoker contract`);
+  console.log(
+    `${GREEN}✓${RESET} baby activity snapshot: authenticated invoker contract`
+  );
 } else {
   console.log(`${RED}✗ baby activity snapshot tests failed${RESET}`);
   process.stdout.write(babyActivitySnapshot.out);
@@ -561,7 +698,9 @@ if (babyActivitySnapshot.ok) {
 console.log("");
 const snapshotCost = runBabyActivitySnapshotCostTests();
 if (snapshotCost.ok) {
-  console.log(`${GREEN}✓${RESET} baby activity snapshot: bounded history cost and index plans`);
+  console.log(
+    `${GREEN}✓${RESET} baby activity snapshot: bounded history cost and index plans`
+  );
   process.stdout.write(snapshotCost.out);
 } else {
   console.log(`${RED}✗ baby activity snapshot cost tests failed${RESET}`);
@@ -572,7 +711,9 @@ if (snapshotCost.ok) {
 console.log("");
 const activitySyncCursor = runActivitySyncCursorTests();
 if (activitySyncCursor.ok) {
-  console.log(`${GREEN}✓${RESET} activity sync cursors: update triggers and composite index plans`);
+  console.log(
+    `${GREEN}✓${RESET} activity sync cursors: update triggers and composite index plans`
+  );
   process.stdout.write(activitySyncCursor.out);
 } else {
   console.log(`${RED}✗ activity sync cursor tests failed${RESET}`);
@@ -584,13 +725,17 @@ console.log("");
 try {
   const cc = await runConcurrencyTest();
   if (cc.ok) {
-    console.log(`${GREEN}✓${RESET} concurrency: two overlapping merges serialize, no lost field (${cc.detail})`);
+    console.log(
+      `${GREEN}✓${RESET} concurrency: two overlapping merges serialize, no lost field (${cc.detail})`
+    );
   } else {
     console.log(`${RED}✗ concurrency: a field was lost (${cc.detail})${RESET}`);
     hardFail = true;
   }
 } catch (err) {
-  console.log(`${RED}✗ concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  console.log(
+    `${RED}✗ concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`
+  );
   hardFail = true;
 }
 
@@ -598,13 +743,19 @@ console.log("");
 try {
   const replay = await runIdempotencyConcurrencyTest();
   if (replay.ok) {
-    console.log(`${GREEN}✓${RESET} idempotency concurrency: same-id replays apply once (${replay.detail})`);
+    console.log(
+      `${GREEN}✓${RESET} idempotency concurrency: same-id replays apply once (${replay.detail})`
+    );
   } else {
-    console.log(`${RED}✗ idempotency concurrency: same-id replay was not atomic (${replay.detail})${RESET}`);
+    console.log(
+      `${RED}✗ idempotency concurrency: same-id replay was not atomic (${replay.detail})${RESET}`
+    );
     hardFail = true;
   }
 } catch (err) {
-  console.log(`${RED}✗ idempotency concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  console.log(
+    `${RED}✗ idempotency concurrency test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`
+  );
   hardFail = true;
 }
 
@@ -612,27 +763,40 @@ console.log("");
 try {
   const timerReplay = runTimerCompletionReplayTest();
   if (timerReplay.ok) {
-    console.log(`${GREEN}✓${RESET} timer completion replay: one completed row (${timerReplay.detail})`);
+    console.log(
+      `${GREEN}✓${RESET} timer completion replay: one completed row (${timerReplay.detail})`
+    );
   } else {
-    console.log(`${RED}✗ timer completion replay created divergent rows (${timerReplay.detail})${RESET}`);
+    console.log(
+      `${RED}✗ timer completion replay created divergent rows (${timerReplay.detail})${RESET}`
+    );
     hardFail = true;
   }
 } catch (err) {
-  console.log(`${RED}✗ timer completion replay test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`);
+  console.log(
+    `${RED}✗ timer completion replay test error${RESET}\n${(err.stdout || "") + (err.stderr || "")}`
+  );
   hardFail = true;
 }
 
 console.log("");
 try {
-  const householdCompletion = await runHouseholdTimerCompletionConcurrencyTest();
+  const householdCompletion =
+    await runHouseholdTimerCompletionConcurrencyTest();
   if (householdCompletion.ok) {
-    console.log(`${GREEN}✓${RESET} household completion concurrency: ${householdCompletion.detail}`);
+    console.log(
+      `${GREEN}✓${RESET} household completion concurrency: ${householdCompletion.detail}`
+    );
   } else {
-    console.log(`${RED}✗ household completion concurrency: ${householdCompletion.detail}`);
+    console.log(
+      `${RED}✗ household completion concurrency: ${householdCompletion.detail}`
+    );
     hardFail = true;
   }
 } catch (err) {
-  console.log(`${RED}✗ household completion concurrency error${RESET}\n${(err.stdout || "") + (err.stderr || "") || err.message}`);
+  console.log(
+    `${RED}✗ household completion concurrency error${RESET}\n${(err.stdout || "") + (err.stderr || "") || err.message}`
+  );
   hardFail = true;
 }
 

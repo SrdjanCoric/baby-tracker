@@ -1,3 +1,4 @@
+import { isTimerAccessUnavailable } from "@/services/timer-access-error";
 import { useCallback, useEffect, useRef } from "react";
 import { useBaby } from "@/contexts/baby-context";
 import { useFeeding } from "@/contexts/feeding-context";
@@ -372,6 +373,10 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
           }
         }
       } catch (error) {
+        if (isTimerAccessUnavailable(error)) {
+          if (error.reason === "revoked") await refreshLocks();
+          return { success: false, error: error.reason };
+        }
         console.error(
           "[WatchMessageHandler] Action failed:",
           error instanceof Error ? error.message : "Unknown error"

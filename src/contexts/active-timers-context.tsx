@@ -1,3 +1,4 @@
+import { isTimerAccessUnavailable } from "@/services/timer-access-error";
 import { refreshLiveActivityPushTokens } from "@/services/live-activity-push-token-service";
 import React, {
   createContext,
@@ -5,6 +6,7 @@ import React, {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -46,10 +48,7 @@ interface ActiveTimersContextValue {
     activityType: TimerActivityType
   ) => ActiveTimerLock | null;
   removeLock: (babyId: string, activityType: TimerActivityType) => void;
-  isLockedByOther: (
-    babyId: string,
-    activityType: TimerActivityType
-  ) => boolean;
+  isLockedByOther: (babyId: string, activityType: TimerActivityType) => boolean;
   getLockedByName: (
     babyId: string,
     activityType: TimerActivityType
@@ -134,8 +133,14 @@ export function ActiveTimersProvider({
   children: React.ReactNode;
 }) {
   const { selectedBaby } = useBaby();
-  const { user } = useAuth();
-  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const binding = `${user?.id ?? "guest"}:${user?.householdId ?? "none"}:${selectedBaby?.id ?? "none"}:${Boolean(isAuthLoading)}`;
+  const bindingRef = useRef(binding);
+  useLayoutEffect(() => {
+    bindingRef.current = binding;
+  }, [binding]);
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } =
+    useSync();
 
   const [state, dispatch] = useReducer(activeTimersReducer, {
     locks: [],
@@ -163,56 +168,75 @@ export function ActiveTimersProvider({
 
   const dropStaleLocks = useCallback(
     (locks: ActiveTimerLock[], issuedAtRevision: number) => {
-      return locks.filter(lock => {
+      return locks.filter((lock) => {
         const byId = removedLocksRef.current.get(lock.id);
         const byActivity = removedLocksRef.current.get(
           `${lock.babyId}:${lock.activityType}`
         );
         return (
-          (byId ?? 0) <= issuedAtRevision && (byActivity ?? 0) <= issuedAtRevision
+          (byId ?? 0) <= issuedAtRevision &&
+          (byActivity ?? 0) <= issuedAtRevision
         );
       });
     },
     []
   );
 
-  const loadLocks = useCallback(async (
-    throwOnError: boolean,
-    requireFreshSnapshot = false
-  ) => {
-    if (!selectedBaby?.id) {
-      dispatch({ type: "SET_LOCKS", locks: [] });
-      return;
-    }
+  const loadLocks = useCallback(
+    async (throwOnError: boolean, requireFreshSnapshot = false) => {
+      if (isAuthLoading) return;
+      const issuedBinding = `${user?.id ?? "guest"}:${user?.householdId ?? "none"}:${selectedBaby?.id ?? "none"}:${Boolean(isAuthLoading)}`;
+      if (!selectedBaby?.id) {
+        dispatch({ type: "SET_LOCKS", locks: [] });
+        return;
+      }
 
-    // Skip API call for guest users (no valid auth)
-    if (!user?.id) {
-      dispatch({ type: "SET_LOCKS", locks: [] });
-      return;
-    }
+      // Skip API call for guest users (no valid auth)
+      if (!user?.id || !user.householdId) {
+        dispatch({ type: "SET_LOCKS", locks: [] });
+        return;
+      }
 
-    try {
-      dispatch({ type: "SET_LOADING", isLoading: true });
-      const issuedAtRevision = removalRevisionRef.current;
-      const locks = await (requireFreshSnapshot
-        ? getActiveTimersForBaby(selectedBaby.id)
-        : getActiveTimerSnapshotForBaby(selectedBaby.id));
-      dispatch({
-        type: "SET_LOCKS",
-        locks: dropStaleLocks([...locks], issuedAtRevision),
-      });
-    } catch (error) {
-      console.error("[ActiveTimersContext] Failed to load locks:", error);
-      reportIssue({ name: "timers.load_locks_failed", area: "timers", level: "warning", error });
-      dispatch({ type: "SET_LOADING", isLoading: false });
-      if (throwOnError) throw error;
-    }
-  }, [dropStaleLocks, selectedBaby?.id, user?.id]);
-
-  const refreshLocks = useCallback(
-    () => loadLocks(false),
-    [loadLocks]
+      try {
+        dispatch({ type: "SET_LOADING", isLoading: true });
+        const issuedAtRevision = removalRevisionRef.current;
+        const locks = await (requireFreshSnapshot
+          ? getActiveTimersForBaby(selectedBaby.id)
+          : getActiveTimerSnapshotForBaby(selectedBaby.id));
+        if (bindingRef.current !== issuedBinding) return;
+        dispatch({
+          type: "SET_LOCKS",
+          locks: dropStaleLocks([...locks], issuedAtRevision),
+        });
+      } catch (error) {
+        if (bindingRef.current !== issuedBinding) return;
+        if (isTimerAccessUnavailable(error)) {
+          if (error.reason === "revoked")
+            dispatch({ type: "SET_LOCKS", locks: [] });
+          else dispatch({ type: "SET_LOADING", isLoading: false });
+          return;
+        }
+        console.error("[ActiveTimersContext] Failed to load locks:", error);
+        reportIssue({
+          name: "timers.load_locks_failed",
+          area: "timers",
+          level: "warning",
+          error,
+        });
+        dispatch({ type: "SET_LOADING", isLoading: false });
+        if (throwOnError) throw error;
+      }
+    },
+    [
+      dropStaleLocks,
+      isAuthLoading,
+      selectedBaby?.id,
+      user?.householdId,
+      user?.id,
+    ]
   );
+
+  const refreshLocks = useCallback(() => loadLocks(false), [loadLocks]);
 
   useEffect(() => {
     void refreshLocks().catch(() => undefined);
@@ -221,13 +245,20 @@ export function ActiveTimersProvider({
   useEffect(() => {
     if (!registerForegroundRefreshLoader) return;
     return registerForegroundRefreshLoader("active_timers", async () => {
+      if (isAuthLoading || !user?.id || !user.householdId) return;
       await Promise.all([
         retryPendingLockReleases(),
         retryPendingTimerStartEdits(),
       ]);
       await loadLocks(true, true);
     });
-  }, [loadLocks, registerForegroundRefreshLoader]);
+  }, [
+    isAuthLoading,
+    loadLocks,
+    registerForegroundRefreshLoader,
+    user?.householdId,
+    user?.id,
+  ]);
 
   useEffect(() => {
     const handleChange = async (change: RemoteChange) => {
@@ -243,7 +274,9 @@ export function ActiveTimersProvider({
           return;
         }
         noteLockRemoval(deletedId);
-        const deletedActivityType = change.old.activity_type as string | undefined;
+        const deletedActivityType = change.old.activity_type as
+          | string
+          | undefined;
         if (deletedBabyId && deletedActivityType) {
           noteLockRemoval(`${deletedBabyId}:${deletedActivityType}`);
         }

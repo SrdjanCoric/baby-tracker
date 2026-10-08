@@ -1,3 +1,4 @@
+import { useTimerMutationAccessError } from "@/hooks/useTimerMutationAccessError";
 import React, {
   createContext,
   useContext,
@@ -301,6 +302,19 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const handleTimerAccessError = useTimerMutationAccessError(
+    selectedBaby?.id, user?.id, state.activeTimer?.timerInstanceId,
+    async () => {
+      if (!selectedBaby) return;
+      stopVersionRef.current++;
+      const activityId = liveActivityIdRef.current;
+      liveActivityIdRef.current = null;
+      dispatch({ type: "STOP_TIMER" });
+      await PumpingStorageService.clearActiveTimer(selectedBaby.id);
+      const endedById = activityId ? await endTimerLiveActivity(activityId) : false;
+      if (!endedById) await endLiveActivityByType("pumping");
+    }
+  );
   const observedOwnedTimerRef = useRef<string | null>(null);
   const {
     babyBinding,
@@ -803,16 +817,14 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             timerInstanceId: state.activeTimer.timerInstanceId,
             activityId: state.activeTimer.activityId,
             side,
-          }).catch((error) =>
-            console.error(
-              "[PumpingContext] Failed to update timer data:",
-              error
-            )
-          );
+          }).catch(async (error) => {
+            if (await handleTimerAccessError(error)) return;
+            console.error("[PumpingContext] Failed to update timer data:", error);
+          });
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const editPumpingStartTime = useCallback(
@@ -906,11 +918,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             side: state.activeTimer.side,
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[PumpingContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const resumePumping = useCallback(
@@ -964,11 +977,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             accumulatedSeconds: activeElapsedSeconds,
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[PumpingContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const addPumping = useCallback(

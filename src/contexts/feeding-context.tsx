@@ -1,3 +1,4 @@
+import { useTimerMutationAccessError } from "@/hooks/useTimerMutationAccessError";
 import React, {
   createContext,
   useContext,
@@ -396,6 +397,19 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const handleTimerAccessError = useTimerMutationAccessError(
+    selectedBaby?.id, user?.id, state.activeTimer?.timerInstanceId,
+    async () => {
+      if (!selectedBaby) return;
+      stopVersionRef.current++;
+      const activityId = liveActivityIdRef.current;
+      liveActivityIdRef.current = null;
+      dispatch({ type: "STOP_TIMER" });
+      await FeedingStorageService.clearActiveTimer(selectedBaby.id);
+      const endedById = activityId ? await endTimerLiveActivity(activityId) : false;
+      if (!endedById) await endLiveActivityByType("feeding");
+    }
+  );
   const observedOwnedTimerRef = useRef<string | null>(null);
   const {
     babyBinding,
@@ -956,16 +970,14 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             leftAccumulatedSeconds: leftAccumulated,
             rightAccumulatedSeconds: rightAccumulated,
             currentSideStartedAt: now.toISOString(),
-          }).catch((error) =>
-            console.error(
-              "[FeedingContext] Failed to update timer data:",
-              error
-            )
-          );
+          }).catch(async (error) => {
+            if (await handleTimerAccessError(error)) return;
+            console.error("[FeedingContext] Failed to update timer data:", error);
+          });
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const editBreastfeedingStartTime = useCallback(
@@ -1137,11 +1149,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               state.activeTimer.currentSideStartedAt.toISOString(),
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[FeedingContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const resumeBreastfeeding = useCallback(
@@ -1203,11 +1216,12 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             accumulatedSeconds: activeElapsedSeconds,
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[FeedingContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const addFeeding = useCallback(

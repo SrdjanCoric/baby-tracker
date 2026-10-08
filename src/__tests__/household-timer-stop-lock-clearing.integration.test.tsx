@@ -27,6 +27,7 @@ function mockMakeQuery(table: string) {
       await mockGate!.promise;
     }
     if (selectDelayMs) await sleepMs(selectDelayMs);
+    if (table === "babies") return { data: [{ id: "baby-1" }], error: null, count: null };
     if (table === "users") {
       return { data: { display_name: "Alice" }, error: null, count: null };
     }
@@ -72,6 +73,7 @@ function mockMakeQuery(table: string) {
 
 jest.mock("@/services/supabase", () => ({
   supabase: {
+    auth: { onAuthStateChange: jest.fn(), getSession: jest.fn(async () => ({ data: { session: { user: { id: "user-b" } } }, error: null })) },
     from: (table: string) => mockMakeQuery(table),
     rpc: jest.fn(async () => ({ data: [], error: null })),
   },
@@ -288,8 +290,8 @@ describe("household stop from second caregiver", () => {
     expect(pending).toEqual([expect.objectContaining({ userId: "user-b", timerInstanceId: "instance-1" })]);
     expect(sink.reportIssue).toHaveBeenCalledTimes(1);
     expect(sink.reportIssue).toHaveBeenCalledWith(expect.objectContaining({
-      name: "timers.lock_release_queued", error: mockDeleteError,
-      tags: { activityType: "sleep", code: "42501" },
+      name: "timers.lock_release_queued", error: expect.objectContaining(mockDeleteError as object),
+      tags: { activityType: "sleep", code: "42501", resource: "active_timers" },
     }));
   });
 

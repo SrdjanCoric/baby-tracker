@@ -337,7 +337,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104, 0109, 0110) → tasks/0105-gate-4-10-2-release.md
 - [x] 0111 · Make the widget and Watch activity snapshot cost independent of history length → tasks/done/0111-bound-activity-snapshot-cost.md
 - [x] 0112 · Subscribe each phone only to its own household's live updates → tasks/done/0112-scope-live-updates-to-household.md
-- [ ] 0113 · Stop "permission denied" errors when the app restores household timers → tasks/0113-fix-timer-permission-denied.md
+- [x] 0113 · Stop "permission denied" errors when the app restores household timers → tasks/done/0113-fix-timer-permission-denied.md
 - [ ] 0114 · Celebrate each long sleep or tummy time once, at its highest tier, only when it just happened → tasks/0114-fix-achievement-celebrations.md
 - [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
 

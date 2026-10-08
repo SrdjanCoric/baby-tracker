@@ -21,7 +21,16 @@ import {
 } from "./active-timer-service";
 
 const storage = new Map<string, string>();
-const { fromMock, rpcMock, deleteMock, eqMock, selectMock, maybeSingleMock, updateMock } = vi.hoisted(() => ({
+const {
+  fromMock,
+  rpcMock,
+  deleteMock,
+  eqMock,
+  selectMock,
+  maybeSingleMock,
+  updateMock,
+  getSessionMock,
+} = vi.hoisted(() => ({
   fromMock: vi.fn(),
   rpcMock: vi.fn(),
   deleteMock: vi.fn(),
@@ -29,37 +38,68 @@ const { fromMock, rpcMock, deleteMock, eqMock, selectMock, maybeSingleMock, upda
   selectMock: vi.fn(),
   maybeSingleMock: vi.fn(),
   updateMock: vi.fn(),
+  getSessionMock: vi.fn(),
 }));
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
     getItem: vi.fn(async (key: string) => storage.get(key) ?? null),
-    setItem: vi.fn(async (key: string, value: string) => storage.set(key, value)),
+    setItem: vi.fn(async (key: string, value: string) =>
+      storage.set(key, value)
+    ),
   },
 }));
 
 vi.mock("@/services/supabase", () => ({
-  supabase: { from: fromMock, rpc: rpcMock },
+  supabase: {
+    auth: { getSession: getSessionMock, onAuthStateChange: vi.fn() },
+    from: (table: string) => {
+      if (table !== "babies") return fromMock(table);
+      const query = {
+        select: vi.fn(),
+        eq: vi.fn(),
+        maybeSingle: vi.fn(async () => ({
+          data: { id: "baby-1" },
+          error: null,
+        })),
+      };
+      query.select.mockReturnValue(query);
+      query.eq.mockReturnValue(query);
+      return query;
+    },
+    rpc: rpcMock,
+  },
 }));
 
 vi.mock("@/i18n", () => ({ default: { t: vi.fn(() => "Someone") } }));
+
+beforeEach(() => {
+  getSessionMock.mockResolvedValue({
+    data: { session: { user: { id: "user-1" } } },
+    error: null,
+  });
+});
 
 describe("active timer acquisition", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     rpcMock.mockResolvedValue({
-      data: [{
-        success: true,
-        lock_holder_id: "user-1",
-        lock_holder_name: "Caregiver",
-        started_at: "2026-07-15T08:00:00.000Z",
-      }],
+      data: [
+        {
+          success: true,
+          lock_holder_id: "user-1",
+          lock_holder_name: "Caregiver",
+          started_at: "2026-07-15T08:00:00.000Z",
+        },
+      ],
       error: null,
     });
   });
 
   it("omits p_started_at when the database should supply start-now time", async () => {
-    await acquireTimerLock("baby-1", "feeding", "user-1", { timerInstanceId: "timer-1" });
+    await acquireTimerLock("baby-1", "feeding", "user-1", {
+      timerInstanceId: "timer-1",
+    });
 
     expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", {
       p_baby_id: "baby-1",
@@ -80,9 +120,12 @@ describe("active timer acquisition", () => {
       requestedStart
     );
 
-    expect(rpcMock).toHaveBeenCalledWith("acquire_timer_lock", expect.objectContaining({
-      p_started_at: requestedStart.toISOString(),
-    }));
+    expect(rpcMock).toHaveBeenCalledWith(
+      "acquire_timer_lock",
+      expect.objectContaining({
+        p_started_at: requestedStart.toISOString(),
+      })
+    );
   });
 });
 
@@ -93,9 +136,11 @@ describe("active timer snapshots", () => {
 
   it("single-flights concurrent aggregate reads for the same baby", async () => {
     let resolveQuery!: (value: { data: unknown[]; error: null }) => void;
-    const queryResult = new Promise<{ data: unknown[]; error: null }>(resolve => {
-      resolveQuery = resolve;
-    });
+    const queryResult = new Promise<{ data: unknown[]; error: null }>(
+      (resolve) => {
+        resolveQuery = resolve;
+      }
+    );
     const query = {
       select: selectMock,
       eq: eqMock,
@@ -109,7 +154,7 @@ describe("active timer snapshots", () => {
     const second = getActiveTimerSnapshotForBaby("baby-flight");
 
     expect(first).toBe(second);
-    expect(fromMock).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(fromMock).toHaveBeenCalledTimes(1));
     resolveQuery({ data: [], error: null });
     await expect(Promise.all([first, second])).resolves.toEqual([[], []]);
   });
@@ -132,10 +177,12 @@ describe("active timer snapshots", () => {
     process.on("unhandledRejection", listener);
 
     try {
-      await expect(getActiveTimerSnapshotForBaby("baby-error")).rejects.toEqual({
-        message: "offline",
-      });
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await expect(getActiveTimerSnapshotForBaby("baby-error")).rejects.toEqual(
+        {
+          message: "offline",
+        }
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
       expect(unhandled).toEqual([]);
     } finally {
       process.off("unhandledRejection", listener);
@@ -143,7 +190,11 @@ describe("active timer snapshots", () => {
   });
 
   it("uses an empty-success read when no per-type lock exists", async () => {
-    const query = { select: selectMock, eq: eqMock, maybeSingle: maybeSingleMock };
+    const query = {
+      select: selectMock,
+      eq: eqMock,
+      maybeSingle: maybeSingleMock,
+    };
     selectMock.mockReturnValue(query);
     eqMock.mockReturnValue(query);
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
@@ -191,9 +242,8 @@ describe("active timer start editing", () => {
     const zeroMatchQuery = {
       update: updateMock,
       eq: eqMock,
-      then: (
-        resolve: (value: { error: null; count: number }) => unknown
-      ) => Promise.resolve({ error: null, count: 0 }).then(resolve),
+      then: (resolve: (value: { error: null; count: number }) => unknown) =>
+        Promise.resolve({ error: null, count: 0 }).then(resolve),
     };
     updateMock.mockReturnValue(zeroMatchQuery);
     eqMock.mockReturnValue(zeroMatchQuery);
@@ -259,10 +309,15 @@ describe("active timer cleanup", () => {
       queuePendingLockRelease("baby-1", "feeding", "user-1", "timer-1"),
     ]);
 
-    const pending = JSON.parse(storage.get("@pending_lock_releases") ?? "[]") as Array<{
+    const pending = JSON.parse(
+      storage.get("@pending_lock_releases") ?? "[]"
+    ) as Array<{
       timerInstanceId?: string;
     }>;
-    expect(pending.map(release => release.timerInstanceId)).toEqual(["timer-1", "timer-2"]);
+    expect(pending.map((release) => release.timerInstanceId)).toEqual([
+      "timer-1",
+      "timer-2",
+    ]);
   });
 
   it("deletes only the lock matching the completed timer instance", async () => {
@@ -282,6 +337,10 @@ describe("active timer cleanup", () => {
   });
 
   it("lets a household member delete the matching timer instance", async () => {
+    getSessionMock.mockResolvedValue({
+      data: { session: { user: { id: "member-1" } } },
+      error: null,
+    });
     maybeSingleMock.mockResolvedValue({
       data: {
         id: "lock-1",
@@ -391,7 +450,7 @@ describe("durable lock release", () => {
     );
     await vi.waitFor(() => expect(maybeSingleMock).toHaveBeenCalled());
 
-    expect(readPending().map(release => release.timerInstanceId)).toEqual([
+    expect(readPending().map((release) => release.timerInstanceId)).toEqual([
       "timer-1",
     ]);
     void releasing;
@@ -424,7 +483,7 @@ describe("durable lock release", () => {
       )
     ).rejects.toThrow("Network request failed");
 
-    expect(readPending().map(release => release.timerInstanceId)).toEqual([
+    expect(readPending().map((release) => release.timerInstanceId)).toEqual([
       "timer-1",
     ]);
   });
@@ -433,6 +492,10 @@ describe("durable lock release", () => {
 describe("household timer updates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getSessionMock.mockResolvedValue({
+      data: { session: { user: { id: "member-1" } } },
+      error: null,
+    });
     const query = {
       update: updateMock,
       eq: eqMock,
@@ -483,7 +546,11 @@ describe("household timer updates", () => {
 });
 
 describe("lock failure reporting", () => {
-  const sink = { reportIssue: vi.fn(), addBreadcrumb: vi.fn(), setTag: vi.fn() };
+  const sink = {
+    reportIssue: vi.fn(),
+    addBreadcrumb: vi.fn(),
+    setTag: vi.fn(),
+  };
   const serverError = { code: "500", message: "Internal Server Error" };
 
   beforeEach(() => {
@@ -498,8 +565,9 @@ describe("lock failure reporting", () => {
       eq: eqMock,
       select: selectMock,
       maybeSingle: maybeSingleMock,
-      then: (resolve: (value: { error: typeof serverError; count: null }) => unknown) =>
-        Promise.resolve({ error: serverError, count: null }).then(resolve),
+      then: (
+        resolve: (value: { error: typeof serverError; count: null }) => unknown
+      ) => Promise.resolve({ error: serverError, count: null }).then(resolve),
     };
     deleteMock.mockReturnValue(query);
     eqMock.mockReturnValue(query);
@@ -525,11 +593,16 @@ describe("lock failure reporting", () => {
   });
 
   it("leaves reporting a failed release to the caller", async () => {
-    await expect(releaseTimerLock("baby-1", "sleep", "user-1")).rejects.toBe(serverError);
+    await expect(releaseTimerLock("baby-1", "sleep", "user-1")).rejects.toBe(
+      serverError
+    );
 
     expect(sink.reportIssue).not.toHaveBeenCalled();
     expect(sink.addBreadcrumb).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "lock release failed", level: "warning" })
+      expect.objectContaining({
+        message: "lock release failed",
+        level: "warning",
+      })
     );
   });
 
@@ -537,30 +610,52 @@ describe("lock failure reporting", () => {
     await queuePendingLockRelease("baby-1", "sleep", "user-1", "timer-1");
     setContextTag("network_online", false);
     const offlineQuery: any = {
-      delete: () => offlineQuery, eq: () => offlineQuery, select: () => offlineQuery, maybeSingle: maybeSingleMock,
+      delete: () => offlineQuery,
+      eq: () => offlineQuery,
+      select: () => offlineQuery,
+      maybeSingle: maybeSingleMock,
       then: (resolve: (value: unknown) => unknown) =>
-        Promise.resolve({ error: new TypeError("Network request failed"), count: null }).then(resolve),
+        Promise.resolve({
+          error: new TypeError("Network request failed"),
+          count: null,
+        }).then(resolve),
     };
     fromMock.mockReturnValue(offlineQuery);
     await retryPendingLockReleases();
     expect(sink.reportIssue).not.toHaveBeenCalled();
-    expect(JSON.parse(storage.get("@pending_lock_releases") ?? "[]")[0].reported).toBeFalsy();
+    expect(
+      JSON.parse(storage.get("@pending_lock_releases") ?? "[]")[0].reported
+    ).toBeFalsy();
 
     setContextTag("network_online", true);
     const query: any = {
-      delete: () => query, eq: () => query, select: () => query, maybeSingle: maybeSingleMock,
+      delete: () => query,
+      eq: () => query,
+      select: () => query,
+      maybeSingle: maybeSingleMock,
       then: (resolve: (value: unknown) => unknown) =>
-        Promise.resolve({ error: { code: "42501", message: "permission denied" }, count: null }).then(resolve),
+        Promise.resolve({
+          error: { code: "42501", message: "permission denied" },
+          count: null,
+        }).then(resolve),
     };
     fromMock.mockReturnValue(query);
     await retryPendingLockReleases();
     await retryPendingLockReleases();
     expect(sink.reportIssue).toHaveBeenCalledTimes(1);
-    expect(sink.reportIssue).toHaveBeenCalledWith(expect.objectContaining({
-      name: "timers.pending_lock_release_failed",
-      tags: { activityType: "sleep", code: "42501" },
-    }));
-    expect(JSON.parse(storage.get("@pending_lock_releases") ?? "[]")[0].reported).toBe(true);
+    expect(sink.reportIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "timers.pending_lock_release_failed",
+        tags: {
+          activityType: "sleep",
+          code: "42501",
+          resource: "active_timers",
+        },
+      })
+    );
+    expect(
+      JSON.parse(storage.get("@pending_lock_releases") ?? "[]")[0].reported
+    ).toBe(true);
   });
 
   it("reports a queued release that keeps failing only once", async () => {
@@ -576,10 +671,14 @@ describe("lock failure reporting", () => {
         tags: { activityType: "sleep", code: "500" },
       })
     );
-    const pending = JSON.parse(storage.get("@pending_lock_releases") ?? "[]") as Array<{
+    const pending = JSON.parse(
+      storage.get("@pending_lock_releases") ?? "[]"
+    ) as Array<{
       timerInstanceId?: string;
     }>;
-    expect(pending.map(release => release.timerInstanceId)).toEqual(["timer-1"]);
+    expect(pending.map((release) => release.timerInstanceId)).toEqual([
+      "timer-1",
+    ]);
   });
 });
 

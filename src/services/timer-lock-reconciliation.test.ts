@@ -1,3 +1,4 @@
+import { TimerAccessUnavailableError } from "./timer-access-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { reconcileTimerLock } from "./timer-lock-reconciliation";
 
@@ -18,6 +19,16 @@ vi.mock("./active-timer-service", () => ({
 describe("timer lock reconciliation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("propagates confirmed access loss instead of retaining an offline household timer", async () => {
+    const error = new TimerAccessUnavailableError("revoked");
+    acquireTimerLockMock.mockRejectedValueOnce(error);
+    await expect(reconcileTimerLock({
+      babyId: "baby-1", activityType: "sleep", userId: "user-1",
+      startedAt: "2026-07-15T08:00:00.000Z", timerInstanceId: "timer-1",
+      timerData: {}, persistState: vi.fn(),
+    })).rejects.toBe(error);
   });
 
   it("marks a local timer conflicted when another caregiver acquired the lock first", async () => {

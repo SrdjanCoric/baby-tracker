@@ -1,3 +1,4 @@
+import { useTimerMutationAccessError } from "@/hooks/useTimerMutationAccessError";
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import {
   TummyTimeStorageService,
@@ -278,6 +279,19 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const handleTimerAccessError = useTimerMutationAccessError(
+    selectedBaby?.id, user?.id, state.activeTimer?.timerInstanceId,
+    async () => {
+      if (!selectedBaby) return;
+      stopVersionRef.current++;
+      const activityId = liveActivityIdRef.current;
+      liveActivityIdRef.current = null;
+      dispatch({ type: "STOP_TIMER" });
+      await TummyTimeStorageService.clearActiveTimer(selectedBaby.id);
+      const endedById = activityId ? await endTimerLiveActivity(activityId) : false;
+      if (!endedById) await endLiveActivityByType("tummyTime");
+    }
+  );
   const observedOwnedTimerRef = useRef<string | null>(null);
   const { babyBinding, beginBabyBinding, finishBabyBinding, isCurrentBabyBinding } =
     useBabyProviderBinding(selectedBaby?.id ?? null);
@@ -810,10 +824,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           totalPausedMs: state.activeTimer.totalPausedMs,
         });
       } catch (error) {
-        console.error("[TummyTimeContext] Failed to update timer data:", error);
+        if (await handleTimerAccessError(error)) return;
+          console.error("[TummyTimeContext] Failed to update timer data:", error);
       }
     }
-  }, [selectedBaby, state.activeTimer, user?.id]);
+  }, [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]);
 
   const resumeTummyTime = useCallback(async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
     if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused) return;
@@ -857,10 +872,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           accumulatedSeconds: activeElapsedSeconds,
         });
       } catch (error) {
-        console.error("[TummyTimeContext] Failed to update timer data:", error);
+        if (await handleTimerAccessError(error)) return;
+          console.error("[TummyTimeContext] Failed to update timer data:", error);
       }
     }
-  }, [selectedBaby, state.activeTimer, user?.id]);
+  }, [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]);
 
   const addTummyTime = useCallback(
     async (input: CreateTummyTimeInput): Promise<StoredTummyTimeEntry> => {

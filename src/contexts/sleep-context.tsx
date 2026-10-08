@@ -1,3 +1,4 @@
+import { useTimerMutationAccessError } from "@/hooks/useTimerMutationAccessError";
 import React, {
   createContext,
   useContext,
@@ -526,6 +527,19 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   const isStoppingRef = useRef(false);
   const [isStopping, setIsStopping] = useState(false);
   const stopVersionRef = useRef(0);
+  const handleTimerAccessError = useTimerMutationAccessError(
+    selectedBaby?.id, user?.id, state.activeTimer?.timerInstanceId,
+    async () => {
+      if (!selectedBaby) return;
+      stopVersionRef.current++;
+      const activityId = liveActivityIdRef.current;
+      liveActivityIdRef.current = null;
+      dispatch({ type: "STOP_TIMER" });
+      await SleepStorageService.clearActiveTimer(selectedBaby.id);
+      const endedById = activityId ? await endTimerLiveActivity(activityId) : false;
+      if (!endedById) await endLiveActivityByType("sleep");
+    }
+  );
   const observedOwnedTimerRef = useRef<string | null>(null);
   const activeMorningConfirmationRef = useRef<{
     activityId: string;
@@ -1645,13 +1659,14 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
             morningClassification: state.activeTimer.morningClassification,
             morningClassificationVersion:
               state.activeTimer.morningClassificationVersion,
-          }).catch((error) =>
-            console.error("[SleepContext] Failed to update timer data:", error)
-          );
+          }).catch(async (error) => {
+            if (await handleTimerAccessError(error)) return;
+            console.error("[SleepContext] Failed to update timer data:", error);
+          });
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const editSleepStartTime = useCallback(
@@ -1759,11 +1774,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               state.activeTimer.morningClassificationVersion,
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[SleepContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const resumeSleep = useCallback(
@@ -1823,11 +1839,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               state.activeTimer.morningClassificationVersion,
           });
         } catch (error) {
+          if (await handleTimerAccessError(error)) return;
           console.error("[SleepContext] Failed to update timer data:", error);
         }
       }
     },
-    [selectedBaby, state.activeTimer, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, user?.id]
   );
 
   const addSleep = useCallback(
@@ -2006,6 +2023,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
               morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
             });
           } catch (error) {
+            if (await handleTimerAccessError(error)) return;
             console.error(
               "[SleepContext] Failed to sync active morning confirmation:",
               error
@@ -2021,7 +2039,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
         morningClassificationVersion: MORNING_CLASSIFICATION_VERSION,
       });
     },
-    [selectedBaby, state.activeTimer, updateSleep, user?.id]
+    [handleTimerAccessError, selectedBaby, state.activeTimer, updateSleep, user?.id]
   );
 
   const deleteSleep = useCallback(

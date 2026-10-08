@@ -35,20 +35,96 @@ describe("observability sink", () => {
     setObservabilitySink(null);
   });
 
+  it("reports timer permission failures once per session across restore and pending writes", () => {
+    const sink = createSink();
+    setObservabilitySink(sink);
+    const error = {
+      code: "42501",
+      message: "permission denied",
+      timerResource: "active_timers",
+    };
+    expect(
+      reportIssue({ name: "timers.restore_failed", area: "timers", error })
+    ).toBe(true);
+    expect(
+      reportIssue({ name: "timers.load_locks_failed", area: "timers", error })
+    ).toBe(false);
+    expect(
+      reportIssue({
+        name: "timers.pending_start_edit_rejected",
+        area: "timers",
+        error,
+      })
+    ).toBe(false);
+    expect(sink.reportIssue).toHaveBeenCalledTimes(1);
+    expect(sink.reportIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tags: { code: "42501", resource: "active_timers" },
+      })
+    );
+  });
+
+  it("reports timer permission failures once for each resource per session", () => {
+    const sink = createSink();
+    setObservabilitySink(sink);
+    for (const timerResource of [
+      "active_timers",
+      "acquire_timer_lock",
+      "toggle_timer_pause",
+    ]) {
+      const issue = {
+        name: "timers.restore_failed",
+        area: "timers",
+        error: { code: "42501", timerResource },
+      };
+      expect(reportIssue(issue)).toBe(true);
+      expect(reportIssue(issue)).toBe(false);
+    }
+    expect(sink.reportIssue).toHaveBeenCalledTimes(3);
+    resetObservabilityIssueLimiter();
+    expect(
+      reportIssue({
+        name: "timers.restore_failed",
+        area: "timers",
+        error: { code: "42501", timerResource: "active_timers" },
+      })
+    ).toBe(true);
+  });
+
+  it("does not report expected unavailable timer access", () => {
+    const sink = createSink();
+    setObservabilitySink(sink);
+    expect(
+      reportIssue({
+        name: "timers.restore_failed",
+        area: "timers",
+        error: { code: "TIMER_ACCESS_UNAVAILABLE" },
+      })
+    ).toBe(false);
+    expect(sink.reportIssue).not.toHaveBeenCalled();
+  });
+
   it("returns whether an issue reached the sink", () => {
-    const issue = { name: "timers.pending_lock_release_failed", area: "timers" };
+    const issue = {
+      name: "timers.pending_lock_release_failed",
+      area: "timers",
+    };
     setObservabilitySink(null);
     expect(reportIssue(issue)).toBe(false);
     const sink = createSink();
     setObservabilitySink(sink);
     setContextTag("network_online", false);
-    expect(reportIssue({ ...issue, error: new TypeError("Network request failed") })).toBe(false);
+    expect(
+      reportIssue({ ...issue, error: new TypeError("Network request failed") })
+    ).toBe(false);
     setContextTag("network_online", true);
     for (let i = 0; i < 5; i++) expect(reportIssue(issue)).toBe(true);
     expect(reportIssue(issue)).toBe(false);
     expect(sink.reportIssue).toHaveBeenCalledTimes(5);
     resetObservabilityIssueLimiter();
-    sink.reportIssue.mockImplementation(() => { throw new Error("sink unavailable"); });
+    sink.reportIssue.mockImplementation(() => {
+      throw new Error("sink unavailable");
+    });
     expect(reportIssue(issue)).toBe(false);
   });
 
@@ -215,18 +291,21 @@ describe("observability sink", () => {
   it.each([
     new TypeError("Network request timed out"),
     { message: "TypeError: Network request timed out", code: "" },
-  ])("filters timed-out transport failures offline and dedups online: %s", (error) => {
-    const sink = createSink();
-    setObservabilitySink(sink);
-    const issue = { name: "timers.restore_failed", area: "timers", error };
-    setContextTag("network_online", false);
-    reportIssue(issue);
-    expect(sink.reportIssue).not.toHaveBeenCalled();
-    setContextTag("network_online", true);
-    reportIssue(issue);
-    reportIssue(issue);
-    expect(sink.reportIssue).toHaveBeenCalledTimes(1);
-  });
+  ])(
+    "filters timed-out transport failures offline and dedups online: %s",
+    (error) => {
+      const sink = createSink();
+      setObservabilitySink(sink);
+      const issue = { name: "timers.restore_failed", area: "timers", error };
+      setContextTag("network_online", false);
+      reportIssue(issue);
+      expect(sink.reportIssue).not.toHaveBeenCalled();
+      setContextTag("network_online", true);
+      reportIssue(issue);
+      reportIssue(issue);
+      expect(sink.reportIssue).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it("filters the network error object produced by PostgREST", async () => {
     const client = new PostgrestClient("http://localhost/rest/v1", {
