@@ -11,10 +11,18 @@ const identities: { userId: string; householdId: string; babyId: string; sibling
 let realtime: RealTimeSync;
 vi.mock('@/services/supabase', () => ({ get supabase() { return client; } }));
 
-function fixtureSql(sql: string) {
+let restoreLocalGrants = '';
+const SUBSCRIBED_TABLES = [
+  'feedings', 'sleep_sessions', 'diapers', 'pumping_sessions', 'growth_measurements',
+  'tummy_time_sessions', 'babies', 'users', 'households', 'active_timers',
+  'wake_window_preferences', 'activity_goals', 'milestone_responses', 'health_entries',
+];
+const UNPUBLISHED_LOCALLY = ['users', 'households'];
+
+function fixtureSql(sql: string): string {
   try {
-    execFileSync('psql', [databaseUrl, '-v', 'ON_ERROR_STOP=1'], {
-      input: sql, stdio: ['pipe', 'pipe', 'pipe'],
+    return execFileSync('psql', [databaseUrl, '-v', 'ON_ERROR_STOP=1', '-At'], {
+      input: sql, stdio: ['pipe', 'pipe', 'pipe'], encoding: 'utf8',
     });
   } catch (error) {
     throw new Error(`Local Realtime fixture SQL failed: ${String((error as { stderr?: Buffer }).stderr ?? '')}`);
@@ -31,6 +39,43 @@ beforeAll(async () => {
       throw new Error('Realtime integration requires loopback Supabase');
     }
   }
+  // Mirror the hosted project: a fresh local reset lacks these reads and publications, and one
+  // unreadable or unpublished table silently stops every postgres_changes event on the channel.
+  // Record the local column-scoped grants first so afterAll restores them for the SQL suites.
+  const tables = `ARRAY['${SUBSCRIBED_TABLES.join("','")}']`;
+  const unpublished = `ARRAY['${UNPUBLISHED_LOCALLY.join("','")}']`;
+  restoreLocalGrants = fixtureSql(`
+    SELECT coalesce(string_agg(statement, ' '), '') FROM (
+      SELECT format('REVOKE SELECT ON public.%I FROM authenticated;', c.relname) || coalesce((
+        SELECT format(' GRANT SELECT (%s) ON public.%I TO authenticated;',
+          string_agg(quote_ident(a.attname), ', ' ORDER BY a.attnum), c.relname)
+        FROM pg_attribute a
+        WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+          AND has_column_privilege('authenticated', c.oid, a.attnum, 'SELECT')
+        HAVING count(*) > 0), '') AS statement
+      FROM pg_class c
+      WHERE c.relnamespace = 'public'::regnamespace AND c.relname = ANY(${tables})
+        AND NOT has_table_privilege('authenticated', c.oid, 'SELECT')
+      UNION ALL
+      SELECT format('ALTER PUBLICATION supabase_realtime DROP TABLE public.%I;', name)
+      FROM unnest(${unpublished}) AS name
+      WHERE NOT EXISTS (SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = name)
+    ) AS restore;`).trim();
+  fixtureSql(`
+    DO $$
+    DECLARE name text;
+    BEGIN
+      FOREACH name IN ARRAY ${tables} LOOP
+        EXECUTE format('GRANT SELECT ON public.%I TO authenticated', name);
+      END LOOP;
+      FOREACH name IN ARRAY ${unpublished} LOOP
+        IF NOT EXISTS (SELECT 1 FROM pg_publication_tables
+          WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = name) THEN
+          EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', name);
+        END IF;
+      END LOOP;
+    END $$;`);
   const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
   admin = createClient(status.API_URL, status.SERVICE_ROLE_KEY, options);
   client = createClient(status.API_URL, status.ANON_KEY, options);
@@ -61,6 +106,7 @@ afterAll(async () => {
   for (const identity of identities) {
     fixtureSql(`DELETE FROM public.babies WHERE household_id = '${identity.householdId}'; DELETE FROM auth.users WHERE id = '${identity.userId}'; DELETE FROM public.households WHERE id = '${identity.householdId}';`);
   }
+  if (restoreLocalGrants) fixtureSql(restoreLocalGrants);
 });
 
 it('includes psql diagnostics when fixture SQL fails', () => {
@@ -85,6 +131,10 @@ it('delivers both siblings and household metadata without foreign household even
   });
   await realtime.subscribeToHousehold(identities[0].householdId, [identities[0].babyId, identities[0].siblingId!]);
   await vi.waitFor(() => expect(realtime.isConnected()).toBe(true), { timeout: 10000 });
+  // Realtime reports the join before registering its listeners; writes before that are dropped.
+  await vi.waitFor(() => expect(execFileSync('psql', [databaseUrl, '-Atc',
+    `SELECT count(*) FROM realtime.subscription WHERE entity = 'public.active_timers'::regclass AND claims->>'sub' = '${identities[0].userId}'`],
+  { encoding: 'utf8' }).trim()).not.toBe('0'), { timeout: 10000 });
   const siblingTimerId = randomUUID();
   fixtureSql(`INSERT INTO public.active_timers (id, baby_id, activity_type, started_by) VALUES ('${siblingTimerId}', '${identities[0].siblingId}', 'sleep', '${identities[0].userId}');`);
   await vi.waitFor(() => expect(received.some(c => c.table === 'active_timers' && c.new?.id === siblingTimerId)).toBe(true), { timeout: 10000 });
