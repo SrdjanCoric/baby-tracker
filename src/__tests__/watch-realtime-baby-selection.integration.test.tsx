@@ -32,6 +32,8 @@ let mockActivityBindingBabyId = "baby-a";
 const mockStartBreastfeedingA = jest.fn();
 const mockStartBreastfeedingB = jest.fn();
 
+jest.mock("@/services/supabase", () => ({ supabase: {} }));
+
 jest.mock("@/contexts/auth-context", () => ({
   useAuth: () => ({
     user: mockUser,

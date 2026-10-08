@@ -1115,9 +1115,12 @@ SET LOCAL ROLE authenticated;
 SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS old_overnight_equivalent;
 RESET ROLE;
 
+-- The start guard compares against the real clock, so running timers start relative to now().
+SELECT set_config('widget.snapshot_now',
+  to_char(pg_catalog.now() AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"'),true);
 INSERT INTO public.active_timers (baby_id,activity_type,started_by,started_at,timer_data)
 SELECT '87000000-0000-0000-0000-000000000002', kind,
-  '87000000-0000-0000-0000-000000000001', '2026-10-07T09:00:00Z',
+  '87000000-0000-0000-0000-000000000001', pg_catalog.now() - INTERVAL '3 hours',
   jsonb_build_object('timerInstanceId','cost-' || kind, 'isPaused',false,'accumulatedSeconds',120)
 FROM unnest(ARRAY['feeding','sleep','pumping','tummy_time']) kind;
 SET LOCAL ROLE authenticated;

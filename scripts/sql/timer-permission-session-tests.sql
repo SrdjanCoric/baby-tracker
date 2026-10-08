@@ -1,7 +1,11 @@
 \set ON_ERROR_STOP on
 BEGIN;
+
+-- Hosted projects grant these table reads to authenticated; a fresh local reset does not.
+GRANT SELECT ON public.users, public.babies TO authenticated;
+
 -- Exercise the same SELECT, DELETE and start-edit UPDATE as the timer service without
--- adding grants in the test; anonymous requests must reproduce the observed SQLSTATE.
+-- adding active_timers grants; anonymous requests must reproduce the observed SQLSTATE.
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
