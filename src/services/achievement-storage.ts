@@ -39,19 +39,26 @@ export async function getDetectedAchievementIds(
 export async function saveAchievement(
   babyId: string,
   id: AchievementId,
-  detectedBy?: string
+  detectedBy?: string,
+  silentlyEarnedIds: AchievementId[] = []
 ): Promise<void> {
   const existing = await getLocalAchievements(babyId);
-  if (existing.some((a) => a.id === id)) return;
+  const newIds = [id, ...silentlyEarnedIds].filter(
+    (earnedId) => !existing.some((a) => a.id === earnedId)
+  );
+  if (newIds.length === 0) return;
 
-  existing.push({ id, detectedAt: new Date().toISOString() });
+  const detectedAt = new Date().toISOString();
+  existing.push(...newIds.map((earnedId) => ({ id: earnedId, detectedAt })));
   const key = getStorageKey(babyId);
   await AsyncStorage.setItem(key, JSON.stringify(existing));
 
   if (detectedBy) {
-    insertAchievementInDatabase(babyId, id, detectedBy).catch((err) => {
-      console.error("[Achievements] Failed to sync to database:", err);
-    });
+    for (const earnedId of newIds) {
+      insertAchievementInDatabase(babyId, earnedId, detectedBy).catch((err) => {
+        console.error("[Achievements] Failed to sync to database:", err);
+      });
+    }
   }
 }
 

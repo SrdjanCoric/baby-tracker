@@ -31,7 +31,7 @@ Sleep decision table (tummy time works the same way with its own tiers and no ni
 | None (no night sleep, or none with a duration above zero) | — | No celebration |
 | Present | None | No celebration |
 | Present | One or more | Celebrate the highest; store the rest as earned silently |
-| Night sleep ended over 24h ago, saved just now (manual entry or import) | — | Ignored: no celebration |
+| Night sleep ended over 24h ago, saved just now (manual entry or import) | — | No celebration; reached tiers stored as earned silently |
 | Nap (not a night sleep) of any length | — | Ignored (unchanged) |
 | Running sleep (no end time, no duration) | — | Ignored (unchanged) |
 
@@ -53,6 +53,15 @@ First solid food: celebrated only when a solid feeding's activity time is recent
 
 ## Clarifications
 
+- 2026-10-08, review TR-1: the owner requested fixing the review finding. Historical activities
+  imported or back-entered mid-session earn their reached tiers silently before recent entries
+  are evaluated, matching startup catch-up. Recent entries can still celebrate higher unearned
+  tiers when historical and recent entries arrive together.
+
+## Implementation classification
+
+- Change class: `code`; validation tier: `canonical`; TDD applicable: `true`.
+
 ## Non-goals
 
 - Detection is still triggered by the number of entries changing: deleting an entry can still run
@@ -73,12 +82,12 @@ the first bug. Manual back-entry of an old sleep reproduces the second bug witho
 
 ## Implementation work
 
-- [ ] Sleep and tummy-time detection pick the highest unearned tier a recent entry reaches and
+- [x] Sleep and tummy-time detection pick the highest unearned tier a recent entry reaches and
       report the lower unearned tiers so they can be stored silently, per the decision table and
       examples — proven in `src/services/achievement-detection.test.ts`
-- [ ] Sleep, tummy-time, and solid-food recency use the activity time from rule 2; an old entry
+- [x] Sleep, tummy-time, and solid-food recency use the activity time from rule 2; an old entry
       saved just now is not recent — proven in `src/services/achievement-detection.test.ts`
-- [ ] When a celebration fires, the lower tiers are stored as earned at the same time, and a later
+- [x] When a celebration fires, the lower tiers are stored as earned at the same time, and a later
       entry (for example a nap) does not celebrate them — proven in
       `src/contexts/achievement-context.component.test.tsx`
 
@@ -96,10 +105,63 @@ the first bug. Manual back-entry of an old sleep reproduces the second bug witho
 
 ## Acceptance criteria
 
-- [ ] The decision-table rows and examples in `What to build` pass in
+- [x] The decision-table rows and examples in `What to build` pass in
       `src/services/achievement-detection.test.ts`.
-- [ ] A 10.5h recent night sleep on a baby with nothing earned produces one 10h celebration, and a
+- [x] A 10.5h recent night sleep on a baby with nothing earned produces one 10h celebration, and a
       following nap produces none, in `src/contexts/achievement-context.component.test.tsx`.
-- [ ] A night sleep that ended over 24 hours ago but was saved just now produces no celebration.
-- [ ] Focused tests, typecheck, and lint pass.
+- [x] A night sleep that ended over 24 hours ago but was saved just now produces no celebration.
+- [x] Focused tests, typecheck, and lint pass.
 - [ ] The [verify] simulator checkpoint passes.
+
+
+## Implementation evidence
+
+- Branch: `feature/fix-achievement-celebrations`; change class `code`, validation tier
+  `canonical`, TDD applicable `true`. Focused pre-review checks only; final canonical proof and
+  the simulator checkpoint belong to `finish-task`.
+- Detection reports the highest unearned reached tier and its unearned lower IDs. The provider
+  marks all reported IDs earned immediately; achievement storage saves them in one local write
+  with one timestamp and retains the existing per-ID server insert path.
+- RED/GREEN: tier matrix initially failed 12 tests (including 10h sleep returning 6h), then
+  passed 20; activity-time matrix failed 6 (old activity with new creation time), then passed
+  33; provider persistence failed 2 (lower IDs missing), then passed all 4.
+- Passing checks: `npm run test:unit -- src/services/achievement-detection.test.ts
+  src/services/achievement-storage.test.ts` (37 tests); `npm run test:component -- --runInBand
+  --runTestsByPath src/contexts/achievement-context.component.test.tsx` (4 tests);
+  `npm run typecheck`; `npm run lint`; `git diff --check`.
+- Logs: `/tmp/agent-workflows/e2f8af45fd34/20a37a1d27b3/` (`detection-tier-red.log`,
+  `detection-tier-green.log`, `recency-red.log`, `recency-green.log`, `provider-red.log`,
+  `provider-green.log`, `unit.log`, `component.log`, `typecheck.log`, `lint.log`).
+- Coverage: detection tests cover every decision-table row, partial earned sets, threshold
+  boundaries, entry order, end-time precedence, start-plus-duration fallback, solid start-time
+  fallback, and historical catch-up. Real-provider tests cover 10.5h sleep → dismiss → nap →
+  restart, 16-minute tummy time → 20-minute tummy time, old back-entered activities, and silent
+  startup catch-up. Storage tests prove one batch write, one timestamp for new IDs, preservation
+  of existing IDs, and per-ID authenticated sync.
+- Derived facts: storage saves read and replace the complete local achievement array
+  (`achievement-storage.ts`), so simultaneous individual saves cannot reliably store lower tiers;
+  the new celebration path batches them. Optional silent IDs preserve the existing development
+  trigger and solid-feeding result shapes (`achievement-context.tsx`, `achievement-detection.ts`).
+- Boundaries: stored activity shapes and timestamps mirror `SleepStorageService.addSleep`,
+  `TummyTimeStorageService.addTummyTime`, and `FeedingStorageService.addFeeding`. Component tests
+  use these actual producers through real detection, provider state, and achievement storage;
+  AsyncStorage and remote sync are isolated test boundaries. Unit tests mirror those same types.
+- Questions/clarifications: None. Additions beyond the task: None. Deferred decisions: None.
+- Out-of-scope observation: existing startup catch-up launches separate achievement saves
+  concurrently, which can overwrite local earned IDs. Its in-memory catch-up behavior is covered;
+  changing startup persistence is deliberately deferred. Count-only triggers and cross-device
+  repeat celebrations remain the stated non-goals.
+- The simulator modal/toast checkpoint remains unchecked for the manual finish-task proof.
+
+
+## Review remediation
+
+- TR-1 fixed: historical sleep, tummy-time, and solid-food records silently contribute earned IDs
+  on count changes. Their IDs and any newly celebrated tier persist in one batch, preventing lost
+  writes when multiple activity kinds arrive together.
+- RED: two targeted provider regression tests failed because old entries left earned IDs empty.
+  GREEN: all three targeted tests passed, including the mixed historical/recent batch guard.
+  Logs: `tr-1-red.log` and `tr-1-green.log` in the task log directory above.
+- Planning feedback: TR-1: the decision table row for "Night sleep ended over 24h ago, saved just now"
+  says "Ignored". It should have said "No celebration; tiers it reaches are stored as earned
+  silently", so mid-session imports behave the same as the startup catch-up.

@@ -46,4 +46,24 @@ describe("achievement storage", () => {
     expect(AsyncStorage.setItem).toHaveBeenCalled();
     expect(insertAchievementInDatabase).not.toHaveBeenCalled();
   });
+
+  it("stores a celebration and its unearned lower tiers in one write and syncs each new id", async () => {
+    await saveAchievement("baby-1", "sleep_10h", "user-1", ["sleep_6h", "sleep_8h"]);
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
+    const saved = JSON.parse(vi.mocked(AsyncStorage.setItem).mock.calls[0][1]);
+    expect(saved.map((entry: { id: string }) => entry.id)).toEqual(["sleep_6h", "sleep_10h", "sleep_8h"]);
+    expect(saved[0].detectedAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(saved[1].detectedAt).toBe(saved[2].detectedAt);
+    expect(insertAchievementInDatabase).toHaveBeenCalledTimes(2);
+    expect(insertAchievementInDatabase).toHaveBeenCalledWith("baby-1", "sleep_10h", "user-1");
+    expect(insertAchievementInDatabase).toHaveBeenCalledWith("baby-1", "sleep_8h", "user-1");
+  });
+
+  it("does not rewrite or sync tiers that are already stored", async () => {
+    await saveAchievement("baby-1", "sleep_6h", "user-1", []);
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+    expect(insertAchievementInDatabase).not.toHaveBeenCalled();
+  });
+
 });

@@ -9,6 +9,7 @@ import {
   detectSleepAchievements,
   detectTummyTimeAchievements,
   detectFeedingAchievements,
+  getHistoricalAchievementIds,
 } from "@/services/achievement-detection";
 import type { AchievementId, DetectedAchievement } from "@/services/achievement-detection";
 import {
@@ -120,24 +121,36 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
 
     if (!sleepCountChanged && !feedingCountChanged && !tummyTimeCountChanged) return;
 
+    const earnedIds = getHistoricalAchievementIds(
+      sleepCountChanged ? sleeps : [],
+      feedingCountChanged ? feedings : [],
+      tummyTimeCountChanged ? tummyTimes : [],
+      alreadyDetected,
+      selectedBaby.birthDate
+    );
+    const earned = new Set([...alreadyDetected, ...earnedIds]);
     let detected: DetectedAchievement | null = null;
 
     if (sleepCountChanged) {
-      detected = detectSleepAchievements(sleeps, alreadyDetected, selectedBaby.birthDate);
+      detected = detectSleepAchievements(sleeps, earned, selectedBaby.birthDate);
     }
 
     if (!detected && feedingCountChanged) {
-      detected = detectFeedingAchievements(feedings, alreadyDetected, selectedBaby.birthDate);
+      detected = detectFeedingAchievements(feedings, earned, selectedBaby.birthDate);
     }
 
     if (!detected && tummyTimeCountChanged) {
-      detected = detectTummyTimeAchievements(tummyTimes, alreadyDetected, selectedBaby.birthDate);
+      detected = detectTummyTimeAchievements(tummyTimes, earned, selectedBaby.birthDate);
     }
 
     if (detected) {
       setPendingCelebration(detected);
-      setAlreadyDetected((prev) => new Set([...prev, detected!.id]));
-      saveAchievement(selectedBaby.id, detected.id, session?.user?.id);
+      earnedIds.push(detected.id, ...(detected.silentlyEarnedIds ?? []));
+    }
+
+    if (earnedIds.length > 0) {
+      setAlreadyDetected((prev) => new Set([...prev, ...earnedIds]));
+      saveAchievement(selectedBaby.id, earnedIds[0], session?.user?.id, earnedIds.slice(1));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sleeps.length, feedings.length, tummyTimes.length, selectedBaby?.id, selectedBaby?.birthDate, alreadyDetected, pendingCelebration, session?.user?.id]);
