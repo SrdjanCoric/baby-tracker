@@ -12,6 +12,20 @@ function deferred() {
 }
 
 describe("foreground refresh coordinator", () => {
+  it('starts a fresh subscription catch-up after an older foreground pull finishes', async () => {
+    const coordinator = createForegroundRefreshCoordinator();
+    const gate = deferred();
+    const loader = vi.fn().mockImplementationOnce(() => gate.promise).mockResolvedValue(undefined);
+    coordinator.register('feedings', loader);
+    const foreground = coordinator.trigger(true);
+    await Promise.resolve();
+    const subscription = coordinator.refresh(true);
+    expect(loader).toHaveBeenCalledTimes(1);
+    gate.resolve();
+    await Promise.all([foreground, subscription]);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
   it("coalesces a wake and reconnect into one successful online pass", async () => {
     const coordinator = createForegroundRefreshCoordinator();
     const gate = deferred();

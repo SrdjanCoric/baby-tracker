@@ -77,6 +77,7 @@ interface SyncContextValue extends SyncState {
   subscribeToRemoteChanges: (table: SyncableTable, callback: RemoteChangeCallback) => () => void;
   setAuthContext: (householdId: string, userId: string) => void;
   clearAuthContext: () => void;
+  setRealtimeBabyIds: (householdId: string, babyIds: readonly string[]) => void;
   registerForegroundRefreshLoader: (id: string, loader: ForegroundRefreshLoader) => () => void;
   enqueueOperation: (operation: {
     type: 'CREATE' | 'UPDATE' | 'DELETE';
@@ -126,6 +127,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const wasOfflineRef = useRef(false);
   const reconcileChainRef = useRef<Promise<void>>(Promise.resolve());
   const refreshCoordinatorRef = useRef(createForegroundRefreshCoordinator());
+  const realtimeBabyRosterRef = useRef<{ householdId: string; babyIds: readonly string[] } | null>(null);
 
   useEffect(() => {
     const handleAppStateChange = async (nextState: AppStateStatus) => {
@@ -245,12 +247,37 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const unsubscribeRealTimeErrors = realTimeSync.onError((error) => {
       reportIssue({ name: 'realtime.channel_error', area: 'realtime', level: 'warning', error });
     });
+    let realtimeRefreshChain = Promise.resolve();
+    let catchUpQueued = false;
     const unsubscribeRealTimeConnection = realTimeSync.onConnectionChange((connected) => {
       setContextTag('realtime_connected', connected);
       recordBreadcrumb({
         category: 'realtime',
         message: connected ? 'connected' : 'disconnected',
         level: connected ? 'info' : 'warning',
+      });
+    });
+    const unsubscribeSubscriptionReplaced = realTimeSync.onSubscriptionReplaced(() => {
+      if (catchUpQueued) return;
+      catchUpQueued = true;
+      const auth = engine.getAuthContext();
+      const isCurrent = () => isMounted && auth !== null &&
+        engine.getAuthContext()?.householdId === auth.householdId &&
+        engine.getAuthContext()?.userId === auth.userId;
+      realtimeRefreshChain = realtimeRefreshChain.then(async () => {
+        catchUpQueued = false;
+        if (!isCurrent()) return;
+        if (engine.getPendingCount() > 0) {
+          try {
+            await engine.sync();
+          } catch (error) {
+            reportIssue({ name: 'sync.realtime_sync_failed', area: 'sync', error });
+          }
+        }
+        if (!isCurrent()) return;
+        await refreshCoordinatorRef.current.refresh(engine.getState().isConnected);
+      }).catch(error => {
+        reportIssue({ name: 'sync.realtime_refresh_failed', area: 'sync', error });
       });
     });
 
@@ -260,6 +287,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       unsubscribeRealTime();
       unsubscribeRealTimeErrors();
       unsubscribeRealTimeConnection();
+      unsubscribeSubscriptionReplaced();
       instanceRefCount--;
 
       if (instanceRefCount === 0) {
@@ -335,7 +363,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
     if (realTimeSyncInstance) {
       realTimeSyncInstance.setAuthContext({ householdId, userId });
-      realTimeSyncInstance.subscribeToHousehold(householdId).catch((error) => {
+      const roster = realtimeBabyRosterRef.current;
+      if (roster?.householdId !== householdId) return;
+      realTimeSyncInstance.subscribeToHousehold(householdId, roster.babyIds).catch((error) => {
         console.error('[SyncContext] Failed to subscribe to household:', error);
         reportIssue({ name: 'realtime.subscribe_failed', area: 'realtime', error });
         dispatch({ type: 'SYNC_ERROR', payload: error.message });
@@ -343,7 +373,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setRealtimeBabyIds = useCallback((householdId: string, babyIds: readonly string[]) => {
+    realtimeBabyRosterRef.current = { householdId, babyIds };
+    if (syncEngineInstance?.getAuthContext()?.householdId !== householdId) return;
+    void realTimeSyncInstance?.subscribeToHousehold(householdId, babyIds).catch(error => {
+      reportIssue({ name: 'realtime.subscribe_failed', area: 'realtime', error });
+      dispatch({ type: 'SYNC_ERROR', payload: error.message });
+    });
+  }, []);
+
   const clearAuthContext = useCallback(() => {
+    realtimeBabyRosterRef.current = null;
     syncEngineInstance?.clearAuthContext();
     realTimeSyncInstance?.clearAuthContext();
   }, []);
@@ -387,9 +427,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     subscribeToRemoteChanges,
     setAuthContext,
     clearAuthContext,
+    setRealtimeBabyIds,
     registerForegroundRefreshLoader,
     enqueueOperation,
-  }), [state, isInitialized, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, clearAuthContext, registerForegroundRefreshLoader, enqueueOperation]);
+  }), [state, isInitialized, forceSync, retryFailedSync, clearAllData, subscribeToRemoteChanges, setAuthContext, clearAuthContext, setRealtimeBabyIds, registerForegroundRefreshLoader, enqueueOperation]);
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

@@ -13,6 +13,26 @@ vi.mock('@/services/supabase', () => ({
   },
 }));
 
+async function mockChannels() {
+  const { supabase } = await import('@/services/supabase');
+  const channels: {
+    on: ReturnType<typeof vi.fn>;
+    subscribe: ReturnType<typeof vi.fn>;
+    unsubscribe: ReturnType<typeof vi.fn>;
+    status?: (status: string) => void;
+  }[] = [];
+  vi.mocked(supabase.channel).mockImplementation(() => {
+    const channel = {
+      on: vi.fn().mockReturnThis(), unsubscribe: vi.fn(),
+      subscribe: vi.fn((status: (value: string) => void) => { channel.status = status; return channel; }),
+      status: undefined as ((status: string) => void) | undefined,
+    };
+    channels.push(channel);
+    return channel as never;
+  });
+  return channels;
+}
+
 describe('RealTimeSync', () => {
   let realTimeSync: RealTimeSync;
   const mockHouseholdId = 'household-123';
@@ -29,6 +49,141 @@ describe('RealTimeSync', () => {
   });
 
   describe('subscription management', () => {
+    it('replaces the channel when the roster changes', async () => {
+      const channels = await mockChannels();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1', 'baby-2']);
+      expect(channels).toHaveLength(2);
+      expect(channels[0].unsubscribe).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not resubscribe for a reordered roster with duplicates', async () => {
+      const channels = await mockChannels();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1', 'baby-2']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2', 'baby-1', 'baby-1']);
+      expect(channels).toHaveLength(1);
+      expect(channels[0].unsubscribe).not.toHaveBeenCalled();
+    });
+
+    it('ignores CLOSED from an obsolete channel', async () => {
+      const channels = await mockChannels();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      channels[1].status!('SUBSCRIBED');
+      channels[0].status!('CLOSED');
+      expect(realTimeSync.isConnected()).toBe(true);
+    });
+
+    it('drops events from an obsolete channel', async () => {
+      const channels = await mockChannels();
+      const received = vi.fn();
+      realTimeSync.onRemoteChange(received);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      const oldListener = channels[0].on.mock.calls.find(call => call[1].table === 'feedings')![2];
+      oldListener({ eventType: 'INSERT', new: { id: 'stale', baby_id: 'baby-1' }, old: {} });
+      expect(received).not.toHaveBeenCalled();
+    });
+
+    it('uses only current baby ids in the replacement filter', async () => {
+      const channels = await mockChannels();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1', 'baby-2']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      expect(channels[1].on.mock.calls.find(call => call[1].table === 'feedings')![1].filter).toBe('baby_id=in.(baby-2)');
+    });
+
+    it('ignores late SUBSCRIBED after sign-out and unsubscribes every channel', async () => {
+      const channels = await mockChannels();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      channels[1].status!('SUBSCRIBED');
+      realTimeSync.clearAuthContext();
+      for (const channel of channels) {
+        channel.status!('SUBSCRIBED');
+        expect(channel.unsubscribe).toHaveBeenCalledTimes(1);
+      }
+      expect(realTimeSync.isConnected()).toBe(false);
+    });
+
+    it('keeps connection telemetry steady during roster replacement but disconnects on sign-out', async () => {
+      const channels = await mockChannels();
+      const connection = vi.fn();
+      realTimeSync.onConnectionChange(connection);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      channels[0].status!('SUBSCRIBED');
+      connection.mockClear();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      expect(connection).not.toHaveBeenCalled();
+      expect(realTimeSync.isConnected()).toBe(true);
+      channels[1].status!('CHANNEL_ERROR');
+      expect(connection).toHaveBeenLastCalledWith(false);
+      channels[1].status!('SUBSCRIBED');
+      connection.mockClear();
+      realTimeSync.clearAuthContext();
+      expect(connection).toHaveBeenCalledWith(false);
+    });
+
+    it('only reports the first activation of a same-household replacement', async () => {
+      const channels = await mockChannels();
+      const replaced = vi.fn();
+      realTimeSync.onSubscriptionReplaced(replaced);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      channels[0].status!('SUBSCRIBED');
+      channels[0].status!('CHANNEL_ERROR');
+      channels[0].status!('SUBSCRIBED');
+      expect(replaced).not.toHaveBeenCalled();
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-2']);
+      channels[1].status!('SUBSCRIBED');
+      expect(replaced).toHaveBeenCalledTimes(1);
+      channels[1].status!('CHANNEL_ERROR');
+      channels[1].status!('SUBSCRIBED');
+      expect(replaced).toHaveBeenCalledTimes(1);
+      realTimeSync.setAuthContext({ householdId: 'other', userId: mockUserId });
+      await realTimeSync.subscribeToHousehold('other', ['other-baby']);
+      channels[2].status!('SUBSCRIBED');
+      expect(replaced).toHaveBeenCalledTimes(1);
+    });
+
+    it('delivers a household baby hard delete with an empty new record', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnValue({ unsubscribe: vi.fn() }) };
+      vi.mocked(supabase.channel).mockReturnValue(channel as never);
+      const received = vi.fn();
+      realTimeSync.onRemoteChange(received);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ['baby-1']);
+      const babyListener = channel.on.mock.calls.find(call => call[1].table === 'babies')![2];
+      babyListener({ eventType: 'DELETE', new: {}, old: { id: 'baby-1', household_id: mockHouseholdId } });
+      expect(received).toHaveBeenCalledWith(expect.objectContaining({ new: null, old: { id: 'baby-1', household_id: mockHouseholdId } }));
+    });
+
+    it('filters the household and chunks baby listeners at 100 ids', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnValue({ unsubscribe: vi.fn() }) };
+      vi.mocked(supabase.channel).mockReturnValue(channel as never);
+      const ids = Array.from({ length: 101 }, (_, i) => `baby-${String(i).padStart(3, '0')}`);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, ids);
+      const registrations = channel.on.mock.calls.map(call => call[1]);
+      expect(registrations).toHaveLength(25);
+      expect(registrations.filter(r => r.table === 'feedings').map(r => r.filter)).toEqual([
+        `baby_id=in.(${ids.slice(0, 100).join(',')})`, 'baby_id=in.(baby-100)',
+      ]);
+      for (const registration of registrations) {
+        expect(registration.event).toBe('*');
+        if (registration.table === 'users') expect(registration.filter).toBeUndefined();
+        else if (registration.table === 'babies') expect(registration.filter).toBe(`household_id=eq.${mockHouseholdId}`);
+        else if (registration.table === 'households') expect(registration.filter).toBe(`id=eq.${mockHouseholdId}`);
+        else expect(registration.filter).toMatch(/^baby_id=in\.\(/);
+      }
+    });
+
+    it('keeps only household, babies and users listeners for an empty roster', async () => {
+      const { supabase } = await import('@/services/supabase');
+      const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnValue({ unsubscribe: vi.fn() }) };
+      vi.mocked(supabase.channel).mockReturnValue(channel as never);
+      await realTimeSync.subscribeToHousehold(mockHouseholdId, []);
+      expect(channel.on.mock.calls.map(call => call[1].table).sort()).toEqual(['babies', 'households', 'users']);
+    });
+
     it('should subscribe to household changes on initialization', async () => {
       const { supabase } = await import('@/services/supabase');
 

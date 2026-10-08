@@ -193,7 +193,7 @@ export function presentGuestMigrationConflict({
 
 export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(babyReducer, initialBabyState);
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, setRealtimeBabyIds, registerForegroundRefreshLoader } = useSync();
   const { user, signOut } = useAuth();
   const authScope = user ? `${user.id}:${user.householdId ?? "no-household"}` : "guest";
   const authScopeRef = useRef(authScope);
@@ -411,6 +411,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("[BabyContext] Failed to load babies:", error);
       if (householdIdOverride) throw error;
+      if (!isStaleLoad() && committedScopeRef.current !== loadScope) {
+        committedScopeRef.current = loadScope;
+        dispatch({ type: "SET_BABIES", payload: [] });
+        dispatch({ type: "SET_SELECTED_BABY", payload: null });
+      }
       return [];
     } finally {
       if (!isStaleLoad()) {
@@ -422,6 +427,16 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadBabies();
   }, [loadBabies]);
+
+  useEffect(() => {
+    if (!user?.householdId || state.isLoading || committedScopeRef.current !== authScope) return;
+    setRealtimeBabyIds?.(user.householdId, state.babies.map(baby => baby.id));
+  }, [authScope, setRealtimeBabyIds, state.babies, state.isLoading, user?.householdId]);
+
+  useEffect(() => {
+    if (!user?.householdId) return;
+    return registerForegroundRefreshLoader?.('babies', async () => { await loadBabies(); });
+  }, [loadBabies, registerForegroundRefreshLoader, user?.householdId]);
 
   const addBaby = useCallback(async (input: CreateBabyInput) => {
     const operationGeneration = authGenerationRef.current;

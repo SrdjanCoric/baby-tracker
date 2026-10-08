@@ -148,7 +148,7 @@ const HouseholdContext = createContext<HouseholdContextValue | null>(null);
 
 export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   const { user, refreshUserProfile } = useAuth();
-  const { subscribeToRemoteChanges } = useSync();
+  const { subscribeToRemoteChanges, registerForegroundRefreshLoader } = useSync();
   const [state, dispatch] = useReducer(householdReducer, initialHouseholdState);
 
   const householdId = user?.householdId ?? null;
@@ -267,6 +267,15 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Failed to refresh joined household");
     }
   }, [householdId]);
+
+  useEffect(() => {
+    if (!householdId) return;
+    return registerForegroundRefreshLoader?.('household', async () => {
+      const profile = await refreshUserProfile();
+      if (profile.householdId !== householdId) return;
+      await loadHousehold(undefined, true);
+    });
+  }, [householdId, loadHousehold, refreshUserProfile, registerForegroundRefreshLoader]);
 
   useEffect(() => {
     if (householdId) {

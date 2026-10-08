@@ -5,6 +5,7 @@ export interface ForegroundRefreshCoordinator {
   startWakeCycle(): void;
   noteOffline(): void;
   trigger(isOnline: boolean): Promise<void>;
+  refresh(isOnline: boolean): Promise<void>;
 }
 
 export function createForegroundRefreshCoordinator(): ForegroundRefreshCoordinator {
@@ -55,5 +56,11 @@ export function createForegroundRefreshCoordinator(): ForegroundRefreshCoordinat
       onlineSatisfied = false;
     },
     trigger,
+    async refresh(isOnline) {
+      // A subscription starts observing changes after an older pull's snapshot was taken.
+      await inFlight?.promise;
+      onlineSatisfied = false;
+      await trigger(isOnline);
+    },
   };
 }

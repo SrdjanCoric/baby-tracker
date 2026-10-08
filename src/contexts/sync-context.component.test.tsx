@@ -28,6 +28,7 @@ const mockRealtime = {
   onRemoteChange: jest.fn(() => jest.fn()),
   onError: jest.fn(() => jest.fn()),
   onConnectionChange: jest.fn(() => jest.fn()),
+  onSubscriptionReplaced: jest.fn(() => jest.fn()),
   destroy: jest.fn(),
 };
 

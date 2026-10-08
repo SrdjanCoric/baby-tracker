@@ -38,10 +38,13 @@ const SYNCABLE_TABLES: SyncableTable[] = [
 export class RealTimeSync {
   private deviceId: string;
   private currentHouseholdId: string | null = null;
+  private babyIds: string[] = [];
+  private subscriptionGeneration = 0;
   private subscription: { unsubscribe: () => void } | null = null;
   private connected = false;
   private changeListeners: Set<RemoteChangeListener> = new Set();
   private connectionListeners: Set<ConnectionChangeListener> = new Set();
+  private replacementListeners: Set<() => void> = new Set();
   private errorListeners: Set<ErrorListener> = new Set();
   private authContext: RealTimeSyncContext | null = null;
 
@@ -50,6 +53,8 @@ export class RealTimeSync {
   }
 
   setAuthContext(context: RealTimeSyncContext): void {
+    if (this.authContext && (this.authContext.householdId !== context.householdId ||
+        this.authContext.userId !== context.userId)) this.unsubscribe();
     this.authContext = context;
   }
 
@@ -77,43 +82,62 @@ export class RealTimeSync {
     return this.connected;
   }
 
-  async subscribeToHousehold(householdId: string): Promise<void> {
+  async subscribeToHousehold(householdId: string, babyIds: readonly string[] = []): Promise<void> {
     const authContext = this.ensureAuthContext();
 
     if (householdId !== authContext.householdId) {
       throw new Error('Cannot subscribe to a household the user does not belong to');
     }
 
-    if (this.currentHouseholdId === householdId && this.subscription) {
+    const sortedIds = [...new Set(babyIds)].sort();
+    if (this.currentHouseholdId === householdId && this.subscription &&
+        sortedIds.join(',') === this.babyIds.join(',')) {
       return;
     }
 
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
-    }
+    const isReplacement = this.currentHouseholdId === householdId && this.subscription !== null;
+    if (isReplacement) this.teardown();
+    else this.unsubscribe();
 
     this.currentHouseholdId = householdId;
+    this.babyIds = sortedIds;
 
-    const channel = supabase.channel(`household:${householdId}`);
+    const generation = this.subscriptionGeneration;
+    const channel = supabase.channel(`household:${householdId}:${generation}`);
 
     for (const table of SYNCABLE_TABLES) {
-      channel.on(
-        'postgres_changes' as never,
-        {
-          event: '*',
-          schema: 'public',
-          table,
-        } as never,
-        (payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) => {
-          this.handleRemoteChange(table, payload);
-        }
-      );
+      const filters: (string | undefined)[] = table === 'babies'
+        ? [`household_id=eq.${householdId}`]
+        : table === 'households' ? [`id=eq.${householdId}`]
+        : table === 'users' ? [undefined]
+        : Array.from({ length: Math.ceil(sortedIds.length / 100) }, (_, index) =>
+          `baby_id=in.(${sortedIds.slice(index * 100, (index + 1) * 100).join(',')})`);
+      for (const filter of filters) {
+        channel.on(
+          'postgres_changes' as never,
+          {
+            event: '*',
+            schema: 'public',
+            table,
+            ...(filter ? { filter } : {}),
+          } as never,
+          (payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) => {
+            if (generation !== this.subscriptionGeneration) return;
+            this.handleRemoteChange(table, payload);
+          }
+        );
+      }
     }
 
+    let firstJoin = true;
     this.subscription = channel.subscribe((status: string, error?: Error) => {
+      if (generation !== this.subscriptionGeneration) return;
       if (status === 'SUBSCRIBED') {
         this.setConnected(true);
+        if (firstJoin) {
+          firstJoin = false;
+          if (isReplacement) this.replacementListeners.forEach(listener => listener());
+        }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         this.setConnected(false, true);
         if (error) {
@@ -134,8 +158,8 @@ export class RealTimeSync {
     const change: RemoteChange = {
       table,
       eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
-      new: payload.new || null,
-      old: payload.old || null,
+      new: payload.new && Object.keys(payload.new).length ? payload.new : null,
+      old: payload.old && Object.keys(payload.old).length ? payload.old : null,
     };
 
     if (this.isEchoFromSameDevice(change)) {
@@ -236,6 +260,11 @@ export class RealTimeSync {
     };
   }
 
+  onSubscriptionReplaced(listener: () => void): () => void {
+    this.replacementListeners.add(listener);
+    return () => { this.replacementListeners.delete(listener); };
+  }
+
   onError(listener: ErrorListener): () => void {
     this.errorListeners.add(listener);
     return () => {
@@ -243,12 +272,18 @@ export class RealTimeSync {
     };
   }
 
-  unsubscribe(): void {
+  private teardown(): void {
+    this.subscriptionGeneration++;
     if (this.subscription) {
       this.subscription.unsubscribe();
       this.subscription = null;
     }
     this.currentHouseholdId = null;
+    this.babyIds = [];
+  }
+
+  unsubscribe(): void {
+    this.teardown();
     this.setConnected(false);
   }
 
@@ -257,6 +292,7 @@ export class RealTimeSync {
     this.changeListeners.clear();
     this.connectionListeners.clear();
     this.errorListeners.clear();
+    this.replacementListeners.clear();
     this.authContext = null;
   }
 

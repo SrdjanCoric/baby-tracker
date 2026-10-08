@@ -10,6 +10,7 @@ import {
 
 const mockRefreshUserProfile = jest.fn();
 const mockSubscribeToRemoteChanges = jest.fn(() => jest.fn());
+const mockRegisterForegroundRefreshLoader = jest.fn(() => jest.fn());
 
 jest.mock("./auth-context", () => ({
   useAuth: () => ({
@@ -23,7 +24,7 @@ jest.mock("./auth-context", () => ({
 }));
 
 jest.mock("./sync-context", () => ({
-  useSync: () => ({ subscribeToRemoteChanges: mockSubscribeToRemoteChanges }),
+  useSync: () => ({ subscribeToRemoteChanges: mockSubscribeToRemoteChanges, registerForegroundRefreshLoader: mockRegisterForegroundRefreshLoader }),
 }));
 
 jest.mock("@/services/household-service", () => ({
@@ -60,6 +61,23 @@ describe("HouseholdProvider targeted refresh", () => {
       displayName: "Caregiver",
       isOwner: false,
     });
+  });
+
+  it('reloads membership and household changes missed during subscription replacement', async () => {
+    jest.mocked(getHousehold).mockResolvedValue({ data: { id: 'source-household', inviteCode: 'SRCE2345', createdAt: '2026-01-01' }, error: null });
+    jest.mocked(getHouseholdMembers).mockResolvedValue({ data: [], error: null });
+    mockRefreshUserProfile.mockResolvedValue({ householdId: 'source-household', displayName: 'Caregiver', isOwner: true });
+    const view = render(<HouseholdProvider><Probe /></HouseholdProvider>);
+    await waitFor(() => expect(view.getByText('idle')).toBeTruthy());
+    const refresh = (mockRegisterForegroundRefreshLoader.mock.calls as unknown as [string, () => Promise<void>][]).find(call => call[0] === 'household')?.[1];
+    expect(refresh).toBeDefined();
+    jest.mocked(getHousehold).mockResolvedValue({ data: { id: 'source-household', inviteCode: 'NEWC2345', createdAt: '2026-01-01' }, error: null });
+    await act(async () => { await refresh!(); });
+    expect(mockRefreshUserProfile).toHaveBeenCalledTimes(1);
+    expect(getHouseholdMembers).toHaveBeenCalledTimes(2);
+    mockRefreshUserProfile.mockResolvedValue({ householdId: 'another-household', displayName: 'Caregiver', isOwner: false });
+    await act(async () => { await refresh!(); });
+    expect(getHouseholdMembers).toHaveBeenCalledTimes(2);
   });
 
   it("clears loading when the redemption request rejects", async () => {

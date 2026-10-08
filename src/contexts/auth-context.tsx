@@ -544,7 +544,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!userId) return { displayName: null, householdId: null, isOwner: false };
 
     const profile = await fetchUserProfile(userId, true);
-    setUser(prev => prev ? { ...prev, ...profile } : prev);
+    setUser(prev => {
+      if (!prev) return prev;
+      if (prev.householdId === profile.householdId &&
+          prev.displayName === profile.displayName && prev.isOwner === profile.isOwner) return prev;
+      return { ...prev, ...profile };
+    });
     return profile;
   }, [user?.id]);
 

@@ -2,11 +2,13 @@ import React from "react";
 import { act, render, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
 import { BabyProvider, useBaby } from "./baby-context";
-import { fetchAndSyncHouseholdBabies } from "@/services/baby-sync-service";
+import { fetchAndSyncHouseholdBabies, createBabyInDatabase, deleteBabyFromDatabase } from "@/services/baby-sync-service";
 import { BabyStorageService, type StoredBabyProfile } from "@/services/baby-storage";
 
 const mockSignOut = jest.fn();
 const mockSubscribeToRemoteChanges = jest.fn(() => jest.fn());
+const mockSetRealtimeBabyIds = jest.fn();
+const mockRegisterForegroundRefreshLoader = jest.fn(() => jest.fn());
 
 let mockUser = {
   id: "caregiver-1",
@@ -21,7 +23,16 @@ jest.mock("./auth-context", () => ({
 }));
 
 jest.mock("./sync-context", () => ({
-  useSync: () => ({ subscribeToRemoteChanges: mockSubscribeToRemoteChanges }),
+  useSync: () => ({
+    subscribeToRemoteChanges: mockSubscribeToRemoteChanges,
+    setRealtimeBabyIds: mockSetRealtimeBabyIds,
+    registerForegroundRefreshLoader: mockRegisterForegroundRefreshLoader,
+  }),
+}));
+
+jest.mock('@/services/sync', () => ({
+  tombstonedId: jest.requireActual('@/services/sync/tombstone').tombstonedId,
+  upsertById: jest.requireActual('@/services/sync/tombstone').upsertById,
 }));
 
 jest.mock("@/services/baby-sync-service", () => ({
@@ -70,9 +81,11 @@ const sharedBaby: StoredBabyProfile = {
 };
 
 let capturedRefresh: ((householdIdOverride?: string) => Promise<StoredBabyProfile[]>) | null = null;
+let capturedBabyContext: ReturnType<typeof useBaby>;
 
 function Probe() {
-  const { selectedBaby, refreshBabies } = useBaby();
+  capturedBabyContext = useBaby();
+  const { selectedBaby, refreshBabies } = capturedBabyContext;
   capturedRefresh = refreshBabies;
   return <Text>{selectedBaby?.name ?? "none"}</Text>;
 }
@@ -87,6 +100,57 @@ describe("BabyProvider targeted household refresh", () => {
     );
   });
 
+  it('reports an offline cached roster after loading completes', async () => {
+    jest.mocked(fetchAndSyncHouseholdBabies).mockRejectedValueOnce(new Error('offline'));
+    jest.mocked(BabyStorageService.getAllBabies).mockResolvedValueOnce([sourceBaby]);
+    render(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']));
+    expect(capturedBabyContext.isLoading).toBe(false);
+  });
+
+  it('reports an empty current roster when both network and cache fail after a household switch', async () => {
+    const view = render(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']));
+    mockSetRealtimeBabyIds.mockClear();
+    jest.mocked(fetchAndSyncHouseholdBabies).mockRejectedValueOnce(new Error('offline'));
+    jest.mocked(BabyStorageService.getAllBabies).mockRejectedValueOnce(new Error('cache unavailable'));
+    mockUser = { id: 'caregiver-1', householdId: 'shared-household' };
+    view.rerender(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('shared-household', []));
+    expect(capturedBabyContext.isLoading).toBe(false);
+    expect(mockSetRealtimeBabyIds).not.toHaveBeenCalledWith('shared-household', ['source-baby']);
+  });
+
+  it("updates the live roster after remote additions, tombstones and restores", async () => {
+    render(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']));
+    const receive = (mockSubscribeToRemoteChanges.mock.calls as unknown as [string, (change: unknown) => Promise<void>][]).find(call => call[0] === 'babies')![1];
+    const row = { id: 'remote-baby', name: 'Remote baby', household_id: 'source-household', created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
+    await act(async () => { await receive({ table: 'babies', eventType: 'INSERT', new: row, old: null }); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby', 'remote-baby']);
+    await act(async () => { await receive({ table: 'babies', eventType: 'UPDATE', new: { ...row, deleted: true }, old: row }); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']);
+    await act(async () => { await receive({ table: 'babies', eventType: 'UPDATE', new: { ...row, deleted: false }, old: { ...row, deleted: true } }); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby', 'remote-baby']);
+    const refresh = (mockRegisterForegroundRefreshLoader.mock.calls as unknown as [string, () => Promise<void>][]).find(call => call[0] === 'babies')![1];
+    jest.mocked(fetchAndSyncHouseholdBabies).mockResolvedValue([sourceBaby, sharedBaby]);
+    await act(async () => { await refresh(); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby', 'shared-baby']);
+  });
+
+  it('updates the roster for local additions and deletions, including the last baby', async () => {
+    render(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']));
+    jest.mocked(createBabyInDatabase).mockResolvedValue(sharedBaby);
+    jest.mocked(deleteBabyFromDatabase).mockResolvedValue(true);
+    await act(async () => { await capturedBabyContext.addBaby({ name: sharedBaby.name }); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby', 'shared-baby']);
+    await act(async () => { await capturedBabyContext.deleteBaby(sourceBaby.id); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['shared-baby']);
+    await act(async () => { await capturedBabyContext.deleteBaby(sharedBaby.id); });
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', []);
+  });
+
   it("lets an in-flight join callback load and select the new household scope", async () => {
     const view = render(
       <BabyProvider>
@@ -98,6 +162,7 @@ describe("BabyProvider targeted household refresh", () => {
     expect(refreshFromSourceRender).not.toBeNull();
 
     mockUser = { id: "caregiver-1", householdId: "shared-household" };
+    mockSetRealtimeBabyIds.mockClear();
     view.rerender(
       <BabyProvider>
         <Probe />
@@ -111,6 +176,8 @@ describe("BabyProvider targeted household refresh", () => {
 
     expect(loaded).toEqual([sharedBaby]);
     await waitFor(() => expect(view.getByText("Shared Baby")).toBeTruthy());
+    expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('shared-household', ['shared-baby']);
+    expect(mockSetRealtimeBabyIds).not.toHaveBeenCalledWith('shared-household', ['source-baby']);
     expect(BabyStorageService.replaceAllBabies).toHaveBeenCalledWith(
       [sharedBaby],
       expect.objectContaining({ babiesKey: "caregiver-1:shared-household:babies" })

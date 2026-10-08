@@ -336,7 +336,9 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0110 · Do not notify caregivers about activities that ended over an hour ago → tasks/done/0110-no-push-for-past-activities.md
 - [ ] 0105 · Prepare and gate the 4.10.2 release (after 0103, 0104, 0109, 0110) → tasks/0105-gate-4-10-2-release.md
 - [x] 0111 · Make the widget and Watch activity snapshot cost independent of history length → tasks/done/0111-bound-activity-snapshot-cost.md
-- [ ] 0112 · Subscribe each phone only to its own household's live updates → tasks/0112-scope-live-updates-to-household.md
+- [x] 0112 · Subscribe each phone only to its own household's live updates → tasks/done/0112-scope-live-updates-to-household.md
+- [ ] 0113 · Stop "permission denied" errors when the app restores household timers → tasks/0113-fix-timer-permission-denied.md
+- [ ] 0114 · Celebrate each long sleep or tummy time once, at its highest tier, only when it just happened → tasks/0114-fix-achievement-celebrations.md
 - [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
 
 ## Workflow status
@@ -512,6 +514,12 @@ with 0111.
 On 2026-10-07 the owner reordered the open tasks to implement imports before the 4.10.2 release:
 0107 through 0110 come first, then 0105, which now also waits for 0109 and 0110 and ships the
 import feature in 4.10.2, then 0112. Task 0106 moves to the end of the list.
+On 2026-10-08 the owner added Task 0113 from a Sentry triage: 39 Postgres `42501` (permission
+denied) events on Android 4.9.16 in household timer restore and lock calls (REACT-NATIVE-E, D, N, X, 11).
+It is independent of 0112 and runs after it.
+On 2026-10-08 the owner added Task 0114 after reports of sleep celebrations firing in the wrong
+order: one long sleep earned the 6-hour celebration, then the 8-hour one later, and old imported
+or back-entered sleeps could celebrate. It is independent of every open task and runs after 0113.
 The owner then merged Task 0108 into 0107, so one task imports every supported Huckleberry type;
 0108 is retired and its number is not reused. 0109 now follows 0107.
 

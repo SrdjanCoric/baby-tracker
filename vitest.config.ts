@@ -12,6 +12,7 @@ export default defineConfig({
       "**/*.component.test.tsx",
       "**/*.integration.test.tsx",
       "src/services/import/import-sync.test.ts",
+      "src/services/sync/real-time-sync.integration.test.ts",
     ],
     environment: "node",
     globals: true,

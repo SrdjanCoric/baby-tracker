@@ -281,6 +281,30 @@ describe("AuthContext", () => {
   });
 
   describe("profile refresh", () => {
+    it('preserves user identity for unchanged profiles and updates every changed profile field', async () => {
+      mockGetSession.mockResolvedValueOnce({ data: { session: mockSession }, error: null });
+      let auth!: ReturnType<typeof useAuth>;
+      function Probe() { auth = useAuth(); return null; }
+      render(<AuthProvider><Probe /></AuthProvider>);
+      await waitFor(() => expect(auth.isLoading).toBe(false));
+      const original = auth.user;
+      expect(original).not.toBeNull();
+      await act(async () => { await auth.refreshUserProfile(); });
+      expect(auth.user).toBe(original);
+      const profile = { household_id: 'household-1', display_name: 'Caregiver', is_owner: true };
+      for (const update of [{ display_name: 'Renamed' }, { household_id: 'household-2' }, { is_owner: false }]) {
+        const previous = auth.user;
+        Object.assign(profile, update);
+        mockProfileSingle.mockResolvedValue({ data: { ...profile }, error: null });
+        await act(async () => { await auth.refreshUserProfile(); });
+        expect(auth.user).not.toBe(previous);
+        expect(auth.user).toMatchObject({ displayName: profile.display_name, householdId: profile.household_id, isOwner: profile.is_owner });
+        const changed = auth.user;
+        await act(async () => { await auth.refreshUserProfile(); });
+        expect(auth.user).toBe(changed);
+      }
+    });
+
     it("rejects an unavailable profile instead of returning empty account fields", async () => {
       mockGetSession.mockResolvedValueOnce({ data: { session: mockSession }, error: null });
       mockProfileSingle

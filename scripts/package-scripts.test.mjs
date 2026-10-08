@@ -52,6 +52,6 @@ test("the canonical check command runs every maintained non-device suite once", 
   );
   assert.equal(
     packageJson.scripts.check,
-    "npm run check:code && npm run test:sql:setup && npm run test:sql"
+    "npm run check:code && npm run test:sql:setup && npm run test:sql && npm run test:realtime"
   );
 });
