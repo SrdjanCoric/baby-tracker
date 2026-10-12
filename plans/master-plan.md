@@ -340,6 +340,22 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0113 · Stop "permission denied" errors when the app restores household timers → tasks/done/0113-fix-timer-permission-denied.md
 - [x] 0114 · Celebrate each long sleep or tummy time once, at its highest tier, only when it just happened → tasks/done/0114-fix-achievement-celebrations.md
 - [ ] 0106 · Handle a shared login that changed before the app's save or sign-out (after 0103) → tasks/0106-handle-shared-session-change-on-save-and-sign-out.md
+- [ ] 0115 · Delete unused components, hooks and helpers with their tests → tasks/0115-delete-dead-files-and-their-tests.md
+- [ ] 0116 · Delete unused functions inside live files with their tests (after 0115) → tasks/0116-delete-dead-functions-and-their-tests.md
+- [ ] 0117 · Delete the four screens nothing links to (after 0116) → tasks/0117-delete-unreachable-screens.md
+- [ ] 0118 · Delete tests that only test themselves (after 0117) → tasks/0118-delete-tests-that-guard-nothing.md
+- [ ] 0119 · Prove a stop on one device clears the timer on every household device → tasks/0119-remote-stop-clears-timer-everywhere.md
+- [ ] 0120 · Prove a stop never touches another household's timer → tasks/0120-stop-never-touches-other-household.md
+- [ ] 0121 · Send widget pushes to the whole household, including the starter, and no one else (after 0094) → tasks/0121-widget-push-reaches-whole-household.md
+- [ ] 0122 · Send activity notifications only to the other members who turned them on (after 0121) → tasks/0122-activity-notification-recipients.md
+- [ ] 0123 · Show the same "today's sleep" on Home, the widget and Statistics → tasks/0123-one-todays-sleep-number.md
+- [ ] 0124 · Prove leaving a household and removing a caregiver work on the server → tasks/0124-test-leaving-and-removal.md
+- [ ] 0125 · Keep a deleted account's entries when the household has other members (after 0124) → tasks/0125-account-deletion-keeps-shared-entries.md
+- [ ] 0126 · Send wake-window and bedtime reminders only to people who turned them on → tasks/0126-wake-window-reminders-opt-in-per-person.md
+- [ ] 0127 · Keep each baby's running timer on that baby's card (after 0119) → tasks/0127-keep-each-baby-timer-lock-on-its-own-card.md
+- [ ] 0128 · Switch babies without stopping their timers (after 0127) → tasks/0128-switch-babies-without-stopping-timers.md
+- [ ] 0129 · Keep guest-mode timers on the right baby (after 0128) → tasks/0129-keep-guest-baby-timers-separate.md
+- [ ] 0130 · Make the Lock Screen timer follow the selected baby (after 0128, 0094) → tasks/0130-live-activity-follows-selected-baby.md
 
 ## Workflow status
 
@@ -561,3 +577,5 @@ phone keeps showing the timer as running. 0102 is claimable alongside 0101; neit
 other. 0101 holds patch 4.9.22 and 0102 takes 4.9.23.
 
 On 2026-10-07, on `main` after Task 0103: these notes describe the `hotfix/4.9` plan; 0094 stays `[>]`, and 0103–0106 take priority.
+
+On 2026-10-08 the owner added Tasks 0115 through 0130 from a test audit (`docs/usage/test-audit.md`, yardstick `docs/usage/*.md`). 0115–0118 delete verified dead code and tests that guard nothing. 0119–0126 close single-baby and household gaps. 0127–0130 cover two babies' timers and come last by owner choice. In every gap task, a test that exposes a real bug means the task fixes that bug too. Switching babies keeps every timer running; the "Stop & Switch" dialog goes (0128). Achievement tests stay in 0114. The `docs/usage/` folder must be committed with this planning batch, since the tasks cite it.
