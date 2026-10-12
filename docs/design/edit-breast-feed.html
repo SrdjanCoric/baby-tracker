@@ -1,0 +1,310 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit a breast feed</title>
+
+<style>
+  :root {
+    --ground: #F5EDE8;
+    --card: #FFFFFF;
+    --ink: #2D2A26;
+    --ink-2: #5C5752;
+    --ink-3: #7A756E;
+    --hair: #EDEAE6;
+    --hair-strong: #D5D1CC;
+    --muted-bg: #E8E4F0;
+    --accent: #6B5B95;
+    --accent-wash: #F2EFF4;
+    --amber: #D4A017;
+    --go: #4A7F4D;
+    --stop: #A8574B;
+    --ios-red: #E5484D;
+    --ios-blue: #2F6FDE;
+    --bezel: #D9CFC9;
+    --scrim: rgba(0,0,0,.38);
+    --shadow: 0 1px 2px rgba(45, 42, 38, .06), 0 12px 36px rgba(45, 42, 38, .10);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #121110; --card: #2A2725; --ink: #F5F2F0; --ink-2: #B8B3B0; --ink-3: #9E9A97;
+      --hair: #2F2C32; --hair-strong: #4A464F; --muted-bg: #2E2840; --accent: #A594CF;
+      --accent-wash: #241F31; --amber: #E0B84A; --go: #6DB070; --stop: #D08476;
+      --ios-red: #FF6B6B; --ios-blue: #6FA2FF; --bezel: #3A363D; --scrim: rgba(0,0,0,.55);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121110; --card: #2A2725; --ink: #F5F2F0; --ink-2: #B8B3B0; --ink-3: #9E9A97;
+    --hair: #2F2C32; --hair-strong: #4A464F; --muted-bg: #2E2840; --accent: #A594CF;
+    --accent-wash: #241F31; --amber: #E0B84A; --go: #6DB070; --stop: #D08476;
+    --ios-red: #FF6B6B; --ios-blue: #6FA2FF; --bezel: #3A363D; --scrim: rgba(0,0,0,.55);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 36px rgba(0, 0, 0, .45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 48px 16px 96px; }
+
+  .eyebrow { font-size: 12px; letter-spacing: .11em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: 0; }
+  h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: clamp(28px, 4.2vw, 40px); line-height: 1.12; letter-spacing: -.015em;
+    font-weight: 600; text-wrap: balance; margin: 10px 0 14px;
+  }
+  h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+    font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; margin: 0;
+  }
+  .lede { max-width: 62ch; color: var(--ink-2); font-size: 17px; }
+  .meta { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--hair-strong); display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 13px; color: var(--ink-3); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .86em; color: var(--ink-2); }
+
+  section.block { margin-top: 56px; }
+  .block-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; padding-bottom: 12px; border-bottom: 1px solid var(--hair-strong); }
+  .block-head p { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 60ch; }
+  .block-head .pick { margin-left: auto; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--go); padding: 4px 10px; border-radius: 999px; }
+
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; align-items: start; }
+  .row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 1000px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 680px) { .row, .row.two { grid-template-columns: minmax(0, 1fr); } }
+
+  .col-label { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.now { background: var(--hair-strong); }
+  .dot.next { background: var(--go); }
+  .dot.warn { background: var(--amber); }
+
+  /* ---------- phone ---------- */
+  .phone { background: var(--bezel); border-radius: 44px; padding: 9px; box-shadow: var(--shadow); width: 100%; max-width: 330px; margin: 0 auto; }
+  .screen { background: var(--card); border-radius: 36px; overflow: hidden; padding: 10px 0 18px; position: relative; min-height: 560px; display: flex; flex-direction: column; }
+  .handle { width: 36px; height: 4px; border-radius: 99px; background: var(--hair-strong); margin: 6px auto 12px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 0 18px 4px; font-size: 20px; color: var(--ink-3); }
+  .nav .titles { text-align: center; }
+  .nav .titles strong { display: block; color: var(--ink); font-size: 17px; font-weight: 600; }
+  .nav .titles span { font-size: 13px; color: var(--ink-3); }
+  .nav .right { display: flex; gap: 10px; align-items: center; }
+
+  .timer-body { padding: 22px 20px 6px; display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
+  .status-head { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .status-head .emoji { font-size: 30px; }
+  .status-head .word { color: var(--accent); font-size: 17px; font-weight: 600; }
+  .start-pill { background: var(--muted-bg); border-radius: 999px; padding: 10px 18px; font-size: 13.5px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; margin-bottom: 18px; display: inline-flex; align-items: center; gap: 8px; }
+  .start-pill .caret { font-size: 11px; opacity: .75; }
+  .timer-card { background: var(--muted-bg); border-radius: 24px; padding: 24px 32px; margin-bottom: 22px; }
+  .timer-card .value { color: var(--accent); font-size: 38px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .timer-card.paused .value { color: var(--amber); opacity: .55; }
+  .run-row { display: flex; align-items: center; gap: 8px; margin-bottom: 26px; font-size: 15px; color: var(--ink-2); }
+  .run-row .live { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+  .run-row .live.paused { background: var(--amber); }
+  .controls { display: flex; align-items: center; gap: 22px; }
+  .btn-round { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .btn-round.ghost { border: 2px solid var(--accent); color: var(--accent); }
+  .btn-round.solid { background: var(--accent); color: #fff; width: 72px; height: 72px; font-size: 28px; }
+  .btn-round.ghost.danger { border-color: var(--stop); color: var(--stop); font-size: 20px; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 12px 0 0; }
+
+  .discard-link { margin-top: 26px; font-size: 13.5px; color: var(--ink-3); display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; }
+  .discard-link.armed { color: var(--stop); font-weight: 600; background: color-mix(in srgb, var(--stop) 12%, transparent); }
+
+  .added { position: relative; }
+  .added::before { content: ""; position: absolute; left: -14px; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--go); }
+
+  /* ---------- overlays ---------- */
+  .overlay { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 20px; border-radius: 36px; }
+  .overlay.bottom { align-items: flex-end; padding: 10px; }
+
+  .ios-alert { width: 100%; max-width: 250px; background: var(--card); border-radius: 14px; overflow: hidden; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  .ios-alert .body { padding: 18px 16px 14px; }
+  .ios-alert .body strong { display: block; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .ios-alert .body span { font-size: 13px; color: var(--ink-2); line-height: 1.35; display: block; }
+  .ios-alert .actions { display: flex; border-top: 1px solid var(--hair-strong); }
+  .ios-alert .actions div { flex: 1; padding: 11px 6px; font-size: 16px; color: var(--ios-blue); }
+  .ios-alert .actions div + div { border-left: 1px solid var(--hair-strong); }
+  .ios-alert .actions .destr { color: var(--ios-red); }
+  .ios-alert .actions .bold { font-weight: 600; }
+
+  .sheet { width: 100%; }
+  .sheet .group { background: var(--card); border-radius: 14px; overflow: hidden; text-align: center; }
+  .sheet .group + .group { margin-top: 8px; }
+  .sheet .title { padding: 12px 16px; font-size: 13px; color: var(--ink-3); border-bottom: 1px solid var(--hair-strong); line-height: 1.35; }
+  .sheet .title strong { color: var(--ink); font-size: 14px; display: block; }
+  .sheet .act { padding: 15px; font-size: 18px; color: var(--ios-blue); }
+  .sheet .act + .act { border-top: 1px solid var(--hair-strong); }
+  .sheet .act.destr { color: var(--ios-red); }
+  .sheet .act.bold { font-weight: 600; }
+
+  .toast { position: absolute; left: 16px; right: 16px; bottom: 26px; background: var(--ink); color: var(--card); border-radius: 12px; padding: 11px 14px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+  .toast b { color: var(--accent); font-weight: 600; }
+
+  /* ---------- home card ---------- */
+  .home { padding: 8px 14px; }
+  .hcard { background: var(--card); border: 1px solid var(--hair-strong); border-radius: 18px; padding: 12px 14px; position: relative; min-height: 122px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .hcard .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+  .hcard .top .live { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .hcard .big { font-size: 17px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .hcard .sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .hcard .chip { position: absolute; left: 14px; bottom: 12px; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--muted-bg); padding: 3px 8px; border-radius: 999px; }
+  .hcard .btns { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; }
+  .mini { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .mini.ghost { border: 2px solid var(--accent); color: var(--accent); }
+  .mini.solid { background: var(--accent); color: #fff; }
+  .mini.x { border: 2px dashed var(--stop); color: var(--stop); opacity: .6; }
+  .hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .hcard.small { min-height: 92px; padding: 10px 12px; }
+  .hcard.small .top { font-size: 13px; }
+  .hcard.small .big { font-size: 15px; color: var(--ink); }
+
+  /* ---------- notes ---------- */
+  .note { background: var(--card); border-radius: 16px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .note + .note { margin-top: 18px; }
+  .note p { margin: 0 0 10px; font-size: 14.5px; color: var(--ink-2); }
+  .note p:last-child { margin-bottom: 0; }
+  .note strong { color: var(--ink); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; margin-bottom: 10px; }
+  .tag.add { background: var(--go); color: #fff; }
+  .tag.cut { background: var(--stop); color: #fff; }
+  .tag.same { background: var(--hair-strong); color: var(--ink-2); }
+  .caption { font-size: 13px; color: var(--ink-3); margin: 10px 2px 0; max-width: 40ch; margin-left: auto; margin-right: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .table-scroll { overflow-x: auto; margin-top: 8px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--hair-strong); }
+  td.y { color: var(--go); font-weight: 600; }
+  td.n { color: var(--stop); font-weight: 600; }
+  td.m { color: var(--amber); font-weight: 600; }
+
+  /* ---------- edit screen ---------- */
+  .edit { padding: 6px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .edit .icon { text-align: center; font-size: 34px; margin: 2px 0 4px; }
+  .lbl { font-size: 13.5px; color: var(--ink-2); margin-bottom: 6px; }
+  .seg { display: flex; gap: 8px; }
+  .seg div { flex: 1; text-align: center; padding: 10px 0; border-radius: 14px; background: var(--hair); font-size: 14.5px; font-weight: 500; }
+  .seg div.on { color: #fff; }
+  .trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .trow .lbl { margin: 0; width: 52px; }
+  .fld { flex: 1; display: flex; justify-content: space-between; align-items: center; border-radius: 14px; padding: 10px 14px; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .fld.num { flex: none; width: 112px; justify-content: flex-end; gap: 6px; }
+  .fld.num span { color: var(--ink-3); font-size: 13px; }
+  .fld.ro { background: transparent !important; border: 1px dashed; }
+  .len { display: flex; justify-content: space-between; align-items: center; border-radius: 14px; border: 1px dashed; padding: 10px 14px; }
+  .len b { font-size: 17px; }
+  .pz { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); padding: 0 14px; margin-top: -8px; }
+  .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sides .fld { justify-content: space-between; }
+  .err { font-size: 12.5px; color: var(--stop); margin-top: -6px; }
+  .fld.bad { outline: 1.5px solid var(--stop); }
+  .save { margin-top: 6px; text-align: center; color: #fff; border-radius: 14px; padding: 13px; font-weight: 600; font-size: 16px; }
+  .save.off { opacity: .4; }
+  .notes { border-radius: 14px; background: var(--hair); padding: 10px 14px; font-size: 14px; color: var(--ink-3); min-height: 44px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Decided design · implement exactly as drawn</p>
+    <h1>Edit a breast feed</h1>
+    <p class="lede">Start, Duration and minutes per side are edited. End and Paused are shown, never edited. Nothing changes on its own when something else is edited.</p>
+    <div class="meta"><span><code>app/edit/feeding.tsx</code> · <code>app/feeding/manual.tsx</code></span><span>Decided 2026-10-12. Text, order, colours and spacing are the contract; labels go through the usual translation files.</span></div>
+  </header>
+
+  <section class="block">
+    <div class="block-head"><h2>Today</h2><p>Breast feed edit form as it is now.</p></div>
+    <div class="row">
+<div>
+        <div class="col-label"><span class="dot now"></span> Today · breast feed</div>
+        <div class="phone"><div class="screen">
+          <div class="handle"></div>
+          <div class="nav"><span>✕</span><div class="titles"><strong>Edit Entry</strong><span>Breastfeeding</span></div><span>🗑️</span></div>
+          <div class="edit">
+            <div class="icon">🤱</div>
+            <div class="trow"><div class="lbl">Start</div><div class="fld" style="background:#E8F0E0;color:#2D2A26">Sat 12 Oct &nbsp; 1:00 PM <span>🕐</span></div></div>
+            <div class="trow"><div class="lbl">End</div><div class="fld" style="background:#E8F0E0;color:#2D2A26">Sat 12 Oct &nbsp; 1:09 PM <span>🕐</span></div></div>
+            <div class="len" style="border-color:#88B04B;background:#E8F0E0;color:#2D2A26"><span class="lbl" style="margin:0">Duration</span><b>9m</b></div>
+            <div><div class="lbl">Side</div><div class="seg"><div>Left</div><div>Right</div><div class="on" style="background:#88B04B">Both</div></div></div>
+            <div><div class="lbl">Notes (optional)</div><div class="notes">Add notes…</div></div>
+            <div class="save" style="background:#88B04B">Save</div>
+          </div>
+        </div></div>
+        <p class="caption">Duration is end − start, pause inside it. No minutes per side anywhere. Any time edit silently resets both sides to 0.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="block">
+    <div class="block-head"><h2>Decided</h2><p>Normal state and the state after lowering Duration below a side.</p></div>
+    <div class="row">
+<div>
+        <div class="col-label"><span class="dot next"></span> Proposed · breast feed</div>
+        <div class="phone"><div class="screen">
+          <div class="handle"></div>
+          <div class="nav"><span>✕</span><div class="titles"><strong>Edit Entry</strong><span>Breastfeeding</span></div><span>🗑️</span></div>
+          <div class="edit">
+            <div class="icon">🤱</div>
+            <div class="trow"><div class="lbl">Start</div><div class="fld" style="background:#E8F0E0;color:#2D2A26">Sat 12 Oct &nbsp; 1:00 PM <span>🕐</span></div></div>
+            <div class="trow"><div class="lbl">Duration</div><div class="fld num" style="background:#E8F0E0;color:#2D2A26"><b>6</b><span>min</span></div></div>
+            <div class="pz"><span>Paused 3m · ends 1:09 PM</span></div>
+            <div><div class="lbl">Minutes per side</div>
+              <div class="sides">
+                <div class="fld" style="background:#E8F0E0;color:#2D2A26"><span>Left</span><b>5</b></div>
+                <div class="fld" style="background:#E8F0E0;color:#2D2A26"><span>Right</span><b>1</b></div>
+              </div>
+            </div>
+            <div><div class="lbl">Finished on</div><div class="seg"><div class="on" style="background:#88B04B">Left</div><div class="" style="">Right</div><div class="" style="">Both</div></div></div>
+            
+            <div><div class="lbl">Notes (optional)</div><div class="notes">Add notes…</div></div>
+            <div class="save" style="background:#88B04B">Save</div>
+          </div>
+        </div></div>
+        <p class="caption">End is no longer a field. Duration is the one free number; End = Start + Duration + Paused, shown as a quiet line. Sides typed by hand, same filled style as the time row. Side picker renamed "Finished on".</p>
+      </div>
+<div>
+        <div class="col-label"><span class="dot warn"></span> Proposed · duration lowered</div>
+        <div class="phone"><div class="screen">
+          <div class="handle"></div>
+          <div class="nav"><span>✕</span><div class="titles"><strong>Edit Entry</strong><span>Breastfeeding</span></div><span>🗑️</span></div>
+          <div class="edit">
+            <div class="icon">🤱</div>
+            <div class="trow"><div class="lbl">Start</div><div class="fld" style="background:#E8F0E0;color:#2D2A26">Sat 12 Oct &nbsp; 1:00 PM <span>🕐</span></div></div>
+            <div class="trow"><div class="lbl">Duration</div><div class="fld num" style="background:#E8F0E0;color:#2D2A26"><b>3</b><span>min</span></div></div>
+            <div class="pz"><span>Paused 3m · ends 1:06 PM</span></div>
+            <div class="added"><div class="lbl">Minutes per side</div>
+              <div class="sides">
+                <div class="fld bad" style="background:#E8F0E0;color:#2D2A26"><span>Left</span><b>5</b></div>
+                <div class="fld" style="background:#E8F0E0;color:#2D2A26"><span>Right</span><b>1</b></div>
+              </div><p class="err" style="margin-top:6px">Left can't be longer than the feed (3)</p>
+            </div>
+            <div><div class="lbl">Finished on</div><div class="seg"><div class="on" style="background:#88B04B">Left</div><div class="" style="">Right</div><div class="" style="">Both</div></div></div>
+            
+            <div><div class="lbl">Notes (optional)</div><div class="notes">Add notes…</div></div>
+            <div class="save off" style="background:#88B04B">Save</div>
+          </div>
+        </div></div>
+        <p class="caption">She lowered Duration 6 → 3. Sides never move on their own: Left 5 no longer fits, turns red, Save disabled until she fixes it. Moving Start slides the whole feed and changes nothing else.</p>
+      </div>
+    </div>
+
+    <div class="row two" style="margin-top:32px">
+      <div class="note">
+        <span class="tag add">Rules (breast and pumping)</span>
+        <p><strong>Start</strong> is a timestamp. Moving it slides the whole entry; nothing else changes.</p>
+        <p><strong>Duration</strong> is editable, whole minutes, at least 1. <strong>End</strong> is read-only = Start + Duration + Paused. <strong>Paused</strong> comes from the timer, read-only, 0 for manual entries (line then reads only "ends …").</p>
+        <p><strong>Left / Right minutes</strong>: whole minutes, blank allowed, prefilled from the record. Each ≤ Duration. No rule on the sum ("Both" counts twice). Never change on their own; a side that no longer fits turns red and blocks Save.</p>
+        <p><strong>Finished on</strong> is the old Side picker, renamed. Drives the next-side tie-break.</p>
+      </div>
+      <div class="note">
+        <span class="tag add">Manual log (breast)</span>
+        <p>Same Duration and Left / Right minute fields, optional. No "Paused" text; the line reads only "ends 1:09 PM".</p>
+        <span class="tag same">Unchanged</span>
+        <p>Bottle and solids forms. Delete button. Notes. Sleep edit screen.</p>
+      </div>
+    </div>
+  </section>
+
+</div>

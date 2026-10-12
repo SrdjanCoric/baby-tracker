@@ -356,6 +356,13 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [ ] 0128 · Switch babies without stopping their timers (after 0127) → tasks/0128-switch-babies-without-stopping-timers.md
 - [ ] 0129 · Keep guest-mode timers on the right baby (after 0128) → tasks/0129-keep-guest-baby-timers-separate.md
 - [ ] 0130 · Make the Lock Screen timer follow the selected baby (after 0128, 0094) → tasks/0130-live-activity-follows-selected-baby.md
+- [ ] 0131 · Discard a running timer from its screen → tasks/0131-discard-running-timer.md
+- [ ] 0132 · Save breast feeds, pumping and tummy time without resumed pauses → tasks/0132-save-feeds-pumping-tummy-without-pauses.md
+- [ ] 0133 · Bank pumping minutes per side while the timer runs (after 0132) → tasks/0133-bank-pumping-minutes-per-side.md
+- [ ] 0134 · Freeze the running readout over a pause for breast feeding, pumping and tummy time (after 0132) → tasks/0134-freeze-readout-over-pause-non-sleep.md
+- [ ] 0135 · Edit and log a breast feed with duration and minutes per side (after 0132) → tasks/0135-edit-breast-feed-duration-and-sides.md
+- [ ] 0136 · Edit and log a pumping session with duration and minutes per side (after 0133, 0135) → tasks/0136-edit-pumping-duration-and-sides.md
+- [ ] 0137 · Show paused time on the tummy time edit screen (after 0132) → tasks/0137-show-paused-time-on-tummy-time-edit.md
 
 ## Workflow status
 
@@ -579,3 +586,12 @@ other. 0101 holds patch 4.9.22 and 0102 takes 4.9.23.
 On 2026-10-07, on `main` after Task 0103: these notes describe the `hotfix/4.9` plan; 0094 stays `[>]`, and 0103–0106 take priority.
 
 On 2026-10-08 the owner added Tasks 0115 through 0130 from a test audit (`docs/usage/test-audit.md`, yardstick `docs/usage/*.md`). 0115–0118 delete verified dead code and tests that guard nothing. 0119–0126 close single-baby and household gaps. 0127–0130 cover two babies' timers and come last by owner choice. In every gap task, a test that exposes a real bug means the task fixes that bug too. Switching babies keeps every timer running; the "Stop & Switch" dialog goes (0128). Achievement tests stay in 0114. The `docs/usage/` folder must be committed with this planning batch, since the tasks cite it.
+
+Tasks 0131 through 0137 were added on 2026-10-12 from a user request (discard a running timer; keep
+diaper-change pauses out of a nursing session). The decided screens are HTML mocks under
+`docs/design/`, and each task names its mock; the implementer matches the "Decided" frames exactly.
+Task 0132 narrows the counted-pause rule of decision 018 to sleep alone: on breast feeding, pumping
+and tummy time a resumed pause is excluded from the saved duration and stored on the entry as
+`pausedSeconds`. Task 0133 gives pumping the per-side seconds breast feeds already have. Tasks 0135
+and 0136 replace the End picker on breast and pumping edit forms with an editable Duration and End
+derived as Start + Duration + Paused, so start, end, pause and side minutes can never disagree.
