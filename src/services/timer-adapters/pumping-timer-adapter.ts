@@ -6,7 +6,7 @@ import {
   type StoredPumpingEntry,
 } from "../pumping-storage";
 import {
-  calculateTimerDurationSeconds,
+  calculateTimerDuration,
   parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
@@ -27,6 +27,7 @@ export interface RestoredPumpingTimer extends TimerIdentity {
   side: BreastSide;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
 }
 
 interface CreatePumpingTimerAdapterOptions {
@@ -45,6 +46,7 @@ export function createPumpingTimerAdapter({
 > {
   return {
     activityType: "pumping",
+    discardsShortSessions: true,
     storage: {
       getActiveTimer: (babyIdArgument) =>
         PumpingStorageService.getActiveTimer(babyIdArgument),
@@ -62,6 +64,9 @@ export function createPumpingTimerAdapter({
           : {}),
         ...(payload.activityId ? { activityId: payload.activityId } : {}),
         side: payload.side,
+        ...(payload.lastResumedAt
+          ? { lastResumedAt: payload.lastResumedAt }
+          : {}),
         isPaused: payload.isPaused,
         totalPausedMs: payload.totalPausedMs,
         ...(payload.pausedAt ? { pausedAt: payload.pausedAt } : {}),
@@ -77,6 +82,9 @@ export function createPumpingTimerAdapter({
           timerData.side === "left" || timerData.side === "right"
             ? timerData.side
             : "both",
+        ...(typeof timerData.lastResumedAt === "string"
+          ? { lastResumedAt: timerData.lastResumedAt }
+          : {}),
         isPaused: timerData.isPaused === true,
         totalPausedMs:
           typeof timerData.totalPausedMs === "number"
@@ -94,6 +102,9 @@ export function createPumpingTimerAdapter({
           ? { activityId: activeTimer.activityId }
           : {}),
         side: activeTimer.side,
+        ...(activeTimer.lastResumedAt
+          ? { lastResumedAt: activeTimer.lastResumedAt }
+          : {}),
         isPaused: activeTimer.isPaused === true,
         totalPausedMs: activeTimer.totalPausedMs ?? 0,
         ...(activeTimer.pausedAt ? { pausedAt: activeTimer.pausedAt } : {}),
@@ -105,10 +116,11 @@ export function createPumpingTimerAdapter({
       side: payload.side,
       startedAt,
       endedAt,
-      durationSeconds: calculateTimerDurationSeconds(
+      ...calculateTimerDuration(
         startedAt,
         endedAt,
-        payload.totalPausedMs
+        payload.totalPausedMs,
+        "pumping"
       ),
     }),
     liveActivity: {
@@ -132,6 +144,7 @@ export function createPumpingTimerAdapter({
         side: payload.side,
         totalPausedMs: payload.totalPausedMs,
         pausedAt: parseTimerDate(payload.pausedAt),
+        lastResumedAt: parseTimerDate(payload.lastResumedAt),
       }),
   };
 }

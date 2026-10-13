@@ -1,9 +1,12 @@
+import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
+
 export interface TummyTimeEntry {
   id?: string;
   babyId: string;
   startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   notes?: string;
 }
 
@@ -157,7 +160,11 @@ export function validateManualTummyTimeTimes(
 ): TummyTimeValidationResult {
   const durationSeconds =
     entry.startedAt && entry.endedAt
-      ? calculateTummyTimeDuration(entry.startedAt, entry.endedAt)
+      ? calculateActiveDurationSeconds(
+          entry.startedAt,
+          entry.endedAt,
+          entry.pausedSeconds ?? 0
+        )
       : undefined;
 
   const result = validateManualTummyTime({

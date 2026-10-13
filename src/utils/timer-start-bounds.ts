@@ -55,3 +55,16 @@ export function normalizeTimerStartSelection(
   }
   return normalized;
 }
+
+export function getPausedTimerStartUpperBound(
+  timer?: {
+    startTime: Date;
+    isPaused: boolean;
+    pausedAt?: Date;
+    totalPausedMs: number;
+  } | null
+): Date | undefined {
+  // A cumulative total cannot tell which completed pauses a later start would cut off.
+  if (timer && timer.totalPausedMs > 0) return timer.startTime;
+  return timer?.isPaused ? timer.pausedAt : undefined;
+}

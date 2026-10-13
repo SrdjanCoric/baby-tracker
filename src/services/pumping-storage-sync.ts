@@ -6,6 +6,7 @@ export interface SyncedPumpingEntry extends SyncableEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   amountMl?: number;
   side?: BreastSide;
   notes?: string;

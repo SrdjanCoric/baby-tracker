@@ -218,6 +218,119 @@ describe("queued timer completion", () => {
     vi.mocked(AsyncStorage.getItem).mockResolvedValue(null);
   });
 
+  it("adopts the preserved completion despite newer local clocks and stays converged on pull", async () => {
+    const storage = new Map<string, string>();
+    vi.mocked(AsyncStorage.getItem).mockImplementation(
+      async (key) => storage.get(key) ?? null
+    );
+    vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => {
+      storage.set(key, value);
+    });
+    const crdt = new CrdtSync({
+      deviceId: "loser",
+      clockStorage: new MemoryClockStorage(),
+      shadowStore: new MemoryShadowStore(),
+      clock: () => Date.parse("2026-10-13T12:00:00Z"),
+    });
+    const engine = makeEngine();
+    engine.setCrdtSync(crdt);
+    const row = {
+      id: "activity-1",
+      baby_id: "b1",
+      type: "breast",
+      started_at: "2026-10-13T10:00:00Z",
+      ended_at: "2026-10-13T10:05:00Z",
+      duration_seconds: 300,
+      paused_seconds: 0,
+      left_duration_seconds: 300,
+      right_duration_seconds: 0,
+      field_clocks: {
+        duration_seconds: "2026-10-13T10:05:00.000Z-0000-winner",
+        paused_seconds: "2026-10-13T10:05:00.000Z-0000-winner",
+      },
+    };
+    storage.set(
+      "@feedings:b1:u1",
+      JSON.stringify([{ id: row.id, durationSeconds: 180, pausedSeconds: 120 }])
+    );
+    await engine.enqueueOperation({
+      ...op("CREATE", "feedings", row.id, {
+        ...row,
+        duration_seconds: 180,
+        paused_seconds: 120,
+        field_clocks: undefined,
+      }),
+      timerCompletion: {
+        timerInstanceId: "timer-1",
+        startedAt: row.started_at,
+      },
+    });
+    expect(
+      (await crdt.getShadow("feedings", row.id))?.fieldClocks.duration_seconds
+    ).not.toBe(row.field_clocks.duration_seconds);
+    rpc.mockResolvedValue({ data: { preserved: true, row }, error: null });
+    const notify = vi.fn();
+    engine.onRemoteChange(notify);
+    engine.setOnlineForTesting(true);
+    await engine.sync();
+    expect(JSON.parse(storage.get("@feedings:b1:u1")!)[0]).toMatchObject({
+      durationSeconds: 300,
+      pausedSeconds: 0,
+      leftDurationSeconds: 300,
+      rightDurationSeconds: 0,
+      endedAt: row.ended_at,
+    });
+    const { field_clocks, ...fields } = row;
+    expect(await crdt.getShadow("feedings", row.id)).toEqual({
+      ...fields,
+      fieldClocks: field_clocks,
+    });
+    expect(await crdt.reconcileRemote("feedings", row.id, row)).toEqual(row);
+    expect(notify).toHaveBeenCalledWith({
+      table: "feedings",
+      eventType: "UPDATE",
+      new: row,
+      old: null,
+    });
+    engine.destroy();
+  });
+
+  it.each(["UPDATE", "DELETE"] as const)(
+    "does not dispatch a preserved completion over a queued local %s", async type => {
+      const storage = new Map<string, string>();
+      vi.mocked(AsyncStorage.getItem).mockImplementation(async key => storage.get(key) ?? null);
+      vi.mocked(AsyncStorage.setItem).mockImplementation(async (key, value) => { storage.set(key, value); });
+      const engine = makeEngine();
+      const row = { id: "activity-1", baby_id: "b1", type: "breast",
+        started_at: "2026-10-13T10:00:00Z", ended_at: "2026-10-13T10:05:00Z",
+        duration_seconds: 300, notes: "server notes", field_clocks: {} };
+      await engine.enqueueOperation({ ...op("CREATE", "feedings", row.id, row),
+        timerCompletion: { timerInstanceId: "timer-1", startedAt: row.started_at } });
+      let resolveResponse!: (value: unknown) => void;
+      let signalStarted!: () => void;
+      const started = new Promise<void>(resolve => { signalStarted = resolve; });
+      rpc.mockImplementationOnce(() => {
+        signalStarted();
+        return new Promise(resolve => { resolveResponse = resolve; });
+      });
+      const notify = vi.fn();
+      engine.onRemoteChange(notify);
+      engine.setOnlineForTesting(true);
+      const syncing = engine.sync();
+      await started;
+      await engine.enqueueOperation(op(type, "feedings", row.id,
+        type === "UPDATE" ? { id: row.id, baby_id: "b1", notes: "local edit" } : null));
+      const local = type === "UPDATE" ? [{ id: row.id, notes: "local edit" }] : [];
+      storage.set("@feedings:b1:u1", JSON.stringify(local));
+      resolveResponse({ data: { preserved: true, row }, error: null });
+      await syncing;
+      expect(JSON.parse(storage.get("@feedings:b1:u1")!)).toEqual(local);
+      expect(notify).not.toHaveBeenCalled();
+      expect(engine.getPendingEntityOperations("feedings").get(row.id)).toBe(type);
+      engine.destroy();
+    }
+  );
+
   it.each([
     "sleep_sessions",
     "feedings",
@@ -248,15 +361,15 @@ describe("queued timer completion", () => {
           p_timer_started_at: "2026-10-06T08:00:00.000Z",
           p_operation_id: operation.id,
           p_expected_user_id: "u1",
-        }),
+        })
       );
       expect(rpc.mock.calls[0][1].p_record.timerCompletion).toBeUndefined();
       expect(
-        rpc.mock.calls[0][1].p_field_clocks.timerCompletion,
+        rpc.mock.calls[0][1].p_field_clocks.timerCompletion
       ).toBeUndefined();
       expect(engine.getPendingCount()).toBe(0);
       engine.destroy();
-    },
+    }
   );
 
   it("retains completion identity and operation id across failed delivery and restart", async () => {

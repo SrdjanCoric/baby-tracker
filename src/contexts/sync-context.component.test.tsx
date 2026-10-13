@@ -18,6 +18,7 @@ jest.unmock("./sync-context");
 
 const mockEngine = {
   subscribe: jest.fn(() => jest.fn()),
+  onRemoteChange: jest.fn(() => jest.fn()),
   initialize: jest.fn().mockResolvedValue(undefined),
   getPendingCount: jest.fn(() => 0),
   getState: jest.fn(() => ({ isConnected: true })),

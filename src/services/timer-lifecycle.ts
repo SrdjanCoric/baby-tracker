@@ -25,6 +25,7 @@ import {
 } from "./live-activity-service";
 import {
   acceptTimerCompletion,
+  discardTimerCompletion,
   isTimerCompletionSecured,
   markTimerCompletionDurable,
   resolveTimerIdentity,
@@ -42,7 +43,10 @@ import {
   readPendingTimerStop,
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
-import { shouldDiscardTimerDuration } from "@/utils/timer-duration";
+import {
+  calculateActiveDurationSeconds,
+  shouldDiscardTimerDuration,
+} from "@/utils/timer-duration";
 import {
   errorCode,
   recordBreadcrumb,
@@ -53,6 +57,7 @@ export interface SharedTimerPayload extends Partial<TimerIdentity> {
   isPaused: boolean;
   totalPausedMs: number;
   pausedAt?: string;
+  lastResumedAt?: string;
 }
 
 export interface TimerLifecycleActiveTimer
@@ -62,6 +67,7 @@ export interface TimerLifecycleActiveTimer
   isPaused?: boolean;
   totalPausedMs?: number;
   pausedAt?: string;
+  lastResumedAt?: string;
 }
 
 export interface RestoredTimer<
@@ -109,6 +115,7 @@ export interface TimerLifecycleAdapter<
   TCreateInput,
 > {
   activityType: TimerActivityType;
+  discardsShortSessions: boolean;
   storage: TimerLifecycleStorage<TPayload, TActiveTimer, TRecord>;
   timerDataCodec: TimerDataCodec<TPayload, TActiveTimer>;
   buildRecord(
@@ -196,16 +203,20 @@ export interface ObservedOwnedTimer {
   isPaused: boolean;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
 }
 
-export interface ObservedTimerPauseChange {
+export interface ObservedTimerPauseChange<TPayload extends SharedTimerPayload> {
   isPaused: boolean;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
   accumulatedSeconds: number;
+  payload: TPayload;
 }
 
 export interface SyncObservedOwnedTimerLockOptions<
+  TPayload extends SharedTimerPayload,
   TActiveTimer extends ObservedOwnedTimer,
 > {
   activityType: TimerActivityType;
@@ -215,8 +226,9 @@ export interface SyncObservedOwnedTimerLockOptions<
   locks: readonly ActiveTimerLock[];
   locksLoading: boolean;
   observedTimerInstanceIdRef: { current: string | null };
+  timerDataCodec: Pick<TimerDataCodec<TPayload, unknown>, "decode">;
   onPauseChange(
-    change: ObservedTimerPauseChange,
+    change: ObservedTimerPauseChange<TPayload>,
     activeTimer: TActiveTimer
   ): Promise<unknown> | unknown;
   onVanished(activeTimer: TActiveTimer): Promise<unknown> | unknown;
@@ -236,6 +248,7 @@ function matchesOwnedTimerLock(
 }
 
 export async function syncObservedOwnedTimerLock<
+  TPayload extends SharedTimerPayload,
   TActiveTimer extends ObservedOwnedTimer,
 >({
   activityType,
@@ -247,7 +260,8 @@ export async function syncObservedOwnedTimerLock<
   observedTimerInstanceIdRef,
   onPauseChange,
   onVanished,
-}: SyncObservedOwnedTimerLockOptions<TActiveTimer>): Promise<void> {
+  timerDataCodec,
+}: SyncObservedOwnedTimerLockOptions<TPayload, TActiveTimer>): Promise<void> {
   if (!babyId || !activeTimer || activeTimer.lockState !== "owned") {
     observedTimerInstanceIdRef.current = null;
     return;
@@ -268,16 +282,16 @@ export async function syncObservedOwnedTimerLock<
     )
   ) {
     observedTimerInstanceIdRef.current = activeTimer.timerInstanceId;
-    const isPaused = lock.timerData?.isPaused === true;
-    const totalPausedMs =
-      typeof lock.timerData?.totalPausedMs === "number"
-        ? lock.timerData.totalPausedMs
-        : 0;
+    const payload = timerDataCodec.decode(lock.timerData ?? {}, lock.startedAt);
+    const isPaused = payload.isPaused;
+    const totalPausedMs = payload.totalPausedMs;
     const pausedAt =
-      isPaused && typeof lock.timerData?.pausedAt === "string"
-        ? new Date(lock.timerData.pausedAt)
+      isPaused && payload.pausedAt
+        ? parseTimerDate(payload.pausedAt)
         : undefined;
+    const lastResumedAt = parseTimerDate(payload.lastResumedAt);
     if (
+      activeTimer.lastResumedAt?.getTime() !== lastResumedAt?.getTime() ||
       activeTimer.isPaused !== isPaused ||
       activeTimer.totalPausedMs !== totalPausedMs ||
       activeTimer.pausedAt?.getTime() !== pausedAt?.getTime()
@@ -294,7 +308,14 @@ export async function syncObservedOwnedTimerLock<
               )
             );
       await onPauseChange(
-        { isPaused, totalPausedMs, pausedAt, accumulatedSeconds },
+        {
+          isPaused,
+          totalPausedMs,
+          pausedAt,
+          accumulatedSeconds,
+          payload,
+          ...(activityType !== "sleep" ? { lastResumedAt } : {}),
+        },
         activeTimer
       );
     }
@@ -307,15 +328,52 @@ export async function syncObservedOwnedTimerLock<
   }
 }
 
+export function shouldDiscardActiveSession(
+  adapter: { activityType: TimerActivityType; discardsShortSessions: boolean },
+  startedAt: Date,
+  endedAt: Date,
+  totalPausedMs: number
+): boolean {
+  return (
+    adapter.discardsShortSessions &&
+    shouldDiscardTimerDuration(
+      calculateTimerDurationSeconds(
+        startedAt,
+        endedAt,
+        totalPausedMs,
+        adapter.activityType
+      )
+    )
+  );
+}
+
+export function calculateTimerDuration(
+  startedAt: Date,
+  endedAt: Date,
+  totalPausedMs: number,
+  activityType: TimerActivityType
+): { durationSeconds: number; pausedSeconds: number } {
+  const wallMs = Math.max(0, endedAt.getTime() - startedAt.getTime());
+  const pausedMs =
+    activityType !== "sleep" ? Math.min(Math.max(0, totalPausedMs), wallMs) : 0;
+  return {
+    durationSeconds: calculateActiveDurationSeconds(
+      startedAt,
+      endedAt,
+      Math.floor(pausedMs / 1000)
+    ),
+    pausedSeconds: Math.floor(pausedMs / 1000),
+  };
+}
+
 export function calculateTimerDurationSeconds(
   startedAt: Date,
   endedAt: Date,
-  _totalPausedMs: number
+  totalPausedMs: number,
+  activityType: TimerActivityType
 ): number {
-  return Math.max(
-    0,
-    Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000)
-  );
+  return calculateTimerDuration(startedAt, endedAt, totalPausedMs, activityType)
+    .durationSeconds;
 }
 
 export function parseTimerDate(
@@ -367,6 +425,25 @@ export async function stopRemoteTimerLifecycle<
     identity,
     stopTime
   );
+  if (
+    shouldDiscardActiveSession(
+      adapter,
+      new Date(lock.startedAt),
+      new Date(completion.stoppedAt),
+      payload.totalPausedMs
+    )
+  ) {
+    await discardTimerCompletion(completion);
+    await releaseTimerLockDurably(
+      babyId,
+      adapter.activityType,
+      userId,
+      identity.timerInstanceId,
+      lock.startedAt
+    );
+    await refreshLocks?.();
+    return null;
+  }
 
   let record = await adapter.storage.getRecordById(
     babyId,
@@ -426,6 +503,12 @@ export async function editRunningTimerStartTime<
   TRecord,
   TCreateInput
 >): Promise<void> {
+  if (
+    adapter.activityType !== "sleep" && payload.totalPausedMs > 0 &&
+    startedAt.getTime() > new Date(activeTimer.startedAt).getTime()
+  ) {
+    throw new Error("Cannot move the start later after completed pauses");
+  }
   const pausedAt = payload.isPaused
     ? parseTimerDate(payload.pausedAt, new Date())
     : undefined;
@@ -827,14 +910,10 @@ export async function restoreTimerLifecycle<
         const startedAt = new Date(activeTimer.startedAt);
         const startedAtMs = startedAt.getTime();
         const requestedStopTimeMs = requestedStopTime.getTime();
-        const requestedDurationSeconds = Math.floor(
-          (requestedStopTimeMs - startedAtMs) / 1000
-        );
         if (
           !Number.isFinite(startedAtMs) ||
           !Number.isFinite(requestedStopTimeMs) ||
-          requestedStopTimeMs < startedAtMs ||
-          shouldDiscardTimerDuration(requestedDurationSeconds)
+          requestedStopTimeMs < startedAtMs
         ) {
           dispatchStopTimer();
           isStale = true;
@@ -850,6 +929,31 @@ export async function restoreTimerLifecycle<
           identity,
           requestedStopTime
         );
+        if (
+          adapter.activityType === "sleep"
+            ? shouldDiscardTimerDuration(
+                calculateTimerDurationSeconds(
+                  startedAt,
+                  new Date(completion.stoppedAt),
+                  0,
+                  "sleep"
+                )
+              )
+            : shouldDiscardActiveSession(
+                adapter,
+                startedAt,
+                new Date(completion.stoppedAt),
+                payloadWithIdentity.totalPausedMs
+              )
+        ) {
+          await discardTimerCompletion(completion);
+          dispatchStopTimer();
+          isStale = true;
+          await adapter.storage.clearActiveTimer(baby.id);
+          await endAdapterLiveActivity(activeTimer.liveActivityId);
+          showTimerConflictNotice(reconciliation.lockHolderName);
+          return;
+        }
         dispatchStopTimer();
         let record = await adapter.storage.getRecordById(
           baby.id,

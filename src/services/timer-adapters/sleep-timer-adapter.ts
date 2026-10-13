@@ -67,6 +67,7 @@ export function createSleepTimerAdapter({
 
   return {
     activityType: "sleep",
+    discardsShortSessions: false,
     storage: {
       getActiveTimer: (babyIdArgument) =>
         SleepStorageService.getActiveTimer(babyIdArgument),
@@ -144,7 +145,8 @@ export function createSleepTimerAdapter({
       durationSeconds: calculateTimerDurationSeconds(
         startedAt,
         endedAt,
-        payload.totalPausedMs
+        payload.totalPausedMs,
+        "sleep"
       ),
       morningClassification: payload.morningClassification,
       morningClassificationVersion: payload.morningClassificationVersion,

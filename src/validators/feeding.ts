@@ -1,5 +1,6 @@
 import type { BreastSide, FeedingType, BottleContentType, SolidAmount, SolidReaction } from "@constants/activities";
 import { SOLID_AMOUNTS, SOLID_REACTIONS } from "@constants/activities";
+import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
 
 export interface FeedingEntry {
   id?: string;
@@ -9,6 +10,7 @@ export interface FeedingEntry {
   startedAt: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   amountMl?: number;
   contentType?: BottleContentType;
   foodType?: string;
@@ -199,7 +201,11 @@ export function validateManualBreastfeedingTimes(
 ): FeedingValidationResult {
   const durationSeconds =
     entry.startedAt && entry.endedAt
-      ? Math.floor((entry.endedAt.getTime() - entry.startedAt.getTime()) / 1000)
+      ? calculateActiveDurationSeconds(
+          entry.startedAt,
+          entry.endedAt,
+          entry.pausedSeconds ?? 0
+        )
       : undefined;
 
   const result = validateManualBreastfeeding({

@@ -22,6 +22,7 @@ export interface StoredTummyTimeEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,7 @@ export interface CreateTummyTimeInput {
   startedAt: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   notes?: string;
 }
 
@@ -49,6 +51,7 @@ export interface ActiveTummyTimeTimerData extends Partial<TimerIdentity>, TimerL
   liveActivityId?: string;
   isPaused?: boolean;
   pausedAt?: string;
+  lastResumedAt?: string;
   totalPausedMs?: number;
 }
 
@@ -100,7 +103,10 @@ export const TummyTimeStorageService = {
     const key = getTummyTimesKey(babyId);
     return withStorageLock(key, async () => {
       await settleImportJournal(key);
-      return readCollection(babyId);
+      return (await readCollection(babyId)).map(entry => ({
+        ...entry,
+        pausedSeconds: entry.pausedSeconds ?? 0,
+      }));
     });
   },
 
@@ -127,6 +133,7 @@ export const TummyTimeStorageService = {
         startedAt: input.startedAt.toISOString(),
         endedAt: input.endedAt?.toISOString(),
         durationSeconds: input.durationSeconds,
+        pausedSeconds: input.pausedSeconds ?? 0,
         notes: input.notes,
         createdAt: now,
         updatedAt: now,

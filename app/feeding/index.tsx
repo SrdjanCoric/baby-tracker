@@ -22,7 +22,7 @@ import { exitModal } from "@/navigation";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
 import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
-import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
+import { getPausedTimerStartUpperBound, getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const FEEDING_GREEN = ACTIVITY.feeding.accent;
 const FEEDING_GREEN_LIGHT = ACTIVITY.feeding.accentDark;
@@ -74,9 +74,9 @@ export default function FeedingScreen() {
       getTimerStartBounds(
         feedings,
         new Date(),
-        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+        getPausedTimerStartUpperBound(activeTimer)
       ),
-    [activeTimer?.isPaused, activeTimer?.pausedAt, feedings]
+    [activeTimer, feedings]
   );
 
   const accentColor = isDark ? FEEDING_GREEN_LIGHT : FEEDING_GREEN;

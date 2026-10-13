@@ -1,3 +1,6 @@
+import { createFeedingTimerAdapter } from "@/services/timer-adapters/feeding-timer-adapter";
+import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
+import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import TimelineScreen from "./timeline";
@@ -15,6 +18,13 @@ const mockRangeLoaders = {
   tummyTime: jest.fn(async () => {}),
   health: jest.fn(async () => {}),
 };
+
+jest.mock("@/services/live-activity-service", () => ({}));
+jest.mock("@/services/active-timer-service", () => ({}));
+jest.mock("@/services/timer-conflict-notice", () => ({}));
+jest.mock("@/services/timer-completion-service", () => ({}));
+jest.mock("@/services/timer-lock-reconciliation", () => ({}));
+jest.mock("@/services/timer-stop-coordinator", () => ({}));
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockRouterPush }),
@@ -432,6 +442,45 @@ describe("Timeline daily summary wiring", () => {
     expect(screen.getByTestId("timeline-item-subtitle").props.children).toContain(
       "sleep.ongoing"
     );
+  });
+
+  it("builds a feeding timeline row from the adapter's pause-excluded record", () => {
+    const start = new Date(2026, 0, 20, 8, 0, 0);
+    const end = new Date(2026, 0, 20, 8, 30, 0);
+    const adapter = createFeedingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer: jest.fn() });
+    const input = adapter.buildRecord(start, end, { isPaused: false, totalPausedMs: 600_000, side: "left", leftAccumulatedSeconds: 300, rightAccumulatedSeconds: 0, currentSideStartedAt: new Date(start.getTime() + 900_000).toISOString(), });
+    mockFeedings = [{ ...input, id: "paused-record", startedAt: start.toISOString(),
+      endedAt: end.toISOString(), createdAt: end.toISOString(), updatedAt: end.toISOString() }];
+    render(<TimelineScreen />);
+    const subtitle = screen.getByTestId("timeline-item-subtitle").props.children;
+    expect(subtitle).toContain("20m");
+    expect(subtitle).not.toContain("30m");
+  });
+
+  it("builds a pumping timeline row from the adapter's pause-excluded record", () => {
+    const start = new Date(2026, 0, 20, 8, 0, 0);
+    const end = new Date(2026, 0, 20, 8, 30, 0);
+    const adapter = createPumpingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer: jest.fn() });
+    const input = adapter.buildRecord(start, end, { isPaused: false, totalPausedMs: 600_000, side: "left", });
+    mockPumpings = [{ ...input, id: "paused-record", startedAt: start.toISOString(),
+      endedAt: end.toISOString(), createdAt: end.toISOString(), updatedAt: end.toISOString() }];
+    render(<TimelineScreen />);
+    const subtitle = screen.getByTestId("timeline-item-subtitle").props.children;
+    expect(subtitle).toContain("20m");
+    expect(subtitle).not.toContain("30m");
+  });
+
+  it("builds a tummy-time timeline row from the adapter's pause-excluded record", () => {
+    const start = new Date(2026, 0, 20, 8, 0, 0);
+    const end = new Date(2026, 0, 20, 8, 30, 0);
+    const adapter = createTummyTimeTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer: jest.fn() });
+    const input = adapter.buildRecord(start, end, { isPaused: false, totalPausedMs: 600_000,  });
+    mockTummyTimes = [{ ...input, id: "paused-record", startedAt: start.toISOString(),
+      endedAt: end.toISOString(), createdAt: end.toISOString(), updatedAt: end.toISOString() }];
+    render(<TimelineScreen />);
+    const subtitle = screen.getByTestId("timeline-item-subtitle").props.children;
+    expect(subtitle).toContain("20m");
+    expect(subtitle).not.toContain("30m");
   });
 
   it("keeps a legacy feeding row on its stored duration instead of its longer interval", () => {

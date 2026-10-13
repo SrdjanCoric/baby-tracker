@@ -104,6 +104,12 @@ enum WidgetSnapshotTests {
         guard CommandLine.arguments.count == 2 else {
             fatalError("expected the repository fixture directory")
         }
+        let pausedTimerJSON = Data(#"{"type":"feeding","startTime":"2026-07-15T08:00:00.000Z","isPaused":true,"accumulatedSeconds":60,"pausedAt":"2026-07-15T08:01:00.000Z"}"#.utf8)
+        let pausedTimer = try JSONDecoder().decode(ActiveTimerData.self, from: pausedTimerJSON)
+        let encodedTimer = try JSONSerialization.jsonObject(with: JSONEncoder().encode(pausedTimer)) as! [String: Any]
+        require(encodedTimer["pausedAt"] == nil, "unused pause timestamp must be ignored")
+        require(pausedTimer.isPaused == true && pausedTimer.accumulatedSeconds == 60, "paused display must remain frozen")
+
         let fixtures = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
         let legacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy.json"))
         let oldLegacy = try Data(contentsOf: fixtures.appendingPathComponent("legacy-old.json"))

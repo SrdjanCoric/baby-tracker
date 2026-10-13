@@ -325,3 +325,14 @@ describe("validateManualPumpingTimes", () => {
     });
   });
 });
+
+it.each([61, 60])("validates the active-minute pause boundary with %i paused seconds", pausedSeconds => {
+  const result = validateManualPumpingTimes({
+    babyId: "baby-1", side: "left", volumeMl: 120,
+    startedAt: new Date("2026-08-05T10:00:00.000Z"),
+    endedAt: new Date("2026-08-05T10:02:00.000Z"),
+    pausedSeconds,
+  });
+  expect(result.isValid).toBe(pausedSeconds === 60);
+  expect(result.errors.durationSeconds).toBe(pausedSeconds === 60 ? undefined : "validation.durationMinimum1m");
+});

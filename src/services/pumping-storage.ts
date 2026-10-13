@@ -19,6 +19,7 @@ export interface StoredPumpingEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   volumeMl?: number;
   notes?: string;
   createdAt: string;
@@ -33,6 +34,7 @@ export interface CreatePumpingInput {
   startedAt: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   volumeMl?: number;
   notes?: string;
 }
@@ -52,6 +54,7 @@ export interface ActivePumpingTimerData extends Partial<TimerIdentity>, TimerLoc
   liveActivityId?: string;
   isPaused?: boolean;
   pausedAt?: string;
+  lastResumedAt?: string;
   totalPausedMs?: number;
 }
 
@@ -87,7 +90,10 @@ export const PumpingStorageService = {
     const key = getPumpingsKey(babyId);
     return withStorageLock(key, async () => {
       await settleImportJournal(key);
-      return readCollection(babyId);
+      return (await readCollection(babyId)).map(entry => ({
+        ...entry,
+        pausedSeconds: entry.pausedSeconds ?? 0,
+      }));
     });
   },
 
@@ -113,6 +119,7 @@ export const PumpingStorageService = {
         startedAt: input.startedAt.toISOString(),
         endedAt: input.endedAt?.toISOString(),
         durationSeconds: input.durationSeconds,
+        pausedSeconds: input.pausedSeconds ?? 0,
         volumeMl: input.volumeMl,
         notes: input.notes,
         createdAt: now,

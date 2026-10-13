@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
 import { createFeedingTimerAdapter } from "./feeding-timer-adapter";
 
 vi.mock("../live-activity-service", () => ({}));
@@ -43,6 +44,30 @@ describe("feeding timer adapter", () => {
       ...overrides,
     });
   }
+
+  it("matches edit duration rounding for fractional wall and pause milliseconds", () => {
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    const end = new Date(startedAt.getTime() + 90_999);
+    const record = adapter.buildRecord(startedAt, end, {
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      type: "breast",
+      side: "left",
+      leftAccumulatedSeconds: 0,
+      rightAccumulatedSeconds: 0,
+      currentSideStartedAt: startedAt.toISOString(),
+      isPaused: false,
+      totalPausedMs: 30_999,
+    });
+    expect(record.pausedSeconds).toBe(30);
+    expect(record.durationSeconds).toBe(60);
+    expect(
+      calculateActiveDurationSeconds(startedAt, end, record.pausedSeconds!)
+    ).toBe(record.durationSeconds);
+  });
 
   it("adds running elapsed time to the active left, right, or both sides", () => {
     expect(build({ side: "left" })).toMatchObject({
@@ -114,7 +139,7 @@ describe("feeding timer adapter", () => {
     });
   });
 
-  it("counts a resumed pause in the breastfeed span", () => {
+  it("excludes and stores a resumed pause in the breastfeed span", () => {
     const adapter = createFeedingTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -147,8 +172,9 @@ describe("feeding timer adapter", () => {
       lastFinishedSide: "left",
       startedAt: resumedPauseStartedAt,
       endedAt: resumedPauseEndedAt,
-      durationSeconds: 1200,
-      leftDurationSeconds: 1200,
+      durationSeconds: 600,
+      pausedSeconds: 600,
+      leftDurationSeconds: 600,
       rightDurationSeconds: undefined,
     });
     const encoded = adapter.timerDataCodec.encode(payload);
@@ -158,6 +184,52 @@ describe("feeding timer adapter", () => {
     ).toEqual(payload);
     expect(encoded).not.toHaveProperty("pausedAt");
   });
+
+  it.each([
+    {
+      label: "never paused",
+      isPaused: false,
+      totalPausedMs: 0,
+      durationSeconds: 60,
+      pausedSeconds: 0,
+    },
+    {
+      label: "resumed multiple pauses",
+      isPaused: false,
+      totalPausedMs: 20_000 + 10_000,
+      durationSeconds: 30,
+      pausedSeconds: 30,
+    },
+    {
+      label: "paused now after an earlier pause",
+      isPaused: true,
+      totalPausedMs: 10_000,
+      durationSeconds: 50,
+      pausedSeconds: 10,
+    },
+  ])(
+    "saves $label",
+    ({ label: _label, durationSeconds, pausedSeconds, ...payload }) => {
+      expect(build(payload)).toMatchObject({
+        startedAt,
+        endedAt,
+        durationSeconds,
+        pausedSeconds,
+      });
+    }
+  );
+
+  it.each(["left", "right", "both"])(
+    "adds no resumed pause to the %s side",
+    (side) => {
+      expect(
+        build({ side, isPaused: true, totalPausedMs: 10_000 })
+      ).toMatchObject({
+        leftDurationSeconds: 10,
+        rightDurationSeconds: 20,
+      });
+    }
+  );
 
   it("normalizes invalid restored timer timestamps", () => {
     const dispatchRestoreTimer = vi.fn();
@@ -235,4 +307,51 @@ describe("feeding timer adapter", () => {
       pausedAt: new Date(pausedAt),
     });
   });
+});
+
+describe("bounded saved pause totals", () => {
+  it.each([
+    { pausedMs: -60_000, durationSeconds: 360, pausedSeconds: 0 },
+    { pausedMs: 600_000, durationSeconds: 0, pausedSeconds: 360 },
+  ])(
+    "bounds $pausedMs pause milliseconds to the saved interval",
+    ({ pausedMs, durationSeconds, pausedSeconds }) => {
+      const startedAt = new Date("2026-07-15T08:00:00.000Z");
+      const endedAt = new Date(startedAt.getTime() + 360_400);
+      const adapter = createFeedingTimerAdapter({
+        babyId: "baby-1",
+        dispatchRestoreTimer: vi.fn(),
+      });
+      const record = adapter.buildRecord(startedAt, endedAt, {
+        type: "breast",
+        side: "left",
+        isPaused: false,
+        totalPausedMs: pausedMs,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: startedAt.toISOString(),
+      });
+      expect(record).toMatchObject({ durationSeconds, pausedSeconds });
+    }
+  );
+});
+
+it("preserves whole wall seconds when rounding a resumed pause", () => {
+  const startedAt = new Date("2026-07-15T08:00:00.000Z");
+  const endedAt = new Date(startedAt.getTime() + 360_400);
+  const adapter = createFeedingTimerAdapter({
+    babyId: "baby-1",
+    dispatchRestoreTimer: vi.fn(),
+  });
+  const record = adapter.buildRecord(startedAt, endedAt, {
+    isPaused: false,
+    totalPausedMs: 180_700,
+    type: "breast",
+    side: "left",
+    leftAccumulatedSeconds: 0,
+    rightAccumulatedSeconds: 0,
+    currentSideStartedAt: startedAt.toISOString(),
+  });
+  expect(record).toMatchObject({ durationSeconds: 180, pausedSeconds: 180 });
+  expect(record.durationSeconds! + record.pausedSeconds!).toBe(360);
 });

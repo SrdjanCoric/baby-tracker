@@ -650,3 +650,14 @@ describe("validateSolidFeeding", () => {
     expect(Object.keys(result.errors).length).toBeGreaterThanOrEqual(2);
   });
 });
+
+it.each([61, 60])("validates the active-minute pause boundary with %i paused seconds", pausedSeconds => {
+  const result = validateManualBreastfeedingTimes({
+    type: "breast", side: "left",
+    startedAt: new Date("2026-08-05T10:00:00.000Z"),
+    endedAt: new Date("2026-08-05T10:02:00.000Z"),
+    pausedSeconds,
+  });
+  expect(result.isValid).toBe(pausedSeconds === 60);
+  expect(result.errors.durationSeconds).toBe(pausedSeconds === 60 ? undefined : "validation.durationMinimum1m");
+});

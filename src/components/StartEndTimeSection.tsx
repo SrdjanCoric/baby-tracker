@@ -3,6 +3,7 @@ import { Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
 import { formatDate, formatDuration, formatTime } from "@/utils/time";
 import type { TimeFormat } from "@/contexts/time-format-context";
 
@@ -16,6 +17,7 @@ type DateTimeBoundsSource = DateTimeBounds | (() => DateTimeBounds);
 interface StartEndTimeSectionProps {
   startTime: Date;
   endTime: Date;
+  pausedSeconds?: number;
   onStartTimeChange(value: Date): void;
   onEndTimeChange(value: Date): void;
   startBounds: DateTimeBoundsSource;
@@ -51,6 +53,7 @@ function clampToBounds(value: Date, bounds: DateTimeBounds): Date {
 export function StartEndTimeSection({
   startTime,
   endTime,
+  pausedSeconds = 0,
   onStartTimeChange,
   onEndTimeChange,
   startBounds,
@@ -158,13 +161,16 @@ export function StartEndTimeSection({
           <Text style={{ color: accentColor }}>🕐</Text>
         </Pressable>
       </View>
-      {error ? <Text className="text-red-500 text-sm mt-2">{error}</Text> : null}
+      {error ? (
+        <Text className="text-red-500 text-sm mt-2">{error}</Text>
+      ) : null}
     </View>
   );
 
-  const durationSeconds = Math.max(
-    0,
-    Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+  const durationSeconds = calculateActiveDurationSeconds(
+    startTime,
+    endTime,
+    pausedSeconds
   );
   const iosBounds = iosTarget ? boundsFor(iosTarget) : null;
   const androidBounds = androidPicker ? boundsFor(androidPicker.target) : null;
@@ -214,7 +220,10 @@ export function StartEndTimeSection({
 
       <View
         className="mb-6 flex-row items-center justify-between rounded-card-lg border border-dashed px-4 py-3"
-        style={{ backgroundColor: mutedBackgroundColor, borderColor: accentColor }}
+        style={{
+          backgroundColor: mutedBackgroundColor,
+          borderColor: accentColor,
+        }}
         accessibilityLabel={`${durationLabel}: ${formatDuration(durationSeconds, "short")}`}
       >
         <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">

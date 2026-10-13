@@ -94,6 +94,72 @@ describe("EditFeedingScreen clock-time editing", () => {
     fireEvent(screen.getByTestId("datetime-picker"), "change", {}, value);
   }
 
+  it("includes pauses in both picker bounds", async () => {
+    mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180 }];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })).toBeTruthy());
+    fireEvent.press(screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" }));
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date(new Date("2026-08-07T10:00:00.000Z").getTime() - 240_000)
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" }));
+    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+      new Date(new Date("2026-08-07T08:00:00.000Z").getTime() + 240_000)
+    );
+  });
+
+  it("keeps stored pauses excluded after a start-time edit", async () => {
+    mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180 }];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("1h 57m")).toBeTruthy());
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "feeding.startTime feeding.selectTime",
+      }),
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T08:01:00.000Z"),
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toMatchObject({
+      durationSeconds: 6960,
+    });
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
+      "pausedSeconds",
+    );
+  });
+
+  it("preserves a legacy counted-pause duration when editing", async () => {
+    mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180, durationSeconds: 7200 }];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() => expect(screen.getByText("2h")).toBeTruthy());
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "feeding.startTime feeding.selectTime",
+      }),
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T08:01:00.000Z"),
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toMatchObject({
+      durationSeconds: 7140,
+    });
+    expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
+      "pausedSeconds",
+    );
+  });
+
+
   it("prefills a breast feed's real interval and presents duration as read-only", async () => {
     const screen = await renderInitialized();
 

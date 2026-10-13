@@ -1,4 +1,5 @@
 import type { BreastSide } from "@constants/activities";
+import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
 
 export interface PumpingEntry {
   id?: string;
@@ -7,6 +8,7 @@ export interface PumpingEntry {
   startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   volumeMl?: number;
   notes?: string;
 }
@@ -98,7 +100,7 @@ export function validatePumping(entry: Partial<PumpingEntry>): PumpingValidation
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 }
 
@@ -153,7 +155,7 @@ export function validateManualPumping(entry: Partial<PumpingEntry>): PumpingVali
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 }
 
@@ -162,7 +164,11 @@ export function validateManualPumpingTimes(
 ): PumpingValidationResult {
   const durationSeconds =
     entry.startedAt && entry.endedAt
-      ? Math.floor((entry.endedAt.getTime() - entry.startedAt.getTime()) / 1000)
+      ? calculateActiveDurationSeconds(
+          entry.startedAt,
+          entry.endedAt,
+          entry.pausedSeconds ?? 0
+        )
       : undefined;
 
   const result = validateManualPumping({

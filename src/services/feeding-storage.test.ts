@@ -53,7 +53,7 @@ describe("FeedingStorageService", () => {
 
       const result = await FeedingStorageService.getAllFeedings("baby-123");
 
-      expect(result).toEqual(mockFeedings);
+      expect(result).toEqual(mockFeedings.map(entry => ({ ...entry, pausedSeconds: 0 })));
     });
   });
 
@@ -81,7 +81,7 @@ describe("FeedingStorageService", () => {
 
       const result = await FeedingStorageService.getFeedingById("baby-123", "feeding-1");
 
-      expect(result).toEqual(mockFeeding);
+      expect(result).toEqual({ ...mockFeeding, pausedSeconds: 0 });
     });
   });
 

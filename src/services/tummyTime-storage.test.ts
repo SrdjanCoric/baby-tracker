@@ -51,7 +51,7 @@ describe("TummyTimeStorageService", () => {
 
       const result = await TummyTimeStorageService.getAllTummyTimes("baby-123");
 
-      expect(result).toEqual(mockTummyTimes);
+      expect(result).toEqual(mockTummyTimes.map(entry => ({ ...entry, pausedSeconds: 0 })));
     });
   });
 
@@ -77,7 +77,7 @@ describe("TummyTimeStorageService", () => {
 
       const result = await TummyTimeStorageService.getTummyTimeById("baby-123", "tt-1");
 
-      expect(result).toEqual(mockTummyTime);
+      expect(result).toEqual({ ...mockTummyTime, pausedSeconds: 0 });
     });
   });
 

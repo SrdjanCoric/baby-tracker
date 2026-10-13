@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import { calculateActiveDurationSeconds, getEditablePausedSeconds } from "@/utils/timer-duration";
 import { useFeeding } from "@/contexts/feeding-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { formatDate, formatTime } from "@/utils/time";
@@ -66,6 +67,8 @@ export default function EditFeedingScreen() {
     }
   }, [feeding, isInitialized]);
 
+  const pausedSeconds = getEditablePausedSeconds(feeding);
+
   const startChanged = Boolean(
     feeding?.type === "breast" &&
       startTime &&
@@ -125,6 +128,7 @@ export default function EditFeedingScreen() {
         side,
         startedAt: startTime,
         endedAt: endTime,
+        pausedSeconds,
       });
       if (!validation.isValid) {
         setErrors(validation.errors);
@@ -174,8 +178,10 @@ export default function EditFeedingScreen() {
           (feeding.endedAt || endChanged)
         ) {
           input.endedAt = endTime;
-          input.durationSeconds = Math.floor(
-            (endTime.getTime() - startTime.getTime()) / 1000
+          input.durationSeconds = calculateActiveDurationSeconds(
+            startTime,
+            endTime,
+            pausedSeconds
           );
         }
       }
@@ -186,7 +192,7 @@ export default function EditFeedingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, feeding, startTime, endTime, endChanged, timeChanged, side, amountMl, contentType, foodType, amount, reaction, notes, checkAndConfirmFeeding, feedings, updateFeeding, router]);
+  }, [selectedBaby, feeding, pausedSeconds, startTime, endTime, endChanged, timeChanged, side, amountMl, contentType, foodType, amount, reaction, notes, checkAndConfirmFeeding, feedings, updateFeeding, router]);
 
   const handleDelete = useCallback(() => {
     if (!feeding) return;
@@ -215,28 +221,33 @@ export default function EditFeedingScreen() {
         Math.min(
           boundaryNow,
           (endTime?.getTime() ?? boundaryNow + MINIMUM_BREASTFEEDING_MS) -
-            MINIMUM_BREASTFEEDING_MS
+            MINIMUM_BREASTFEEDING_MS -
+            pausedSeconds * 1000
         )
       ),
     };
-  }, [endTime]);
+  }, [endTime, pausedSeconds]);
   const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     const startTimestamp = startTime?.getTime() ?? boundaryNow;
     const maximumTimestamp = Math.min(
       boundaryNow,
-      startTimestamp + MAXIMUM_BREASTFEEDING_MS
+      startTimestamp +
+        MAXIMUM_BREASTFEEDING_MS +
+        pausedSeconds * 1000
     );
     return {
       minimumDate: new Date(
         Math.min(
-          startTimestamp + MINIMUM_BREASTFEEDING_MS,
+          startTimestamp +
+            MINIMUM_BREASTFEEDING_MS +
+            pausedSeconds * 1000,
           maximumTimestamp
         )
       ),
       maximumDate: new Date(maximumTimestamp),
     };
-  }, [startTime]);
+  }, [startTime, pausedSeconds]);
 
   const foodTranslations: Record<string, string> = useMemo(() => ({
     banana: t("foods.banana"), avocado: t("foods.avocado"), apple: t("foods.apple"),
@@ -445,7 +456,11 @@ export default function EditFeedingScreen() {
 
   const now = new Date();
   const durationMs = endTime
-    ? endTime.getTime() - startTime.getTime()
+    ? calculateActiveDurationSeconds(
+        startTime,
+        endTime,
+        pausedSeconds
+      ) * 1000
     : 0;
   const canSave =
     feeding.type !== "breast" ||
@@ -489,81 +504,82 @@ export default function EditFeedingScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-6 pb-6"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Icon */}
-        <View className="items-center mb-6">
-          <View
-            className="w-20 h-20 rounded-full items-center justify-center"
-            style={{ backgroundColor: FEEDING_GREEN_MUTED }}
-          >
-            <Text className="text-4xl">🤱</Text>
-          </View>
-        </View>
-
-        {feeding.type === "breast" && endTime ? (
-          <StartEndTimeSection
-            startTime={startTime}
-            endTime={endTime}
-            onStartTimeChange={setStartTime}
-            onEndTimeChange={setEndTime}
-            startBounds={startBounds}
-            endBounds={endBounds}
-            timeFormat={timeFormat}
-            startLabel={t("feeding.startTime")}
-            endLabel={t("feeding.endTime")}
-            durationLabel={t("feeding.duration")}
-            doneLabel={t("common.done")}
-            selectDateLabel={t("feeding.selectDate")}
-            selectTimeLabel={t("feeding.selectTime")}
-            accentColor={FEEDING_GREEN}
-            mutedBackgroundColor={FEEDING_GREEN_MUTED}
-            textColor="#2D2A26"
-            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
-            durationError={
-              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
-            }
-          />
-        ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-6 pb-6"
+          showsVerticalScrollIndicator={false}
+        >
           <View className="items-center mb-6">
-            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-              {formatDate(new Date(feeding.startedAt))}
-            </Text>
-            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
-              {formatTime(new Date(feeding.startedAt), timeFormat)}
-            </Text>
+            <View
+              className="w-20 h-20 rounded-full items-center justify-center"
+              style={{ backgroundColor: FEEDING_GREEN_MUTED }}
+            >
+              <Text className="text-4xl">🤱</Text>
+            </View>
           </View>
-        )}
 
-        {/* Type-specific form */}
-        {feeding.type === "breast" && renderBreastfeedingForm()}
-        {feeding.type === "bottle" && renderBottleForm()}
-        {feeding.type === "solid" && renderSolidsForm()}
+          {feeding.type === "breast" && endTime ? (
+            <StartEndTimeSection
+              startTime={startTime}
+              endTime={endTime}
+              pausedSeconds={pausedSeconds}
+              onStartTimeChange={setStartTime}
+              onEndTimeChange={setEndTime}
+              startBounds={startBounds}
+              endBounds={endBounds}
+              timeFormat={timeFormat}
+              startLabel={t("feeding.startTime")}
+              endLabel={t("feeding.endTime")}
+              durationLabel={t("feeding.duration")}
+              doneLabel={t("common.done")}
+              selectDateLabel={t("feeding.selectDate")}
+              selectTimeLabel={t("feeding.selectTime")}
+              accentColor={FEEDING_GREEN}
+              mutedBackgroundColor={FEEDING_GREEN_MUTED}
+              textColor="#2D2A26"
+              startError={
+                errors.startedAt ? te(t, errors.startedAt) : undefined
+              }
+              endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+              durationError={
+                errors.durationSeconds
+                  ? te(t, errors.durationSeconds)
+                  : undefined
+              }
+            />
+          ) : (
+            <View className="items-center mb-6">
+              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+                {formatDate(new Date(feeding.startedAt))}
+              </Text>
+              <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+                {formatTime(new Date(feeding.startedAt), timeFormat)}
+              </Text>
+            </View>
+          )}
 
-        {/* Notes */}
-        <View className="mt-4">
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("common.notes")} ({t("common.optional")})
-          </Text>
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t("feeding.notesPlaceholder")}
-            multiline
-            numberOfLines={3}
-            className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
-            placeholderTextColor="#999"
-            textAlignVertical="top"
-          />
-        </View>
-      </ScrollView>
+          {feeding.type === "breast" && renderBreastfeedingForm()}
+          {feeding.type === "bottle" && renderBottleForm()}
+          {feeding.type === "solid" && renderSolidsForm()}
 
-      {/* Save Button */}
-      <View className="px-6 pb-6">
+          <View className="mt-4">
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+              {t("common.notes")} ({t("common.optional")})
+            </Text>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder={t("feeding.notesPlaceholder")}
+              multiline
+              numberOfLines={3}
+              className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
+              placeholderTextColor="#999"
+              textAlignVertical="top"
+            />
+          </View>
+        </ScrollView>
+
+        <View className="px-6 pb-6">
           <Pressable
             onPress={handleSave}
             disabled={!canSave || isSaving}

@@ -1,17 +1,23 @@
 import React from "react";
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import EditSleepScreen from "../../app/edit/sleep";
+import { createFeedingTimerAdapter } from "@/services/timer-adapters/feeding-timer-adapter";
+import type { StoredFeedingEntry } from "@/services/feeding-storage";
 import { createPumpingTimerAdapter } from "@/services/timer-adapters/pumping-timer-adapter";
 import { createSleepTimerAdapter } from "@/services/timer-adapters/sleep-timer-adapter";
 import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
 import type { StoredPumpingEntry } from "@/services/pumping-storage";
 import type { StoredSleepEntry, UpdateSleepInput } from "@/services/sleep-storage";
 import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
-import { formatSleepAsCSV } from "@/utils/csv-generator";
+import { formatFeedingsAsCSV, formatPumpingAsCSV, formatTummyTimeAsCSV, formatSleepAsCSV } from "@/utils/csv-generator";
 import { renderSleepSection } from "@/utils/pdf-templates/sleep-section";
-import { aggregateSleep } from "@/utils/report-aggregator";
+import { renderFeedingSection } from "@/utils/pdf-templates/feeding-section";
+import { renderPumpingSection } from "@/utils/pdf-templates/pumping-section";
+import { renderTummyTimeSection } from "@/utils/pdf-templates/tummy-time-section";
+import { aggregateFeeding, aggregatePumping, aggregateTummyTime, aggregateSleep } from "@/utils/report-aggregator";
 import { buildDayViewData } from "@/utils/sleep-patterns";
 import {
+  calculateFeedingStats,
   calculatePumpingStats,
   calculateTummyTimeStats,
 } from "@/utils/statistics";
@@ -74,7 +80,48 @@ describe("recorded timer duration consumers", () => {
   const startedAt = new Date("2026-08-05T12:00:00.000Z");
   const endedAt = new Date("2026-08-05T12:30:00.000Z");
 
-  it("includes a resumed pause in pumping totals without splitting the session", () => {
+  it("uses nursing seconds in statistics, summaries and export reports", () => {
+    const input = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: jest.fn(),
+    }).buildRecord(startedAt, endedAt, {
+      type: "breast",
+      side: "left",
+      isPaused: false,
+      totalPausedMs: 600_000,
+      leftAccumulatedSeconds: 300,
+      rightAccumulatedSeconds: 300,
+      currentSideStartedAt: "2026-08-05T12:20:00.000Z",
+    });
+    const feeding: StoredFeedingEntry = {
+      ...input,
+      id: "feeding-1",
+      startedAt: input.startedAt.toISOString(),
+      endedAt: input.endedAt?.toISOString(),
+      createdAt: endedAt.toISOString(),
+      updatedAt: endedAt.toISOString(),
+    };
+    expect(calculateFeedingStats([feeding])).toMatchObject({
+      totalDurationSeconds: 1200,
+    });
+    expect(
+      calculateDailySummary(startedAt, {
+        feedings: [feeding],
+        sleeps: [],
+        diapers: [],
+        pumpings: [],
+        growths: [],
+        tummyTimes: [],
+        healthEntries: [],
+      })
+    ).toMatchObject({ nursingMinutes: 20 });
+    const stats = aggregateFeeding([feeding], startedAt, endedAt);
+    expect(stats.breastfeeding.totalMinutes).toBe(20);
+    expect(renderFeedingSection(stats)).toContain("20 min");
+    expect(formatFeedingsAsCSV([feeding], false)).toContain("00:20:00");
+  });
+
+  it("excludes a resumed pause in pumping totals without splitting the session", () => {
     const adapter = createPumpingTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: jest.fn(),
@@ -97,11 +144,15 @@ describe("recorded timer duration consumers", () => {
 
     expect(calculatePumpingStats([pumping])).toMatchObject({
       totalCount: 1,
-      totalDurationSeconds: 1800,
+      totalDurationSeconds: 1200,
     });
+    const stats = aggregatePumping([pumping], startedAt, endedAt);
+    expect(stats.totalMinutes).toBe(20);
+    expect(renderPumpingSection(stats)).toContain("20 min");
+    expect(formatPumpingAsCSV([pumping], false)).toContain("00:20:00");
   });
 
-  it("includes a resumed pause in tummy-time totals without splitting the session", () => {
+  it("excludes a resumed pause in tummy-time totals without splitting the session", () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: jest.fn(),
@@ -123,8 +174,23 @@ describe("recorded timer duration consumers", () => {
 
     expect(calculateTummyTimeStats([tummyTime])).toMatchObject({
       sessionCount: 1,
-      totalDurationSeconds: 1800,
+      totalDurationSeconds: 1200,
     });
+    expect(
+      calculateDailySummary(startedAt, {
+        feedings: [],
+        sleeps: [],
+        diapers: [],
+        pumpings: [],
+        growths: [],
+        tummyTimes: [tummyTime],
+        healthEntries: [],
+      })
+    ).toMatchObject({ tummyTimeMinutes: 20 });
+    const stats = aggregateTummyTime([tummyTime], startedAt, endedAt);
+    expect(stats.totalMinutes).toBe(20);
+    expect(renderTummyTimeSection(stats)).toContain("20 min");
+    expect(formatTummyTimeAsCSV([tummyTime], false)).toContain("00:20:00");
   });
 
   it("keeps sleep consumers aligned for a recorded resumed pause", () => {

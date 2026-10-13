@@ -80,6 +80,72 @@ describe("EditPumpingScreen clock-time editing", () => {
     return screen;
   }
 
+  it("includes pauses in both picker bounds", async () => {
+    mockPumpings = [{ ...mockPumpings[0], pausedSeconds: 180 }];
+    const screen = render(<EditPumpingScreen />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "pumping.startTime feeding.selectDate" })).toBeTruthy());
+    fireEvent.press(screen.getByRole("button", { name: "pumping.startTime feeding.selectDate" }));
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date(new Date("2026-08-07T09:45:00.000Z").getTime() - 240_000)
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+    fireEvent.press(screen.getByRole("button", { name: "pumping.endTime feeding.selectDate" }));
+    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+      new Date(new Date("2026-08-07T09:00:00.000Z").getTime() + 240_000)
+    );
+  });
+
+  it("keeps stored pauses excluded after a start-time edit", async () => {
+    mockPumpings = [{ ...mockPumpings[0], pausedSeconds: 180 }];
+    const screen = render(<EditPumpingScreen />);
+    await waitFor(() => expect(screen.getByText("42m")).toBeTruthy());
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.startTime feeding.selectTime",
+      }),
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:01:00.000Z"),
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePumping.mock.calls[0][1]).toMatchObject({
+      durationSeconds: 2460,
+    });
+    expect(mockUpdatePumping.mock.calls[0][1]).not.toHaveProperty(
+      "pausedSeconds",
+    );
+  });
+
+  it("preserves a legacy counted-pause duration when editing", async () => {
+    mockPumpings = [{ ...mockPumpings[0], pausedSeconds: 180, durationSeconds: 2700 }];
+    const screen = render(<EditPumpingScreen />);
+    await waitFor(() => expect(screen.getByText("45m")).toBeTruthy());
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "pumping.startTime feeding.selectTime",
+      }),
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T09:01:00.000Z"),
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdatePumping).toHaveBeenCalledTimes(1));
+    expect(mockUpdatePumping.mock.calls[0][1]).toMatchObject({
+      durationSeconds: 2640,
+    });
+    expect(mockUpdatePumping.mock.calls[0][1]).not.toHaveProperty(
+      "pausedSeconds",
+    );
+  });
+
+
   it("prefills the real interval and presents duration as read-only", async () => {
     const screen = await renderInitialized();
 

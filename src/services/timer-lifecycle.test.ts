@@ -1,6 +1,7 @@
 import { TimerAccessUnavailableError } from "./timer-access-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  syncObservedOwnedTimerLock,
   editRunningTimerStartTime,
   restoreTimerLifecycle,
   stopRemoteTimerLifecycle,
@@ -61,6 +62,7 @@ vi.mock("./timer-conflict-notice", () => ({
 
 vi.mock("./timer-completion-service", () => ({
   acceptTimerCompletion: vi.fn(),
+  discardTimerCompletion: vi.fn(),
   isTimerCompletionSecured: vi.fn(),
   markTimerCompletionDurable: vi.fn(),
   resolveTimerIdentity: vi.fn(),
@@ -142,6 +144,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer,
@@ -230,6 +233,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer,
@@ -311,6 +315,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer,
@@ -397,6 +402,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer,
@@ -468,6 +474,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer,
@@ -536,6 +543,7 @@ describe("editRunningTimerStartTime", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer: vi.fn(),
@@ -602,6 +610,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
         setActiveTimer,
@@ -670,6 +679,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
         setActiveTimer,
@@ -730,6 +740,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue({
           startedAt: "2026-08-05T12:00:00.000Z",
@@ -796,6 +807,7 @@ describe("restoreTimerLifecycle", () => {
         { id: string }
       > = {
         activityType: "sleep",
+        discardsShortSessions: false,
         storage: {
           getActiveTimer: vi.fn().mockResolvedValue({
             startedAt: "2026-08-05T12:00:00.000Z",
@@ -883,6 +895,7 @@ describe("restoreTimerLifecycle", () => {
         { id: string }
       > = {
         activityType: "sleep",
+        discardsShortSessions: false,
         storage: {
           getActiveTimer: vi.fn().mockResolvedValue({
             startedAt: "2026-08-05T12:00:00.000Z",
@@ -969,6 +982,7 @@ describe("restoreTimerLifecycle", () => {
         { id: string }
       > = {
         activityType: "sleep",
+        discardsShortSessions: false,
         storage: {
           getActiveTimer: vi.fn().mockResolvedValue({
             startedAt: "2026-08-05T12:00:00.000Z",
@@ -1048,6 +1062,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue(null),
         setActiveTimer: vi.fn(),
@@ -1104,6 +1119,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
         setActiveTimer: vi.fn(),
@@ -1172,6 +1188,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue({
           startedAt: "2026-08-05T12:00:00.000Z",
@@ -1248,6 +1265,7 @@ describe("restoreTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn().mockResolvedValue({
           startedAt: "2026-08-05T12:00:00.000Z",
@@ -1366,6 +1384,50 @@ describe("restoreTimerLifecycle", () => {
 });
 
 describe("stopRemoteTimerLifecycle", () => {
+  it("uses accepted completion time to discard a remote feed with less than a minute active", async () => {
+    const { createFeedingTimerAdapter } =
+      await import("./timer-adapters/feeding-timer-adapter");
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    adapter.storage.getRecordById = vi.fn().mockResolvedValue(null);
+    vi.mocked(resolveTimerIdentity).mockResolvedValue({
+      timerInstanceId: "remote-short",
+      activityId: "record-short",
+    });
+    vi.mocked(acceptTimerCompletion).mockResolvedValue({
+      babyId: "baby-1",
+      activityType: "feeding",
+      timerInstanceId: "remote-short",
+      activityId: "record-short",
+      startedAt: "2026-08-05T12:00:00Z",
+      stoppedAt: "2026-08-05T12:00:30Z",
+      status: "pending",
+    });
+    vi.mocked(releaseTimerLockDurably).mockResolvedValue(true);
+    const persistRecord = vi.fn().mockResolvedValue({ id: "record-short" });
+    const result = await stopRemoteTimerLifecycle({
+      adapter,
+      babyId: "baby-1",
+      userId: "stopper",
+      lock: {
+        id: "lock",
+        babyId: "baby-1",
+        activityType: "feeding",
+        startedBy: "starter",
+        startedByName: "Starter",
+        startedAt: "2026-08-05T12:00:00Z",
+        timerData: { timerInstanceId: "remote-short" },
+      },
+      requestedStopTime: new Date("2026-08-05T12:05:00Z"),
+      persistRecord,
+      dispatchAddRecord: vi.fn(),
+    });
+    expect(result).toBeNull();
+    expect(persistRecord).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1381,6 +1443,7 @@ describe("stopRemoteTimerLifecycle", () => {
       { id: string }
     > = {
       activityType: "sleep",
+      discardsShortSessions: false,
       storage: {
         getActiveTimer: vi.fn(),
         setActiveTimer: vi.fn(),
@@ -1456,5 +1519,58 @@ describe("stopRemoteTimerLifecycle", () => {
       "timer-remote",
       "2026-08-05T12:00:00.000Z"
     );
+  });
+});
+describe("observed timer payload decoding", () => {
+  it("delivers decoded feeding side fields instead of raw lock JSON", async () => {
+    const { createFeedingTimerAdapter } =
+      await import("./timer-adapters/feeding-timer-adapter");
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby-1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    const startedAt = "2026-08-05T12:00:00Z";
+    const onPauseChange = vi.fn();
+    await syncObservedOwnedTimerLock({
+      activityType: "feeding",
+      timerDataCodec: adapter.timerDataCodec,
+      babyId: "baby-1",
+      userId: "user-1",
+      activeTimer: {
+        timerInstanceId: "timer-1",
+        startTime: new Date(startedAt),
+        lockState: "owned",
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      locks: [
+        {
+          id: "lock-1",
+          babyId: "baby-1",
+          activityType: "feeding",
+          startedAt,
+          startedBy: "user-1",
+          startedByName: "Owner",
+          timerData: {
+            timerInstanceId: "timer-1",
+            isPaused: true,
+            leftAccumulatedSeconds: "invalid",
+            rightAccumulatedSeconds: 42,
+          },
+        },
+      ],
+      locksLoading: false,
+      observedTimerInstanceIdRef: { current: null },
+      onPauseChange,
+      onVanished: vi.fn(),
+    });
+    expect(onPauseChange.mock.calls[0][0]).toMatchObject({
+      payload: {
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 42,
+        currentSideStartedAt: startedAt,
+      },
+    });
+    expect(onPauseChange.mock.calls[0][0]).not.toHaveProperty("timerData");
   });
 });

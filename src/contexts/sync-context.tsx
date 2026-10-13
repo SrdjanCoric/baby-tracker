@@ -1,3 +1,4 @@
+import { withTableReconciliation } from "@/services/sync/crdt-sync";
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { SyncEngine, SyncState as EngineSyncState, SyncStatus, RealTimeSync, RemoteChange, SyncableTable, isCrdtTable, reconcileRemoteChange } from '@/services/sync';
@@ -214,26 +215,36 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         dispatchChange(change);
         return;
       }
-      reconcileChainRef.current = reconcileChainRef.current.then(async () => {
-        try {
-          const crdt = await getCrdtSync();
-          const reconciled = (await reconcileRemoteChange(crdt, change)) as RemoteChange;
-          dispatchChange(reconciled);
-        } catch (error) {
-          console.error('[SyncContext] CRDT reconcile failed; dispatching raw change:', error);
-          reportIssue({
-            name: 'sync.crdt_reconcile_failed',
-            area: 'sync',
-            error,
-            tags: { table: change.table, eventType: change.eventType },
-          });
-          dispatchChange(change);
-        }
-      });
+      reconcileChainRef.current = reconcileChainRef.current.then(() =>
+        withTableReconciliation(change.table, async () => {
+          try {
+            const crdt = await getCrdtSync();
+            const reconciled = (await reconcileRemoteChange(
+              crdt,
+              change
+            )) as RemoteChange;
+            dispatchChange(reconciled);
+          } catch (error) {
+            console.error(
+              "[SyncContext] CRDT reconcile failed; dispatching raw change:",
+              error
+            );
+            reportIssue({
+              name: "sync.crdt_reconcile_failed",
+              area: "sync",
+              error,
+              tags: { table: change.table, eventType: change.eventType },
+            });
+            dispatchChange(change);
+          }
+        })
+      );
     });
 
     let isMounted = true;
-    engine.initialize()
+    const unsubscribeEngineChanges = engine.onRemoteChange(dispatchChange);
+    engine
+      .initialize()
       .then(() => {
         if (isMounted) {
           setIsInitialized(true);
@@ -285,6 +296,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       isMounted = false;
       unsubscribe();
       unsubscribeRealTime();
+      unsubscribeEngineChanges();
       unsubscribeRealTimeErrors();
       unsubscribeRealTimeConnection();
       unsubscribeSubscriptionReplaced();

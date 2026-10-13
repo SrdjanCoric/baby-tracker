@@ -17,7 +17,7 @@ import { MilestoneSuggestionModal } from "@/components";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
 import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
-import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
+import { getPausedTimerStartUpperBound, getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const TUMMY_ORANGE = "#E67E22";
 const TUMMY_ORANGE_MUTED = "#FEF3E2";
@@ -64,9 +64,9 @@ export default function TummyTimeScreen() {
       getTimerStartBounds(
         tummyTimes,
         new Date(),
-        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+        getPausedTimerStartUpperBound(activeTimer)
       ),
-    [activeTimer?.isPaused, activeTimer?.pausedAt, tummyTimes]
+    [activeTimer, tummyTimes]
   );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("tummyTime");

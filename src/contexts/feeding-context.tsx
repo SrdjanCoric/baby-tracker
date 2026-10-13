@@ -57,6 +57,7 @@ import {
 } from "@/hooks/useBabyProviderBinding";
 import {
   acceptTimerCompletion,
+  discardTimerCompletion,
   createTimerIdentity,
   markTimerCompletionDurable,
   type TimerIdentity,
@@ -64,6 +65,7 @@ import {
 import { isTimerStarter } from "@/services/timer-starter";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
 import {
+  shouldDiscardActiveSession,
   editRunningTimerStartTime,
   restoreTimerLifecycle,
   syncObservedOwnedTimerLock,
@@ -88,6 +90,7 @@ export interface ActiveTimer extends TimerIdentity {
   currentSideStartedAt: Date;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
 }
 
 export interface FeedingState {
@@ -131,10 +134,26 @@ export type FeedingAction =
       type: "PAUSE_TIMER";
       payload: { accumulatedSeconds: number; pausedAt: Date };
     }
-  | { type: "RESUME_TIMER" }
+  | {
+      type: "RESUME_TIMER";
+      payload: {
+        resumedAt: Date;
+        totalPausedMs: number;
+        leftAccumulatedSeconds: number;
+        rightAccumulatedSeconds: number;
+      };
+    }
   | {
       type: "SYNC_TIMER_PAUSE";
-      payload: { isPaused: boolean; pausedAt?: Date; totalPausedMs: number };
+      payload: {
+        isPaused: boolean;
+        pausedAt?: Date;
+        lastResumedAt?: Date;
+        totalPausedMs: number;
+        leftAccumulatedSeconds: number;
+        rightAccumulatedSeconds: number;
+        currentSideStartedAt: Date;
+      };
     }
   | { type: "REMOTE_INSERT"; payload: StoredFeedingEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredFeedingEntry }
@@ -285,16 +304,18 @@ export function feedingReducer(
     }
 
     case "RESUME_TIMER": {
-      if (!state.activeTimer || !state.activeTimer.pausedAt) return state;
-      const pauseDuration = Date.now() - state.activeTimer.pausedAt.getTime();
+      if (!state.activeTimer) return state;
       return {
         ...state,
         activeTimer: {
           ...state.activeTimer,
           isPaused: false,
           pausedAt: undefined,
-          totalPausedMs: state.activeTimer.totalPausedMs + pauseDuration,
-          currentSideStartedAt: new Date(),
+          totalPausedMs: action.payload.totalPausedMs,
+          lastResumedAt: action.payload.resumedAt,
+          currentSideStartedAt: action.payload.resumedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
         },
       };
     }
@@ -306,8 +327,14 @@ export function feedingReducer(
         activeTimer: {
           ...state.activeTimer,
           isPaused: action.payload.isPaused,
-          pausedAt: action.payload.isPaused ? action.payload.pausedAt : undefined,
+          pausedAt: action.payload.isPaused
+            ? action.payload.pausedAt
+            : undefined,
           totalPausedMs: action.payload.totalPausedMs,
+          lastResumedAt: action.payload.lastResumedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
+          currentSideStartedAt: action.payload.currentSideStartedAt,
         },
       };
 
@@ -598,6 +625,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const babyId = selectedBaby?.id;
     void syncObservedOwnedTimerLock({
+      timerDataCodec: createFeedingTimerAdapter({
+        babyId: babyId ?? "",
+        dispatchRestoreTimer: () => {},
+      }).timerDataCodec,
       activityType: "feeding",
       babyId,
       userId: user?.id,
@@ -605,11 +636,31 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       locks: activeTimerLocks,
       locksLoading: activeTimerLocksLoading,
       observedTimerInstanceIdRef: observedOwnedTimerRef,
-      onPauseChange: async ({ isPaused, pausedAt, totalPausedMs, accumulatedSeconds }, activeTimer) => {
+      onPauseChange: async (
+        {
+          isPaused,
+          pausedAt,
+          lastResumedAt,
+          totalPausedMs,
+          accumulatedSeconds,
+          payload,
+        },
+        activeTimer
+      ) => {
         if (!babyId) return;
+        const { leftAccumulatedSeconds, rightAccumulatedSeconds } = payload;
+        const currentSideStartedAt = new Date(payload.currentSideStartedAt);
         dispatch({
           type: "SYNC_TIMER_PAUSE",
-          payload: { isPaused, pausedAt, totalPausedMs },
+          payload: {
+            isPaused,
+            pausedAt,
+            lastResumedAt,
+            totalPausedMs,
+            leftAccumulatedSeconds,
+            rightAccumulatedSeconds,
+            currentSideStartedAt,
+          },
         });
         if (liveActivityIdRef.current) {
           if (isPaused) {
@@ -624,12 +675,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           startedAt: activeTimer.startTime.toISOString(),
           side: activeTimer.side,
           type: "breast",
-          leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds,
-          rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds,
-          currentSideStartedAt: activeTimer.currentSideStartedAt.toISOString(),
+          leftAccumulatedSeconds,
+          rightAccumulatedSeconds,
+          currentSideStartedAt: currentSideStartedAt.toISOString(),
           liveActivityId: liveActivityIdRef.current ?? undefined,
           isPaused,
           pausedAt: pausedAt?.toISOString(),
+          lastResumedAt: lastResumedAt?.toISOString(),
           totalPausedMs,
           lockState: activeTimer.lockState,
         });
@@ -794,21 +846,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           await finishTimer();
           return true;
         }
+        const adapter = createFeedingTimerAdapter({
+          babyId: selectedBaby.id,
+          dispatchRestoreTimer: (restoredTimer) => {
+            dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
+          },
+        });
         const requestedStopTime =
           activeTimer.isPaused && activeTimer.pausedAt
             ? activeTimer.pausedAt
             : (requestedEndTime ?? new Date());
-        const durationSeconds = Math.floor(
-          (requestedStopTime.getTime() -
-            activeTimer.startTime.getTime()) /
-            1000
-        );
-
-        if (durationSeconds < 60) {
-          await finishTimer();
-          return null;
-        }
-
         const completion = await acceptTimerCompletion(
           selectedBaby.id,
           "feeding",
@@ -817,6 +864,18 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           requestedStopTime
         );
         const endTime = new Date(completion.stoppedAt);
+        if (
+          shouldDiscardActiveSession(
+            adapter,
+            activeTimer.startTime,
+            endTime,
+            activeTimer.totalPausedMs
+          )
+        ) {
+          await discardTimerCompletion(completion);
+          await finishTimer();
+          return null;
+        }
 
         if (completion.status === "completed") {
           const existing = await FeedingStorageService.getFeedingById(
@@ -827,12 +886,6 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           return existing;
         }
 
-        const adapter = createFeedingTimerAdapter({
-          babyId: selectedBaby.id,
-          dispatchRestoreTimer: (restoredTimer) => {
-            dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
-          },
-        });
         const feedingInput = adapter.buildRecord(
           activeTimer.startTime,
           endTime,
@@ -847,6 +900,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
               activeTimer.currentSideStartedAt.toISOString(),
             isPaused: activeTimer.isPaused,
             totalPausedMs: activeTimer.totalPausedMs,
+            lastResumedAt: activeTimer.lastResumedAt?.toISOString(),
             pausedAt: activeTimer.pausedAt?.toISOString(),
           }
         );
@@ -977,6 +1031,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           liveActivityId: liveActivityIdRef.current ?? undefined,
           isPaused: state.activeTimer.isPaused,
           totalPausedMs: state.activeTimer.totalPausedMs,
+          lastResumedAt: state.activeTimer.lastResumedAt?.toISOString(),
           pausedAt: state.activeTimer.pausedAt?.toISOString(),
           lockState: state.activeTimer.lockState,
         });
@@ -988,17 +1043,32 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           );
         }
         if (user?.id) {
-          updateTimerData(selectedBaby.id, "feeding", user.id, {
-            timerInstanceId: state.activeTimer.timerInstanceId,
-            activityId: state.activeTimer.activityId,
-            side,
-            type: "breast",
-            leftAccumulatedSeconds: leftAccumulated,
-            rightAccumulatedSeconds: rightAccumulated,
-            currentSideStartedAt: now.toISOString(),
-          }).catch(async (error) => {
+          updateTimerData(
+            selectedBaby.id,
+            "feeding",
+            user.id,
+            createFeedingTimerAdapter({
+              babyId: selectedBaby.id,
+              dispatchRestoreTimer: () => {},
+            }).timerDataCodec.encode({
+              timerInstanceId: state.activeTimer.timerInstanceId,
+              activityId: state.activeTimer.activityId,
+              side,
+              type: "breast",
+              leftAccumulatedSeconds: leftAccumulated,
+              rightAccumulatedSeconds: rightAccumulated,
+              currentSideStartedAt: now.toISOString(),
+              isPaused: state.activeTimer.isPaused,
+              pausedAt: state.activeTimer.pausedAt?.toISOString(),
+              totalPausedMs: state.activeTimer.totalPausedMs,
+              lastResumedAt: state.activeTimer.lastResumedAt?.toISOString(),
+            })
+          ).catch(async (error) => {
             if (await handleTimerAccessError(error)) return;
-            console.error("[FeedingContext] Failed to update timer data:", error);
+            console.error(
+              "[FeedingContext] Failed to update timer data:",
+              error
+            );
           });
         }
       }
@@ -1069,6 +1139,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           isPaused: activeTimer.isPaused,
           pausedAt: activeTimer.pausedAt?.toISOString(),
           totalPausedMs: activeTimer.totalPausedMs,
+          lastResumedAt: activeTimer.lastResumedAt?.toISOString(),
           lockState: activeTimer.lockState,
         },
         payload: {
@@ -1082,6 +1153,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
           isPaused: activeTimer.isPaused,
           pausedAt: activeTimer.pausedAt?.toISOString(),
           totalPausedMs: activeTimer.totalPausedMs,
+          lastResumedAt: activeTimer.lastResumedAt?.toISOString(),
         },
         startedAt,
         liveActivityIdRef,
@@ -1152,6 +1224,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         isPaused: true,
         pausedAt: now.toISOString(),
         totalPausedMs: state.activeTimer.totalPausedMs,
+        lastResumedAt: state.activeTimer.lastResumedAt?.toISOString(),
         lockState: state.activeTimer.lockState,
       });
 
@@ -1167,6 +1240,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             pausedAt: now.toISOString(),
             accumulatedSeconds: totalElapsed,
             totalPausedMs: state.activeTimer.totalPausedMs,
+            lastResumedAt: state.activeTimer.lastResumedAt?.toISOString(),
             side: state.activeTimer.side,
             type: "breast",
             leftAccumulatedSeconds: leftAccumulated,
@@ -1185,18 +1259,70 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
 
   const resumeBreastfeeding = useCallback(
     async (requestedResumeTime?: Date, widgetPauseDurationMs?: number) => {
-      if (!selectedBaby || !state.activeTimer || !state.activeTimer.isPaused)
+      if (!selectedBaby || !state.activeTimer) return;
+
+      if (
+        !state.activeTimer.isPaused &&
+        requestedResumeTime &&
+        state.activeTimer.lastResumedAt &&
+        (requestedResumeTime <= state.activeTimer.lastResumedAt ||
+          (widgetPauseDurationMs !== undefined &&
+            requestedResumeTime.getTime() - widgetPauseDurationMs <
+              state.activeTimer.lastResumedAt.getTime()))
+      )
         return;
 
-      const now = requestedResumeTime ?? new Date();
-      const pauseDuration =
-        widgetPauseDurationMs ??
-        (state.activeTimer.pausedAt
+      const requestedAt = requestedResumeTime ?? new Date();
+      const now =
+        state.activeTimer.pausedAt && requestedAt < state.activeTimer.pausedAt
+          ? state.activeTimer.pausedAt
+          : requestedAt;
+      if (
+        !state.activeTimer.isPaused &&
+        !(widgetPauseDurationMs && widgetPauseDurationMs > 0)
+      )
+        return;
+      const pauseDuration = Math.max(
+        0,
+        state.activeTimer.pausedAt
           ? now.getTime() - state.activeTimer.pausedAt.getTime()
-          : 0);
+          : (widgetPauseDurationMs ?? 0)
+      );
       const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
 
-      dispatch({ type: "RESUME_TIMER" });
+      let leftAccumulated = state.activeTimer.leftAccumulatedSeconds;
+      let rightAccumulated = state.activeTimer.rightAccumulatedSeconds;
+      if (!state.activeTimer.isPaused) {
+        const secondsBeforePause = Math.max(
+          0,
+          Math.floor(
+            (now.getTime() -
+              pauseDuration -
+              state.activeTimer.currentSideStartedAt.getTime()) /
+              1000
+          )
+        );
+        if (
+          state.activeTimer.side === "left" ||
+          state.activeTimer.side === "both"
+        )
+          leftAccumulated += secondsBeforePause;
+        if (
+          state.activeTimer.side === "right" ||
+          state.activeTimer.side === "both"
+        )
+          rightAccumulated += secondsBeforePause;
+      }
+
+      dispatch({
+        type: "RESUME_TIMER",
+        payload: {
+          resumedAt: now,
+          totalPausedMs: newTotalPausedMs,
+          leftAccumulatedSeconds: leftAccumulated,
+          rightAccumulatedSeconds: rightAccumulated,
+        },
+      });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(
@@ -1214,12 +1340,13 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         startedAt: state.activeTimer.startTime.toISOString(),
         side: state.activeTimer.side,
         type: "breast",
-        leftAccumulatedSeconds: state.activeTimer.leftAccumulatedSeconds,
-        rightAccumulatedSeconds: state.activeTimer.rightAccumulatedSeconds,
+        leftAccumulatedSeconds: leftAccumulated,
+        rightAccumulatedSeconds: rightAccumulated,
         currentSideStartedAt: now.toISOString(),
         liveActivityId: liveActivityIdRef.current ?? undefined,
         isPaused: false,
         totalPausedMs: newTotalPausedMs,
+        lastResumedAt: now.toISOString(),
         lockState: state.activeTimer.lockState,
       });
 
@@ -1233,10 +1360,11 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
             activityId: state.activeTimer.activityId,
             isPaused: false,
             totalPausedMs: newTotalPausedMs,
+            lastResumedAt: now.toISOString(),
             side: state.activeTimer.side,
             type: "breast",
-            leftAccumulatedSeconds: state.activeTimer.leftAccumulatedSeconds,
-            rightAccumulatedSeconds: state.activeTimer.rightAccumulatedSeconds,
+            leftAccumulatedSeconds: leftAccumulated,
+            rightAccumulatedSeconds: rightAccumulated,
             currentSideStartedAt: now.toISOString(),
             effectiveStartTime: state.activeTimer.startTime.toISOString(),
             accumulatedSeconds: activeElapsedSeconds,
@@ -1402,6 +1530,7 @@ function transformFeedingFromRemote(
     startedAt: data.started_at as string,
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
+    pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
     leftDurationSeconds: data.left_duration_seconds as number | undefined,
     rightDurationSeconds: data.right_duration_seconds as number | undefined,
     amountMl: data.amount_ml as number | undefined,

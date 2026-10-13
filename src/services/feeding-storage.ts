@@ -22,6 +22,7 @@ export interface StoredFeedingEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   leftDurationSeconds?: number;
   rightDurationSeconds?: number;
   amountMl?: number;
@@ -44,6 +45,7 @@ export interface CreateFeedingInput {
   startedAt: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  pausedSeconds?: number;
   leftDurationSeconds?: number;
   rightDurationSeconds?: number;
   amountMl?: number;
@@ -79,6 +81,7 @@ export interface ActiveTimerData extends Partial<TimerIdentity>, TimerLockReconc
   liveActivityId?: string;
   isPaused?: boolean;
   pausedAt?: string;
+  lastResumedAt?: string;
   totalPausedMs?: number;
 }
 
@@ -105,7 +108,10 @@ export const FeedingStorageService = {
     const key = getFeedingsKey(babyId);
     return withStorageLock(key, async () => {
       await settleImportJournal(key);
-      return readCollection(babyId);
+      return (await readCollection(babyId)).map(entry => ({
+        ...entry,
+        pausedSeconds: entry.pausedSeconds ?? 0,
+      }));
     });
   },
 
@@ -133,6 +139,7 @@ export const FeedingStorageService = {
         startedAt: input.startedAt.toISOString(),
         endedAt: input.endedAt?.toISOString(),
         durationSeconds: input.durationSeconds,
+        pausedSeconds: input.pausedSeconds ?? 0,
         leftDurationSeconds: input.leftDurationSeconds,
         rightDurationSeconds: input.rightDurationSeconds,
         amountMl: input.amountMl,

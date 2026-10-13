@@ -272,3 +272,32 @@ describe("CrdtSync.reconcileRemote", () => {
     expect(merged.amount_ml).toBe(7);
   });
 });
+
+it("serializes a pulled shadow write with adoption of the winning completion", async () => {
+  const store = new MemoryShadowStore();
+  const sync = new CrdtSync({ deviceId: "loser", clockStorage: new MemoryClockStorage(),
+    shadowStore: store, clock: () => Date.parse("2026-10-13T12:00:00Z") });
+  await sync.stampWrite("feedings", "f1", { id: "f1", duration_seconds: 180 });
+  let readStarted!: () => void;
+  const started = new Promise<void>(resolve => { readStarted = resolve; });
+  let releaseRead!: () => void;
+  const gate = new Promise<void>(resolve => { releaseRead = resolve; });
+  const originalGet = store.get.bind(store);
+  let gateNext = true;
+  store.get = async key => {
+    const captured = await originalGet(key);
+    if (gateNext) { gateNext = false; readStarted(); await gate; }
+    return captured;
+  };
+  const winner = { id: "f1", duration_seconds: 300,
+    field_clocks: { duration_seconds: "2026-10-13T10:05:00.000Z-0000-winner" } };
+  const pulling = reconcilePulledRows(sync, "feedings", [winner]);
+  await started;
+  const adopting = sync.adoptRemote("feedings", "f1", winner);
+  // Let an unprotected adoption finish while the pull still holds its stale snapshot.
+  await new Promise(resolve => setTimeout(resolve, 0));
+  releaseRead();
+  await Promise.all([pulling, adopting]);
+  expect((await sync.getShadow("feedings", "f1"))?.duration_seconds).toBe(300);
+  expect(await reconcilePulledRows(sync, "feedings", [winner])).toEqual([winner]);
+});

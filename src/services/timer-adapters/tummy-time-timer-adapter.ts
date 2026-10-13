@@ -5,7 +5,7 @@ import {
   type StoredTummyTimeEntry,
 } from "../tummyTime-storage";
 import {
-  calculateTimerDurationSeconds,
+  calculateTimerDuration,
   parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
@@ -23,6 +23,7 @@ export interface RestoredTummyTimeTimer extends TimerIdentity {
   startTime: Date;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
 }
 
 interface CreateTummyTimeTimerAdapterOptions {
@@ -41,6 +42,7 @@ export function createTummyTimeTimerAdapter({
 > {
   return {
     activityType: "tummy_time",
+    discardsShortSessions: false,
     storage: {
       getActiveTimer: babyIdArgument =>
         TummyTimeStorageService.getActiveTimer(babyIdArgument),
@@ -57,6 +59,9 @@ export function createTummyTimeTimerAdapter({
           ? { timerInstanceId: payload.timerInstanceId }
           : {}),
         ...(payload.activityId ? { activityId: payload.activityId } : {}),
+        ...(payload.lastResumedAt
+          ? { lastResumedAt: payload.lastResumedAt }
+          : {}),
         isPaused: payload.isPaused,
         totalPausedMs: payload.totalPausedMs,
         ...(payload.pausedAt ? { pausedAt: payload.pausedAt } : {}),
@@ -67,6 +72,9 @@ export function createTummyTimeTimerAdapter({
           : {}),
         ...(typeof timerData.activityId === "string"
           ? { activityId: timerData.activityId }
+          : {}),
+        ...(typeof timerData.lastResumedAt === "string"
+          ? { lastResumedAt: timerData.lastResumedAt }
           : {}),
         isPaused: timerData.isPaused === true,
         totalPausedMs:
@@ -84,6 +92,9 @@ export function createTummyTimeTimerAdapter({
         ...(activeTimer.activityId
           ? { activityId: activeTimer.activityId }
           : {}),
+        ...(activeTimer.lastResumedAt
+          ? { lastResumedAt: activeTimer.lastResumedAt }
+          : {}),
         isPaused: activeTimer.isPaused === true,
         totalPausedMs: activeTimer.totalPausedMs ?? 0,
         ...(activeTimer.pausedAt ? { pausedAt: activeTimer.pausedAt } : {}),
@@ -94,10 +105,11 @@ export function createTummyTimeTimerAdapter({
       babyId,
       startedAt,
       endedAt,
-      durationSeconds: calculateTimerDurationSeconds(
+      ...calculateTimerDuration(
         startedAt,
         endedAt,
-        payload.totalPausedMs
+        payload.totalPausedMs,
+        "tummy_time"
       ),
     }),
     liveActivity: {
@@ -120,6 +132,7 @@ export function createTummyTimeTimerAdapter({
         activityId,
         totalPausedMs: payload.totalPausedMs,
         pausedAt: parseTimerDate(payload.pausedAt),
+        lastResumedAt: parseTimerDate(payload.lastResumedAt),
       }),
   };
 }

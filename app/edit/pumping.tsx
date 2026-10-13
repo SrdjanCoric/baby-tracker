@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import { calculateActiveDurationSeconds, getEditablePausedSeconds } from "@/utils/timer-duration";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import type { BreastSide } from "@/constants/activities";
@@ -55,6 +56,8 @@ export default function EditPumpingScreen() {
       setIsInitialized(true);
     }
   }, [pumping, isInitialized]);
+
+  const pausedSeconds = getEditablePausedSeconds(pumping);
 
   const startChanged = Boolean(
     pumping && startTime &&
@@ -111,6 +114,7 @@ export default function EditPumpingScreen() {
         side,
         startedAt: startTime,
         endedAt: endTime,
+        pausedSeconds,
       });
       const { volumeMl: _volumeError, ...timeErrors } = validation.errors;
       if (Object.keys(timeErrors).length > 0) {
@@ -150,7 +154,11 @@ export default function EditPumpingScreen() {
         input.startedAt = startTime;
         if (pumping.endedAt || endChanged) {
           input.endedAt = endTime;
-          input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+          input.durationSeconds = calculateActiveDurationSeconds(
+            startTime,
+            endTime,
+            pausedSeconds
+          );
         }
       }
       await updatePumping(pumping.id, input);
@@ -159,7 +167,7 @@ export default function EditPumpingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, pumping, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, checkAndConfirmPumping, pumpings, updatePumping, router]);
+  }, [selectedBaby, pumping, pausedSeconds, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, checkAndConfirmPumping, pumpings, updatePumping, router]);
 
   const handleDelete = useCallback(() => {
     if (!pumping) return;
@@ -184,21 +192,35 @@ export default function EditPumpingScreen() {
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
-      maximumDate: new Date(Math.min(
-        boundaryNow,
-        (endTime?.getTime() ?? boundaryNow + MINIMUM_PUMPING_MS) - MINIMUM_PUMPING_MS
-      )),
+      maximumDate: new Date(
+        Math.min(
+          boundaryNow,
+          (endTime?.getTime() ?? boundaryNow + MINIMUM_PUMPING_MS) -
+            MINIMUM_PUMPING_MS -
+            pausedSeconds * 1000
+        )
+      ),
     };
-  }, [endTime]);
+  }, [endTime, pausedSeconds]);
   const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     const startTimestamp = startTime?.getTime() ?? boundaryNow;
-    const maximumTimestamp = Math.min(boundaryNow, startTimestamp + MAXIMUM_PUMPING_MS);
+    const maximumTimestamp = Math.min(
+      boundaryNow,
+      startTimestamp + MAXIMUM_PUMPING_MS + pausedSeconds * 1000
+    );
     return {
-      minimumDate: new Date(Math.min(startTimestamp + MINIMUM_PUMPING_MS, maximumTimestamp)),
+      minimumDate: new Date(
+        Math.min(
+          startTimestamp +
+            MINIMUM_PUMPING_MS +
+            pausedSeconds * 1000,
+          maximumTimestamp
+        )
+      ),
       maximumDate: new Date(maximumTimestamp),
     };
-  }, [startTime]);
+  }, [startTime, pausedSeconds]);
 
   if (!selectedBaby || !pumping || !startTime || !endTime) {
     return (
@@ -211,11 +233,18 @@ export default function EditPumpingScreen() {
   }
 
   const now = new Date();
-  const durationMs = endTime.getTime() - startTime.getTime();
-  const canSave = !timeChanged || (
-    durationMs >= MINIMUM_PUMPING_MS && durationMs <= MAXIMUM_PUMPING_MS &&
-    startTime <= now && endTime <= now
-  );
+  const durationMs =
+    calculateActiveDurationSeconds(
+      startTime,
+      endTime,
+      pausedSeconds
+    ) * 1000;
+  const canSave =
+    !timeChanged ||
+    (durationMs >= MINIMUM_PUMPING_MS &&
+      durationMs <= MAXIMUM_PUMPING_MS &&
+      startTime <= now &&
+      endTime <= now);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -251,126 +280,130 @@ export default function EditPumpingScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-6 pb-6"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Icon */}
-        <View className="items-center mb-6">
-          <View
-            className="w-20 h-20 rounded-full items-center justify-center"
-            style={{ backgroundColor: PUMPING_BLUE_MUTED }}
-          >
-            <Text className="text-4xl">🫙</Text>
-          </View>
-        </View>
-
-        {/* Side */}
-        <View className="mb-4">
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("pumping.side")}
-          </Text>
-          <View className="flex-row gap-2">
-            {(["left", "right", "both"] as const).map((s) => (
-              <Pressable
-                key={s}
-                onPress={() => setSide(s)}
-                className={`flex-1 py-3 rounded-button-lg items-center ${
-                  side === s ? "" : "bg-surface-secondary dark:bg-surface-dark-secondary"
-                }`}
-                style={side === s ? { backgroundColor: PUMPING_BLUE } : undefined}
-              >
-                <Text
-                  className={`text-base font-medium ${
-                    side === s
-                      ? "text-white"
-                      : "text-content-primary dark:text-content-dark-primary"
-                  }`}
-                >
-                  {t(`feeding.${s}`)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <StartEndTimeSection
-          startTime={startTime}
-          endTime={endTime}
-          onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
-          startBounds={startBounds}
-          endBounds={endBounds}
-          timeFormat={timeFormat}
-          startLabel={t("pumping.startTime")}
-          endLabel={t("pumping.endTime")}
-          durationLabel={t("pumping.duration")}
-          doneLabel={t("common.done")}
-          selectDateLabel={t("feeding.selectDate")}
-          selectTimeLabel={t("feeding.selectTime")}
-          accentColor={PUMPING_BLUE}
-          mutedBackgroundColor={PUMPING_BLUE_MUTED}
-          textColor="#2D2A26"
-          startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-          endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
-          durationError={errors.durationSeconds ? te(t, errors.durationSeconds) : undefined}
-        />
-
-        {/* Volume */}
-        <View className="mb-4">
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("pumping.amount")} ({t("feeding.ml")})
-          </Text>
-          <TextInput
-            value={volumeMl}
-            onChangeText={setVolumeMl}
-            placeholder="0"
-            keyboardType="number-pad"
-            className="h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
-            placeholderTextColor="#999"
-          />
-          {errors.volumeMl && (
-            <Text className="text-red-500 text-sm mt-2">{te(t, errors.volumeMl)}</Text>
-          )}
-        </View>
-
-        {/* Notes */}
-        <View>
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("common.notes")} ({t("common.optional")})
-          </Text>
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t("feeding.notesPlaceholder")}
-            multiline
-            numberOfLines={3}
-            className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
-            placeholderTextColor="#999"
-            textAlignVertical="top"
-          />
-        </View>
-      </ScrollView>
-
-      {/* Save Button */}
-      <View className="px-6 pb-6">
-        <Pressable
-          onPress={handleSave}
-          disabled={!canSave || isSaving}
-          className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-            !canSave || isSaving ? "opacity-50" : ""
-          }`}
-          style={{ backgroundColor: PUMPING_BLUE }}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.save")}
-          accessibilityState={{ disabled: !canSave || isSaving }}
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-6 pb-6"
+          showsVerticalScrollIndicator={false}
         >
-          <Text className="text-white text-lg font-semibold">
-            {isSaving ? t("common.loading") : t("common.save")}
-          </Text>
-        </Pressable>
-      </View>
+          <View className="items-center mb-6">
+            <View
+              className="w-20 h-20 rounded-full items-center justify-center"
+              style={{ backgroundColor: PUMPING_BLUE_MUTED }}
+            >
+              <Text className="text-4xl">🫙</Text>
+            </View>
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+              {t("pumping.side")}
+            </Text>
+            <View className="flex-row gap-2">
+              {(["left", "right", "both"] as const).map((s) => (
+                <Pressable
+                  key={s}
+                  onPress={() => setSide(s)}
+                  className={`flex-1 py-3 rounded-button-lg items-center ${
+                    side === s
+                      ? ""
+                      : "bg-surface-secondary dark:bg-surface-dark-secondary"
+                  }`}
+                  style={
+                    side === s ? { backgroundColor: PUMPING_BLUE } : undefined
+                  }
+                >
+                  <Text
+                    className={`text-base font-medium ${
+                      side === s
+                        ? "text-white"
+                        : "text-content-primary dark:text-content-dark-primary"
+                    }`}
+                  >
+                    {t(`feeding.${s}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <StartEndTimeSection
+            startTime={startTime}
+            endTime={endTime}
+            pausedSeconds={pausedSeconds}
+            onStartTimeChange={setStartTime}
+            onEndTimeChange={setEndTime}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            timeFormat={timeFormat}
+            startLabel={t("pumping.startTime")}
+            endLabel={t("pumping.endTime")}
+            durationLabel={t("pumping.duration")}
+            doneLabel={t("common.done")}
+            selectDateLabel={t("feeding.selectDate")}
+            selectTimeLabel={t("feeding.selectTime")}
+            accentColor={PUMPING_BLUE}
+            mutedBackgroundColor={PUMPING_BLUE_MUTED}
+            textColor="#2D2A26"
+            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+            durationError={
+              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
+            }
+          />
+
+          <View className="mb-4">
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+              {t("pumping.amount")} ({t("feeding.ml")})
+            </Text>
+            <TextInput
+              value={volumeMl}
+              onChangeText={setVolumeMl}
+              placeholder="0"
+              keyboardType="number-pad"
+              className="h-14 px-4 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-lg text-content-primary dark:text-content-dark-primary"
+              placeholderTextColor="#999"
+            />
+            {errors.volumeMl && (
+              <Text className="text-red-500 text-sm mt-2">
+                {te(t, errors.volumeMl)}
+              </Text>
+            )}
+          </View>
+
+          <View>
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+              {t("common.notes")} ({t("common.optional")})
+            </Text>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder={t("feeding.notesPlaceholder")}
+              multiline
+              numberOfLines={3}
+              className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
+              placeholderTextColor="#999"
+              textAlignVertical="top"
+            />
+          </View>
+        </ScrollView>
+
+        <View className="px-6 pb-6">
+          <Pressable
+            onPress={handleSave}
+            disabled={!canSave || isSaving}
+            className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
+              !canSave || isSaving ? "opacity-50" : ""
+            }`}
+            style={{ backgroundColor: PUMPING_BLUE }}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.save")}
+            accessibilityState={{ disabled: !canSave || isSaving }}
+          >
+            <Text className="text-white text-lg font-semibold">
+              {isSaving ? t("common.loading") : t("common.save")}
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

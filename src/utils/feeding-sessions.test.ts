@@ -1,6 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { countFeedingSessions, computeSuggestedSide } from "./feeding-sessions";
+import { createFeedingTimerAdapter } from "@/services/timer-adapters/feeding-timer-adapter";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+
+vi.mock("@/services/live-activity-service", () => ({}));
+vi.mock("@/services/active-timer-service", () => ({}));
+vi.mock("@/services/timer-conflict-notice", () => ({}));
+vi.mock("@/services/timer-completion-service", () => ({}));
+vi.mock("@/services/timer-lock-reconciliation", () => ({}));
+vi.mock("@/services/timer-stop-coordinator", () => ({}));
+vi.mock("@react-native-async-storage/async-storage", () => ({ default: {} }));
+vi.mock("react-native", () => ({ Alert: { alert: vi.fn() }, NativeModules: {}, Platform: { OS: "ios" } }));
 
 function makeFeeding(overrides: Partial<StoredFeedingEntry> & { startedAt: string }): StoredFeedingEntry {
   return {
@@ -97,6 +107,38 @@ describe("countFeedingSessions", () => {
 });
 
 describe("computeSuggestedSide", () => {
+  it("suggests right after nursing 1 minute right, pausing 3, and nursing 5 left", () => {
+    const adapter = createFeedingTimerAdapter({
+      babyId: "baby1",
+      dispatchRestoreTimer: vi.fn(),
+    });
+    const input = adapter.buildRecord(
+      new Date("2026-10-13T08:00:00Z"),
+      new Date("2026-10-13T08:09:00Z"),
+      {
+        side: "left",
+        type: "breast",
+        isPaused: false,
+        totalPausedMs: 180_000,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 60,
+        currentSideStartedAt: "2026-10-13T08:04:00Z",
+      }
+    );
+    const feeding = makeFeeding({
+      ...input,
+      startedAt: input.startedAt.toISOString(),
+      endedAt: input.endedAt?.toISOString(),
+    });
+    expect(feeding).toMatchObject({
+      durationSeconds: 360,
+      pausedSeconds: 180,
+      leftDurationSeconds: 300,
+      rightDurationSeconds: 60,
+    });
+    expect(computeSuggestedSide([feeding])).toBe("right");
+  });
+
   it("returns null for empty array", () => {
     expect(computeSuggestedSide([])).toBeNull();
   });

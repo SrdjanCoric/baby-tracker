@@ -20,7 +20,7 @@ import { getOppositeSide } from "@/constants/activities";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
 import { RunningTimerStartEditor } from "@/components/RunningTimerStartEditor";
 import { BoundedAndroidDateTimePicker } from "@/components/BoundedAndroidDateTimePicker";
-import { getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
+import { getPausedTimerStartUpperBound, getTimerStartBounds, normalizeTimerStartSelection, type TimerStartBounds } from "@/utils/timer-start-bounds";
 
 const PUMPING_BLUE = "#7B9BC9";
 const PUMPING_BLUE_MUTED = "#E8EDF5";
@@ -71,9 +71,9 @@ export default function PumpingScreen() {
       getTimerStartBounds(
         pumpings,
         new Date(),
-        activeTimer?.isPaused ? activeTimer.pausedAt : undefined
+        getPausedTimerStartUpperBound(activeTimer)
       ),
-    [activeTimer?.isPaused, activeTimer?.pausedAt, pumpings]
+    [activeTimer, pumpings]
   );
 
   const { checkAndSendAlert, resetAlert } = useTimerAlertIntegration("pumping");

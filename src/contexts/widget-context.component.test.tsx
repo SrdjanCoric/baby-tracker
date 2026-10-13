@@ -2,6 +2,8 @@ jest.mock("@/services/live-activity-push-token-service", () => ({
   startLiveActivityPushTokenSync: jest.fn(() => jest.fn()),
 }));
 import React from "react";
+import { createTummyTimeTimerAdapter } from "@/services/timer-adapters/tummy-time-timer-adapter";
+import type { StoredTummyTimeEntry } from "@/services/tummyTime-storage";
 import { act, render } from "@testing-library/react-native";
 
 const START = new Date("2026-08-06T10:00:00.000Z");
@@ -35,6 +37,7 @@ let mockTimerState: Omit<MockTimerState, "sleep"> & {
   sleep: MockTimerState["sleep"] | null;
 } = makeTimerState(false);
 let mockTick = 0;
+let mockTummyTimes: StoredTummyTimeEntry[] = [];
 const mockUseTimeRefresh = jest.fn(() => mockTick);
 let mockBaby: { id: string; name: string; birthDate?: string } = {
   id: "baby-1",
@@ -103,7 +106,7 @@ jest.mock("./growth-context", () => ({
 
 jest.mock("./tummyTime-context", () => ({
   useTummyTime: () => ({
-    tummyTimes: [],
+    tummyTimes: mockTummyTimes,
     activeTimer: mockTimerState.tummyTime,
     dailyGoalSeconds: 0,
   }),
@@ -143,6 +146,12 @@ jest.mock("@/services/live-activity-service", () => ({
   registerPushToStart: jest.fn(),
 }));
 
+jest.mock("@/services/active-timer-service", () => ({}));
+jest.mock("@/services/timer-completion-service", () => ({}));
+jest.mock("@/services/timer-lock-reconciliation", () => ({}));
+jest.mock("@/services/timer-stop-coordinator", () => ({}));
+jest.mock("@/services/timer-conflict-notice", () => ({}));
+
 import { updateWidgetData } from "@/services/widget-data-service";
 import { WidgetProvider, useWidget } from "./widget-context";
 
@@ -178,6 +187,7 @@ function activeTimers() {
       type: string;
       startTime: string;
       accumulatedSeconds?: number;
+      isPaused?: boolean;
       isRemote?: boolean;
       lockState?: string;
     }>,
@@ -195,11 +205,42 @@ describe("WidgetProvider running timer payload", () => {
     mockUseTimeRefresh.mockClear();
     (updateWidgetData as jest.Mock).mockClear();
     mockTick = 0;
+    mockTummyTimes = [];
     mockTimerState = makeTimerState(false);
     mockLocks = [];
     mockBaby = { id: "baby-1", name: "Sofi" };
     mockWakeWindowConfig = null;
     capturedJson = null;
+  });
+
+  it("publishes active tummy-time minutes from a saved paused session", () => {
+    jest.useFakeTimers().setSystemTime(new Date(2026, 7, 14, 13, 0));
+    try {
+      const endedAt = new Date();
+      endedAt.setHours(12, 30, 0, 0);
+      const startedAt = new Date(endedAt.getTime() - 30 * 60 * 1000);
+      const input = createTummyTimeTimerAdapter({
+        babyId: "baby-1",
+        dispatchRestoreTimer: jest.fn(),
+      }).buildRecord(startedAt, endedAt, {
+        isPaused: false,
+        totalPausedMs: 600_000,
+      });
+      mockTummyTimes = [
+        {
+          ...input,
+          id: "paused-tummy",
+          startedAt: startedAt.toISOString(),
+          endedAt: endedAt.toISOString(),
+          createdAt: endedAt.toISOString(),
+          updatedAt: endedAt.toISOString(),
+        },
+      ];
+      activeTimers();
+      expect(JSON.parse(capturedJson!).activities.tummyTime.todayMinutes).toBe(20);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("publishes the app clock preference for native prediction labels", () => {
@@ -272,6 +313,16 @@ describe("WidgetProvider running timer payload", () => {
       { type: "pumping", startTime: START.toISOString() },
       { type: "tummyTime", startTime: START.toISOString() },
     ]);
+  });
+
+  it("omits pause timestamps from the widget snapshot while preserving paused displays", () => {
+    mockTimerState = makeTimerState(true);
+    const timers = activeTimers().timers;
+    for (const timer of timers) {
+      expect(timer).not.toHaveProperty("pausedAt");
+      expect(timer.isPaused).toBe(true);
+      expect(timer.accumulatedSeconds).toBe(30 * 60);
+    }
   });
 
   it("freezes every paused timer at pausedAt minus the real start", () => {

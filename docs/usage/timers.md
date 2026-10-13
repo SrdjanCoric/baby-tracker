@@ -5,7 +5,8 @@ Timer types: feeding (breast), sleep, pumping, tummy time.
 ## Basic timer use
 
 - [ ] [Today] Start, pause, resume and stop from the Home card. — weak: src/components/DashboardCard.component.test.tsx
-- [x] [Today] A pause you resumed from still counts toward the duration. Stopping while paused ends the entry at the pause. — test: src/__tests__/external-timer-stop-providers.integration.test.tsx
+- [x] [Today] Sleep counts a pause you resumed from. Stopping while paused ends the entry at the pause. — test: src/services/timer-adapters/sleep-timer-adapter.test.ts; src/__tests__/external-timer-stop-providers.integration.test.tsx
+- [x] [Today] Breast feeding, pumping and tummy time exclude resumed pauses from the saved duration and store their total as `pausedSeconds`. An open pause is neither billed nor stored; stopping ends the entry at the pause. Breast feeding side minutes count nursing only. — test: src/services/timer-adapters/feeding-timer-adapter.test.ts; src/services/timer-adapters/pumping-timer-adapter.test.ts; src/services/timer-adapters/tummy-time-timer-adapter.test.ts; src/__tests__/external-timer-stop-providers.integration.test.tsx
 - [x] [Today] A running timer survives closing and reopening the app with the right elapsed time. — test: src/__tests__/external-timer-stop-providers.integration.test.tsx
 - [x] [Today] Breast feeding remembers the last finished side. — test: src/utils/feeding-sessions.test.ts
 
@@ -38,7 +39,7 @@ Timer types: feeding (breast), sleep, pumping, tummy time.
 - [ ] [Bug] Today the Live Activity is one per type, and starting B's timer ends A's. Switching back makes them flip-flop.
 - [ ] [Bug] Today a stop fallback can end that type's Live Activity for every baby.
 - [x] [Today] Members on iOS 17.2+ get a Live Activity started for timers others start (push-to-start). (Feature still in review.) — test: src/__tests__/live-activity-start-push.test.ts
-- [ ] [Bug] Today the Live Activity that the server sends to other members subtracts resumed pauses, so it shows less time than the saved entry. (Found by reading code.)
+- [ ] [Bug] Today the Live Activity that the server sends to other members subtracts resumed pauses from a sleep, so it shows less time than the saved sleep entry. (Found by reading code.)
 - [ ] [Bug] Today a Live Activity started from the Watch carries no baby or timer id, so it is not ended when someone else stops the timer. (Found by reading code.)
 
 ## Widget (iPhone)
@@ -49,3 +50,12 @@ Timer types: feeding (breast), sleep, pumping, tummy time.
 
 - [x] [Decided] The Watch is in scope for one baby: see, start, pause and stop that baby's timers. — test: src/hooks/useWatchMessageHandler.component.test.tsx
 - [x] [Limit] The Watch cannot switch babies. The phone sends it only one baby. — test: scripts/swift/watch-summary-tests.swift
+
+## Mixed app versions
+
+- [ ] [Limit] Older apps ignore the winning-row response when their timer completion loses to another device. Their local timing can remain different from the saved server entry on later pulls. Updated apps adopt the response when a completion loses; upgrading does not automatically repair an already acknowledged losing completion. — migration 074 and `src/services/sync/sync-engine.ts`.
+
+## Remote command timing
+
+- [ ] [Limit] Remote non-sleep pause/resume commands use their database receipt time. A Watch command delivered late can lose the real pause interval and count that interval as active time. — database-time policy; migration 073.
+- [ ] [Limit] Non-sleep pause math mixes two clocks. The app writes start, side and in-app pause times with the phone clock; remote pause and resume use the database clock. A phone clock that is off shifts pause totals and side seconds by that gap. If the gap is longer than the time before a remote pause, the entry comes out as zero and is discarded. — migration 073; `src/services/timer-lifecycle.ts`.

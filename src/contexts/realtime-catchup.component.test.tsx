@@ -5,6 +5,7 @@ jest.unmock('./sync-context');
 jest.unmock('@/services/foreground-refresh-coordinator');
 const mockAuth = { householdId: 'household-1', userId: 'caregiver-1' };
 const mockEngine = {
+  onRemoteChange: jest.fn(() => jest.fn()),
   subscribe: jest.fn(() => jest.fn()), initialize: jest.fn().mockResolvedValue(undefined),
   getAuthContext: jest.fn(() => mockAuth as typeof mockAuth | null),
   getPendingCount: jest.fn(() => 0), getState: jest.fn(() => ({ isConnected: true })),

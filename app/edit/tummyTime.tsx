@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import { calculateActiveDurationSeconds, getEditablePausedSeconds } from "@/utils/timer-duration";
 import { useTummyTime } from "@/contexts/tummyTime-context";
 import { useBaby, useTimeFormat } from "@/contexts";
 import { exitModal } from "@/navigation";
@@ -51,6 +52,8 @@ export default function EditTummyTimeScreen() {
     }
   }, [tummyTime, isInitialized]);
 
+  const pausedSeconds = getEditablePausedSeconds(tummyTime);
+
   const startChanged = Boolean(
     tummyTime && startTime &&
       startTime.getTime() !== new Date(tummyTime.startedAt).getTime()
@@ -93,6 +96,7 @@ export default function EditTummyTimeScreen() {
         babyId: tummyTime.babyId,
         startedAt: startTime,
         endedAt: endTime,
+        pausedSeconds,
       });
       if (!validation.isValid) {
         setErrors(validation.errors);
@@ -127,7 +131,11 @@ export default function EditTummyTimeScreen() {
         input.startedAt = startTime;
         if (tummyTime.endedAt || endChanged) {
           input.endedAt = endTime;
-          input.durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+          input.durationSeconds = calculateActiveDurationSeconds(
+            startTime,
+            endTime,
+            pausedSeconds
+          );
         }
       }
       await updateTummyTime(tummyTime.id, input);
@@ -136,7 +144,7 @@ export default function EditTummyTimeScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, tummyTime, startTime, endTime, endChanged, timeChanged, notes, checkAndConfirmTummyTime, tummyTimes, updateTummyTime, router]);
+  }, [selectedBaby, tummyTime, pausedSeconds, startTime, endTime, endChanged, timeChanged, notes, checkAndConfirmTummyTime, tummyTimes, updateTummyTime, router]);
 
   const handleDelete = useCallback(() => {
     if (!tummyTime) return;
@@ -161,21 +169,37 @@ export default function EditTummyTimeScreen() {
   const startBounds = useCallback(() => {
     const boundaryNow = Date.now();
     return {
-      maximumDate: new Date(Math.min(
-        boundaryNow,
-        (endTime?.getTime() ?? boundaryNow + MINIMUM_TUMMY_TIME_MS) - MINIMUM_TUMMY_TIME_MS
-      )),
+      maximumDate: new Date(
+        Math.min(
+          boundaryNow,
+          (endTime?.getTime() ?? boundaryNow + MINIMUM_TUMMY_TIME_MS) -
+            MINIMUM_TUMMY_TIME_MS -
+            pausedSeconds * 1000
+        )
+      ),
     };
-  }, [endTime]);
+  }, [endTime, pausedSeconds]);
   const endBounds = useCallback(() => {
     const boundaryNow = Date.now();
     const startTimestamp = startTime?.getTime() ?? boundaryNow;
-    const maximumTimestamp = Math.min(boundaryNow, startTimestamp + MAXIMUM_TUMMY_TIME_MS);
+    const maximumTimestamp = Math.min(
+      boundaryNow,
+      startTimestamp +
+        MAXIMUM_TUMMY_TIME_MS +
+        pausedSeconds * 1000
+    );
     return {
-      minimumDate: new Date(Math.min(startTimestamp + MINIMUM_TUMMY_TIME_MS, maximumTimestamp)),
+      minimumDate: new Date(
+        Math.min(
+          startTimestamp +
+            MINIMUM_TUMMY_TIME_MS +
+            pausedSeconds * 1000,
+          maximumTimestamp
+        )
+      ),
       maximumDate: new Date(maximumTimestamp),
     };
-  }, [startTime]);
+  }, [startTime, pausedSeconds]);
 
   if (!selectedBaby || !tummyTime || !startTime || !endTime) {
     return (
@@ -188,11 +212,18 @@ export default function EditTummyTimeScreen() {
   }
 
   const now = new Date();
-  const durationMs = endTime.getTime() - startTime.getTime();
-  const canSave = !timeChanged || (
-    durationMs >= MINIMUM_TUMMY_TIME_MS && durationMs <= MAXIMUM_TUMMY_TIME_MS &&
-    startTime <= now && endTime <= now
-  );
+  const durationMs =
+    calculateActiveDurationSeconds(
+      startTime,
+      endTime,
+      pausedSeconds
+    ) * 1000;
+  const canSave =
+    !timeChanged ||
+    (durationMs >= MINIMUM_TUMMY_TIME_MS &&
+      durationMs <= MAXIMUM_TUMMY_TIME_MS &&
+      startTime <= now &&
+      endTime <= now);
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark" testID="edit-activity-screen">
@@ -229,81 +260,81 @@ export default function EditTummyTimeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-6 pb-6"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Icon */}
-        <View className="items-center mb-6">
-          <View
-            className="w-20 h-20 rounded-full items-center justify-center"
-            style={{ backgroundColor: TUMMY_TIME_ORANGE_MUTED }}
-          >
-            <Text className="text-4xl">💪</Text>
-          </View>
-        </View>
-
-        <StartEndTimeSection
-          startTime={startTime}
-          endTime={endTime}
-          onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
-          startBounds={startBounds}
-          endBounds={endBounds}
-          timeFormat={timeFormat}
-          startLabel={t("tummyTime.startTime")}
-          endLabel={t("tummyTime.endTime")}
-          durationLabel={t("tummyTime.duration")}
-          doneLabel={t("common.done")}
-          selectDateLabel={t("feeding.selectDate")}
-          selectTimeLabel={t("feeding.selectTime")}
-          accentColor={TUMMY_TIME_ORANGE}
-          mutedBackgroundColor={TUMMY_TIME_ORANGE_MUTED}
-          textColor="#2D2A26"
-          startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-          endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
-          durationError={errors.durationSeconds ? te(t, errors.durationSeconds) : undefined}
-        />
-
-        {/* Notes */}
-        <View>
-          <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
-            {t("common.notes")} ({t("common.optional")})
-          </Text>
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t("tummyTime.notesPlaceholder")}
-            multiline
-            numberOfLines={3}
-            className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
-            placeholderTextColor="#999"
-            textAlignVertical="top"
-            testID="notes-input"
-          />
-        </View>
-      </ScrollView>
-
-      {/* Save Button */}
-      <View className="px-6 pb-6">
-        <Pressable
-          onPress={handleSave}
-          disabled={!canSave || isSaving}
-          className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-            !canSave || isSaving ? "opacity-50" : ""
-          }`}
-          style={{ backgroundColor: TUMMY_TIME_ORANGE }}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.save")}
-          accessibilityState={{ disabled: !canSave || isSaving }}
-          testID="save-button"
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-6 pb-6"
+          showsVerticalScrollIndicator={false}
         >
-          <Text className="text-white text-lg font-semibold">
-            {isSaving ? t("common.loading") : t("common.save")}
-          </Text>
-        </Pressable>
-      </View>
+          <View className="items-center mb-6">
+            <View
+              className="w-20 h-20 rounded-full items-center justify-center"
+              style={{ backgroundColor: TUMMY_TIME_ORANGE_MUTED }}
+            >
+              <Text className="text-4xl">💪</Text>
+            </View>
+          </View>
+
+          <StartEndTimeSection
+            startTime={startTime}
+            endTime={endTime}
+            pausedSeconds={pausedSeconds}
+            onStartTimeChange={setStartTime}
+            onEndTimeChange={setEndTime}
+            startBounds={startBounds}
+            endBounds={endBounds}
+            timeFormat={timeFormat}
+            startLabel={t("tummyTime.startTime")}
+            endLabel={t("tummyTime.endTime")}
+            durationLabel={t("tummyTime.duration")}
+            doneLabel={t("common.done")}
+            selectDateLabel={t("feeding.selectDate")}
+            selectTimeLabel={t("feeding.selectTime")}
+            accentColor={TUMMY_TIME_ORANGE}
+            mutedBackgroundColor={TUMMY_TIME_ORANGE_MUTED}
+            textColor="#2D2A26"
+            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
+            durationError={
+              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
+            }
+          />
+
+          <View>
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
+              {t("common.notes")} ({t("common.optional")})
+            </Text>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder={t("tummyTime.notesPlaceholder")}
+              multiline
+              numberOfLines={3}
+              className="h-24 px-4 py-3 bg-surface-secondary dark:bg-surface-dark-secondary rounded-button-lg text-base text-content-primary dark:text-content-dark-primary"
+              placeholderTextColor="#999"
+              textAlignVertical="top"
+              testID="notes-input"
+            />
+          </View>
+        </ScrollView>
+
+        <View className="px-6 pb-6">
+          <Pressable
+            onPress={handleSave}
+            disabled={!canSave || isSaving}
+            className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
+              !canSave || isSaving ? "opacity-50" : ""
+            }`}
+            style={{ backgroundColor: TUMMY_TIME_ORANGE }}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.save")}
+            accessibilityState={{ disabled: !canSave || isSaving }}
+            testID="save-button"
+          >
+            <Text className="text-white text-lg font-semibold">
+              {isSaving ? t("common.loading") : t("common.save")}
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

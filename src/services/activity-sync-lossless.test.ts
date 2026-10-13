@@ -1,5 +1,9 @@
+import { TummyTimeStorageService } from "./tummyTime-storage";
+import { PumpingStorageService } from "./pumping-storage";
+import { FeedingStorageService } from "./feeding-storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createImportedActivityBatch,
   createFeedingInDatabase,
   createGrowthInDatabase,
   createPumpingInDatabase,
@@ -18,6 +22,7 @@ import {
   fetchSleepFromDatabase,
   fetchTummyTimeFromDatabase,
   retainRemoteMilestoneResponse,
+  retainCompletedTimerRow,
   syncGuestActivitiesToDatabase,
   updateDiaperInDatabase,
   updateFeedingInDatabase,
@@ -27,7 +32,8 @@ import {
   upsertMilestoneResponseInDatabase,
 } from "./activity-sync-service";
 import { setStorageUserId } from "./storage-prefix";
-import { __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getCrdtSync, __resetCrdtSyncForTests } from "./sync/crdt-sync-instance";
 import { __resetDeviceIdForTests } from "./sync/device-id";
 import { SyncEngine } from "./sync/sync-engine";
 import type { OperationType } from "./sync/types";
@@ -287,6 +293,256 @@ describe("lossless activity sync", () => {
     rpcMock.mockResolvedValue({ error: null });
     __resetCrdtSyncForTests();
     __resetDeviceIdForTests();
+  });
+
+  it.each([
+    {
+      table: "feedings",
+      key: "@feedings:baby-1",
+      create: (input: import("./feeding-storage").CreateFeedingInput) =>
+        createFeedingInDatabase({ ...input, type: "breast" }, "user-1"),
+      fetch: fetchFeedingsFromDatabase,
+    },
+    {
+      table: "pumping_sessions",
+      key: "@pumpings:baby-1",
+      create: (input: import("./pumping-storage").CreatePumpingInput) =>
+        createPumpingInDatabase({ ...input, side: "both" }, "user-1"),
+      fetch: fetchPumpingFromDatabase,
+    },
+    {
+      table: "tummy_time_sessions",
+      key: "@tummyTimes:baby-1",
+      create: (input: import("./tummyTime-storage").CreateTummyTimeInput) =>
+        createTummyTimeInDatabase(input, "user-1"),
+      fetch: fetchTummyTimeFromDatabase,
+    },
+  ])(
+    "round-trips stored active and paused seconds through $table sync",
+    async ({ table, key, create, fetch }) => {
+      const input = {
+        id: "paused-record-1",
+        babyId: "baby-1",
+        type: "breast" as const,
+        side: "both" as const,
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+        endedAt: new Date("2026-07-14T09:09:00.000Z"),
+        durationSeconds: 360,
+        pausedSeconds: 180,
+      };
+      expect(await create(input)).toMatchObject({
+        durationSeconds: 360,
+        pausedSeconds: 180,
+      });
+      const [operation] = vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)
+        .mock.calls[0];
+      expect(operation).toMatchObject({
+        table,
+        data: { duration_seconds: 360, paused_seconds: 180 },
+      });
+      // The queued write is the producer of the server-shaped read fixture.
+      serverRows = [
+        {
+          ...operation.data,
+          updated_at: "2026-07-14T09:09:00.000Z",
+          field_clocks: {},
+        },
+      ];
+      pendingOperations.clear();
+      storage.delete(key);
+      expect(await fetch("baby-1")).toEqual([
+        expect.objectContaining({ durationSeconds: 360, pausedSeconds: 180 }),
+      ]);
+    }
+  );
+
+  it.each([
+    { table: "feedings", fetch: fetchFeedingsFromDatabase },
+    { table: "pumping_sessions", fetch: fetchPumpingFromDatabase },
+    { table: "tummy_time_sessions", fetch: fetchTummyTimeFromDatabase },
+  ])(
+    "reads absent or null pauses as zero without changing old $table duration",
+    async ({ fetch }) => {
+      serverRows = [undefined, null].map((pausedSeconds, index) => ({
+        id: `legacy-${index}`,
+        baby_id: "baby-1",
+        type: "breast",
+        side: "both",
+        started_at: "2026-07-14T09:00:00.000Z",
+        ended_at: "2026-07-14T09:09:00.000Z",
+        duration_seconds: 540,
+        ...(pausedSeconds === undefined ? {} : { paused_seconds: pausedSeconds }),
+        created_at: "2026-07-14T09:00:00.000Z",
+        updated_at: "2026-07-14T09:09:00.000Z",
+        field_clocks: {},
+      }));
+      expect(await fetch("baby-1")).toEqual([
+        expect.objectContaining({ durationSeconds: 540, pausedSeconds: 0 }),
+        expect.objectContaining({ durationSeconds: 540, pausedSeconds: 0 }),
+      ]);
+    }
+  );
+
+  it.each(["feedings", "pumping_sessions", "tummy_time_sessions"] as const)(
+    "preserves stored pauses through the existing $table entry import batch and its durable queue",
+    async (table) => {
+      const entries = [
+        await createFeedingInDatabase(
+          {
+            babyId: "source-baby",
+            type: "breast",
+            startedAt: new Date("2026-07-14T09:00:00Z"),
+            durationSeconds: 360,
+            pausedSeconds: 180,
+          },
+          "user-1"
+        ),
+        await createPumpingInDatabase(
+          {
+            babyId: "source-baby",
+            side: "both",
+            startedAt: new Date("2026-07-14T09:00:00Z"),
+            durationSeconds: 360,
+            pausedSeconds: 180,
+          },
+          "user-1"
+        ),
+        await createTummyTimeInDatabase(
+          {
+            babyId: "source-baby",
+            startedAt: new Date("2026-07-14T09:00:00Z"),
+            durationSeconds: 360,
+            pausedSeconds: 180,
+          },
+          "user-1"
+        ),
+      ];
+      const engine = new SyncEngine();
+      syncEngine = engine;
+      await engine.initialize();
+      engine.setAuthContext({ userId: "user-1", householdId: "household-1" });
+      try {
+        const index = [
+          "feedings",
+          "pumping_sessions",
+          "tummy_time_sessions",
+        ].indexOf(table);
+        expect(
+          await createImportedActivityBatch(
+            table,
+            "import-baby",
+            [{ ...entries[index], babyId: "import-baby" }] as never,
+            "user-1"
+          )
+        ).toBe(1);
+        const queued = JSON.parse(storage.get("@sync_queue")!).operations;
+        expect(queued).toHaveLength(1);
+        for (const operation of queued) {
+          expect(operation.data).toMatchObject({
+            duration_seconds: 360,
+            paused_seconds: 180,
+          });
+        }
+      } finally {
+        engine.destroy();
+      }
+    }
+  );
+
+  it("stores zero pauses for manual entries and reads legacy local entries without backfilling them", async () => {
+    const startedAt = new Date("2026-07-14T09:00:00Z");
+    const input = {
+      babyId: "baby-1",
+      startedAt,
+      endedAt: new Date("2026-07-14T09:09:00Z"),
+      durationSeconds: 540,
+    };
+    const manualEntries = [
+      await FeedingStorageService.addFeeding({ ...input, type: "breast" }),
+      await PumpingStorageService.addPumping({ ...input, side: "both" }),
+      await TummyTimeStorageService.addTummyTime(input),
+    ];
+    const readers = [
+      FeedingStorageService.getAllFeedings,
+      PumpingStorageService.getAllPumpings,
+      TummyTimeStorageService.getAllTummyTimes,
+    ];
+    const keys = ["@feedings:baby-1", "@pumpings:baby-1", "@tummyTimes:baby-1"];
+    for (const [index, entry] of manualEntries.entries()) {
+      expect(entry).toMatchObject({
+        startedAt: startedAt.toISOString(),
+        durationSeconds: 540,
+        pausedSeconds: 0,
+      });
+      const legacy = { ...entry };
+      delete legacy.pausedSeconds;
+      const raw = JSON.stringify([legacy]);
+      storage.set(keys[index], raw);
+      expect(await readers[index]("baby-1")).toEqual([
+        expect.objectContaining({ durationSeconds: 540, pausedSeconds: 0 }),
+      ]);
+      expect(storage.get(keys[index])).toBe(raw);
+    }
+  });
+
+  it("promotes legacy guest entries with zero paused seconds", async () => {
+    const entry = {
+      id: "legacy-guest",
+      babyId: "guest-baby",
+      startedAt: "2026-07-14T09:00:00Z",
+      endedAt: "2026-07-14T09:09:00Z",
+      durationSeconds: 540,
+      createdAt: "2026-07-14T09:09:00Z",
+      updatedAt: "2026-07-14T09:09:00Z",
+    };
+    storage.set(
+      "@feedings:guest-baby",
+      JSON.stringify([{ ...entry, type: "breast" }]),
+    );
+    storage.set(
+      "@pumpings:guest-baby",
+      JSON.stringify([{ ...entry, side: "both" }]),
+    );
+    storage.set("@tummyTimes:guest-baby", JSON.stringify([entry]));
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "household-baby"]]),
+    );
+    const operations = vi
+      .mocked(syncEngine!.enqueueOperation)
+      .mock.calls.map(([operation]) => operation);
+    expect(operations).toHaveLength(3);
+    for (const operation of operations)
+      expect(operation.data.paused_seconds).toBe(0);
+  });
+
+
+  it("keeps pause totals when guest entries are promoted to the household", async () => {
+    const input = {
+      babyId: "guest-baby",
+      startedAt: new Date("2026-07-14T09:00:00Z"),
+      endedAt: new Date("2026-07-14T09:09:00Z"),
+      durationSeconds: 360,
+      pausedSeconds: 180,
+    };
+    await FeedingStorageService.addFeeding({ ...input, type: "breast" });
+    await PumpingStorageService.addPumping({ ...input, side: "both" });
+    await TummyTimeStorageService.addTummyTime(input);
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "household-baby"]])
+    );
+    const operations = vi
+      .mocked(syncEngine!.enqueueOperation)
+      .mock.calls.map(([operation]) => operation);
+    expect(operations).toHaveLength(3);
+    for (const operation of operations) {
+      expect(operation.data).toMatchObject({
+        baby_id: "household-baby",
+        duration_seconds: 360,
+        paused_seconds: 180,
+      });
+    }
   });
 
   it("preserves confirmed sleep classification when pulling a caregiver update", async () => {
@@ -956,6 +1212,63 @@ describe("lossless activity sync", () => {
     await expect(pulling).resolves.toEqual([created]);
     expect(JSON.parse(storage.get("@feedings:baby-1")!)).toEqual([created]);
   });
+
+  it("keeps winning completion storage when a pull captured the losing shadow", async () => {
+    setStorageUserId("user-1");
+    const engine = makeRealSyncEngine();
+    syncEngine = engine;
+    const crdt = await getCrdtSync();
+    engine.setCrdtSync(crdt);
+    const row = { id: "feeding-1", baby_id: "baby-1", type: "breast",
+      started_at: "2026-07-14T09:00:00.000Z", ended_at: "2026-07-14T09:05:00.000Z",
+      duration_seconds: 300, paused_seconds: 0,
+      updated_at: "2026-07-14T09:05:00.000Z",
+      field_clocks: { duration_seconds: "2026-07-14T09:05:00.000Z-0000-winner" } };
+    await engine.enqueueOperation({ id: "losing-completion", type: "CREATE", table: "feedings",
+      entityId: row.id, data: { ...row, duration_seconds: 180 },
+      timestamp: new Date().toISOString(), retryCount: 0,
+      timerCompletion: { timerInstanceId: "timer-1", startedAt: row.started_at } });
+    serverRows = [row];
+    rpcMock.mockResolvedValue({ data: { preserved: true, row }, error: null });
+    const gate = deferred<void>();
+    const started = deferred<void>();
+    let gateNext = true;
+    vi.mocked(AsyncStorage.getItem).mockImplementation(async key => {
+      const captured = storage.get(key) ?? null;
+      if (gateNext && key === "@crdt_shadow:feedings:feeding-1") {
+        gateNext = false; started.resolve(); await gate.promise;
+      }
+      return captured;
+    });
+    const pulling = fetchFeedingsFromDatabase("baby-1");
+    await started.promise;
+    engine.setOnlineForTesting(true);
+    const pushing = engine.sync();
+    await vi.waitFor(() => expect(rpcMock).toHaveBeenCalled());
+    await new Promise(resolve => setTimeout(resolve, 0));
+    gate.resolve();
+    await Promise.all([pulling, pushing]);
+    expect(JSON.parse(storage.get("@feedings:baby-1:user-1")!)[0].durationSeconds).toBe(300);
+    expect((await crdt.getShadow("feedings", row.id))?.duration_seconds).toBe(300);
+    engine.destroy();
+  });
+
+  it.each(["tombstone", "UPDATE", "DELETE"])(
+    "retains a preserved completion safely with %s", async (state) => {
+      const local = state === "DELETE" ? [] : [localFeeding];
+      storage.set("@feedings:baby-1", JSON.stringify(local));
+      if (state !== "tombstone") pendingOperations.set("feeding-1", state as OperationType);
+      const applied = await retainCompletedTimerRow("feedings", {
+        id: "feeding-1", baby_id: "baby-1", type: "breast",
+        started_at: "2026-07-14T09:00:00.000Z", notes: "stale server notes",
+        deleted: state === "tombstone",
+      }, "", () => {});
+      expect(JSON.parse(storage.get("@feedings:baby-1")!)).toEqual(
+        state === "UPDATE" ? [localFeeding] : []
+      );
+      expect(applied).toBe(state === "tombstone");
+    }
+  );
 
   it("keeps a pending local update visible instead of replacing it with pulled server state", async () => {
     serverRows = [{

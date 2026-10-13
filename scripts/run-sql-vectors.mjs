@@ -406,40 +406,43 @@ async function runHouseholdTimerCompletionConcurrencyTest() {
           ${sqlLiteral({ timerInstanceId: timerId })});
       `,
       ]);
-      const worker = (user, holdSeconds) => {
+      const worker = (user, holdSeconds, durationSeconds, clockTime) => {
+        const winningCandidate = { ...record, logged_by: user,
+          duration_seconds: durationSeconds,
+          ended_at: new Date(new Date(startedAt).getTime() + durationSeconds * 1000).toISOString() };
+        const clocks = Object.fromEntries(Object.keys(winningCandidate).map(field =>
+          [field, `${clockTime}-0000-${user}`]));
         const call = `SELECT public.merge_record_and_complete_timer('${table}',
-          ${sqlLiteral({ ...record, logged_by: user })}, '{}'::jsonb,
+          ${sqlLiteral(winningCandidate)}, ${sqlLiteral(clocks)},
           '${operationId}-${activity}', '${user}', '${timerId}', '${startedAt}');`;
         return {
-          call,
-          run: () =>
-            execFileAsync("psql", [
-              DB_URL,
-              "-X",
-              "-v",
-              "ON_ERROR_STOP=1",
-              "-q",
-              "-c",
-              `
-            BEGIN;
-            SET LOCAL ROLE authenticated;
-            SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
-            ${call}
-            SELECT pg_sleep(${holdSeconds});
-            COMMIT;
-          `,
-            ]),
+          call, record: winningCandidate,
+          run: (onWritten = () => {}) => new Promise((resolve, reject) => {
+            const child = execFile("psql", [DB_URL, "-X", "-v", "ON_ERROR_STOP=1", "-q", "-c", `
+              BEGIN;
+              SET LOCAL ROLE authenticated;
+              SELECT set_config('request.jwt.claims', ${sqlLiteral({ sub: user })}::text, true);
+              ${call}
+              SELECT 'completion-written';
+              SELECT pg_sleep(${holdSeconds});
+              COMMIT;
+            `], (error, stdout) => error ? reject(error) : resolve(stdout));
+            let output = "";
+            child.stdout.on("data", chunk => {
+              output += chunk;
+              if (output.includes("completion-written")) { onWritten(); onWritten = () => {}; }
+            });
+          }),
         };
       };
-      const memberWorker = worker(member, 0.4);
-      const ownerWorker = worker(CC.user, 0);
-      // Match the existing merge concurrency seam: keep one write transaction open while the other runs.
-      const results = await Promise.allSettled([
-        memberWorker.run(),
-        ownerWorker.run(),
-      ]);
-      for (const result of results)
-        if (result.status === "rejected") throw result.reason;
+      const memberWorker = worker(member, 0.4, 300, "2026-07-04T10:05:00.000Z");
+      const ownerWorker = worker(CC.user, 0, 420, "2026-07-04T10:07:00.000Z");
+      let signalWritten;
+      const firstWritten = new Promise(resolve => { signalWritten = resolve; });
+      const first = memberWorker.run(signalWritten);
+      // The first RPC holds the completion lock until COMMIT; the second writer must wait.
+      await Promise.race([firstWritten, first.then(() => { throw new Error("Missing first-write signal"); })]);
+      await Promise.all([first, ownerWorker.run()]);
       // An offline replay from either caregiver has the same operation identity.
       for (const [user, completion] of [
         [CC.user, ownerWorker],
@@ -456,6 +459,16 @@ async function runHouseholdTimerCompletionConcurrencyTest() {
           COMMIT;
         `,
         ]);
+      }
+      if (activity !== "sleep") {
+        const timing = JSON.parse(psql(["-At", "-c", `SELECT json_build_object(
+          'duration', duration_seconds, 'end', ended_at, 'loggedBy', logged_by)
+          FROM public.${table} WHERE id = '${CC.feeding}';`]).trim());
+        if (timing.duration !== memberWorker.record.duration_seconds ||
+            new Date(timing.end).getTime() !== new Date(memberWorker.record.ended_at).getTime() ||
+            timing.loggedBy !== member) {
+          return { ok: false, detail: `${activity}: second completion overwrote first timing: ${JSON.stringify(timing)}` };
+        }
       }
       const state = psql([
         "-At",
@@ -657,6 +670,28 @@ try {
   console.log(`${RED}✗ atomic timer completion tests failed${RESET}`);
   process.stdout.write((err.stdout || "") + (err.stderr || ""));
   hardFail = true;
+}
+
+for (const [file, description] of [
+  [
+    "non-sleep-pause-tests.sql",
+    "non-sleep pause accounting: duplicate pauses and server clock boundaries",
+  ],
+  [
+    "non-sleep-paused-seconds-tests.sql",
+    "non-sleep pause columns: legacy RPC compatibility and constraints",
+  ],
+]) {
+  console.log("");
+  try {
+    const out = psql(["-f", join(ROOT, "scripts/sql", file)]);
+    console.log(`${GREEN}✓${RESET} ${description}`);
+    process.stdout.write(out);
+  } catch (err) {
+    console.log(`${RED}✗ ${description} failed${RESET}`);
+    process.stdout.write((err.stdout || "") + (err.stderr || ""));
+    hardFail = true;
+  }
 }
 
 console.log("");

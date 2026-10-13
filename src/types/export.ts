@@ -79,6 +79,7 @@ export const FEEDING_CSV_COLUMNS: CSVColumn[] = [
   { key: "reaction", header: "Reaction" },
   { key: "notes", header: "Notes" },
   { key: "loggedBy", header: "Logged By" },
+  { key: "pausedSeconds", header: "Paused (seconds)" },
 ];
 
 export const SLEEP_CSV_COLUMNS: CSVColumn[] = [
@@ -108,6 +109,7 @@ export const PUMPING_CSV_COLUMNS: CSVColumn[] = [
   { key: "side", header: "Side" },
   { key: "notes", header: "Notes" },
   { key: "loggedBy", header: "Logged By" },
+  { key: "pausedSeconds", header: "Paused (seconds)" },
 ];
 
 export const GROWTH_CSV_COLUMNS: CSVColumn[] = [
@@ -125,4 +127,5 @@ export const TUMMY_TIME_CSV_COLUMNS: CSVColumn[] = [
   { key: "duration", header: "Duration" },
   { key: "notes", header: "Notes" },
   { key: "loggedBy", header: "Logged By" },
+  { key: "pausedSeconds", header: "Paused (seconds)" },
 ];

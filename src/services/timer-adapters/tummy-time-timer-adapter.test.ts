@@ -32,6 +32,7 @@ vi.mock("../timer-conflict-notice", () => ({
 
 vi.mock("../timer-completion-service", () => ({
   acceptTimerCompletion: vi.fn(),
+  discardTimerCompletion: vi.fn(),
   isTimerCompletionSecured: vi.fn(),
   markTimerCompletionDurable: vi.fn(),
   resolveTimerIdentity: vi.fn(),
@@ -62,7 +63,7 @@ vi.mock("react-native", () => ({
 }));
 
 describe("tummy time timer adapter", () => {
-  it("counts a resumed pause in the bare tummy time span", () => {
+  it("excludes and stores a resumed pause in the bare tummy time span", () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -82,9 +83,52 @@ describe("tummy time timer adapter", () => {
       babyId: "baby-1",
       startedAt,
       endedAt,
-      durationSeconds: 123,
+      durationSeconds: 120,
+      pausedSeconds: 3,
     });
   });
+
+  it.each([
+    {
+      label: "never paused",
+      isPaused: false,
+      totalPausedMs: 0,
+      durationSeconds: 180,
+      pausedSeconds: 0,
+    },
+    {
+      label: "resumed multiple pauses",
+      isPaused: false,
+      totalPausedMs: 20_000 + 10_000,
+      durationSeconds: 150,
+      pausedSeconds: 30,
+    },
+    {
+      label: "paused now after an earlier pause",
+      isPaused: true,
+      totalPausedMs: 30_000,
+      durationSeconds: 150,
+      pausedSeconds: 30,
+    },
+  ])(
+    "saves $label",
+    ({ label: _label, durationSeconds, pausedSeconds, ...payload }) => {
+      const adapter = createTummyTimeTimerAdapter({
+        babyId: "baby-1",
+        dispatchRestoreTimer: vi.fn(),
+      });
+      const startedAt = new Date("2026-08-05T12:00:00.000Z");
+      const endedAt = new Date("2026-08-05T12:03:00.000Z");
+      expect(
+        adapter.buildRecord(startedAt, endedAt, { ...payload })
+      ).toMatchObject({
+        startedAt,
+        endedAt,
+        durationSeconds,
+        pausedSeconds,
+      });
+    }
+  );
 
   it("round-trips today's timer_data payload without inventing pausedAt", () => {
     const adapter = createTummyTimeTimerAdapter({
@@ -205,7 +249,7 @@ describe("tummy time timer adapter", () => {
     }
   });
 
-  it("discards a sub-minute paused timer that loses restore reconciliation", async () => {
+  it("saves a sub-minute paused timer that loses restore reconciliation", async () => {
     const adapter = createTummyTimeTimerAdapter({
       babyId: "baby-1",
       dispatchRestoreTimer: vi.fn(),
@@ -270,10 +314,13 @@ describe("tummy time timer adapter", () => {
       errorLabel: "[TummyTimeContext]",
     });
 
-    expect(acceptTimerCompletion).not.toHaveBeenCalled();
-    expect(persistRecord).not.toHaveBeenCalled();
-    expect(markTimerCompletionDurable).not.toHaveBeenCalled();
-    expect(dispatchAddRecord).not.toHaveBeenCalled();
+    expect(acceptTimerCompletion).toHaveBeenCalled();
+    expect(persistRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ durationSeconds: 20 }),
+      expect.objectContaining({ activityId: "activity-1" })
+    );
+    expect(markTimerCompletionDurable).toHaveBeenCalled();
+    expect(dispatchAddRecord).toHaveBeenCalledWith({ id: "activity-1" });
     expect(dispatchStopTimer).toHaveBeenCalled();
     expect(adapter.storage.clearActiveTimer).toHaveBeenCalledWith("baby-1");
   });
@@ -382,22 +429,62 @@ describe("calculateTimerDurationSeconds", () => {
       calculateTimerDurationSeconds(
         startedAt,
         new Date("2026-08-05T11:59:59.000Z"),
-        0
+        0,
+        "sleep"
       )
     ).toBe(0);
     expect(
       calculateTimerDurationSeconds(
         startedAt,
         new Date("2026-08-05T12:00:03.999Z"),
-        0
+        0,
+        "sleep"
       )
     ).toBe(3);
     expect(
       calculateTimerDurationSeconds(
         startedAt,
         new Date("2026-08-05T12:00:08.750Z"),
-        2_500
+        2_500,
+        "sleep"
       )
     ).toBe(8);
   });
+});
+
+describe("bounded saved pause totals", () => {
+  it.each([
+    { pausedMs: -60_000, durationSeconds: 360, pausedSeconds: 0 },
+    { pausedMs: 600_000, durationSeconds: 0, pausedSeconds: 360 },
+  ])(
+    "bounds $pausedMs pause milliseconds to the saved interval",
+    ({ pausedMs, durationSeconds, pausedSeconds }) => {
+      const startedAt = new Date("2026-07-15T08:00:00.000Z");
+      const endedAt = new Date(startedAt.getTime() + 360_400);
+      const adapter = createTummyTimeTimerAdapter({
+        babyId: "baby-1",
+        dispatchRestoreTimer: vi.fn(),
+      });
+      const record = adapter.buildRecord(startedAt, endedAt, {
+        isPaused: false,
+        totalPausedMs: pausedMs,
+      });
+      expect(record).toMatchObject({ durationSeconds, pausedSeconds });
+    }
+  );
+});
+
+it("preserves whole wall seconds when rounding a resumed pause", () => {
+  const startedAt = new Date("2026-07-15T08:00:00.000Z");
+  const endedAt = new Date(startedAt.getTime() + 360_400);
+  const adapter = createTummyTimeTimerAdapter({
+    babyId: "baby-1",
+    dispatchRestoreTimer: vi.fn(),
+  });
+  const record = adapter.buildRecord(startedAt, endedAt, {
+    isPaused: false,
+    totalPausedMs: 180_700,
+  });
+  expect(record).toMatchObject({ durationSeconds: 180, pausedSeconds: 180 });
+  expect(record.durationSeconds! + record.pausedSeconds!).toBe(360);
 });

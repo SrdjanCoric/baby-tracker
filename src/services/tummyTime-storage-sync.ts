@@ -5,5 +5,6 @@ export interface SyncedTummyTimeEntry extends SyncableEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   notes?: string;
 }

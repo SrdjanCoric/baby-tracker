@@ -120,6 +120,7 @@ export function formatFeedingsAsCSV(
     "Reaction",
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
+    "Paused (seconds)",
   ];
 
   const rows = feedings.map((feeding) => {
@@ -136,6 +137,7 @@ export function formatFeedingsAsCSV(
       feeding.reaction || "",
       ...(includeNotes ? [feeding.notes || ""] : []),
       feeding.loggedBy || "",
+      feeding.pausedSeconds ?? 0,
     ];
     return generateCSVRow(values);
   });
@@ -220,6 +222,7 @@ export function formatPumpingAsCSV(
     "Side",
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
+    "Paused (seconds)",
   ];
 
   const rows = pumpings.map((pumping) => {
@@ -231,6 +234,7 @@ export function formatPumpingAsCSV(
       pumping.side,
       ...(includeNotes ? [pumping.notes || ""] : []),
       pumping.loggedBy || "",
+      pumping.pausedSeconds ?? 0,
     ];
     return generateCSVRow(values);
   });
@@ -290,6 +294,7 @@ export function formatTummyTimeAsCSV(
     "Duration",
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
+    "Paused (seconds)",
   ];
 
   const rows = tummyTimes.map((entry) => {
@@ -299,6 +304,7 @@ export function formatTummyTimeAsCSV(
       formatCSVDuration(entry.durationSeconds),
       ...(includeNotes ? [entry.notes || ""] : []),
       entry.loggedBy || "",
+      entry.pausedSeconds ?? 0,
     ];
     return generateCSVRow(values);
   });

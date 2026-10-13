@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { withTableReconciliation } from "./sync/crdt-sync";
 import { withStorageLock } from "./activity-storage-lock";
 import { getImportedIds, importJournalKey, settleImportJournal } from "./import/import-journal";
 import { getCrdtSync } from "./sync/crdt-sync-instance";
@@ -335,17 +336,19 @@ export async function fetchActivityRangeFromDatabase<T extends TimelineActivityT
     };
   }
 
-  const reconciled = await reconcilePulled(table, rows);
-  const entries = dropTombstoned(reconciled).map((row) =>
-    transformActivityRangeRow(table, row)
-  );
-  return commitPulledRange(
-    scope,
-    table,
-    entries,
-    range,
-    (entry, requestedRange) => activityEntryIsInRange(table, entry, requestedRange)
-  );
+  return withTableReconciliation(table, async () => {
+    const reconciled = await reconcilePulled(table, rows);
+    const entries = dropTombstoned(reconciled).map((row) =>
+      transformActivityRangeRow(table, row)
+    );
+    return commitPulledRange(
+      scope,
+      table,
+      entries,
+      range,
+      (entry, requestedRange) => activityEntryIsInRange(table, entry, requestedRange)
+    );
+  });
 }
 
 async function getPendingEntityOperations(
@@ -757,6 +760,39 @@ function transformActivityRangeRow<T extends TimelineActivityTable>(
   }
 }
 
+export async function retainCompletedTimerRow(
+  table: "feedings" | "pumping_sessions" | "tummy_time_sessions",
+  row: Record<string, unknown>,
+  userId: string,
+  assertScope: () => void,
+  pendingLookup: () => Promise<Map<string, OperationType>> = () =>
+    getPendingEntityOperations(getSyncEngine(), table)
+): Promise<boolean> {
+  const key = getUserScopedKeyFor(
+    `${getActivityRangeDefinition(table).storagePrefix}${row.baby_id}`,
+    userId
+  );
+  return withStorageLock(key, async () => {
+    const pendingType = (await pendingLookup()).get(row.id as string);
+    assertScope();
+    if (pendingType === "UPDATE" || pendingType === "DELETE") return false;
+    assertScope();
+    const raw = await AsyncStorage.getItem(key);
+    assertScope();
+    const entries: ActivityRangeEntryMap[typeof table][] = raw
+      ? JSON.parse(raw)
+      : [];
+    const canonical = transformActivityRangeRow(table, row);
+    const retained = entries.filter((entry) => entry.id !== canonical.id);
+    await AsyncStorage.setItem(
+      key,
+      JSON.stringify(row.deleted === true ? retained : [...retained, canonical])
+    );
+    assertScope();
+    return true;
+  });
+}
+
 function activityEntryIsInRange<T extends TimelineActivityTable>(
   table: T,
   entry: ActivityRangeEntryMap[T],
@@ -764,7 +800,10 @@ function activityEntryIsInRange<T extends TimelineActivityTable>(
 ): boolean {
   if (table === "sleep_sessions") {
     const sleep = entry as StoredSleepEntry;
-    return sleep.startedAt < range.end && (!sleep.endedAt || sleep.endedAt > range.start);
+    return (
+      sleep.startedAt < range.end &&
+      (!sleep.endedAt || sleep.endedAt > range.start)
+    );
   }
 
   let timestamp = "";
@@ -884,12 +923,21 @@ function createConditionalDurableQueueCommit(
 
 // ============ FEEDINGS ============
 
-export async function fetchFeedingsFromDatabase(babyId: string): Promise<StoredFeedingEntry[]> {
+export async function fetchFeedingsFromDatabase(
+  babyId: string
+): Promise<StoredFeedingEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.feedings}${babyId}`);
   const pull = await fetchActivityCursorRows("feedings", babyId, scope);
-  const reconciled = await reconcilePulled("feedings", pull.rows);
-  return commitPulledRecentCollection(scope, "feedings", reconciled, transformFeedingFromDb,
-    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
+  return withTableReconciliation("feedings", async () => {
+    const reconciled = await reconcilePulled("feedings", pull.rows);
+    return commitPulledRecentCollection(
+      scope,
+      "feedings",
+      reconciled,
+      transformFeedingFromDb,
+      () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor)
+    );
+  });
 }
 
 export async function createFeedingInDatabase(
@@ -909,6 +957,7 @@ export async function createFeedingInDatabase(
     startedAt: input.startedAt.toISOString(),
     endedAt: input.endedAt?.toISOString(),
     durationSeconds: input.durationSeconds,
+    pausedSeconds: input.pausedSeconds ?? 0,
     leftDurationSeconds: input.leftDurationSeconds,
     rightDurationSeconds: input.rightDurationSeconds,
     amountMl: input.amountMl,
@@ -927,7 +976,7 @@ export async function createFeedingInDatabase(
   await updateLocalFeedings(
     input.babyId,
     (feedings) => {
-      const existing = feedings.find(item => item.id === id);
+      const existing = feedings.find((item) => item.id === id);
       if (existing) {
         alreadyExists = true;
         storedFeeding = existing;
@@ -935,35 +984,38 @@ export async function createFeedingInDatabase(
       }
       return [...feedings, feeding];
     },
-    createConditionalDurableQueueCommit(() => alreadyExists
-      ? null
-      : ({
-          type: 'CREATE',
-          table: 'feedings',
-          timerCompletion,
-          entityId: id,
-          data: {
-            id,
-            baby_id: input.babyId,
-            type: input.type,
-            side: input.side,
-            last_finished_side: input.lastFinishedSide,
-            started_at: input.startedAt.toISOString(),
-            ended_at: input.endedAt?.toISOString(),
-            duration_seconds: input.durationSeconds,
-            left_duration_seconds: input.leftDurationSeconds,
-            right_duration_seconds: input.rightDurationSeconds,
-            amount_ml: input.amountMl,
-            content_type: input.contentType,
-            food_type: input.foodType,
-            amount: input.amount,
-            reaction: input.reaction,
-            notes: input.notes,
-            logged_by: userId,
-            created_at: now,
-            updated_at: now,
-          },
-        }))
+    createConditionalDurableQueueCommit(() =>
+      alreadyExists
+        ? null
+        : {
+            type: "CREATE",
+            table: "feedings",
+            timerCompletion,
+            entityId: id,
+            data: {
+              id,
+              baby_id: input.babyId,
+              type: input.type,
+              side: input.side,
+              last_finished_side: input.lastFinishedSide,
+              started_at: input.startedAt.toISOString(),
+              ended_at: input.endedAt?.toISOString(),
+              duration_seconds: input.durationSeconds,
+              paused_seconds: input.pausedSeconds ?? 0,
+              left_duration_seconds: input.leftDurationSeconds,
+              right_duration_seconds: input.rightDurationSeconds,
+              amount_ml: input.amountMl,
+              content_type: input.contentType,
+              food_type: input.foodType,
+              amount: input.amount,
+              reaction: input.reaction,
+              notes: input.notes,
+              logged_by: userId,
+              created_at: now,
+              updated_at: now,
+            },
+          }
+    )
   );
 
   return storedFeeding;
@@ -1049,6 +1101,7 @@ function transformFeedingFromDb(data: Record<string, unknown>): StoredFeedingEnt
     startedAt: data.started_at as string,
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
+    pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
     leftDurationSeconds: data.left_duration_seconds as number | undefined,
     rightDurationSeconds: data.right_duration_seconds as number | undefined,
     amountMl: data.amount_ml as number | undefined,
@@ -1376,12 +1429,21 @@ async function updateLocalSleep(
 
 // ============ PUMPING ============
 
-export async function fetchPumpingFromDatabase(babyId: string): Promise<StoredPumpingEntry[]> {
+export async function fetchPumpingFromDatabase(
+  babyId: string
+): Promise<StoredPumpingEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.pumping}${babyId}`);
   const pull = await fetchActivityCursorRows("pumping_sessions", babyId, scope);
-  const reconciled = await reconcilePulled("pumping_sessions", pull.rows);
-  return commitPulledRecentCollection(scope, "pumping_sessions", reconciled, transformPumpingFromDb,
-    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
+  return withTableReconciliation("pumping_sessions", async () => {
+    const reconciled = await reconcilePulled("pumping_sessions", pull.rows);
+    return commitPulledRecentCollection(
+      scope,
+      "pumping_sessions",
+      reconciled,
+      transformPumpingFromDb,
+      () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor)
+    );
+  });
 }
 
 export async function createPumpingInDatabase(
@@ -1399,6 +1461,7 @@ export async function createPumpingInDatabase(
     startedAt: input.startedAt.toISOString(),
     endedAt: input.endedAt?.toISOString(),
     durationSeconds: input.durationSeconds,
+    pausedSeconds: input.pausedSeconds ?? 0,
     volumeMl: input.volumeMl,
     notes: input.notes,
     loggedBy: userId,
@@ -1411,7 +1474,7 @@ export async function createPumpingInDatabase(
   await updateLocalPumping(
     input.babyId,
     (sessions) => {
-      const existing = sessions.find(session => session.id === id);
+      const existing = sessions.find((session) => session.id === id);
       if (existing) {
         alreadyExists = true;
         storedPumping = existing;
@@ -1419,26 +1482,29 @@ export async function createPumpingInDatabase(
       }
       return [...sessions, pumping];
     },
-    createConditionalDurableQueueCommit(() => alreadyExists
-      ? null
-      : ({
-          type: 'CREATE',
-          table: 'pumping_sessions',
-          timerCompletion,
-          entityId: id,
-          data: {
-            id,
-            baby_id: input.babyId,
-            side: input.side,
-            started_at: input.startedAt.toISOString(),
-            ended_at: input.endedAt?.toISOString(),
-            duration_seconds: input.durationSeconds,
-            amount_ml: input.volumeMl,
-            notes: input.notes,
-            logged_by: userId,
-            created_at: now,
-          },
-        }))
+    createConditionalDurableQueueCommit(() =>
+      alreadyExists
+        ? null
+        : {
+            type: "CREATE",
+            table: "pumping_sessions",
+            timerCompletion,
+            entityId: id,
+            data: {
+              id,
+              baby_id: input.babyId,
+              side: input.side,
+              started_at: input.startedAt.toISOString(),
+              ended_at: input.endedAt?.toISOString(),
+              duration_seconds: input.durationSeconds,
+              paused_seconds: input.pausedSeconds ?? 0,
+              amount_ml: input.volumeMl,
+              notes: input.notes,
+              logged_by: userId,
+              created_at: now,
+            },
+          }
+    )
   );
 
   return storedPumping;
@@ -1514,6 +1580,7 @@ function transformPumpingFromDb(data: Record<string, unknown>): StoredPumpingEnt
     startedAt: data.started_at as string,
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
+    pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
     volumeMl: data.amount_ml as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
@@ -1671,12 +1738,25 @@ async function updateLocalGrowth(
 
 // ============ TUMMY TIME ============
 
-export async function fetchTummyTimeFromDatabase(babyId: string): Promise<StoredTummyTimeEntry[]> {
+export async function fetchTummyTimeFromDatabase(
+  babyId: string
+): Promise<StoredTummyTimeEntry[]> {
   const scope = captureActivityPullScope(`${KEYS.tummyTime}${babyId}`);
-  const pull = await fetchActivityCursorRows("tummy_time_sessions", babyId, scope);
-  const reconciled = await reconcilePulled("tummy_time_sessions", pull.rows);
-  return commitPulledRecentCollection(scope, "tummy_time_sessions", reconciled, transformTummyTimeFromDb,
-    () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor));
+  const pull = await fetchActivityCursorRows(
+    "tummy_time_sessions",
+    babyId,
+    scope
+  );
+  return withTableReconciliation("tummy_time_sessions", async () => {
+    const reconciled = await reconcilePulled("tummy_time_sessions", pull.rows);
+    return commitPulledRecentCollection(
+      scope,
+      "tummy_time_sessions",
+      reconciled,
+      transformTummyTimeFromDb,
+      () => persistActivityCursor(scope, pull.cursorKey, pull.nextCursor)
+    );
+  });
 }
 
 export async function createTummyTimeInDatabase(
@@ -1693,6 +1773,7 @@ export async function createTummyTimeInDatabase(
     startedAt: input.startedAt.toISOString(),
     endedAt: input.endedAt?.toISOString(),
     durationSeconds: input.durationSeconds,
+    pausedSeconds: input.pausedSeconds ?? 0,
     notes: input.notes,
     loggedBy: userId,
     createdAt: now,
@@ -1704,7 +1785,7 @@ export async function createTummyTimeInDatabase(
   await updateLocalTummyTime(
     input.babyId,
     (sessions) => {
-      const existing = sessions.find(session => session.id === id);
+      const existing = sessions.find((session) => session.id === id);
       if (existing) {
         alreadyExists = true;
         storedTummyTime = existing;
@@ -1712,24 +1793,27 @@ export async function createTummyTimeInDatabase(
       }
       return [...sessions, tummyTime];
     },
-    createConditionalDurableQueueCommit(() => alreadyExists
-      ? null
-      : ({
-          type: 'CREATE',
-          table: 'tummy_time_sessions',
-          timerCompletion,
-          entityId: id,
-          data: {
-            id,
-            baby_id: input.babyId,
-            started_at: input.startedAt.toISOString(),
-            ended_at: input.endedAt?.toISOString(),
-            duration_seconds: input.durationSeconds,
-            notes: input.notes,
-            logged_by: userId,
-            created_at: now,
-          },
-        }))
+    createConditionalDurableQueueCommit(() =>
+      alreadyExists
+        ? null
+        : {
+            type: "CREATE",
+            table: "tummy_time_sessions",
+            timerCompletion,
+            entityId: id,
+            data: {
+              id,
+              baby_id: input.babyId,
+              started_at: input.startedAt.toISOString(),
+              ended_at: input.endedAt?.toISOString(),
+              duration_seconds: input.durationSeconds,
+              paused_seconds: input.pausedSeconds ?? 0,
+              notes: input.notes,
+              logged_by: userId,
+              created_at: now,
+            },
+          }
+    )
   );
 
   return storedTummyTime;
@@ -1802,6 +1886,7 @@ function transformTummyTimeFromDb(data: Record<string, unknown>): StoredTummyTim
     startedAt: data.started_at as string,
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
+    pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
     createdAt: (data.created_at as string) || new Date().toISOString(),
@@ -2152,6 +2237,7 @@ async function syncFeedingsForBaby(oldBabyId: string, newBabyId: string, userId:
       started_at: feeding.startedAt,
       ended_at: feeding.endedAt,
       duration_seconds: feeding.durationSeconds,
+      paused_seconds: feeding.pausedSeconds ?? 0,
       left_duration_seconds: feeding.leftDurationSeconds,
       right_duration_seconds: feeding.rightDurationSeconds,
       amount_ml: feeding.amountMl,
@@ -2270,6 +2356,7 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
       started_at: pumping.startedAt,
       ended_at: pumping.endedAt,
       duration_seconds: pumping.durationSeconds,
+      paused_seconds: pumping.pausedSeconds ?? 0,
       amount_ml: pumping.volumeMl,
       notes: pumping.notes,
       logged_by: userId,
@@ -2342,6 +2429,7 @@ async function syncTummyTimeForBaby(oldBabyId: string, newBabyId: string, userId
       started_at: tummyTime.startedAt,
       ended_at: tummyTime.endedAt,
       duration_seconds: tummyTime.durationSeconds,
+      paused_seconds: tummyTime.pausedSeconds ?? 0,
       notes: tummyTime.notes,
       logged_by: userId,
       created_at: tummyTime.createdAt,

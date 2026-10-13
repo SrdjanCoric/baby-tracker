@@ -104,6 +104,38 @@ describe("escapeCSVValue", () => {
   });
 });
 
+describe("saved pause totals in CSV", () => {
+  const common = {
+    id: "paused-1",
+    babyId: "baby-1",
+    startedAt: "2026-07-14T09:00:00.000Z",
+    endedAt: "2026-07-14T09:09:00.000Z",
+    durationSeconds: 360,
+    createdAt: "2026-07-14T09:00:00.000Z",
+    updatedAt: "2026-07-14T09:09:00.000Z",
+  };
+  it.each([180, 0, undefined])(
+    "exports pause seconds %s separately from active duration for every non-sleep type",
+    (pausedSeconds) => {
+      for (const csv of [
+        formatFeedingsAsCSV(
+          [{ ...common, type: "breast", pausedSeconds }],
+          false
+        ),
+        formatPumpingAsCSV([{ ...common, side: "both", pausedSeconds }], false),
+        formatTummyTimeAsCSV([{ ...common, pausedSeconds }], false),
+      ]) {
+        const [header, row] = csv.split("\n").map((line) => line.split(","));
+        expect(header).toContain("Paused (seconds)");
+        expect(row[header.indexOf("Paused (seconds)")]).toBe(
+          String(pausedSeconds ?? 0)
+        );
+        expect(row[header.indexOf("Duration")]).toBe("00:06:00");
+      }
+    }
+  );
+});
+
 describe("formatCSVDate", () => {
   it("should format date in ISO format (YYYY-MM-DD)", () => {
     const date = new Date("2024-03-15T10:30:00Z");

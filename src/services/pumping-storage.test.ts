@@ -53,7 +53,7 @@ describe("PumpingStorageService", () => {
 
       const result = await PumpingStorageService.getAllPumpings("baby-123");
 
-      expect(result).toEqual(mockPumpings);
+      expect(result).toEqual(mockPumpings.map(entry => ({ ...entry, pausedSeconds: 0 })));
     });
   });
 
@@ -81,7 +81,7 @@ describe("PumpingStorageService", () => {
 
       const result = await PumpingStorageService.getPumpingById("baby-123", "pumping-1");
 
-      expect(result).toEqual(mockPumping);
+      expect(result).toEqual({ ...mockPumping, pausedSeconds: 0 });
     });
   });
 

@@ -1,7 +1,7 @@
 /**
  * CRDT sync coordinator: the bridge between the pure `crdt.ts` primitives and the live
  * sync path. It owns the device's HLC and a per-record "shadow" of the last clocked
- * value it has seen for each row, and exposes the three operations the sync layer needs:
+ * value it has seen for each row, and exposes the core operations the sync layer needs:
  *
  *  - `stampWrite`  — on local create/edit: diff against the shadow, stamp fresh HLC
  *    clocks onto the changed fields, fold them into the shadow, and return the clocks so
@@ -17,6 +17,7 @@
  * or corrupting a field — the #1 concern the CRDT work exists to eliminate.
  */
 import { HLC, merge, stampChanges, type ClockStorage, type ClockedRecord, type FieldClocks } from "./crdt";
+import { withStorageLock } from "../activity-storage-lock";
 import type { SyncableTable } from "./types";
 
 /** The 9 tables that use CRDT conflict resolution. `milestones` is the DB table
@@ -103,23 +104,28 @@ export class CrdtSync {
   async stampWrite(
     table: SyncableTable,
     entityId: string,
-    data: Record<string, unknown>,
+    data: Record<string, unknown>
   ): Promise<FieldClocks> {
-    await this.ready();
-    const key = shadowKey(table, entityId);
-    const prev = await this.shadowStore.get(key);
+    return withStorageLock(`@crdt:${shadowKey(table, entityId)}`, async () => {
+      await this.ready();
+      const key = shadowKey(table, entityId);
+      const prev = await this.shadowStore.get(key);
 
-    const stamped = stampChanges(
-      prev ? toClockedRecord(toWireRow(prev)) : null,
-      data,
-      () => this.hlc.tick(),
-    );
-    const stampedRecord: ClockedRecord = { ...data, fieldClocks: stamped.fieldClocks };
+      const stamped = stampChanges(
+        prev ? toClockedRecord(toWireRow(prev)) : null,
+        data,
+        () => this.hlc.tick()
+      );
+      const stampedRecord: ClockedRecord = {
+        ...data,
+        fieldClocks: stamped.fieldClocks,
+      };
 
-    const merged = prev ? merge(prev, stampedRecord) : stampedRecord;
-    await this.shadowStore.set(key, merged);
+      const merged = prev ? merge(prev, stampedRecord) : stampedRecord;
+      await this.shadowStore.set(key, merged);
 
-    return stamped.fieldClocks;
+      return stamped.fieldClocks;
+    });
   }
 
   /**
@@ -136,27 +142,45 @@ export class CrdtSync {
   async reconcileRemote(
     table: SyncableTable,
     entityId: string,
-    remoteRow: Record<string, unknown>,
+    remoteRow: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
-    await this.ready();
-    const remote = toClockedRecord(remoteRow);
+    return withStorageLock(`@crdt:${shadowKey(table, entityId)}`, async () => {
+      await this.ready();
+      const remote = toClockedRecord(remoteRow);
 
-    this.hlc.receiveMany(Object.values(remote.fieldClocks));
+      this.hlc.receiveMany(Object.values(remote.fieldClocks));
 
-    const key = shadowKey(table, entityId);
-    const prev = await this.shadowStore.get(key);
-    if (!prev) {
-      return toWireRow(remote);
-    }
+      const key = shadowKey(table, entityId);
+      const prev = await this.shadowStore.get(key);
+      if (!prev) {
+        return toWireRow(remote);
+      }
 
-    const merged = merge(prev, remote);
-    await this.shadowStore.set(key, merged);
-    return toWireRow(merged);
+      const merged = merge(prev, remote);
+      await this.shadowStore.set(key, merged);
+      return toWireRow(merged);
+    });
+  }
+
+  /** A rejected completion must adopt the stored winner, even with older clocks. */
+  async adoptRemote(
+    table: SyncableTable,
+    entityId: string,
+    remoteRow: Record<string, unknown>
+  ): Promise<void> {
+    return withStorageLock(`@crdt:${shadowKey(table, entityId)}`, async () => {
+      await this.ready();
+      const remote = toClockedRecord(remoteRow);
+      this.hlc.receiveMany(Object.values(remote.fieldClocks));
+      await this.shadowStore.set(shadowKey(table, entityId), remote);
+    });
   }
 
   /** Drop a record's shadow (on delete). */
   async forget(table: SyncableTable, entityId: string): Promise<void> {
-    await this.shadowStore.delete(shadowKey(table, entityId));
+    return withStorageLock(`@crdt:${shadowKey(table, entityId)}`, async () => {
+      await this.shadowStore.delete(shadowKey(table, entityId));
+    });
   }
 
   /** Read the current shadow for a record (the last-seen clocked value), or null. */
@@ -169,12 +193,14 @@ export class CrdtSync {
     entityId: string,
     shadow: ClockedRecord | null
   ): Promise<void> {
-    const key = shadowKey(table, entityId);
-    if (shadow) {
-      await this.shadowStore.set(key, shadow);
-    } else {
-      await this.shadowStore.delete(key);
-    }
+    return withStorageLock(`@crdt:${shadowKey(table, entityId)}`, async () => {
+      const key = shadowKey(table, entityId);
+      if (shadow) {
+        await this.shadowStore.set(key, shadow);
+      } else {
+        await this.shadowStore.delete(key);
+      }
+    });
   }
 }
 
@@ -237,4 +263,9 @@ export async function reconcilePulledRows(
     out.push(await crdt.reconcileRemote(table, id, row));
   }
   return out;
+}
+
+/** Keep shadow reconciliation and its collection commit in the same ordered operation. */
+export function withTableReconciliation<T>(table: string, action: () => Promise<T>): Promise<T> {
+  return withStorageLock(`@sync_reconciliation:${table}`, action);
 }

@@ -16,7 +16,7 @@ export interface TimerCompletionRecord extends TimerIdentity {
   activityType: TimerActivityType;
   startedAt: string;
   stoppedAt: string;
-  status: "pending" | "completed";
+  status: "pending" | "completed" | "discarded";
 }
 
 function getCompletionsKey(babyId: string, activityType: TimerActivityType): string {
@@ -116,8 +116,21 @@ export async function acceptTimerCompletion(
 export async function markTimerCompletionDurable(
   completion: TimerCompletionRecord
 ): Promise<TimerCompletionRecord> {
+  return settleTimerCompletion(completion, "completed");
+}
+
+export async function discardTimerCompletion(
+  completion: TimerCompletionRecord
+): Promise<TimerCompletionRecord> {
+  return settleTimerCompletion(completion, "discarded");
+}
+
+async function settleTimerCompletion(
+  completion: TimerCompletionRecord,
+  status: "completed" | "discarded"
+): Promise<TimerCompletionRecord> {
   const records = await getCompletionRecords(completion.babyId, completion.activityType);
-  const durableCompletion: TimerCompletionRecord = { ...completion, status: "completed" };
+  const durableCompletion: TimerCompletionRecord = { ...completion, status };
   const nextRecords = records.some(
     record => record.timerInstanceId === completion.timerInstanceId
   )
@@ -145,7 +158,6 @@ export async function isTimerCompletionSecured(
   completedActivities: ReadonlyArray<{ id: string }>
 ): Promise<boolean> {
   if (completedActivities.some(activity => activity.id === identity.activityId)) return true;
-  return (
-    await getTimerCompletion(babyId, activityType, identity.timerInstanceId)
-  )?.status === "completed";
+  const completion = await getTimerCompletion(babyId, activityType, identity.timerInstanceId);
+  return completion?.status === "completed" || completion?.status === "discarded";
 }

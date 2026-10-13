@@ -79,6 +79,9 @@ BEGIN
       CASE WHEN scenario = 'wrong-user' THEN member_id ELSE caller_id END,
       CASE WHEN scenario = 'no-identity' THEN NULL ELSE timer_id END,started);
     IF expect_reject THEN RAISE EXCEPTION 'expected rejection for % %',activity,scenario; END IF;
+    IF activity = 'sleep' AND (result ? 'preserved' OR result ? 'row') THEN
+      RAISE EXCEPTION 'sleep completion response shape changed';
+    END IF;
     IF (result ->> 'id')::uuid IS DISTINCT FROM rec_id THEN
       RAISE EXCEPTION 'merged result wrong for % %',activity,scenario;
     END IF;
@@ -152,6 +155,53 @@ BEGIN
  OR NOT has_function_privilege('authenticated','public.merge_record_and_complete_timer(text,jsonb,jsonb,text,uuid,text,timestamptz)','EXECUTE') THEN
   RAISE EXCEPTION 'completion execute grants incorrect';
  END IF;
+END $$;
+DO $$
+DECLARE
+ owner_id uuid := 'a2111111-1111-1111-1111-111111111111';
+ member_id uuid := 'a2222222-2222-2222-2222-222222222222';
+ target_baby uuid := 'a2bbbbbb-0000-0000-0000-000000000001';
+ tbl text;
+ activity text;
+ rec jsonb;
+ rec_id uuid;
+ canonical jsonb;
+ response jsonb;
+ saved jsonb;
+ clocks jsonb;
+BEGIN
+ FOR activity,tbl IN SELECT * FROM (VALUES ('feeding','feedings'),('pumping','pumping_sessions'),('tummy_time','tummy_time_sessions')) AS types LOOP
+  rec_id := md5('pause-canonical-' || tbl)::uuid;
+  rec := jsonb_build_object('id',rec_id,'baby_id',target_baby,'logged_by',owner_id,
+    'started_at','2026-07-15T08:00:00Z','ended_at','2026-07-15T08:08:00Z','duration_seconds',300,'paused_seconds',180);
+  IF activity='feeding' THEN rec:=rec || '{"type":"breast","side":"left","left_duration_seconds":300}'::jsonb; END IF;
+  SELECT jsonb_object_agg(key,'{"ts":1,"deviceId":"owner"}'::jsonb) INTO clocks FROM jsonb_object_keys(rec) AS keys(key);
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',owner_id)::text,true);
+  PERFORM public.merge_record_and_complete_timer(tbl,rec,clocks,'first-' || tbl,owner_id,'finished-timer',now());
+  EXECUTE format('SELECT to_jsonb(t) FROM public.%I t WHERE id=$1',tbl) INTO canonical USING rec_id;
+  INSERT INTO public.active_timers(baby_id,activity_type,started_by,started_at,timer_data)
+    VALUES(target_baby,activity,member_id,now(),'{"timerInstanceId":"replacement"}');
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',member_id)::text,true);
+  rec:=rec || '{"duration_seconds":480,"paused_seconds":0,"ended_at":"2026-07-15T08:09:00Z"}'::jsonb;
+  IF activity='feeding' THEN rec:=rec || '{"left_duration_seconds":480}'::jsonb; END IF;
+  SELECT jsonb_object_agg(key,'{"ts":2,"deviceId":"partner"}'::jsonb) INTO clocks FROM jsonb_object_keys(rec) AS keys(key);
+  response := public.merge_record_and_complete_timer(tbl,rec,clocks,'second-' || tbl,member_id,'finished-timer',now());
+  IF response->>'preserved' IS DISTINCT FROM 'true' OR response->'row' IS DISTINCT FROM canonical THEN
+    RAISE EXCEPTION 'preserved response missing canonical row for %: %',tbl,response;
+  END IF;
+  EXECUTE format('SELECT to_jsonb(t) FROM public.%I t WHERE id=$1',tbl) INTO saved USING rec_id;
+  IF saved IS DISTINCT FROM canonical THEN RAISE EXCEPTION 'second builder overwrote canonical completion for %',tbl; END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.sync_operation_acknowledgements WHERE user_id=member_id AND operation_id='second-' || tbl) THEN
+    RAISE EXCEPTION 'second completion unacknowledged for %',tbl;
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.active_timers WHERE baby_id=target_baby AND activity_type=activity AND timer_data->>'timerInstanceId'='replacement') THEN
+    RAISE EXCEPTION 'second builder cleared replacement for %',tbl;
+  END IF;
+  PERFORM public.merge_record(tbl,rec,clocks,'ordinary-edit-' || tbl,member_id);
+  EXECUTE format('SELECT to_jsonb(t) FROM public.%I t WHERE id=$1',tbl) INTO saved USING rec_id;
+  IF (saved->>'duration_seconds')::integer <> 480 THEN RAISE EXCEPTION 'ordinary edit blocked for %',tbl; END IF;
+  DELETE FROM public.active_timers WHERE baby_id=target_baby AND activity_type=activity;
+ END LOOP;
 END $$;
 SELECT 'PASS: all four timer completion decision tables, replay, replacement, rollback, grants';
 ROLLBACK;

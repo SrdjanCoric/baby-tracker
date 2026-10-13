@@ -80,7 +80,7 @@ export function useWidgetStopHandler() {
         queuedCommand.activityType,
         queuedCommand.timerInstanceId
       );
-      if (completion?.status === "completed") {
+      if (completion?.status === "completed" || completion?.status === "discarded") {
         await clearPendingWidgetPauseToggle();
         await acknowledgeExternalTimerCommand(queuedCommand);
         return;
@@ -161,7 +161,7 @@ export function useWidgetStopHandler() {
           command.activityType,
           command.timerInstanceId
         );
-        if (completion?.status !== "completed") return;
+        if (completion?.status !== "completed" && completion?.status !== "discarded") return;
       }
       await clearPendingWidgetPauseToggle();
       await acknowledgeExternalTimerCommand(command);

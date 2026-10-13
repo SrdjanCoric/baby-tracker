@@ -7,7 +7,7 @@ import {
 } from "../feeding-storage";
 import type { BreastSide as LiveActivityBreastSide } from "../live-activity-service";
 import {
-  calculateTimerDurationSeconds,
+  calculateTimerDuration,
   parseTimerDate,
   type RestoredTimer,
   type SharedTimerPayload,
@@ -35,6 +35,7 @@ export interface RestoredFeedingTimer extends TimerIdentity {
   currentSideStartedAt: Date;
   totalPausedMs: number;
   pausedAt?: Date;
+  lastResumedAt?: Date;
 }
 
 interface CreateFeedingTimerAdapterOptions {
@@ -59,6 +60,7 @@ export function createFeedingTimerAdapter({
 > {
   return {
     activityType: "feeding",
+    discardsShortSessions: true,
     storage: {
       getActiveTimer: (babyIdArgument) =>
         FeedingStorageService.getActiveTimer(babyIdArgument),
@@ -80,6 +82,9 @@ export function createFeedingTimerAdapter({
         leftAccumulatedSeconds: payload.leftAccumulatedSeconds,
         rightAccumulatedSeconds: payload.rightAccumulatedSeconds,
         currentSideStartedAt: payload.currentSideStartedAt,
+        ...(payload.lastResumedAt
+          ? { lastResumedAt: payload.lastResumedAt }
+          : {}),
         isPaused: payload.isPaused,
         totalPausedMs: payload.totalPausedMs,
         ...(payload.pausedAt ? { pausedAt: payload.pausedAt } : {}),
@@ -107,6 +112,9 @@ export function createFeedingTimerAdapter({
           typeof timerData.currentSideStartedAt === "string"
             ? timerData.currentSideStartedAt
             : startedAt,
+        ...(typeof timerData.lastResumedAt === "string"
+          ? { lastResumedAt: timerData.lastResumedAt }
+          : {}),
         isPaused: timerData.isPaused === true,
         totalPausedMs:
           typeof timerData.totalPausedMs === "number"
@@ -129,6 +137,9 @@ export function createFeedingTimerAdapter({
         rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds ?? 0,
         currentSideStartedAt:
           activeTimer.currentSideStartedAt ?? activeTimer.startedAt,
+        ...(activeTimer.lastResumedAt
+          ? { lastResumedAt: activeTimer.lastResumedAt }
+          : {}),
         isPaused: activeTimer.isPaused === true,
         totalPausedMs: activeTimer.totalPausedMs ?? 0,
         ...(activeTimer.pausedAt ? { pausedAt: activeTimer.pausedAt } : {}),
@@ -137,19 +148,6 @@ export function createFeedingTimerAdapter({
     buildRecord: (startedAt, endedAt, payload) => {
       let leftDurationSeconds = payload.leftAccumulatedSeconds;
       let rightDurationSeconds = payload.rightAccumulatedSeconds;
-      const resumedPauseSeconds = Math.max(
-        0,
-        Math.floor(payload.totalPausedMs / 1000)
-      );
-
-      if (payload.side === "left") leftDurationSeconds += resumedPauseSeconds;
-      if (payload.side === "right")
-        rightDurationSeconds += resumedPauseSeconds;
-      if (payload.side === "both") {
-        leftDurationSeconds += resumedPauseSeconds;
-        rightDurationSeconds += resumedPauseSeconds;
-      }
-
       if (!payload.isPaused) {
         const currentSideStartedAt = payload.currentSideStartedAt
           ? new Date(payload.currentSideStartedAt)
@@ -184,10 +182,11 @@ export function createFeedingTimerAdapter({
         lastFinishedSide: payload.side,
         startedAt,
         endedAt,
-        durationSeconds: calculateTimerDurationSeconds(
+        ...calculateTimerDuration(
           startedAt,
           endedAt,
-          payload.totalPausedMs
+          payload.totalPausedMs,
+          "feeding"
         ),
         leftDurationSeconds:
           leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
@@ -220,6 +219,7 @@ export function createFeedingTimerAdapter({
           parseTimerDate(payload.currentSideStartedAt, startedAt) ?? startedAt,
         totalPausedMs: payload.totalPausedMs,
         pausedAt: parseTimerDate(payload.pausedAt),
+        lastResumedAt: parseTimerDate(payload.lastResumedAt),
       }),
   };
 }

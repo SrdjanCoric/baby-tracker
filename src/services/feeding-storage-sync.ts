@@ -15,6 +15,7 @@ export interface SyncedFeedingEntry extends SyncableEntry {
   startedAt: string;
   endedAt?: string;
   durationSeconds?: number;
+  pausedSeconds?: number;
   leftDurationSeconds?: number;
   rightDurationSeconds?: number;
   amountMl?: number;

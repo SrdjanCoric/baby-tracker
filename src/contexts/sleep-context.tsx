@@ -1030,6 +1030,12 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const babyId = selectedBaby?.id;
     void syncObservedOwnedTimerLock({
+      timerDataCodec: createSleepTimerAdapter({
+        babyId: babyId ?? "",
+        resolveMorningClassification: (_startedAt, stored) =>
+          stored ?? "unresolved",
+        dispatchRestoreTimer: () => {},
+      }).timerDataCodec,
       activityType: "sleep",
       babyId,
       userId: user?.id,

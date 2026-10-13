@@ -1,3 +1,4 @@
+import { withTableReconciliation } from "./crdt-sync";
 import * as Crypto from 'expo-crypto';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,14 +17,24 @@ import { supabase } from '../supabase';
 import { isCrdtTable } from './crdt-sync';
 import { getCrdtSync } from './crdt-sync-instance';
 import { compareClocks, type ClockedRecord, type FieldClocks } from './crdt';
-import { recordBreadcrumb, reportIssue } from '@/utils/observability-sink';
+import { recordBreadcrumb, reportIssue } from "@/utils/observability-sink";
+import type { RemoteChange } from "./real-time-sync";
 
 type SyncStateListener = (state: SyncState) => void;
 
 /** The subset of the CRDT coordinator the engine needs — kept minimal so tests can
  * inject an in-memory instance. */
 interface CrdtCoordinator {
-  stampWrite(table: SyncableTable, entityId: string, data: Record<string, unknown>): Promise<FieldClocks>;
+  adoptRemote(
+    table: SyncableTable,
+    entityId: string,
+    row: Record<string, unknown>
+  ): Promise<void>;
+  stampWrite(
+    table: SyncableTable,
+    entityId: string,
+    data: Record<string, unknown>
+  ): Promise<FieldClocks>;
   forget(table: SyncableTable, entityId: string): Promise<void>;
   getShadow(table: SyncableTable, entityId: string): Promise<ClockedRecord | null>;
   restoreShadow(table: SyncableTable, entityId: string, shadow: ClockedRecord | null): Promise<void>;
@@ -65,6 +76,7 @@ export class SyncEngine {
   private config: SyncEngineConfig;
   private state: SyncState;
   private listeners: Set<SyncStateListener> = new Set();
+  private remoteChangeListeners = new Set<(change: RemoteChange) => void>();
   private networkUnsubscribe: (() => void) | null = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private quarantined: QueuedOperation[] = [];
@@ -117,6 +129,13 @@ export class SyncEngine {
     this.crdtSync = coordinator;
   }
 
+  onRemoteChange(listener: (change: RemoteChange) => void): () => void {
+    this.remoteChangeListeners.add(listener);
+    return () => {
+      this.remoteChangeListeners.delete(listener);
+    };
+  }
+
   private async getCrdtSync(): Promise<CrdtCoordinator> {
     if (!this.crdtSync) {
       this.crdtSync = await getCrdtSync();
@@ -157,7 +176,12 @@ export class SyncEngine {
         '[SyncEngine] Network status unavailable during initialization; starting offline:',
         error instanceof Error ? error.message : 'Unknown error'
       );
-      reportIssue({ name: 'sync.network_status_unavailable', area: 'sync', level: 'warning', error });
+      reportIssue({
+        name: "sync.network_status_unavailable",
+        area: "sync",
+        level: "warning",
+        error,
+      });
     }
 
     this.updateState({
@@ -182,7 +206,12 @@ export class SyncEngine {
 
     this.updateState({
       isConnected: isOnline,
-      status: isOnline && !this.isSyncing ? 'online' : (isOnline ? 'syncing' : 'offline'),
+      status:
+        isOnline && !this.isSyncing
+          ? "online"
+          : isOnline
+            ? "syncing"
+            : "offline",
     });
 
     this.debounceTimer = setTimeout(async () => {
@@ -236,9 +265,12 @@ export class SyncEngine {
               pendingCount: this.queue.getCount(),
             });
             recordBreadcrumb({
-              category: 'sync',
-              message: 'sync completed',
-              data: { attempts: retryCount + 1, remaining: this.queue.getCount() },
+              category: "sync",
+              message: "sync completed",
+              data: {
+                attempts: retryCount + 1,
+                remaining: this.queue.getCount(),
+              },
             });
 
             this.isSyncing = false;
@@ -341,7 +373,13 @@ export class SyncEngine {
           previous.set(operation, await this.getPreviousShadow(operation));
           if (operation === pending[0]) {
             // Concurrent sync checkpoints must already see the leader's recovery snapshot.
-            operation.localMutation = { key: mutation.key, previousHash, nextHash, state: 'prepared', previousShadow: previous.get(operation) };
+            operation.localMutation = {
+              key: mutation.key,
+              previousHash,
+              nextHash,
+              state: "prepared",
+              previousShadow: previous.get(operation),
+            };
           }
           await this.stampOperation(operation);
           this.assertAuthRun(authRun);
@@ -368,7 +406,14 @@ export class SyncEngine {
           }
         }
         this.updateState({ pendingCount: this.queue.getCount() });
-        reportIssue({ name: prepared ? 'sync.local_mutation_apply_failed' : 'sync.enqueue_persist_failed', area: 'sync', error, tags: { table: pending[0].table, type: pending[0].type } });
+        reportIssue({
+          name: prepared
+            ? "sync.local_mutation_apply_failed"
+            : "sync.enqueue_persist_failed",
+          area: "sync",
+          error,
+          tags: { table: pending[0].table, type: pending[0].type },
+        });
         throw error;
       }
       for (const operation of pending) {
@@ -380,7 +425,13 @@ export class SyncEngine {
         await this.persistQueueSerialized();
       } catch (error) {
         /* Restart resolves the durable prepared snapshot. */
-        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'commit' } });
+        reportIssue({
+          name: "sync.queue_checkpoint_failed",
+          area: "sync",
+          level: "warning",
+          error,
+          tags: { stage: "commit" },
+        });
       }
       this.updateState({ pendingCount: this.queue.getCount() });
       if (this.state.isConnected) void this.handleNetworkChange(true);
@@ -480,7 +531,13 @@ export class SyncEngine {
           '[SyncEngine] Local mutation committed with a durable prepared queue record; restart will finalize it:',
           error instanceof Error ? error.message : 'Unknown error'
         );
-        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'commit' } });
+        reportIssue({
+          name: "sync.queue_checkpoint_failed",
+          area: "sync",
+          level: "warning",
+          error,
+          tags: { stage: "commit" },
+        });
       }
     }
 
@@ -516,8 +573,13 @@ export class SyncEngine {
     }
   }
 
-  private sameAuthContext(left: SyncAuthContext, right: SyncAuthContext): boolean {
-    return left.householdId === right.householdId && left.userId === right.userId;
+  private sameAuthContext(
+    left: SyncAuthContext,
+    right: SyncAuthContext
+  ): boolean {
+    return (
+      left.householdId === right.householdId && left.userId === right.userId
+    );
   }
 
   private scheduleLegacyOwnerMigration(): void {
@@ -527,10 +589,15 @@ export class SyncEngine {
     this.enqueueChain = migration.catch(() => {});
     this.pullReadiness = migration;
     void migration.catch((error) => {
-      reportIssue({ name: 'sync.legacy_owner_migration_failed', area: 'sync', error });
-      this.legacyOwnerMigrationError = error instanceof Error
-        ? error
-        : new Error('Failed to migrate legacy sync operation ownership');
+      reportIssue({
+        name: "sync.legacy_owner_migration_failed",
+        area: "sync",
+        error,
+      });
+      this.legacyOwnerMigrationError =
+        error instanceof Error
+          ? error
+          : new Error("Failed to migrate legacy sync operation ownership");
       this.updateState({
         status: 'error',
         error: this.legacyOwnerMigrationError.message,
@@ -692,7 +759,13 @@ export class SyncEngine {
           '[SyncEngine] Prepared local mutation was resolved in memory but could not be checkpointed:',
           error instanceof Error ? error.message : 'Unknown error'
         );
-        reportIssue({ name: 'sync.queue_checkpoint_failed', area: 'sync', level: 'warning', error, tags: { stage: 'resolve' } });
+        reportIssue({
+          name: "sync.queue_checkpoint_failed",
+          area: "sync",
+          level: "warning",
+          error,
+          tags: { stage: "resolve" },
+        });
       }
     }
   }
@@ -850,19 +923,55 @@ export class SyncEngine {
       if (!data) throw new Error(`${type} operation requires data`);
       const { field_clocks, ...record } = data;
       const completion = operation.timerCompletion;
-      const { error } = await supabase.rpc(completion ? 'merge_record_and_complete_timer' : 'merge_record', {
-        p_table: table,
-        p_record: { id: entityId, ...record },
-        p_field_clocks: (field_clocks as FieldClocks | undefined) ?? {},
-        p_operation_id: operation.id,
-        p_expected_user_id: authRun.context.userId,
-        ...(completion ? {
-          p_timer_instance_id: completion.timerInstanceId,
-          p_timer_started_at: completion.startedAt,
-        } : {}),
-      });
+      const { data: result, error } = await supabase.rpc(
+        completion ? "merge_record_and_complete_timer" : "merge_record",
+        {
+          p_table: table,
+          p_record: { id: entityId, ...record },
+          p_field_clocks: (field_clocks as FieldClocks | undefined) ?? {},
+          p_operation_id: operation.id,
+          p_expected_user_id: authRun.context.userId,
+          ...(completion
+            ? {
+                p_timer_instance_id: completion.timerInstanceId,
+                p_timer_started_at: completion.startedAt,
+              }
+            : {}),
+        }
+      );
       if (error) {
         throw new Error(`Failed to merge ${table}: ${error.message}`);
+      }
+      this.assertAuthRun(authRun);
+      if (
+        completion &&
+        result?.preserved === true &&
+        (table === "feedings" ||
+          table === "pumping_sessions" ||
+          table === "tummy_time_sessions")
+      ) {
+        const row = result.row as Record<string, unknown>;
+        if (row?.id !== entityId || row.baby_id !== record.baby_id) {
+          throw new Error("Preserved completion identity mismatch");
+        }
+        const { retainCompletedTimerRow } =
+          await import("../activity-sync-service");
+        const crdt = await this.getCrdtSync();
+        this.assertAuthRun(authRun);
+        await withTableReconciliation(table, async () => {
+          const applied = await retainCompletedTimerRow(
+            table, row, authRun.context.userId,
+            () => this.assertAuthRun(authRun),
+            async () => this.getPendingEntityOperations(table)
+          );
+          if (applied) {
+            await crdt.adoptRemote(table, entityId, row);
+            this.assertAuthRun(authRun);
+            for (const listener of this.remoteChangeListeners) {
+              listener({ table, eventType: "UPDATE", new: row, old: null });
+            }
+          }
+        });
       }
       return;
     }
@@ -908,7 +1017,10 @@ export class SyncEngine {
   }
 
   setOnlineForTesting(isOnline: boolean): void {
-    this.updateState({ isConnected: isOnline, status: isOnline ? 'online' : 'offline' });
+    this.updateState({
+      isConnected: isOnline,
+      status: isOnline ? "online" : "offline",
+    });
   }
 
   subscribe(listener: SyncStateListener): () => void {
@@ -987,26 +1099,34 @@ export class SyncEngine {
   }
 
   private isOwnedByCurrentAuth(operation: QueuedOperation): boolean {
-    return this.authContext !== null
-      && !this.ownerBindingsInProgress.has(operation.id)
-      && this.isOwnedByAuthContext(operation, this.authContext);
+    return (
+      this.authContext !== null &&
+      !this.ownerBindingsInProgress.has(operation.id) &&
+      this.isOwnedByAuthContext(operation, this.authContext)
+    );
   }
 
   private isOwnedByAuthContext(
     operation: QueuedOperation,
     authContext: SyncAuthContext
   ): boolean {
-    return operation.owner?.householdId === authContext.householdId
-      && operation.owner.userId === authContext.userId;
+    return (
+      operation.owner?.householdId === authContext.householdId &&
+      operation.owner.userId === authContext.userId
+    );
   }
 
   private isOperationCommitted(operation: QueuedOperation): boolean {
     if (operation.localMutationBatch) {
-      const leader = this.queue.getAll().find(item => item.id === operation.localMutationBatch!.leaderId);
-      if (leader?.localMutation?.state !== 'committed') return false;
+      const leader = this.queue
+        .getAll()
+        .find((item) => item.id === operation.localMutationBatch!.leaderId);
+      if (leader?.localMutation?.state !== "committed") return false;
     }
-    return operation.localMutation?.state === 'committed'
-      || (!operation.localMutation && this.processedOperationIds.has(operation.id));
+    return (
+      operation.localMutation?.state === "committed" ||
+      (!operation.localMutation && this.processedOperationIds.has(operation.id))
+    );
   }
 
   getLastSyncedAt(): string | null {
@@ -1041,5 +1161,6 @@ export class SyncEngine {
     this.isSyncing = false;
     this.pendingSync = false;
     this.listeners.clear();
+    this.remoteChangeListeners.clear();
   }
 }
