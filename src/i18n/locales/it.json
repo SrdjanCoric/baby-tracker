@@ -46,7 +46,11 @@
     "custom": "Personalizzato",
     "durationHM": "{{h}}h {{m}}min",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}min"
+    "durationM": "{{m}}min",
+    "discardTimer": "Scarta timer",
+    "discardTimerBody": "{{elapsed}} non verranno salvati. Il timer verrà cancellato su tutti i telefoni.",
+    "keepTiming": "Continua il timer",
+    "discard": "Scarta"
   },
   "timerConflict": {
     "title": "Conflitto del timer risolto",
@@ -262,7 +266,8 @@
     "selectContentAndAmount": "Seleziona il contenuto del biberon e inserisci la quantità",
     "enterAmountValidation": "Inserisci la quantità",
     "enterFoodValidation": "Inserisci o seleziona un alimento",
-    "stopError": "Impossibile fermare la poppata. Riprova."
+    "stopError": "Impossibile fermare la poppata. Riprova.",
+    "discardTimerTitle": "Scartare questa poppata?"
   },
   "sleep": {
     "title": "Sonno",
@@ -359,7 +364,8 @@
     "householdGoalConfirm": "Questo cambierà l'obiettivo di sonno per tutti i caregiver del nucleo familiare. Continuare?",
     "napReminderWarningTitle": "Non raccomandato",
     "napReminderWarningMessage": "I promemoria per il pisolino non sono raccomandati per bambini sotto i 2 mesi. Il sonno del neonato è imprevedibile e le finestre di veglia possono causare stress inutile. Sei sicuro/a di volerli attivare?",
-    "napReminderWarningEnable": "Attiva comunque"
+    "napReminderWarningEnable": "Attiva comunque",
+    "discardTimerTitle": "Scartare questo sonno?"
   },
   "diaper": {
     "title": "Pannolino",
@@ -558,7 +564,8 @@
     "logPastPumpingDesc": "Registra una sessione di estrazione precedente",
     "pastPumpingTitle": "Registra estrazione precedente",
     "logManualPumping": "Registra estrazione",
-    "pumpingSaved": "Sessione di estrazione salvata"
+    "pumpingSaved": "Sessione di estrazione salvata",
+    "discardTimerTitle": "Scartare questa sessione di estrazione?"
   },
   "growth": {
     "title": "Crescita",
@@ -636,7 +643,8 @@
     "customMinutes": "Personalizzato (minuti)",
     "stopError": "Impossibile fermare il tummy time. Riprova.",
     "householdGoalTitle": "Obiettivo condiviso",
-    "householdGoalConfirm": "Questo cambierà l'obiettivo di tummy time per tutti i caregiver del nucleo familiare. Continuare?"
+    "householdGoalConfirm": "Questo cambierà l'obiettivo di tummy time per tutti i caregiver del nucleo familiare. Continuare?",
+    "discardTimerTitle": "Scartare questo tummy time?"
   },
   "baby": {
     "title": "Bambino",

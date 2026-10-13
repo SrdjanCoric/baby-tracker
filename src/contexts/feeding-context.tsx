@@ -61,6 +61,7 @@ import {
   markTimerCompletionDurable,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
+import { isTimerStarter } from "@/services/timer-starter";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
 import {
   editRunningTimerStartTime,
@@ -354,6 +355,7 @@ interface FeedingContextValue extends FeedingState {
   stopBreastfeeding: (
     requestedEndTime?: Date
   ) => Promise<StoredFeedingEntry | null>;
+  discardBreastfeeding: () => Promise<boolean>;
   stopRemoteBreastfeeding: (
     requestedEndTime?: Date
   ) => Promise<StoredFeedingEntry | null>;
@@ -724,9 +726,16 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby, user?.id]
   );
 
-  const stopBreastfeeding = useCallback(
-    async (requestedEndTime?: Date): Promise<StoredFeedingEntry | null> => {
+  const completeBreastfeedingTimer = useCallback(
+    async (
+      requestedEndTime?: Date,
+      discard = false
+    ): Promise<StoredFeedingEntry | null | true> => {
       if (!selectedBaby || !state.activeTimer) return null;
+      if (discard) {
+        const lock = getLockForActivity(selectedBaby.id, "feeding");
+        if (!isTimerStarter(lock, state.activeTimer.lockState, user?.id)) return null;
+      }
       if (isStoppingRef.current) return null;
       isStoppingRef.current = true;
       setIsStopping(true);
@@ -781,6 +790,10 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
+        if (discard) {
+          await finishTimer();
+          return true;
+        }
         const requestedStopTime =
           activeTimer.isPaused && activeTimer.pausedAt
             ? activeTimer.pausedAt
@@ -871,7 +884,20 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
         setIsStopping(false);
       }
     },
-    [selectedBaby, state.activeTimer, user?.householdId, user?.id]
+    [selectedBaby, state.activeTimer, user?.householdId, user?.id, getLockForActivity]
+  );
+
+  const stopBreastfeeding = useCallback(
+    async (requestedEndTime?: Date): Promise<StoredFeedingEntry | null> => {
+      const result = await completeBreastfeedingTimer(requestedEndTime);
+      return result === true ? null : result;
+    },
+    [completeBreastfeedingTimer]
+  );
+  const discardBreastfeeding = useCallback(
+    async (): Promise<boolean> =>
+      (await completeBreastfeedingTimer(undefined, true)) === true,
+    [completeBreastfeedingTimer]
   );
 
   const stopRemoteBreastfeeding = useCallback(
@@ -1313,6 +1339,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startBreastfeeding,
       stopBreastfeeding,
+      discardBreastfeeding,
       stopRemoteBreastfeeding,
       editBreastfeedingStartTime,
       changeSide,
@@ -1333,6 +1360,7 @@ export function FeedingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startBreastfeeding,
       stopBreastfeeding,
+      discardBreastfeeding,
       stopRemoteBreastfeeding,
       editBreastfeedingStartTime,
       changeSide,

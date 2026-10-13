@@ -46,7 +46,11 @@
     "custom": "Personalizado",
     "durationHM": "{{h}}h {{m}}min",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}min"
+    "durationM": "{{m}}min",
+    "discardTimer": "Descartar temporizador",
+    "discardTimerBody": "{{elapsed}} não serão guardados. O temporizador será apagado em todos os telemóveis.",
+    "keepTiming": "Continuar a contar",
+    "discard": "Descartar"
   },
   "timerConflict": {
     "title": "Conflito de temporizador resolvido",
@@ -260,7 +264,8 @@
     "selectContentAndAmount": "Selecione o que há no biberão e digite uma quantidade",
     "enterAmountValidation": "Introduza a quantidade",
     "enterFoodValidation": "Introduza ou selecione um alimento",
-    "stopError": "Falha ao parar a alimentação. Tente novamente."
+    "stopError": "Falha ao parar a alimentação. Tente novamente.",
+    "discardTimerTitle": "Descartar esta mamada?"
   },
   "sleep": {
     "title": "Sono",
@@ -357,7 +362,8 @@
     "householdGoalConfirm": "Isso mudará a meta de sono para todos os cuidadores em sua família. Continuar?",
     "napReminderWarningTitle": "Não Recomendado",
     "napReminderWarningMessage": "Lembretes de sesta não são recomendados para bebés menores de 2 meses. O sono de recém-nascidos é imprevisível e janelas de vigília podem causar estresse desnecessário. Tem a certeza de que deseja ativá-los?",
-    "napReminderWarningEnable": "Ativar Mesmo Assim"
+    "napReminderWarningEnable": "Ativar Mesmo Assim",
+    "discardTimerTitle": "Descartar este sono?"
   },
   "diaper": {
     "title": "Fralda",
@@ -556,7 +562,8 @@
     "logPastPumpingDesc": "Registe uma sessão de extração de mais cedo",
     "pastPumpingTitle": "Registar Extração Anterior",
     "logManualPumping": "Registar Extração",
-    "pumpingSaved": "Sessão de extração guardada"
+    "pumpingSaved": "Sessão de extração guardada",
+    "discardTimerTitle": "Descartar esta sessão de extração?"
   },
   "growth": {
     "title": "Crescimento",
@@ -634,7 +641,8 @@
     "customMinutes": "Personalizado (minutos)",
     "stopError": "Falha ao parar tempo de barriga. Tente novamente.",
     "householdGoalTitle": "Meta Partilhada",
-    "householdGoalConfirm": "Isso mudará a meta de tempo de barriga para todos os cuidadores em sua família. Continuar?"
+    "householdGoalConfirm": "Isso mudará a meta de tempo de barriga para todos os cuidadores em sua família. Continuar?",
+    "discardTimerTitle": "Descartar este tempo de barriga?"
   },
   "baby": {
     "title": "Bebé",

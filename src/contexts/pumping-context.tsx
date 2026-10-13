@@ -53,6 +53,7 @@ import {
   markTimerCompletionDurable,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
+import { isTimerStarter } from "@/services/timer-starter";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
 import {
   editRunningTimerStartTime,
@@ -258,6 +259,7 @@ interface PumpingContextValue extends PumpingState {
     volumeMl: number,
     requestedEndTime?: Date
   ) => Promise<StoredPumpingEntry | null>;
+  discardPumping: () => Promise<boolean>;
   stopRemotePumping: (
     requestedEndTime?: Date
   ) => Promise<StoredPumpingEntry | null>;
@@ -607,12 +609,17 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
     [selectedBaby, user?.id]
   );
 
-  const stopPumping = useCallback(
+  const completePumpingTimer = useCallback(
     async (
       volumeMl: number,
-      requestedEndTime?: Date
-    ): Promise<StoredPumpingEntry | null> => {
+      requestedEndTime?: Date,
+      discard = false
+    ): Promise<StoredPumpingEntry | null | true> => {
       if (!selectedBaby || !state.activeTimer) return null;
+      if (discard) {
+        const lock = getLockForActivity(selectedBaby.id, "pumping");
+        if (!isTimerStarter(lock, state.activeTimer.lockState, user?.id)) return null;
+      }
       if (isStoppingRef.current) return null;
       isStoppingRef.current = true;
       setIsStopping(true);
@@ -667,6 +674,10 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
+        if (discard) {
+          await finishTimer();
+          return true;
+        }
         const requestedStopTime =
           activeTimer.isPaused && activeTimer.pausedAt
             ? activeTimer.pausedAt
@@ -755,7 +766,20 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         setIsStopping(false);
       }
     },
-    [selectedBaby, state.activeTimer, user?.householdId, user?.id]
+    [selectedBaby, state.activeTimer, user?.householdId, user?.id, getLockForActivity]
+  );
+
+  const stopPumping = useCallback(
+    async (volumeMl: number, requestedEndTime?: Date): Promise<StoredPumpingEntry | null> => {
+      const result = await completePumpingTimer(volumeMl, requestedEndTime);
+      return result === true ? null : result;
+    },
+    [completePumpingTimer]
+  );
+  const discardPumping = useCallback(
+    async (): Promise<boolean> =>
+      (await completePumpingTimer(0, undefined, true)) === true,
+    [completePumpingTimer]
   );
 
   const stopRemotePumping = useCallback(
@@ -1090,6 +1114,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      discardPumping,
       stopRemotePumping,
       editPumpingStartTime,
       changePumpingSide,
@@ -1111,6 +1136,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startPumping,
       stopPumping,
+      discardPumping,
       stopRemotePumping,
       editPumpingStartTime,
       changePumpingSide,

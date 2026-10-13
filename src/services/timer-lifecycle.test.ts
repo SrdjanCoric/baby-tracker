@@ -39,6 +39,7 @@ vi.mock("./live-activity-service", () => ({
 }));
 
 vi.mock("./active-timer-service", () => ({
+  hasPendingLockRelease: vi.fn().mockResolvedValue(false),
   findActiveTimerLock: vi.fn(
     (snapshot: Array<{ activityType: string }>, activityType: string) =>
       snapshot.find((lock) => lock.activityType === activityType) ?? null

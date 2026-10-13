@@ -46,7 +46,11 @@
     "custom": "Personnalisé",
     "durationHM": "{{h}}h {{m}}min",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}min"
+    "durationM": "{{m}}min",
+    "discardTimer": "Abandonner le minuteur",
+    "discardTimerBody": "Cette durée ({{elapsed}}) ne sera pas enregistrée. Le minuteur sera effacé sur tous les téléphones.",
+    "keepTiming": "Continuer le minuteur",
+    "discard": "Abandonner"
   },
   "timerConflict": {
     "title": "Conflit de minuteur résolu",
@@ -258,7 +262,8 @@
     "selectContentAndAmount": "Veuillez sélectionner le contenu du biberon et saisir une quantité",
     "enterAmountValidation": "Veuillez saisir la quantité",
     "enterFoodValidation": "Veuillez saisir ou sélectionner un aliment",
-    "stopError": "Impossible d'arrêter le repas. Veuillez réessayer."
+    "stopError": "Impossible d'arrêter le repas. Veuillez réessayer.",
+    "discardTimerTitle": "Abandonner cette tétée ?"
   },
   "sleep": {
     "title": "Sommeil",
@@ -355,7 +360,8 @@
     "householdGoalConfirm": "Cela modifiera l'objectif de sommeil pour tous les aidants de votre foyer. Continuer ?",
     "napReminderWarningTitle": "Non recommandé",
     "napReminderWarningMessage": "Les rappels de sieste ne sont pas recommandés pour les bébés de moins de 2 mois. Le sommeil du nouveau-né est imprévisible et les fenêtres d'éveil peuvent générer un stress inutile. Souhaitez-vous quand même les activer ?",
-    "napReminderWarningEnable": "Activer quand même"
+    "napReminderWarningEnable": "Activer quand même",
+    "discardTimerTitle": "Abandonner ce sommeil ?"
   },
   "diaper": {
     "title": "Couche",
@@ -554,7 +560,8 @@
     "logPastPumpingDesc": "Enregistrer une séance de tire-lait antérieure",
     "pastPumpingTitle": "Enregistrer une séance passée",
     "logManualPumping": "Enregistrer le tire-lait",
-    "pumpingSaved": "Séance de tire-lait enregistrée"
+    "pumpingSaved": "Séance de tire-lait enregistrée",
+    "discardTimerTitle": "Abandonner cette séance de tirage ?"
   },
   "growth": {
     "title": "Croissance",
@@ -632,7 +639,8 @@
     "customMinutes": "Personnalisé (minutes)",
     "stopError": "Impossible d'arrêter le temps sur le ventre. Veuillez réessayer.",
     "householdGoalTitle": "Objectif partagé",
-    "householdGoalConfirm": "Cela modifiera l'objectif de temps sur le ventre pour tous les aidants de votre foyer. Continuer ?"
+    "householdGoalConfirm": "Cela modifiera l'objectif de temps sur le ventre pour tous les aidants de votre foyer. Continuer ?",
+    "discardTimerTitle": "Abandonner ce temps sur le ventre ?"
   },
   "baby": {
     "title": "Bébé",

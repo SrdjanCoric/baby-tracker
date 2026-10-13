@@ -46,7 +46,11 @@
     "custom": "Personalizado",
     "durationHM": "{{h}}h {{m}}min",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}min"
+    "durationM": "{{m}}min",
+    "discardTimer": "Descartar cronômetro",
+    "discardTimerBody": "{{elapsed}} não serão salvos. O cronômetro será apagado em todos os celulares.",
+    "keepTiming": "Continuar contando",
+    "discard": "Descartar"
   },
   "timerConflict": {
     "title": "Conflito de temporizador resolvido",
@@ -261,7 +265,8 @@
     "selectContentAndAmount": "Selecione o que há na mamadeira e digite uma quantidade",
     "enterAmountValidation": "Digite a quantidade",
     "enterFoodValidation": "Digite ou selecione um alimento",
-    "stopError": "Falha ao parar a alimentação. Tente novamente."
+    "stopError": "Falha ao parar a alimentação. Tente novamente.",
+    "discardTimerTitle": "Descartar esta mamada?"
   },
   "sleep": {
     "title": "Sono",
@@ -358,7 +363,8 @@
     "householdGoalConfirm": "Isso mudará a meta de sono para todos os cuidadores em sua família. Continuar?",
     "napReminderWarningTitle": "Não Recomendado",
     "napReminderWarningMessage": "Lembretes de soneca não são recomendados para bebês menores de 2 meses. O sono de recém-nascidos é imprevisível e janelas de vigília podem causar estresse desnecessário. Tem certeza de que deseja ativá-los?",
-    "napReminderWarningEnable": "Ativar Mesmo Assim"
+    "napReminderWarningEnable": "Ativar Mesmo Assim",
+    "discardTimerTitle": "Descartar este sono?"
   },
   "diaper": {
     "title": "Fralda",
@@ -557,7 +563,8 @@
     "logPastPumpingDesc": "Registre uma sessão de ordenha de mais cedo",
     "pastPumpingTitle": "Registrar Ordenha Anterior",
     "logManualPumping": "Registrar Ordenha",
-    "pumpingSaved": "Sessão de ordenha salva"
+    "pumpingSaved": "Sessão de ordenha salva",
+    "discardTimerTitle": "Descartar esta ordenha?"
   },
   "growth": {
     "title": "Crescimento",
@@ -635,7 +642,8 @@
     "customMinutes": "Personalizado (minutos)",
     "stopError": "Falha ao parar tempo de barriguinha. Tente novamente.",
     "householdGoalTitle": "Meta Compartilhada",
-    "householdGoalConfirm": "Isso mudará a meta de tempo de barriguinha para todos os cuidadores em sua família. Continuar?"
+    "householdGoalConfirm": "Isso mudará a meta de tempo de barriguinha para todos os cuidadores em sua família. Continuar?",
+    "discardTimerTitle": "Descartar este tempo de barriguinha?"
   },
   "baby": {
     "title": "Bebê",

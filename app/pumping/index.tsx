@@ -1,3 +1,6 @@
+import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
+import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
+import { isTimerStarter } from "@/services/timer-starter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +50,7 @@ export default function PumpingScreen() {
     isStopping,
     startPumping,
     stopPumping,
+    discardPumping,
     editPumpingStartTime,
     changePumpingSide,
     pausePumping,
@@ -57,16 +61,10 @@ export default function PumpingScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "pumping")
     : null;
-  const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" ||
-    activeTimer?.lockState === "offline" ||
-    activeTimer?.lockState === "accountless";
-  const canEditTimerStart = Boolean(
-    timerLock
-      ? user?.id && timerLock.startedBy === user.id
-      : activeTimer?.lockState === "accountless"
-        ? !user?.id
-        : user?.id && hasLocalTimerOwnership
+  const canEditTimerStart = isTimerStarter(
+    timerLock,
+    activeTimer?.lockState,
+    user?.id
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -161,6 +159,17 @@ export default function PumpingScreen() {
   const handleSideChange = useCallback((side: BreastSide) => {
     changePumpingSide(side);
   }, [changePumpingSide]);
+
+  const handleDiscard = useConfirmDiscardTimer({
+    canDiscard: canEditTimerStart,
+    titleKey: "pumping.discardTimerTitle",
+    elapsedSeconds,
+    discard: discardPumping,
+    beforeDiscard: resetAlert,
+    router,
+    isStoppingRef,
+    screenName: "PumpingScreen",
+  });
 
   const handlePause = useCallback(async () => {
     await pausePumping();
@@ -273,6 +282,7 @@ export default function PumpingScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
+            onDiscard={canEditTimerStart ? handleDiscard : undefined}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editPumpingStartTime}
@@ -541,6 +551,7 @@ interface RunningTimerViewProps {
   isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
+  onDiscard?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   startedAt: Date;
@@ -555,6 +566,7 @@ function RunningTimerView({
   isPaused,
   onSideChange,
   onStop,
+  onDiscard,
   onPause,
   onResume,
   startedAt,
@@ -665,6 +677,7 @@ function RunningTimerView({
       <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
         {isPaused ? t("common.tapToResume") : t("pumping.tapToStop")}
       </Text>
+      {onDiscard && <DiscardTimerLink onPress={onDiscard} />}
     </View>
   );
 }

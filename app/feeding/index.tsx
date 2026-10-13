@@ -1,3 +1,6 @@
+import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
+import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
+import { isTimerStarter } from "@/services/timer-starter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View, ScrollView, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,6 +53,7 @@ export default function FeedingScreen() {
     suggestedSide,
     startBreastfeeding,
     stopBreastfeeding,
+    discardBreastfeeding,
     editBreastfeedingStartTime,
     changeSide,
     pauseBreastfeeding,
@@ -60,16 +64,10 @@ export default function FeedingScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "feeding")
     : null;
-  const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" ||
-    activeTimer?.lockState === "offline" ||
-    activeTimer?.lockState === "accountless";
-  const canEditTimerStart = Boolean(
-    timerLock
-      ? user?.id && timerLock.startedBy === user.id
-      : activeTimer?.lockState === "accountless"
-        ? !user?.id
-        : user?.id && hasLocalTimerOwnership
+  const canEditTimerStart = isTimerStarter(
+    timerLock,
+    activeTimer?.lockState,
+    user?.id
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -162,6 +160,16 @@ export default function FeedingScreen() {
   const handleSideChange = useCallback((side: BreastSide) => {
     changeSide(side);
   }, [changeSide]);
+
+  const handleDiscard = useConfirmDiscardTimer({
+    canDiscard: canEditTimerStart,
+    titleKey: "feeding.discardTimerTitle",
+    elapsedSeconds,
+    discard: discardBreastfeeding,
+    router,
+    isStoppingRef,
+    screenName: "FeedingScreen",
+  });
 
   const handlePause = useCallback(async () => {
     await pauseBreastfeeding();
@@ -260,6 +268,7 @@ export default function FeedingScreen() {
             mutedBg={mutedBg}
             secondaryBg={secondaryBg}
             startedAt={activeTimer!.startTime}
+            onDiscard={canEditTimerStart ? handleDiscard : undefined}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editBreastfeedingStartTime}
@@ -595,6 +604,7 @@ interface BreastfeedingTimerViewProps {
   isPaused: boolean;
   onSideChange: (side: BreastSide) => void;
   onStop: () => void;
+  onDiscard?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   accentColor: string;
@@ -609,7 +619,7 @@ interface BreastfeedingTimerViewProps {
 
 const PAUSED_AMBER = "#D4A017";
 
-function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
+function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, onStop, onDiscard, onPause, onResume, accentColor, buttonBgColor, mutedBg, secondaryBg, startedAt, canEdit, getBounds, onEditStart }: BreastfeedingTimerViewProps) {
   const { t } = useTranslation();
   const { timeFormat } = useTimeFormat();
   const formattedTime = formatDuration(elapsedSeconds);
@@ -701,6 +711,7 @@ function BreastfeedingTimerView({ elapsedSeconds, side, isPaused, onSideChange, 
         <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
           {isPaused ? t("common.tapToResume") : t("feeding.tapToStop")}
         </Text>
+        {onDiscard && <DiscardTimerLink onPress={onDiscard} />}
       </View>
     </View>
   );

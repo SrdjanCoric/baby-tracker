@@ -46,7 +46,11 @@
     "custom": "Benutzerdefiniert",
     "durationHM": "{{h}}Std {{m}}Min",
     "durationH": "{{h}}Std",
-    "durationM": "{{m}}Min"
+    "durationM": "{{m}}Min",
+    "discardTimer": "Timer verwerfen",
+    "discardTimerBody": "{{elapsed}} werden nicht gespeichert. Der Timer wird auf allen Handys gelöscht.",
+    "keepTiming": "Weiter messen",
+    "discard": "Verwerfen"
   },
   "timerConflict": {
     "title": "Timerkonflikt gelöst",
@@ -258,7 +262,8 @@
     "selectContentAndAmount": "Bitte wähle den Flascheninhalt und gib eine Menge ein",
     "enterAmountValidation": "Bitte gib die Menge ein",
     "enterFoodValidation": "Bitte gib ein Lebensmittel ein oder wähle eines aus",
-    "stopError": "Fütterung konnte nicht gestoppt werden. Bitte versuche es erneut."
+    "stopError": "Fütterung konnte nicht gestoppt werden. Bitte versuche es erneut.",
+    "discardTimerTitle": "Diese Fütterung verwerfen?"
   },
   "sleep": {
     "title": "Schlaf",
@@ -355,7 +360,8 @@
     "householdGoalConfirm": "Dies ändert das Schlafziel für alle Betreuungspersonen in deinem Haushalt. Fortfahren?",
     "napReminderWarningTitle": "Nicht empfohlen",
     "napReminderWarningMessage": "Nickerchen-Erinnerungen werden für Babys unter 2 Monaten nicht empfohlen. Neugeborenen-Schlaf ist unvorhersehbar und Wachfenster können unnötigen Stress verursachen. Bist du sicher, dass du sie aktivieren möchtest?",
-    "napReminderWarningEnable": "Trotzdem aktivieren"
+    "napReminderWarningEnable": "Trotzdem aktivieren",
+    "discardTimerTitle": "Diesen Schlaf verwerfen?"
   },
   "diaper": {
     "title": "Windel",
@@ -554,7 +560,8 @@
     "logPastPumpingDesc": "Eine frühere Pump-Sitzung aufzeichnen",
     "pastPumpingTitle": "Vergangenes Abpumpen erfassen",
     "logManualPumping": "Abpumpen erfassen",
-    "pumpingSaved": "Pump-Sitzung gespeichert"
+    "pumpingSaved": "Pump-Sitzung gespeichert",
+    "discardTimerTitle": "Diese Abpump-Sitzung verwerfen?"
   },
   "growth": {
     "title": "Wachstum",
@@ -632,7 +639,8 @@
     "customMinutes": "Benutzerdefiniert (Minuten)",
     "stopError": "Bauchlage konnte nicht gestoppt werden. Bitte versuche es erneut.",
     "householdGoalTitle": "Geteiltes Ziel",
-    "householdGoalConfirm": "Dies ändert das Bauchlage-Ziel für alle Betreuungspersonen in deinem Haushalt. Fortfahren?"
+    "householdGoalConfirm": "Dies ändert das Bauchlage-Ziel für alle Betreuungspersonen in deinem Haushalt. Fortfahren?",
+    "discardTimerTitle": "Diese Bauchlage verwerfen?"
   },
   "baby": {
     "title": "Baby",

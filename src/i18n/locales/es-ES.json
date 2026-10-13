@@ -46,7 +46,11 @@
     "custom": "Personalizado",
     "durationHM": "{{h}}h {{m}}min",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}min"
+    "durationM": "{{m}}min",
+    "discardTimer": "Descartar temporizador",
+    "discardTimerBody": "No se guardará {{elapsed}}. El temporizador se borrará en todos los teléfonos.",
+    "keepTiming": "Seguir contando",
+    "discard": "Descartar"
   },
   "timerConflict": {
     "title": "Conflicto de temporizador resuelto",
@@ -262,7 +266,8 @@
     "selectContentAndAmount": "Selecciona el contenido del biberón e introduce la cantidad",
     "enterAmountValidation": "Por favor introduce la cantidad",
     "enterFoodValidation": "Por favor introduce o selecciona un alimento",
-    "stopError": "No se pudo detener la alimentación. Por favor inténtalo de nuevo."
+    "stopError": "No se pudo detener la alimentación. Por favor inténtalo de nuevo.",
+    "discardTimerTitle": "¿Descartar esta toma?"
   },
   "sleep": {
     "title": "Sueño",
@@ -359,7 +364,8 @@
     "householdGoalConfirm": "Esto cambiará la meta de sueño para todos los cuidadores de tu hogar. ¿Continuar?",
     "napReminderWarningTitle": "No recomendado",
     "napReminderWarningMessage": "Los recordatorios de siesta no se recomiendan para bebés menores de 2 meses. El sueño del recién nacido es impredecible y las ventanas de vigilia pueden causar estrés innecesario. ¿Estás seguro/a de que quieres activarlos?",
-    "napReminderWarningEnable": "Activar de todos modos"
+    "napReminderWarningEnable": "Activar de todos modos",
+    "discardTimerTitle": "¿Descartar este sueño?"
   },
   "diaper": {
     "title": "Pañal",
@@ -558,7 +564,8 @@
     "logPastPumpingDesc": "Registrar una sesión de extracción anterior",
     "pastPumpingTitle": "Registrar extracción anterior",
     "logManualPumping": "Registrar extracción",
-    "pumpingSaved": "Sesión de extracción guardada"
+    "pumpingSaved": "Sesión de extracción guardada",
+    "discardTimerTitle": "¿Descartar esta sesión de extracción?"
   },
   "growth": {
     "title": "Crecimiento",
@@ -636,7 +643,8 @@
     "customMinutes": "Personalizado (minutos)",
     "stopError": "No se pudo detener el tiempo boca abajo. Por favor inténtalo de nuevo.",
     "householdGoalTitle": "Meta compartida",
-    "householdGoalConfirm": "Esto cambiará la meta de tiempo boca abajo para todos los cuidadores de tu hogar. ¿Continuar?"
+    "householdGoalConfirm": "Esto cambiará la meta de tiempo boca abajo para todos los cuidadores de tu hogar. ¿Continuar?",
+    "discardTimerTitle": "¿Descartar este tiempo boca abajo?"
   },
   "baby": {
     "title": "Bebé",

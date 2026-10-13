@@ -530,7 +530,7 @@ describe("timer request authorization", () => {
           userId: "owner",
           timerInstanceId: "instance",
           startedAt: row.started_at,
-          queuedAt: row.started_at,
+          queuedAt: new Date().toISOString(),
         },
       ])
     );

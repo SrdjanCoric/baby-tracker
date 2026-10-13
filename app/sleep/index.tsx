@@ -1,3 +1,6 @@
+import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
+import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
+import { isTimerStarter } from "@/services/timer-starter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -46,6 +49,7 @@ export default function SleepScreen() {
     startSleep,
     editSleepStartTime,
     stopSleep,
+    discardSleep,
     pauseSleep,
     resumeSleep,
     dailyGoalMinutes,
@@ -61,16 +65,10 @@ export default function SleepScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "sleep")
     : null;
-  const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" ||
-    activeTimer?.lockState === "offline" ||
-    activeTimer?.lockState === "accountless";
-  const canEditTimerStart = Boolean(
-    timerLock
-      ? user?.id && timerLock.startedBy === user.id
-      : activeTimer?.lockState === "accountless"
-        ? !user?.id
-        : user?.id && hasLocalTimerOwnership
+  const canEditTimerStart = isTimerStarter(
+    timerLock,
+    activeTimer?.lockState,
+    user?.id
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -149,6 +147,21 @@ export default function SleepScreen() {
       isStoppingRef.current = false;
     }
   }, [napAlert, nightSleepAlert, stopSleep, router]);
+
+  const resetTimerAlerts = useCallback(() => {
+    napAlert.resetAlert();
+    nightSleepAlert.resetAlert();
+  }, [napAlert, nightSleepAlert]);
+  const handleDiscard = useConfirmDiscardTimer({
+    canDiscard: canEditTimerStart,
+    titleKey: "sleep.discardTimerTitle",
+    elapsedSeconds,
+    discard: discardSleep,
+    beforeDiscard: resetTimerAlerts,
+    router,
+    isStoppingRef,
+    screenName: "SleepScreen",
+  });
 
   const handlePause = useCallback(async () => {
     await pauseSleep();
@@ -262,6 +275,7 @@ export default function SleepScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
+            onDiscard={canEditTimerStart ? handleDiscard : undefined}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editSleepStartTime}
@@ -454,6 +468,7 @@ interface RunningTimerViewProps {
   elapsedSeconds: number;
   isPaused: boolean;
   onStop: () => void;
+  onDiscard?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   startedAt: Date;
@@ -466,6 +481,7 @@ function RunningTimerView({
   elapsedSeconds,
   isPaused,
   onStop,
+  onDiscard,
   onPause,
   onResume,
   startedAt,
@@ -555,6 +571,7 @@ function RunningTimerView({
       <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
         {isPaused ? t("common.tapToResume") : t("sleep.tapToStop")}
       </Text>
+      {onDiscard && <DiscardTimerLink onPress={onDiscard} />}
     </View>
   );
 }

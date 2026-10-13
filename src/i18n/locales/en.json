@@ -46,7 +46,11 @@
     "custom": "Custom",
     "durationHM": "{{h}}h {{m}}m",
     "durationH": "{{h}}h",
-    "durationM": "{{m}}m"
+    "durationM": "{{m}}m",
+    "discardTimer": "Discard timer",
+    "discardTimerBody": "{{elapsed}} will not be saved. The timer is cleared on every phone.",
+    "keepTiming": "Keep timing",
+    "discard": "Discard"
   },
   "timerConflict": {
     "title": "Timer conflict resolved",
@@ -258,7 +262,8 @@
     "selectContentAndAmount": "Please select what's in the bottle and enter an amount",
     "enterAmountValidation": "Please enter the amount",
     "enterFoodValidation": "Please enter or select a food",
-    "stopError": "Failed to stop feeding. Please try again."
+    "stopError": "Failed to stop feeding. Please try again.",
+    "discardTimerTitle": "Discard this feed?"
   },
   "sleep": {
     "title": "Sleep",
@@ -355,7 +360,8 @@
     "householdGoalConfirm": "This will change the sleep goal for all caregivers in your household. Continue?",
     "napReminderWarningTitle": "Not Recommended",
     "napReminderWarningMessage": "Nap reminders are not recommended for babies under 2 months. Newborn sleep is unpredictable and wake windows can cause unnecessary stress. Are you sure you want to enable them?",
-    "napReminderWarningEnable": "Enable Anyway"
+    "napReminderWarningEnable": "Enable Anyway",
+    "discardTimerTitle": "Discard this sleep?"
   },
   "diaper": {
     "title": "Diaper",
@@ -554,7 +560,8 @@
     "logPastPumpingDesc": "Record a pumping session from earlier",
     "pastPumpingTitle": "Log Past Pumping",
     "logManualPumping": "Log Pumping",
-    "pumpingSaved": "Pumping session saved"
+    "pumpingSaved": "Pumping session saved",
+    "discardTimerTitle": "Discard this pumping session?"
   },
   "growth": {
     "title": "Growth",
@@ -632,7 +639,8 @@
     "customMinutes": "Custom (minutes)",
     "stopError": "Failed to stop tummy time. Please try again.",
     "householdGoalTitle": "Shared Goal",
-    "householdGoalConfirm": "This will change the tummy time goal for all caregivers in your household. Continue?"
+    "householdGoalConfirm": "This will change the tummy time goal for all caregivers in your household. Continue?",
+    "discardTimerTitle": "Discard this tummy time?"
   },
   "baby": {
     "title": "Baby",

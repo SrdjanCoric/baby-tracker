@@ -135,10 +135,20 @@ jest.mock("@/services/activity-sync-service", () => ({
   deleteTummyTimeFromDatabase: jest.fn(),
 }));
 
+jest.mock("@/services/supabase", () => ({
+  supabase: { from: jest.fn() },
+}));
+jest.mock("@/services/live-activity-push-token-service", () => ({
+  refreshLiveActivityPushTokens: jest.fn(),
+}));
+
 jest.mock("@/services/active-timer-service", () => {
   const getActiveTimerLock = jest.fn();
   const releaseTimerLock = jest.fn();
-  const queuePendingLockRelease = jest.fn();
+  const actual = jest.requireActual<
+    typeof import("@/services/active-timer-service")
+  >("@/services/active-timer-service");
+  const queuePendingLockRelease = jest.fn(actual.queuePendingLockRelease);
   const releaseTimerLockDurably = jest.fn(
     async (
       babyId: string,
@@ -165,6 +175,7 @@ jest.mock("@/services/active-timer-service", () => {
   );
   const snapshots = new Map<string, Promise<unknown[]>>();
   return {
+    hasPendingLockRelease: actual.hasPendingLockRelease,
     acquireTimerLock: jest.fn(),
     releaseTimerLock,
     releaseTimerLockDurably,
@@ -176,12 +187,12 @@ jest.mock("@/services/active-timer-service", () => {
       const existing = snapshots.get(babyId);
       if (existing) return existing;
       const request = Promise.all(
-        ["feeding", "sleep", "pumping", "tummy_time"].map(activityType =>
-          getActiveTimerLock(babyId, activityType).then(lock =>
+        ["feeding", "sleep", "pumping", "tummy_time"].map((activityType) =>
+          getActiveTimerLock(babyId, activityType).then((lock) =>
             lock ? { ...lock, activityType } : null
           )
         )
-      ).then(locks => locks.filter(Boolean));
+      ).then((locks) => locks.filter(Boolean));
       snapshots.set(babyId, request);
       void request.then(
         () => snapshots.delete(babyId),
@@ -191,7 +202,7 @@ jest.mock("@/services/active-timer-service", () => {
     }),
     findActiveTimerLock: jest.fn(
       (snapshot: Array<{ activityType: string }>, activityType: string) =>
-        snapshot.find(lock => lock.activityType === activityType) ?? null
+        snapshot.find((lock) => lock.activityType === activityType) ?? null
     ),
     queuePendingLockRelease,
   };
@@ -384,7 +395,9 @@ describe("external timer stops through production providers", () => {
     activeTimers.acquireTimerLock.mockResolvedValue({ success: true });
     activeTimers.getActiveTimerLock.mockResolvedValue(null);
     activeTimers.releaseTimerLock.mockResolvedValue(false);
-    activeTimers.queuePendingLockRelease.mockResolvedValue(undefined);
+    activeTimers.queuePendingLockRelease.mockImplementation(
+      jest.requireActual("@/services/active-timer-service").queuePendingLockRelease
+    );
     activeTimers.updateTimerStartTime.mockResolvedValue(true);
     activeTimers.queuePendingTimerStartEdit.mockResolvedValue(undefined);
 
@@ -407,6 +420,361 @@ describe("external timer stops through production providers", () => {
       fetchWakeWindowPreference: jest.Mock;
     };
     pushTokens.fetchWakeWindowPreference.mockResolvedValue(null);
+  });
+
+  it.each([
+    "running",
+    "paused",
+    "short",
+    "offline",
+    "accountless",
+    "offline-owned",
+  ])("discards every %s timer without writing an entry", async (mode) => {
+    if (mode === "accountless") mockAuthUser = null;
+    const activeTimers = jest.requireMock("@/services/active-timer-service");
+    if (mode === "offline-owned") {
+      activeTimers.acquireTimerLock.mockRejectedValue(new Error("offline"));
+    }
+    if (mode === "offline") {
+      activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+    }
+    const liveActivities = jest.requireMock("@/services/live-activity-service");
+    liveActivities.startTimerLiveActivity.mockResolvedValue(
+      "discard-live-activity"
+    );
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    const start = new Date(Date.now() - (mode === "short" ? 30_000 : 300_000));
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", start);
+      await sleepState!.startSleep("nap", start);
+      await pumpingState!.startPumping("both", start);
+      await tummyTimeState!.startTummyTime(start);
+    });
+    if (mode === "paused") {
+      await act(async () => {
+        await feedingState!.pauseBreastfeeding();
+        await sleepState!.pauseSleep();
+        await pumpingState!.pausePumping();
+        await tummyTimeState!.pauseTummyTime();
+      });
+    }
+    await act(async () => {
+      await feedingState!.discardBreastfeeding();
+      await sleepState!.discardSleep();
+      await pumpingState!.discardPumping();
+      await tummyTimeState!.discardTummyTime();
+    });
+    expect([
+      feedingState?.activeTimer,
+      sleepState?.activeTimer,
+      pumpingState?.activeTimer,
+      tummyTimeState?.activeTimer,
+    ]).toEqual([null, null, null, null]);
+    for (const storage of [
+      FeedingStorageService,
+      SleepStorageService,
+      PumpingStorageService,
+      TummyTimeStorageService,
+    ]) {
+      await expect(storage.getActiveTimer("baby-1")).resolves.toBeNull();
+    }
+    await expect(
+      FeedingStorageService.getAllFeedings("baby-1")
+    ).resolves.toEqual([]);
+    await expect(SleepStorageService.getAllSleeps("baby-1")).resolves.toEqual(
+      []
+    );
+    await expect(
+      PumpingStorageService.getAllPumpings("baby-1")
+    ).resolves.toEqual([]);
+    await expect(
+      TummyTimeStorageService.getAllTummyTimes("baby-1")
+    ).resolves.toEqual([]);
+    const activitySync = jest.requireMock("@/services/activity-sync-service");
+    for (const name of [
+      "createFeedingInDatabase",
+      "createSleepInDatabase",
+      "createPumpingInDatabase",
+      "createTummyTimeInDatabase",
+    ]) {
+      expect(activitySync[name]).not.toHaveBeenCalled();
+    }
+    expect(liveActivities.endTimerLiveActivity).toHaveBeenCalledTimes(4);
+    if (mode === "accountless") {
+      expect(activeTimers.queuePendingLockRelease).not.toHaveBeenCalled();
+    } else {
+      expect(
+        activeTimers.queuePendingLockRelease.mock.calls.map(
+          (call: unknown[]) => call[1]
+        )
+      ).toEqual(["feeding", "sleep", "pumping", "tummy_time"]);
+      expect(activeTimers.releaseTimerLock).toHaveBeenCalledTimes(4);
+    }
+  });
+
+  it("does not restore offline-discarded timers or Live Activities on cold start", async () => {
+    const activeTimers = jest.requireMock("@/services/active-timer-service");
+    const liveActivities = jest.requireMock("@/services/live-activity-service");
+    liveActivities.startTimerLiveActivity.mockResolvedValue(
+      "discard-live-activity"
+    );
+    activeTimers.releaseTimerLock.mockRejectedValue(new Error("offline"));
+    const owner = render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    const locks = activeTimers.acquireTimerLock.mock.calls.map(
+      (call: unknown[]) => ({
+        babyId: call[0],
+        activityType: call[1],
+        startedBy: call[2],
+        timerData: call[3],
+        startedAt: (call[4] as Date).toISOString(),
+      })
+    );
+    await act(async () => {
+      await feedingState!.discardBreastfeeding();
+      await sleepState!.discardSleep();
+      await pumpingState!.discardPumping();
+      await tummyTimeState!.discardTummyTime();
+    });
+    owner.unmount();
+    liveActivities.startTimerLiveActivity.mockClear();
+    activeTimers.releaseTimerLock.mockClear().mockResolvedValue(true);
+    activeTimers.getActiveTimerLock.mockImplementation(
+      async (_babyId: string, type: string) =>
+        locks.find(
+          (lock: { activityType: string }) => lock.activityType === type
+        ) ?? null
+    );
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    expect([
+      feedingState?.activeTimer,
+      sleepState?.activeTimer,
+      pumpingState?.activeTimer,
+      tummyTimeState?.activeTimer,
+    ]).toEqual([null, null, null, null]);
+    expect(liveActivities.startTimerLiveActivity).not.toHaveBeenCalled();
+    expect(
+      activeTimers.releaseTimerLock.mock.calls
+        .map((call: unknown[]) => call[1])
+        .sort()
+    ).toEqual(["feeding", "pumping", "sleep", "tummy_time"]);
+    for (const lock of locks) {
+      expect(activeTimers.releaseTimerLock).toHaveBeenCalledWith(
+        lock.babyId,
+        lock.activityType,
+        lock.startedBy,
+        lock.timerData.timerInstanceId,
+        lock.startedAt
+      );
+    }
+  });
+
+  it("reports discard refusal with no timer or while completion is in flight", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() => expect([
+      feedingState?.isLoading, sleepState?.isLoading,
+      pumpingState?.isLoading, tummyTimeState?.isLoading,
+    ]).toEqual([false, false, false, false]));
+    const discardAll = () => [
+      feedingState!.discardBreastfeeding, sleepState!.discardSleep,
+      pumpingState!.discardPumping, tummyTimeState!.discardTummyTime,
+    ];
+    await act(async () => {
+      await expect(Promise.all(discardAll().map(discard => discard())))
+        .resolves.toEqual([false, false, false, false]);
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    const liveActivities = jest.requireMock("@/services/live-activity-service");
+    let finishCleanup!: (ended: boolean) => void;
+    const cleanup = new Promise<boolean>(resolve => { finishCleanup = resolve; });
+    liveActivities.endLiveActivityByType.mockReturnValue(cleanup);
+    const discard = discardAll();
+    await act(async () => {
+      const inFlight = discard.map(discard => discard());
+      await expect(Promise.all(discard.map(discard => discard())))
+        .resolves.toEqual([false, false, false, false]);
+      finishCleanup(true);
+      await expect(Promise.all(inFlight)).resolves.toEqual([true, true, true, true]);
+    });
+  });
+
+  it("refuses discard when the lock belongs to another caregiver", async () => {
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    const originalTimers = [
+      feedingState!.activeTimer,
+      sleepState!.activeTimer,
+      pumpingState!.activeTimer,
+      tummyTimeState!.activeTimer,
+    ];
+    const acquiredLocks = jest.requireMock("@/services/active-timer-service")
+      .acquireTimerLock.mock.calls as Array<[
+        string, string, string, Record<string, unknown>, Date
+      ]>;
+    mockGetLockForActivity.mockImplementation((babyId: string, activityType: string) => {
+      const acquired = acquiredLocks.find(call => call[1] === activityType)!;
+      return {
+        id: `lock-${activityType}`,
+        babyId,
+        activityType,
+        startedBy: "user-2",
+        startedByName: "Other caregiver",
+        startedAt: acquired[4].toISOString(),
+        timerData: acquired[3],
+      };
+    });
+    await act(async () => {
+      await expect(feedingState!.discardBreastfeeding()).resolves.toBe(false);
+      await expect(sleepState!.discardSleep()).resolves.toBe(false);
+      await expect(pumpingState!.discardPumping()).resolves.toBe(false);
+      await expect(tummyTimeState!.discardTummyTime()).resolves.toBe(false);
+    });
+    expect([
+      feedingState!.activeTimer,
+      sleepState!.activeTimer,
+      pumpingState!.activeTimer,
+      tummyTimeState!.activeTimer,
+    ]).toEqual(originalTimers);
+    const activeTimers = jest.requireMock("@/services/active-timer-service");
+    expect(activeTimers.releaseTimerLockDurably).not.toHaveBeenCalled();
+    const liveActivities = jest.requireMock("@/services/live-activity-service");
+    expect(liveActivities.endTimerLiveActivity).not.toHaveBeenCalled();
+    expect(liveActivities.endLiveActivityByType).not.toHaveBeenCalled();
+  });
+
+  it("removes discarded locks from another caregiver's real household provider", async () => {
+    const owner = render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect([
+        feedingState?.isLoading,
+        sleepState?.isLoading,
+        pumpingState?.isLoading,
+        tummyTimeState?.isLoading,
+      ]).toEqual([false, false, false, false])
+    );
+    await act(async () => {
+      await feedingState!.startBreastfeeding("left", new Date(startedAt));
+      await sleepState!.startSleep("nap", new Date(startedAt));
+      await pumpingState!.startPumping("both", new Date(startedAt));
+      await tummyTimeState!.startTummyTime(new Date(startedAt));
+    });
+    const activeTimers = jest.requireMock("@/services/active-timer-service");
+    const rows = activeTimers.acquireTimerLock.mock.calls.map(
+      (call: unknown[], index: number) => ({
+        id: `discard-lock-${index}`,
+        baby_id: call[0],
+        activity_type: call[1],
+        started_by: call[2],
+        timer_data: call[3],
+        started_at: startedAt,
+      })
+    );
+    await act(async () => {
+      await feedingState!.discardBreastfeeding();
+      await sleepState!.discardSleep();
+      await pumpingState!.discardPumping();
+      await tummyTimeState!.discardTummyTime();
+    });
+    const releasedRows = activeTimers.releaseTimerLock.mock.calls.map(
+      (call: unknown[]) => rows.find((row: { baby_id: unknown; activity_type: unknown; started_by: unknown; timer_data: Record<string, unknown> }) =>
+        row.baby_id === call[0] && row.activity_type === call[1] &&
+        row.started_by === call[2] && row.timer_data.timerInstanceId === call[3]
+      )
+    );
+    expect(releasedRows).toHaveLength(4);
+    expect(releasedRows).not.toContain(undefined);
+    owner.unmount();
+    mockAuthUser = { id: "user-2", householdId: "household-1" };
+    const { transformActiveTimerFromRemote } = jest.requireActual<
+      typeof import("@/services/active-timer-service")
+    >("@/services/active-timer-service");
+    activeTimers.getActiveTimerLock.mockImplementation(
+      async (_babyId: string, type: string) => {
+        const row = rows.find(
+          (row: { activity_type: unknown }) => row.activity_type === type
+        );
+        return row
+          ? { ...transformActiveTimerFromRemote(row), startedByName: "Starter" }
+          : null;
+      }
+    );
+    const { ActiveTimersProvider, useActiveTimers } = jest.requireActual<
+      typeof import("@/contexts/active-timers-context")
+    >("@/contexts/active-timers-context");
+    let remote: ReturnType<typeof useActiveTimers> | undefined;
+    function RemotePhone() {
+      remote = useActiveTimers();
+      return null;
+    }
+    render(
+      <ActiveTimersProvider>
+        <RemotePhone />
+      </ActiveTimersProvider>
+    );
+    await waitFor(() => expect(remote?.locks).toHaveLength(4));
+    for (const type of ["feeding", "sleep", "pumping", "tummy_time"] as const) {
+      expect(remote!.isLockedByOther("baby-1", type)).toBe(true);
+    }
+    await act(async () => {
+      for (const row of releasedRows) {
+        mockRemoteSubscribers.get("active_timers")!({
+          table: "active_timers",
+          eventType: "DELETE",
+          old: row,
+          new: null,
+        });
+      }
+    });
+    expect(remote!.locks).toEqual([]);
+    for (const type of ["feeding", "sleep", "pumping", "tummy_time"] as const) {
+      expect(remote!.getLockForActivity("baby-1", type)).toBeNull();
+      expect(remote!.isLockedByOther("baby-1", type)).toBe(false);
+    }
   });
 
   it("lets the database timestamp ordinary starts for every provider", async () => {

@@ -1,8 +1,9 @@
 import React from "react";
 import { act, render, screen, fireEvent, waitFor } from "@testing-library/react-native";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 
 const mockPush = jest.fn();
+const mockDiscardBreastfeeding = jest.fn().mockResolvedValue(true);
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = false;
@@ -121,6 +122,7 @@ jest.mock("@/contexts", () => ({
     suggestedSide: "left",
     startBreastfeeding: mockStartBreastfeeding,
     stopBreastfeeding: mockStopBreastfeeding,
+    discardBreastfeeding: mockDiscardBreastfeeding,
     editBreastfeedingStartTime: mockEditBreastfeedingStartTime,
     changeSide: mockChangeSide,
     addFeeding: mockAddFeeding,
@@ -645,4 +647,144 @@ describe("FeedingScreen", () => {
     });
   });
 
+});
+
+
+describe("FeedingScreen discard timer", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-10-12T08:05:00.000Z"));
+    mockActiveTimer = {
+      ...runningTimer,
+      startTime: new Date("2026-10-12T08:00:00.000Z"),
+    };
+    mockAuthUser = { id: "user-1" };
+    mockLockStartedBy = "user-1";
+    mockCanGoBack = false;
+    jest
+      .spyOn(jest.requireMock("react-i18next"), "useTranslation")
+      .mockReturnValue({
+        t: (key: string, options?: Record<string, string>) =>
+          ({
+            "common.discardTimer": "Discard timer",
+            "common.discardTimerBody": `${options?.elapsed} will not be saved. The timer is cleared on every phone.`,
+            "common.keepTiming": "Keep timing",
+            "common.discard": "Discard",
+            "feeding.discardTimerTitle": "Discard this feed?",
+          })[key] ?? key,
+      });
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
+  it.each([false, true])(
+    "shows the line below the hint and confirms with elapsed time (paused=%s)",
+    async (isPaused) => {
+      mockActiveTimer = {
+        ...mockActiveTimer!,
+        isPaused,
+        pausedAt: isPaused ? new Date("2026-10-12T08:03:00.000Z") : undefined,
+      };
+      const alert = jest
+        .spyOn(Alert, "alert")
+        .mockImplementation(() => undefined);
+      render(<FeedingScreen />);
+      const link = screen.getByRole("button", { name: "Discard timer" });
+      const renderedText = (node: unknown): string[] => {
+        if (typeof node === "string") return [node];
+        if (!node || typeof node !== "object") return [];
+        if (Array.isArray(node)) return node.flatMap(renderedText);
+        return renderedText((node as { children?: unknown }).children);
+      };
+      const text = renderedText(screen.toJSON());
+      expect(text[text.indexOf("✕ ") - 1]).toBe(
+        isPaused ? "common.tapToResume" : "feeding.tapToStop"
+      );
+      fireEvent.press(link);
+      expect(alert).toHaveBeenCalledWith(
+        "Discard this feed?",
+        `${isPaused ? "03:00" : "05:00"} will not be saved. The timer is cleared on every phone.`,
+        [
+          expect.objectContaining({
+            text: "Keep timing",
+            style: "cancel",
+            isPreferred: true,
+          }),
+          expect.objectContaining({ text: "Discard", style: "destructive" }),
+        ]
+      );
+      const buttons = alert.mock.calls[0][2]!;
+      await act(async () => {
+        buttons[0].onPress?.();
+      });
+      expect(mockDiscardBreastfeeding).not.toHaveBeenCalled();
+      expect(mockStopBreastfeeding).not.toHaveBeenCalled();
+      expect(mockReplace).not.toHaveBeenCalled();
+      await act(async () => {
+        await buttons[1].onPress?.();
+      });
+      expect(mockDiscardBreastfeeding).toHaveBeenCalledTimes(1);
+      expect(mockStopBreastfeeding).not.toHaveBeenCalled();
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+    }
+  );
+
+  it("always confirms a timer under a minute and closes via back when available", async () => {
+    mockActiveTimer = {
+      ...mockActiveTimer!,
+      startTime: new Date("2026-10-12T08:04:30.000Z"),
+    };
+    mockCanGoBack = true;
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    render(<FeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "Discard timer" }));
+    expect(alert.mock.calls[0][1]).toContain("0:30 will not be saved");
+    expect(mockDiscardBreastfeeding).not.toHaveBeenCalled();
+    await act(async () => {
+      await alert.mock.calls[0][2]![1].onPress?.();
+    });
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["refused", "failed"])("keeps the sheet open when discard is %s", async (outcome) => {
+    const error = new Error("discard failed");
+    const logged = jest.spyOn(console, "error").mockImplementation(() => undefined);
+    if (outcome === "refused") mockDiscardBreastfeeding.mockResolvedValueOnce(false);
+    else mockDiscardBreastfeeding.mockRejectedValueOnce(error);
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    render(<FeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "Discard timer" }));
+    const confirm = alert.mock.calls[0][2]![1].onPress!;
+    await act(async () => { await confirm(); });
+    expect(mockBack).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+    if (outcome === "failed") {
+      expect(logged).toHaveBeenCalledWith("[FeedingScreen] Failed to discard timer:", error);
+    }
+  });
+
+  it("hides discard for another household member", () => {
+    mockLockStartedBy = "user-2";
+    render(<FeedingScreen />);
+    expect(screen.queryByRole("button", { name: "Discard timer" })).toBeNull();
+    expect(screen.getByTestId("stop-timer-button")).toBeTruthy();
+  });
+
+  it.each(["accountless", "offline"])(
+    "shows discard for a local %s owner without a lock",
+    (lockState) => {
+      mockLockStartedBy = null;
+      if (lockState === "accountless") mockAuthUser = null;
+      mockActiveTimer = { ...mockActiveTimer!, lockState };
+      render(<FeedingScreen />);
+      expect(
+        screen.getByRole("button", { name: "Discard timer" })
+      ).toBeTruthy();
+    }
+  );
 });

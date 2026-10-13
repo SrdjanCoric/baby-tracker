@@ -1,3 +1,6 @@
+import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
+import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
+import { isTimerStarter } from "@/services/timer-starter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,6 +39,7 @@ export default function TummyTimeScreen() {
     activeTimer,
     startTummyTime,
     stopTummyTime,
+    discardTummyTime,
     editTummyTimeStartTime,
     pauseTummyTime,
     resumeTummyTime,
@@ -50,16 +54,10 @@ export default function TummyTimeScreen() {
   const timerLock = selectedBaby
     ? getLockForActivity(selectedBaby.id, "tummy_time")
     : null;
-  const hasLocalTimerOwnership =
-    activeTimer?.lockState === "owned" ||
-    activeTimer?.lockState === "offline" ||
-    activeTimer?.lockState === "accountless";
-  const canEditTimerStart = Boolean(
-    timerLock
-      ? user?.id && timerLock.startedBy === user.id
-      : activeTimer?.lockState === "accountless"
-        ? !user?.id
-        : user?.id && hasLocalTimerOwnership
+  const canEditTimerStart = isTimerStarter(
+    timerLock,
+    activeTimer?.lockState,
+    user?.id
   );
   const getTimerStartBoundsForPicker = useCallback(
     () =>
@@ -116,6 +114,18 @@ export default function TummyTimeScreen() {
     }
   }, [onboardingActivity, router, startTummyTime]);
 
+  const isStoppingRef = useRef(false);
+  const handleDiscard = useConfirmDiscardTimer({
+    canDiscard: canEditTimerStart,
+    titleKey: "tummyTime.discardTimerTitle",
+    elapsedSeconds,
+    discard: discardTummyTime,
+    beforeDiscard: resetAlert,
+    router,
+    isStoppingRef,
+    screenName: "TummyTimeScreen",
+  });
+
   const handlePause = useCallback(async () => {
     await pauseTummyTime();
   }, [pauseTummyTime]);
@@ -124,7 +134,6 @@ export default function TummyTimeScreen() {
     await resumeTummyTime();
   }, [resumeTummyTime]);
 
-  const isStoppingRef = useRef(false);
   const handleStopTummyTime = useCallback(async () => {
     if (isStoppingRef.current) return;
     isStoppingRef.current = true;
@@ -210,6 +219,7 @@ export default function TummyTimeScreen() {
             onPause={isAuthenticated ? handlePause : undefined}
             onResume={isAuthenticated ? handleResume : undefined}
             startedAt={activeTimer!.startTime}
+            onDiscard={canEditTimerStart ? handleDiscard : undefined}
             canEdit={canEditTimerStart}
             getBounds={getTimerStartBoundsForPicker}
             onEditStart={editTummyTimeStartTime}
@@ -390,6 +400,7 @@ interface RunningTimerViewProps {
   elapsedSeconds: number;
   isPaused: boolean;
   onStop: () => void;
+  onDiscard?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   startedAt: Date;
@@ -402,6 +413,7 @@ function RunningTimerView({
   elapsedSeconds,
   isPaused,
   onStop,
+  onDiscard,
   onPause,
   onResume,
   startedAt,
@@ -487,6 +499,7 @@ function RunningTimerView({
       <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary mt-3">
         {isPaused ? t("common.tapToResume") : t("tummyTime.tapToStop")}
       </Text>
+      {onDiscard && <DiscardTimerLink onPress={onDiscard} />}
     </View>
   );
 }

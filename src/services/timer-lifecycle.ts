@@ -1,6 +1,7 @@
 import { isTimerAccessUnavailable } from "./timer-access-error";
 import {
   getActiveTimerLock,
+  hasPendingLockRelease,
   findActiveTimerLock,
   isRetryableTimerWriteError,
   queuePendingLockRelease,
@@ -934,6 +935,17 @@ export async function restoreTimerLifecycle<
           lock.startedAt,
           timerData
         );
+        if (
+          await hasPendingLockRelease(
+            baby.id,
+            adapter.activityType,
+            user.id,
+            identity.timerInstanceId
+          )
+        ) {
+          await releaseOrQueueLock(identity, lock.startedAt);
+          return;
+        }
         const completionSecured = await isTimerCompletionSecured(
           baby.id,
           adapter.activityType,

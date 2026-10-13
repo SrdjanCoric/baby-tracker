@@ -356,7 +356,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [ ] 0128 · Switch babies without stopping their timers (after 0127) → tasks/0128-switch-babies-without-stopping-timers.md
 - [ ] 0129 · Keep guest-mode timers on the right baby (after 0128) → tasks/0129-keep-guest-baby-timers-separate.md
 - [ ] 0130 · Make the Lock Screen timer follow the selected baby (after 0128, 0094) → tasks/0130-live-activity-follows-selected-baby.md
-- [ ] 0131 · Discard a running timer from its screen → tasks/0131-discard-running-timer.md
+- [x] 0131 · Discard a running timer from its screen → tasks/done/0131-discard-running-timer.md
 - [ ] 0132 · Save breast feeds, pumping and tummy time without resumed pauses → tasks/0132-save-feeds-pumping-tummy-without-pauses.md
 - [ ] 0133 · Bank pumping minutes per side while the timer runs (after 0132) → tasks/0133-bank-pumping-minutes-per-side.md
 - [ ] 0134 · Freeze the running readout over a pause for breast feeding, pumping and tummy time (after 0132) → tasks/0134-freeze-readout-over-pause-non-sleep.md

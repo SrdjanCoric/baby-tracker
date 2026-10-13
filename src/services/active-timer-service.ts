@@ -235,6 +235,23 @@ export function queuePendingLockRelease(
   });
 }
 
+export function hasPendingLockRelease(
+  babyId: string,
+  activityType: TimerActivityType,
+  userId: string,
+  timerInstanceId: string
+): Promise<boolean> {
+  return withPendingLockReleaseMutation(async () =>
+    (await getPendingLockReleases()).some(
+      (release) =>
+        release.babyId === babyId &&
+        release.activityType === activityType &&
+        release.userId === userId &&
+        release.timerInstanceId === timerInstanceId
+    )
+  );
+}
+
 function removePendingLockRelease(
   babyId: string,
   activityType: TimerActivityType,

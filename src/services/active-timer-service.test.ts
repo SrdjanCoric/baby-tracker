@@ -7,6 +7,7 @@ import {
 import {
   acquireTimerLock,
   getActiveTimerLock,
+  hasPendingLockRelease,
   getActiveTimerSnapshotForBaby,
   isRetryableTimerWriteError,
   queuePendingLockRelease,
@@ -437,6 +438,39 @@ describe("durable lock release", () => {
     JSON.parse(storage.get("@pending_lock_releases") ?? "[]") as Array<{
       timerInstanceId?: string;
     }>;
+
+  it("finds only the pending release for the same baby, activity, user and timer", async () => {
+    const queued = queuePendingLockRelease(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "timer-1"
+    );
+    const matching = hasPendingLockRelease(
+      "baby-1",
+      "sleep",
+      "user-1",
+      "timer-1"
+    );
+    await queued;
+    await expect(matching).resolves.toBe(true);
+    await expect(
+      hasPendingLockRelease("baby-2", "sleep", "user-1", "timer-1")
+    ).resolves.toBe(false);
+    await expect(
+      hasPendingLockRelease("baby-1", "feeding", "user-1", "timer-1")
+    ).resolves.toBe(false);
+    await expect(
+      hasPendingLockRelease("baby-1", "sleep", "user-2", "timer-1")
+    ).resolves.toBe(false);
+    await expect(
+      hasPendingLockRelease("baby-1", "sleep", "user-1", "timer-2")
+    ).resolves.toBe(false);
+    await releaseTimerLockDurably("baby-1", "sleep", "user-1", "timer-1");
+    await expect(
+      hasPendingLockRelease("baby-1", "sleep", "user-1", "timer-1")
+    ).resolves.toBe(false);
+  });
 
   it("persists the release intent before touching the network", async () => {
     maybeSingleMock.mockReturnValue(new Promise(() => {}));

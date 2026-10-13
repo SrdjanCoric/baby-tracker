@@ -97,6 +97,7 @@ import {
   markTimerCompletionDurable,
   type TimerIdentity,
 } from "@/services/timer-completion-service";
+import { isTimerStarter } from "@/services/timer-starter";
 import { type TimerLockReconciliationState } from "@/services/timer-lock-reconciliation";
 import {
   editRunningTimerStartTime,
@@ -457,6 +458,7 @@ interface SleepContextValue extends SleepState {
     requestedIdentity?: TimerIdentity
   ) => Promise<TimerLockResult>;
   stopSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
+  discardSleep: () => Promise<boolean>;
   stopRemoteSleep: (requestedEndTime?: Date) => Promise<StoredSleepEntry | null>;
   editSleepStartTime: (startedAt: Date) => Promise<void>;
   changeSleepType: (sleepType: SleepType) => void;
@@ -1395,9 +1397,16 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  const stopSleep = useCallback(
-    async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
+  const completeSleepTimer = useCallback(
+    async (
+      requestedEndTime?: Date,
+      discard = false
+    ): Promise<StoredSleepEntry | null | true> => {
       if (!selectedBaby || !state.activeTimer) return null;
+      if (discard) {
+        const lock = getLockForActivity(selectedBaby.id, "sleep");
+        if (!isTimerStarter(lock, state.activeTimer.lockState, user?.id)) return null;
+      }
       if (isStoppingRef.current) return null;
       isStoppingRef.current = true;
       setIsStopping(true);
@@ -1475,6 +1484,10 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
+        if (discard) {
+          await finishTimer();
+          return true;
+        }
         const requestedStopTime =
           activeTimer.isPaused && activeTimer.pausedAt
             ? activeTimer.pausedAt
@@ -1572,8 +1585,22 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       state.wakeWindowConfig?.dayEndHour,
       user?.householdId,
       user?.id,
+      getLockForActivity,
       removeLock,
     ]
+  );
+
+  const stopSleep = useCallback(
+    async (requestedEndTime?: Date): Promise<StoredSleepEntry | null> => {
+      const result = await completeSleepTimer(requestedEndTime);
+      return result === true ? null : result;
+    },
+    [completeSleepTimer]
+  );
+  const discardSleep = useCallback(
+    async (): Promise<boolean> =>
+      (await completeSleepTimer(undefined, true)) === true,
+    [completeSleepTimer]
   );
 
   const stopRemoteSleep = useCallback(
@@ -2504,6 +2531,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startSleep,
       stopSleep,
+      discardSleep,
       stopRemoteSleep,
       editSleepStartTime,
       changeSleepType,
@@ -2546,6 +2574,7 @@ export function SleepProvider({ children }: { children: React.ReactNode }) {
       isStopping,
       startSleep,
       stopSleep,
+      discardSleep,
       stopRemoteSleep,
       editSleepStartTime,
       changeSleepType,

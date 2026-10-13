@@ -46,7 +46,11 @@
     "custom": "Prilagođeno",
     "durationHM": "{{h}}č {{m}}m",
     "durationH": "{{h}}č",
-    "durationM": "{{m}}m"
+    "durationM": "{{m}}m",
+    "discardTimer": "Odbaci tajmer",
+    "discardTimerBody": "{{elapsed}} neće biti sačuvano. Tajmer se briše na svim telefonima.",
+    "keepTiming": "Nastavi merenje",
+    "discard": "Odbaci"
   },
   "timerConflict": {
     "title": "Sukob tajmera je rešen",
@@ -266,7 +270,8 @@
     "selectContentAndAmount": "Molimo izaberite šta je u flašici i unesite količinu",
     "enterAmountValidation": "Molimo unesite količinu",
     "enterFoodValidation": "Molimo unesite ili izaberite hranu",
-    "stopError": "Nije uspelo zaustavljanje hranjenja. Molimo pokušajte ponovo."
+    "stopError": "Nije uspelo zaustavljanje hranjenja. Molimo pokušajte ponovo.",
+    "discardTimerTitle": "Odbaci ovo hranjenje?"
   },
   "sleep": {
     "title": "Spavanje",
@@ -363,7 +368,8 @@
     "householdGoalConfirm": "Ovo će promeniti cilj spavanja za sve negovatelje u vašem domaćinstvu. Nastaviti?",
     "napReminderWarningTitle": "Nije preporučeno",
     "napReminderWarningMessage": "Podsetnici za dremku nisu preporučeni za bebe mlađe od 2 meseca. San novorođenčadi je nepredvidiv i budni periodi mogu izazvati nepotreban stres. Da li ste sigurni da želite da ih omogućite?",
-    "napReminderWarningEnable": "Omogući svejedno"
+    "napReminderWarningEnable": "Omogući svejedno",
+    "discardTimerTitle": "Odbaci ovo spavanje?"
   },
   "diaper": {
     "title": "Pelene",
@@ -563,7 +569,8 @@
     "logPastPumpingDesc": "Zabeležite sesiju izdajanja od ranije",
     "pastPumpingTitle": "Evidentiraj prethodno izdajanje",
     "logManualPumping": "Evidentiraj izdajanje",
-    "pumpingSaved": "Sesija izdajanja sačuvana"
+    "pumpingSaved": "Sesija izdajanja sačuvana",
+    "discardTimerTitle": "Odbaci ovu sesiju izdajanja?"
   },
   "growth": {
     "title": "Rast",
@@ -641,7 +648,8 @@
     "customMinutes": "Prilagođeno (minuti)",
     "stopError": "Nije uspelo zaustavljanje vremena na stomaku. Molimo pokušajte ponovo.",
     "householdGoalTitle": "Deljeni cilj",
-    "householdGoalConfirm": "Ovo će promeniti cilj vremena na stomaku za sve negovatelje u vašem domaćinstvu. Nastaviti?"
+    "householdGoalConfirm": "Ovo će promeniti cilj vremena na stomaku za sve negovatelje u vašem domaćinstvu. Nastaviti?",
+    "discardTimerTitle": "Odbaci ovo vreme na stomaku?"
   },
   "baby": {
     "title": "Beba",
