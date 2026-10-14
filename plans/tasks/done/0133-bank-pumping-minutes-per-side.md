@@ -54,7 +54,7 @@ The pumping timer already records which side is active and lets the caregiver sw
 
 ## Human checkpoints
 
-- [ ] [confirm-db] Apply migration 076 (two nullable columns, no data change, plus the `toggle_timer_pause` replacement) to the hosted project and run `npm run test:sql` before the PR merges.
+- [x] [confirm-db] Apply migration 076 (two nullable columns, no data change, plus the `toggle_timer_pause` replacement) to the hosted project and run `npm run test:sql` before the PR merges.
 
 ## Acceptance criteria
 
