@@ -18,7 +18,7 @@ import { dropTombstoned } from "./sync/tombstone";
 import type { StoredFeedingEntry, CreateFeedingInput, UpdateFeedingInput } from "./feeding-storage";
 import type { StoredDiaperEntry, CreateDiaperInput, UpdateDiaperInput } from "./diaper-storage";
 import type { StoredSleepEntry, CreateSleepInput, UpdateSleepInput } from "./sleep-storage";
-import type { StoredPumpingEntry, CreatePumpingInput, UpdatePumpingInput } from "./pumping-storage";
+import { clearStaleSidesOnTimeEdit, type StoredPumpingEntry, type CreatePumpingInput, type UpdatePumpingInput } from "./pumping-storage";
 import type { StoredGrowthEntry, CreateGrowthInput, UpdateGrowthInput } from "./growth-storage";
 import type { StoredTummyTimeEntry, CreateTummyTimeInput, UpdateTummyTimeInput } from "./tummyTime-storage";
 import type { StoredMilestoneResponse, MilestoneState } from "./milestones-storage";
@@ -1462,6 +1462,8 @@ export async function createPumpingInDatabase(
     endedAt: input.endedAt?.toISOString(),
     durationSeconds: input.durationSeconds,
     pausedSeconds: input.pausedSeconds ?? 0,
+    leftDurationSeconds: input.leftDurationSeconds,
+    rightDurationSeconds: input.rightDurationSeconds,
     volumeMl: input.volumeMl,
     notes: input.notes,
     loggedBy: userId,
@@ -1498,6 +1500,8 @@ export async function createPumpingInDatabase(
               ended_at: input.endedAt?.toISOString(),
               duration_seconds: input.durationSeconds,
               paused_seconds: input.pausedSeconds ?? 0,
+              left_duration_seconds: input.leftDurationSeconds,
+              right_duration_seconds: input.rightDurationSeconds,
               amount_ml: input.volumeMl,
               notes: input.notes,
               logged_by: userId,
@@ -1513,14 +1517,17 @@ export async function createPumpingInDatabase(
 export async function updatePumpingInDatabase(
   babyId: string,
   pumpingId: string,
-  input: UpdatePumpingInput
+  requestedInput: UpdatePumpingInput
 ): Promise<StoredPumpingEntry | null> {
   const now = new Date().toISOString();
+  const input = clearStaleSidesOnTimeEdit(requestedInput);
 
   const updateData: Record<string, unknown> = {};
   if (input.startedAt !== undefined) updateData.started_at = input.startedAt.toISOString();
   if (input.endedAt !== undefined) updateData.ended_at = input.endedAt.toISOString();
   if (input.durationSeconds !== undefined) updateData.duration_seconds = input.durationSeconds;
+  if (input.leftDurationSeconds !== undefined) updateData.left_duration_seconds = input.leftDurationSeconds;
+  if (input.rightDurationSeconds !== undefined) updateData.right_duration_seconds = input.rightDurationSeconds;
   if (input.volumeMl !== undefined) updateData.amount_ml = input.volumeMl;
   if (input.notes !== undefined) updateData.notes = input.notes;
   if (input.side !== undefined) updateData.side = input.side;
@@ -1536,6 +1543,10 @@ export async function updatePumpingInDatabase(
             ...input,
             startedAt: input.startedAt?.toISOString() ?? p.startedAt,
             endedAt: input.endedAt?.toISOString() ?? p.endedAt,
+            leftDurationSeconds:
+              input.leftDurationSeconds === undefined ? p.leftDurationSeconds : input.leftDurationSeconds ?? undefined,
+            rightDurationSeconds:
+              input.rightDurationSeconds === undefined ? p.rightDurationSeconds : input.rightDurationSeconds ?? undefined,
             updatedAt: now,
           };
           return updatedPumping;
@@ -1581,6 +1592,10 @@ function transformPumpingFromDb(data: Record<string, unknown>): StoredPumpingEnt
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
     pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
+    leftDurationSeconds:
+      (data.left_duration_seconds as number | null | undefined) ?? undefined,
+    rightDurationSeconds:
+      (data.right_duration_seconds as number | null | undefined) ?? undefined,
     volumeMl: data.amount_ml as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,
@@ -2357,6 +2372,8 @@ async function syncPumpingForBaby(oldBabyId: string, newBabyId: string, userId: 
       ended_at: pumping.endedAt,
       duration_seconds: pumping.durationSeconds,
       paused_seconds: pumping.pausedSeconds ?? 0,
+      left_duration_seconds: pumping.leftDurationSeconds,
+      right_duration_seconds: pumping.rightDurationSeconds,
       amount_ml: pumping.volumeMl,
       notes: pumping.notes,
       logged_by: userId,

@@ -77,9 +77,46 @@ export interface ActivePumpingTimer extends TimerIdentity {
   isPaused: boolean;
   startTime: Date;
   side: BreastSide;
+  leftAccumulatedSeconds: number;
+  rightAccumulatedSeconds: number;
+  currentSideStartedAt: Date;
+  sidesUntracked?: boolean;
   totalPausedMs: number;
   pausedAt?: Date;
   lastResumedAt?: Date;
+}
+
+type SideSeconds = Pick<
+  ActivePumpingTimer,
+  "leftAccumulatedSeconds" | "rightAccumulatedSeconds"
+>;
+
+function bankCurrentSide(
+  timer: SideSeconds & Pick<ActivePumpingTimer, "side">,
+  seconds: number
+): SideSeconds {
+  return {
+    leftAccumulatedSeconds:
+      timer.leftAccumulatedSeconds +
+      (timer.side === "left" || timer.side === "both" ? seconds : 0),
+    rightAccumulatedSeconds:
+      timer.rightAccumulatedSeconds +
+      (timer.side === "right" || timer.side === "both" ? seconds : 0),
+  };
+}
+
+/**
+ * A timer started before per-side seconds existed keeps its sides off every
+ * stored copy, so whichever phone stops it saves no side split.
+ */
+function storedSideFields(
+  timer: Pick<ActivePumpingTimer, "sidesUntracked">,
+  sideSeconds: SideSeconds,
+  currentSideStartedAt: Date
+) {
+  return timer.sidesUntracked
+    ? { sidesUntracked: true }
+    : { ...sideSeconds, currentSideStartedAt: currentSideStartedAt.toISOString() };
 }
 
 export interface PumpingState {
@@ -103,23 +140,30 @@ export type PumpingAction =
       } & TimerIdentity;
     }
   | { type: "STOP_TIMER" }
-  | { type: "UPDATE_TIMER_SIDE"; payload: BreastSide }
-  | { type: "PAUSE_TIMER"; payload: { pausedAt: Date } }
+  | {
+      type: "UPDATE_TIMER_SIDE";
+      payload: SideSeconds & { side: BreastSide; currentSideStartedAt: Date };
+    }
+  | { type: "PAUSE_TIMER"; payload: SideSeconds & { pausedAt: Date } }
   | {
       type: "RESUME_TIMER";
-      payload: { totalPausedMs: number; resumedAt: Date };
+      payload: SideSeconds & { totalPausedMs: number; resumedAt: Date };
     }
   | {
       type: "SYNC_TIMER_PAUSE";
-      payload: {
+      payload: SideSeconds & {
         isPaused: boolean;
         pausedAt?: Date;
         lastResumedAt?: Date;
         totalPausedMs: number;
+        currentSideStartedAt: Date;
       };
     }
   | { type: "RESTORE_TIMER"; payload: ActivePumpingTimer }
-  | { type: "EDIT_TIMER_START"; payload: Date }
+  | {
+      type: "EDIT_TIMER_START";
+      payload: SideSeconds & { startedAt: Date; currentSideStartedAt: Date };
+    }
   | { type: "REMOTE_INSERT"; payload: StoredPumpingEntry }
   | { type: "REMOTE_UPDATE"; payload: StoredPumpingEntry }
   | { type: "REMOTE_DELETE"; payload: string };
@@ -169,6 +213,9 @@ export function pumpingReducer(
           timerInstanceId: action.payload.timerInstanceId,
           activityId: action.payload.activityId,
           side: action.payload.side,
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 0,
+          currentSideStartedAt: action.payload.startTime,
           totalPausedMs: 0,
         },
       };
@@ -180,7 +227,7 @@ export function pumpingReducer(
       if (!state.activeTimer) return state;
       return {
         ...state,
-        activeTimer: { ...state.activeTimer, side: action.payload },
+        activeTimer: { ...state.activeTimer, ...action.payload },
       };
 
     case "PAUSE_TIMER": {
@@ -191,6 +238,8 @@ export function pumpingReducer(
           ...state.activeTimer,
           isPaused: true,
           pausedAt: action.payload.pausedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
         },
       };
     }
@@ -205,6 +254,9 @@ export function pumpingReducer(
           pausedAt: undefined,
           totalPausedMs: action.payload.totalPausedMs,
           lastResumedAt: action.payload.resumedAt,
+          currentSideStartedAt: action.payload.resumedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
         },
       };
     }
@@ -221,6 +273,9 @@ export function pumpingReducer(
             : undefined,
           totalPausedMs: action.payload.totalPausedMs,
           lastResumedAt: action.payload.lastResumedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
+          currentSideStartedAt: action.payload.currentSideStartedAt,
         },
       };
 
@@ -234,7 +289,13 @@ export function pumpingReducer(
       if (!state.activeTimer) return state;
       return {
         ...state,
-        activeTimer: { ...state.activeTimer, startTime: action.payload },
+        activeTimer: {
+          ...state.activeTimer,
+          startTime: action.payload.startedAt,
+          currentSideStartedAt: action.payload.currentSideStartedAt,
+          leftAccumulatedSeconds: action.payload.leftAccumulatedSeconds,
+          rightAccumulatedSeconds: action.payload.rightAccumulatedSeconds,
+        },
       };
 
     case "REMOTE_INSERT":
@@ -527,13 +588,24 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           lastResumedAt,
           totalPausedMs,
           accumulatedSeconds,
+          payload,
         },
         activeTimer
       ) => {
         if (!babyId) return;
+        const { leftAccumulatedSeconds, rightAccumulatedSeconds } = payload;
+        const currentSideStartedAt = new Date(payload.currentSideStartedAt);
         dispatch({
           type: "SYNC_TIMER_PAUSE",
-          payload: { isPaused, pausedAt, lastResumedAt, totalPausedMs },
+          payload: {
+            isPaused,
+            pausedAt,
+            lastResumedAt,
+            totalPausedMs,
+            leftAccumulatedSeconds,
+            rightAccumulatedSeconds,
+            currentSideStartedAt,
+          },
         });
         if (liveActivityIdRef.current) {
           if (isPaused) {
@@ -547,6 +619,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           activityId: activeTimer.activityId,
           startedAt: activeTimer.startTime.toISOString(),
           side: activeTimer.side,
+          ...storedSideFields(
+            activeTimer,
+            { leftAccumulatedSeconds, rightAccumulatedSeconds },
+            currentSideStartedAt
+          ),
           liveActivityId: liveActivityIdRef.current ?? undefined,
           isPaused,
           pausedAt: pausedAt?.toISOString(),
@@ -593,7 +670,12 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             selectedBaby.id,
             "pumping",
             user.id,
-            { side, ...identity },
+            {
+              side,
+              leftAccumulatedSeconds: 0,
+              rightAccumulatedSeconds: 0,
+              ...identity,
+            },
             requestedStartTime
           );
           if (!lockResult.success) {
@@ -628,6 +710,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         ...identity,
         startedAt: startTime.toISOString(),
         side,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: startTime.toISOString(),
         liveActivityId: activityId ?? undefined,
         lockState,
       });
@@ -759,6 +844,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
                 timerInstanceId: activeTimer.timerInstanceId,
                 activityId: completion.activityId,
                 side: activeTimer.side,
+                leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds,
+                rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds,
+                currentSideStartedAt:
+                  activeTimer.currentSideStartedAt.toISOString(),
+                sidesUntracked: activeTimer.sidesUntracked,
                 isPaused: activeTimer.isPaused,
                 totalPausedMs: activeTimer.totalPausedMs,
                 lastResumedAt: activeTimer.lastResumedAt?.toISOString(),
@@ -847,14 +937,26 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
 
   const changePumpingSide = useCallback(
     (side: BreastSide) => {
-      if (state.activeTimer?.isPaused) return;
-      dispatch({ type: "UPDATE_TIMER_SIDE", payload: side });
-      if (selectedBaby && state.activeTimer) {
+      if (!state.activeTimer || state.activeTimer.isPaused) return;
+      const now = new Date();
+      const sideSeconds = bankCurrentSide(
+        state.activeTimer,
+        Math.floor(
+          (now.getTime() - state.activeTimer.currentSideStartedAt.getTime()) /
+            1000
+        )
+      );
+      dispatch({
+        type: "UPDATE_TIMER_SIDE",
+        payload: { side, ...sideSeconds, currentSideStartedAt: now },
+      });
+      if (selectedBaby) {
         PumpingStorageService.setActiveTimer(selectedBaby.id, {
           timerInstanceId: state.activeTimer.timerInstanceId,
           activityId: state.activeTimer.activityId,
           startedAt: state.activeTimer.startTime.toISOString(),
           side,
+          ...storedSideFields(state.activeTimer, sideSeconds, now),
           liveActivityId: liveActivityIdRef.current ?? undefined,
           isPaused: state.activeTimer.isPaused,
           totalPausedMs: state.activeTimer.totalPausedMs,
@@ -877,6 +979,9 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
               timerInstanceId: state.activeTimer.timerInstanceId,
               activityId: state.activeTimer.activityId,
               side,
+              ...sideSeconds,
+              currentSideStartedAt: now.toISOString(),
+              sidesUntracked: state.activeTimer.sidesUntracked,
               isPaused: state.activeTimer.isPaused,
               pausedAt: state.activeTimer.pausedAt?.toISOString(),
               totalPausedMs: state.activeTimer.totalPausedMs,
@@ -905,6 +1010,47 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: "RESTORE_TIMER", payload: restoredTimer });
         },
       });
+      const movedPastCurrentSide =
+        startedAt.getTime() >= activeTimer.currentSideStartedAt.getTime();
+      const currentSideStartedAt = movedPastCurrentSide
+        ? startedAt
+        : activeTimer.currentSideStartedAt.getTime() ===
+            activeTimer.startTime.getTime()
+          ? startedAt
+          : activeTimer.currentSideStartedAt;
+      let leftAccumulatedSeconds = movedPastCurrentSide
+        ? 0
+        : activeTimer.leftAccumulatedSeconds;
+      let rightAccumulatedSeconds = movedPastCurrentSide
+        ? 0
+        : activeTimer.rightAccumulatedSeconds;
+      if (
+        !movedPastCurrentSide &&
+        activeTimer.currentSideStartedAt.getTime() !==
+          activeTimer.startTime.getTime()
+      ) {
+        // The shifted span belongs to the side used before the latest switch.
+        const shiftedSeconds = Math.floor(
+          (startedAt.getTime() - activeTimer.startTime.getTime()) / 1000
+        );
+        if (activeTimer.side === "right" || activeTimer.side === "both") {
+          leftAccumulatedSeconds = Math.max(
+            0,
+            leftAccumulatedSeconds - shiftedSeconds
+          );
+        }
+        if (activeTimer.side === "left" || activeTimer.side === "both") {
+          rightAccumulatedSeconds = Math.max(
+            0,
+            rightAccumulatedSeconds - shiftedSeconds
+          );
+        }
+      }
+      const sideSeconds = {
+        leftAccumulatedSeconds,
+        rightAccumulatedSeconds,
+        currentSideStartedAt: currentSideStartedAt.toISOString(),
+      };
 
       await editRunningTimerStartTime({
         adapter,
@@ -915,6 +1061,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           activityId: activeTimer.activityId,
           startedAt: activeTimer.startTime.toISOString(),
           side: activeTimer.side,
+          ...storedSideFields(activeTimer, sideSeconds, currentSideStartedAt),
           liveActivityId: liveActivityIdRef.current ?? undefined,
           isPaused: activeTimer.isPaused,
           pausedAt: activeTimer.pausedAt?.toISOString(),
@@ -926,6 +1073,8 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           timerInstanceId: activeTimer.timerInstanceId,
           activityId: activeTimer.activityId,
           side: activeTimer.side,
+          ...sideSeconds,
+          sidesUntracked: activeTimer.sidesUntracked,
           isPaused: activeTimer.isPaused,
           pausedAt: activeTimer.pausedAt?.toISOString(),
           totalPausedMs: activeTimer.totalPausedMs,
@@ -934,7 +1083,15 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         startedAt,
         liveActivityIdRef,
         dispatchEditedStart: (nextStart) => {
-          dispatch({ type: "EDIT_TIMER_START", payload: nextStart });
+          dispatch({
+            type: "EDIT_TIMER_START",
+            payload: {
+              startedAt: nextStart,
+              currentSideStartedAt,
+              leftAccumulatedSeconds,
+              rightAccumulatedSeconds,
+            },
+          });
         },
       });
       await refreshLocks();
@@ -948,8 +1105,18 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         return;
 
       const now = requestedPauseTime ?? new Date();
+      const sideSeconds = bankCurrentSide(
+        state.activeTimer,
+        Math.floor(
+          (now.getTime() - state.activeTimer.currentSideStartedAt.getTime()) /
+            1000
+        )
+      );
 
-      dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
+      dispatch({
+        type: "PAUSE_TIMER",
+        payload: { pausedAt: now, ...sideSeconds },
+      });
 
       if (liveActivityIdRef.current) {
         const activeElapsedSeconds = Math.floor(
@@ -966,6 +1133,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         activityId: state.activeTimer.activityId,
         startedAt: state.activeTimer.startTime.toISOString(),
         side: state.activeTimer.side,
+        ...storedSideFields(
+          state.activeTimer,
+          sideSeconds,
+          state.activeTimer.currentSideStartedAt
+        ),
         liveActivityId: liveActivityIdRef.current ?? undefined,
         isPaused: true,
         pausedAt: now.toISOString(),
@@ -988,6 +1160,11 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             totalPausedMs: state.activeTimer.totalPausedMs,
             lastResumedAt: state.activeTimer.lastResumedAt?.toISOString(),
             side: state.activeTimer.side,
+            ...storedSideFields(
+              state.activeTimer,
+              sideSeconds,
+              state.activeTimer.currentSideStartedAt
+            ),
           });
         } catch (error) {
           if (await handleTimerAccessError(error)) return;
@@ -1030,10 +1207,31 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
           : (widgetPauseDurationMs ?? 0)
       );
       const newTotalPausedMs = state.activeTimer.totalPausedMs + pauseDuration;
+      const sideSeconds = state.activeTimer.isPaused
+        ? {
+            leftAccumulatedSeconds: state.activeTimer.leftAccumulatedSeconds,
+            rightAccumulatedSeconds: state.activeTimer.rightAccumulatedSeconds,
+          }
+        : bankCurrentSide(
+            state.activeTimer,
+            Math.max(
+              0,
+              Math.floor(
+                (now.getTime() -
+                  pauseDuration -
+                  state.activeTimer.currentSideStartedAt.getTime()) /
+                  1000
+              )
+            )
+          );
 
       dispatch({
         type: "RESUME_TIMER",
-        payload: { totalPausedMs: newTotalPausedMs, resumedAt: now },
+        payload: {
+          totalPausedMs: newTotalPausedMs,
+          resumedAt: now,
+          ...sideSeconds,
+        },
       });
 
       if (liveActivityIdRef.current) {
@@ -1051,6 +1249,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
         activityId: state.activeTimer.activityId,
         startedAt: state.activeTimer.startTime.toISOString(),
         side: state.activeTimer.side,
+        ...storedSideFields(state.activeTimer, sideSeconds, now),
         liveActivityId: liveActivityIdRef.current ?? undefined,
         isPaused: false,
         totalPausedMs: newTotalPausedMs,
@@ -1070,6 +1269,7 @@ export function PumpingProvider({ children }: { children: React.ReactNode }) {
             totalPausedMs: newTotalPausedMs,
             lastResumedAt: now.toISOString(),
             side: state.activeTimer.side,
+            ...storedSideFields(state.activeTimer, sideSeconds, now),
             effectiveStartTime: state.activeTimer.startTime.toISOString(),
             accumulatedSeconds: activeElapsedSeconds,
           });
@@ -1251,6 +1451,10 @@ function transformPumpingFromRemote(
     endedAt: data.ended_at as string | undefined,
     durationSeconds: data.duration_seconds as number | undefined,
     pausedSeconds: (data.paused_seconds as number | null | undefined) ?? 0,
+    leftDurationSeconds:
+      (data.left_duration_seconds as number | null | undefined) ?? undefined,
+    rightDurationSeconds:
+      (data.right_duration_seconds as number | null | undefined) ?? undefined,
     volumeMl: data.amount_ml as number | undefined,
     notes: data.notes as string | undefined,
     loggedBy: data.logged_by as string | undefined,

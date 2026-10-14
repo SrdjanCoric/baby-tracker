@@ -32,6 +32,7 @@ import type { CreateFeedingInput } from "../feeding-storage";
 import type { CreateDiaperInput } from "../diaper-storage";
 import type { CreateGrowthInput } from "../growth-storage";
 import type { CreatePumpingInput } from "../pumping-storage";
+import { pumpSideSeconds } from "./pump-sides";
 import type { CreateHealthInput } from "../health-storage";
 import type { CreateTummyTimeInput } from "../tummyTime-storage";
 
@@ -365,18 +366,16 @@ function mapRow(
           ? null
           : validateManualPumpingDuration(durationSeconds)
       );
+      const side =
+        left === undefined ? "right" : right === undefined ? "left" : "both";
       return {
         kind: "pumping",
         content,
         input: {
           ...base,
           volumeMl,
-          side:
-            left === undefined
-              ? "right"
-              : right === undefined
-                ? "left"
-                : "both",
+          side,
+          ...pumpSideSeconds(side, durationSeconds),
           ...(durationSeconds !== undefined
             ? {
                 durationSeconds,

@@ -109,6 +109,40 @@ describe("PumpingStorageService", () => {
       expect(AsyncStorage.setItem).toHaveBeenCalled();
     });
 
+    it("keeps per-side seconds on a saved timer session and leaves them absent otherwise", async () => {
+      mockCollectionRead.mockResolvedValue(null);
+
+      const tracked = await PumpingStorageService.addPumping({
+        babyId: "baby-123",
+        side: "right",
+        startedAt: new Date("2024-01-17T13:00:00.000Z"),
+        endedAt: new Date("2024-01-17T13:20:00.000Z"),
+        durationSeconds: 1200,
+        leftDurationSeconds: 720,
+        rightDurationSeconds: 480,
+      });
+      const manual = await PumpingStorageService.addPumping({
+        babyId: "baby-123",
+        side: "left",
+        startedAt: new Date("2024-01-17T15:00:00.000Z"),
+        volumeMl: 80,
+      });
+
+      expect(tracked).toMatchObject({
+        leftDurationSeconds: 720,
+        rightDurationSeconds: 480,
+      });
+      expect(manual.leftDurationSeconds).toBeUndefined();
+      expect(manual.rightDurationSeconds).toBeUndefined();
+      const written = JSON.parse(
+        vi.mocked(AsyncStorage.setItem).mock.calls[0][1]
+      ) as StoredPumpingEntry[];
+      expect(written[0]).toMatchObject({
+        leftDurationSeconds: 720,
+        rightDurationSeconds: 480,
+      });
+    });
+
     it("should add a new pumping entry with both sides", async () => {
       mockCollectionRead.mockResolvedValue(null);
 
@@ -275,6 +309,34 @@ describe("PumpingStorageService", () => {
         { startedAt: new Date("2024-01-17T12:45:00.000Z") }
       );
       expect(result?.startedAt).toBe("2024-01-17T12:45:00.000Z");
+    });
+
+    it.each([
+      ["a time edit", { endedAt: new Date("2024-01-17T13:05:00.000Z"), durationSeconds: 300 }, undefined],
+      ["a notes edit", { notes: "Updated" }, 720],
+    ])("after %s, keeps per-side seconds only if the times did not change", async (_name, input, expectedLeft) => {
+      const existingPumping: StoredPumpingEntry = {
+        id: "pumping-1",
+        babyId: "baby-123",
+        side: "both",
+        startedAt: "2024-01-17T13:00:00.000Z",
+        endedAt: "2024-01-17T13:20:00.000Z",
+        durationSeconds: 1200,
+        leftDurationSeconds: 720,
+        rightDurationSeconds: 480,
+        createdAt: "2024-01-17T13:00:00.000Z",
+        updatedAt: "2024-01-17T13:20:00.000Z",
+      };
+      mockCollectionRead.mockResolvedValue(JSON.stringify([existingPumping]));
+
+      const result = await PumpingStorageService.updatePumping(
+        "baby-123",
+        "pumping-1",
+        input
+      );
+
+      expect(result?.leftDurationSeconds).toBe(expectedLeft);
+      expect(result?.rightDurationSeconds).toBe(expectedLeft === undefined ? undefined : 480);
     });
   });
 
@@ -531,6 +593,25 @@ describe("PumpingStorageService", () => {
           JSON.stringify(timerData)
         );
       });
+    });
+
+    it("keeps the running timer's per-side seconds across a save and reload", async () => {
+      const timerData = {
+        startedAt: "2024-01-17T13:00:00.000Z",
+        side: "right" as const,
+        leftAccumulatedSeconds: 720,
+        rightAccumulatedSeconds: 30,
+        currentSideStartedAt: "2024-01-17T13:12:30.000Z",
+      };
+
+      await PumpingStorageService.setActiveTimer("baby-123", timerData);
+      mockCollectionRead.mockResolvedValue(
+        vi.mocked(AsyncStorage.setItem).mock.calls[0][1]
+      );
+
+      expect(await PumpingStorageService.getActiveTimer("baby-123")).toEqual(
+        timerData
+      );
     });
 
     describe("clearActiveTimer", () => {

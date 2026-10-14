@@ -223,6 +223,8 @@ export function formatPumpingAsCSV(
     ...(includeNotes ? ["Notes"] : []),
     "Logged By",
     "Paused (seconds)",
+    "Left (seconds)",
+    "Right (seconds)",
   ];
 
   const rows = pumpings.map((pumping) => {
@@ -235,6 +237,8 @@ export function formatPumpingAsCSV(
       ...(includeNotes ? [pumping.notes || ""] : []),
       pumping.loggedBy || "",
       pumping.pausedSeconds ?? 0,
+      pumping.leftDurationSeconds ?? "",
+      pumping.rightDurationSeconds ?? "",
     ];
     return generateCSVRow(values);
   });

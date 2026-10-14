@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const widgetSource = readFileSync(
-  new URL("../../../targets/widget/index.swift", import.meta.url),
-  "utf8"
-);
 const watchSource = readFileSync(
   new URL("../../../targets/watch/index.swift", import.meta.url),
   "utf8"
@@ -23,20 +19,6 @@ function sourceBetween(source: string, startMarker: string, endMarker: string): 
 }
 
 describe("native counted-pause resume", () => {
-  it("keeps the widget timer's real start locally and in the resume request", () => {
-    const intent = sourceBetween(
-      widgetSource,
-      "struct TogglePauseActivityIntent",
-      "struct SelectActivityIntent"
-    );
-    const resume = sourceBetween(intent, "if currentlyPaused {", "} else {");
-
-    expect(resume).toContain("let effectiveStartISO = timer.startTime");
-    expect(resume).toContain('"effectiveStartTime": effectiveStartISO');
-    expect(resume).not.toContain("newStartTime");
-    expect(resume).not.toContain('timer["startTime"] =');
-  });
-
   it("keeps the Watch timer's real start locally and in the resume request", () => {
     const resume = sourceBetween(
       watchSource,

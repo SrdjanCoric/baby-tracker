@@ -449,6 +449,80 @@ describe("lossless activity sync", () => {
     }
   );
 
+  it("round-trips pumping minutes per side through sync and reads untracked sides as absent", async () => {
+    await createPumpingInDatabase(
+      {
+        id: "pumping-sides",
+        babyId: "baby-1",
+        side: "right",
+        startedAt: new Date("2026-07-14T09:00:00.000Z"),
+        endedAt: new Date("2026-07-14T09:20:00.000Z"),
+        durationSeconds: 1200,
+        leftDurationSeconds: 720,
+        rightDurationSeconds: 480,
+      },
+      "user-1"
+    );
+    const [operation] = vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)
+      .mock.calls[0];
+    expect(operation.data).toMatchObject({
+      left_duration_seconds: 720,
+      right_duration_seconds: 480,
+    });
+    // The queued write is the producer of the server-shaped read fixture.
+    serverRows = [
+      { ...operation.data, updated_at: "2026-07-14T09:20:00.000Z", field_clocks: {} },
+      {
+        ...operation.data,
+        id: "pumping-untracked",
+        left_duration_seconds: null,
+        right_duration_seconds: null,
+        updated_at: "2026-07-14T09:20:00.000Z",
+        field_clocks: {},
+      },
+    ];
+    pendingOperations.clear();
+    storage.delete("@pumpings:baby-1");
+
+    const pulled = await fetchPumpingFromDatabase("baby-1");
+    expect(pulled.find((entry) => entry.id === "pumping-sides")).toMatchObject({
+      leftDurationSeconds: 720,
+      rightDurationSeconds: 480,
+    });
+    const untracked = pulled.find((entry) => entry.id === "pumping-untracked");
+    expect(untracked?.leftDurationSeconds).toBeUndefined();
+    expect(untracked?.rightDurationSeconds).toBeUndefined();
+  });
+
+  it("keeps pumping minutes per side when guest entries are promoted to the household", async () => {
+    await PumpingStorageService.addPumping({
+      babyId: "guest-baby",
+      side: "right",
+      startedAt: new Date("2026-07-14T09:00:00Z"),
+      endedAt: new Date("2026-07-14T09:20:00Z"),
+      durationSeconds: 1200,
+      leftDurationSeconds: 720,
+      rightDurationSeconds: 480,
+    });
+    await syncGuestActivitiesToDatabase(
+      "user-1",
+      new Map([["guest-baby", "household-baby"]])
+    );
+
+    const operations = vi
+      .mocked(syncEngine!.enqueueOperation)
+      .mock.calls.map(([operation]) => operation);
+    expect(operations).toEqual([
+      expect.objectContaining({
+        table: "pumping_sessions",
+        data: expect.objectContaining({
+          left_duration_seconds: 720,
+          right_duration_seconds: 480,
+        }),
+      }),
+    ]);
+  });
+
   it("stores zero pauses for manual entries and reads legacy local entries without backfilling them", async () => {
     const startedAt = new Date("2026-07-14T09:00:00Z");
     const input = {
@@ -710,6 +784,62 @@ describe("lossless activity sync", () => {
           ended_at: "2026-07-14T10:30:00.000Z",
           duration_seconds: 2700,
         }),
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("marks pumping sides not tracked when an edit changes the interval", async () => {
+    storage.set("@pumpings:baby-1", JSON.stringify([{
+      id: "pumping-1",
+      babyId: "baby-1",
+      side: "both",
+      startedAt: "2026-07-14T10:00:00.000Z",
+      endedAt: "2026-07-14T10:20:00.000Z",
+      durationSeconds: 1200,
+      leftDurationSeconds: 720,
+      rightDurationSeconds: 480,
+      createdAt: "2026-07-14T10:00:00.000Z",
+      updatedAt: "2026-07-14T10:20:00.000Z",
+    }]));
+    const updated = await updatePumpingInDatabase("baby-1", "pumping-1", {
+      endedAt: new Date("2026-07-14T10:05:00.000Z"),
+      durationSeconds: 300,
+    });
+    expect(updated?.leftDurationSeconds).toBeUndefined();
+    expect(updated?.rightDurationSeconds).toBeUndefined();
+    expect(JSON.parse(storage.get("@pumpings:baby-1")!)[0]).not.toHaveProperty("leftDurationSeconds");
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "UPDATE",
+        data: expect.objectContaining({
+          duration_seconds: 300,
+          left_duration_seconds: null,
+          right_duration_seconds: null,
+        }),
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("keeps pumping sides when an edit leaves the interval alone", async () => {
+    storage.set("@pumpings:baby-1", JSON.stringify([{
+      id: "pumping-1",
+      babyId: "baby-1",
+      side: "both",
+      startedAt: "2026-07-14T10:00:00.000Z",
+      endedAt: "2026-07-14T10:20:00.000Z",
+      durationSeconds: 1200,
+      leftDurationSeconds: 720,
+      rightDurationSeconds: 480,
+      createdAt: "2026-07-14T10:00:00.000Z",
+      updatedAt: "2026-07-14T10:20:00.000Z",
+    }]));
+    const updated = await updatePumpingInDatabase("baby-1", "pumping-1", { notes: "Updated" });
+    expect(updated).toEqual(expect.objectContaining({ leftDurationSeconds: 720, rightDurationSeconds: 480 }));
+    expect(vi.mocked(syncEngine!.enqueueOperationWithLocalMutation)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ left_duration_seconds: expect.anything() }),
       }),
       expect.any(Object)
     );

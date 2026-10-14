@@ -588,6 +588,35 @@ describe("formatPumpingAsCSV", () => {
   });
 });
 
+describe("pumping minutes per side in CSV", () => {
+  it("adds left and right seconds as the last columns, empty when a side is absent", () => {
+    const common = {
+      babyId: "baby-1",
+      side: "both" as const,
+      startedAt: "2026-07-14T09:00:00.000Z",
+      durationSeconds: 1200,
+      createdAt: "2026-07-14T09:00:00.000Z",
+      updatedAt: "2026-07-14T09:20:00.000Z",
+    };
+    const csv = formatPumpingAsCSV(
+      [
+        { ...common, id: "tracked", leftDurationSeconds: 720, rightDurationSeconds: 480 },
+        { ...common, id: "left-only", leftDurationSeconds: 900 },
+        { ...common, id: "untracked" },
+      ],
+      true
+    );
+    const [header, ...rows] = csv.split("\n").map((line) => line.split(","));
+
+    expect(header.slice(-2)).toEqual(["Left (seconds)", "Right (seconds)"]);
+    expect(rows.map((row) => row.slice(-2))).toEqual([
+      ["720", "480"],
+      ["900", ""],
+      ["", ""],
+    ]);
+  });
+});
+
 describe("formatGrowthAsCSV", () => {
   const mockGrowth: StoredGrowthEntry[] = [
     {

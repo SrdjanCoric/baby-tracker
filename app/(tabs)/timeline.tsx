@@ -422,7 +422,17 @@ export default function TimelineScreen() {
       ? formatDuration(pumping.durationSeconds, "short")
       : "";
 
-    const parts = [sideLabel];
+    const hasBothSides =
+      (pumping.leftDurationSeconds ?? 0) > 0 &&
+      (pumping.rightDurationSeconds ?? 0) > 0;
+    const parts = [
+      hasBothSides
+        ? formatDualSideDuration(
+            pumping.leftDurationSeconds,
+            pumping.rightDurationSeconds
+          )
+        : sideLabel,
+    ];
     if (volumeLabel) parts.push(volumeLabel);
     if (durationLabel) parts.push(durationLabel);
     const subtitle = parts.join(" · ");

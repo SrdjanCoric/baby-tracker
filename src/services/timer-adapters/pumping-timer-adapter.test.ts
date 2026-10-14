@@ -36,6 +36,9 @@ describe("pumping timer adapter", () => {
         timerInstanceId: "timer-1",
         activityId: "activity-1",
         side: "right",
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 60,
+        currentSideStartedAt: "2026-08-05T12:01:03.000Z",
         isPaused: false,
         totalPausedMs: 3_000,
       })
@@ -47,6 +50,7 @@ describe("pumping timer adapter", () => {
       endedAt,
       durationSeconds: 120,
       pausedSeconds: 3,
+      rightDurationSeconds: 120,
     });
   });
 
@@ -102,6 +106,9 @@ describe("pumping timer adapter", () => {
         timerInstanceId: "timer-1",
         activityId: "activity-1",
         side: "left" as const,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: "2026-08-05T12:00:00.000Z",
         isPaused: false,
         totalPausedMs: 0,
       },
@@ -109,6 +116,9 @@ describe("pumping timer adapter", () => {
         timerInstanceId: "timer-2",
         activityId: "activity-2",
         side: "both" as const,
+        leftAccumulatedSeconds: 45,
+        rightAccumulatedSeconds: 45,
+        currentSideStartedAt: "2026-08-05T12:00:00.000Z",
         isPaused: true,
         totalPausedMs: 45_000,
         pausedAt: "2026-08-05T12:00:45.000Z",
@@ -188,6 +198,9 @@ describe("pumping timer adapter", () => {
           timerInstanceId: "timer-1",
           activityId: "activity-1",
           side: "right",
+          leftAccumulatedSeconds: 0,
+          rightAccumulatedSeconds: 30,
+          currentSideStartedAt: "2026-08-05T12:00:30.000Z",
           isPaused: timer.isPaused,
           totalPausedMs: timer.totalPausedMs,
           ...(timer.pausedAt ? { pausedAt: timer.pausedAt } : {}),
@@ -202,6 +215,9 @@ describe("pumping timer adapter", () => {
         timerInstanceId: "timer-1",
         activityId: "activity-1",
         side: "right",
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 30,
+        currentSideStartedAt: new Date("2026-08-05T12:00:30.000Z"),
         totalPausedMs: timer.totalPausedMs,
         pausedAt: timer.expectedPausedAt,
       });
@@ -256,4 +272,189 @@ it("keeps whole-second active and pause totals equal to the floored wall span", 
   expect(record.durationSeconds).toBe(10);
   expect(record.pausedSeconds).toBe(0);
   expect(record.durationSeconds! + record.pausedSeconds!).toBe(10);
+});
+
+describe("pumping minutes per side", () => {
+  const startedAt = new Date("2026-10-13T08:00:00.000Z");
+  const at = (seconds: number) =>
+    new Date(startedAt.getTime() + seconds * 1000);
+  const adapter = () =>
+    createPumpingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer: vi.fn() });
+
+  it.each([
+    {
+      label: "ran only on the left",
+      endSecond: 180,
+      payload: {
+        side: "left" as const,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(0).toISOString(),
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      left: 180,
+      right: undefined,
+    },
+    {
+      label: "left then right",
+      endSecond: 200,
+      payload: {
+        side: "right" as const,
+        leftAccumulatedSeconds: 120,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(120).toISOString(),
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      left: 120,
+      right: 80,
+    },
+    {
+      label: "both the whole time",
+      endSecond: 180,
+      payload: {
+        side: "both" as const,
+        leftAccumulatedSeconds: 0,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(0).toISOString(),
+        isPaused: false,
+        totalPausedMs: 0,
+      },
+      left: 180,
+      right: 180,
+    },
+    {
+      label: "mixed with a resumed pause",
+      endSecond: 200,
+      payload: {
+        side: "right" as const,
+        leftAccumulatedSeconds: 120,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(150).toISOString(),
+        isPaused: false,
+        totalPausedMs: 30_000,
+        lastResumedAt: at(90).toISOString(),
+      },
+      left: 120,
+      right: 50,
+    },
+    {
+      label: "stopped while paused",
+      endSecond: 90,
+      payload: {
+        side: "left" as const,
+        leftAccumulatedSeconds: 90,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(0).toISOString(),
+        isPaused: true,
+        pausedAt: at(90).toISOString(),
+        totalPausedMs: 0,
+      },
+      left: 90,
+      right: undefined,
+    },
+  ])("saves per-side seconds when the timer $label", ({ endSecond, payload, left, right }) => {
+    const record = adapter().buildRecord(startedAt, at(endSecond), payload);
+
+    expect(record.leftDurationSeconds).toBe(left);
+    expect(record.rightDurationSeconds).toBe(right);
+    expect(record.side).toBe(payload.side);
+    if (payload.side !== "both") {
+      expect(
+        (left ?? 0) + (right ?? 0) + record.pausedSeconds!
+      ).toBe(endSecond);
+    }
+  });
+
+  it("round-trips per-side seconds through the server lock timer data", () => {
+    const payload = {
+      timerInstanceId: "timer-1",
+      activityId: "activity-1",
+      side: "right" as const,
+      leftAccumulatedSeconds: 120,
+      rightAccumulatedSeconds: 15,
+      currentSideStartedAt: at(135).toISOString(),
+      isPaused: false,
+      totalPausedMs: 0,
+    };
+    const codec = adapter().timerDataCodec;
+
+    expect(codec.decode(codec.encode(payload), at(0).toISOString())).toEqual(
+      payload
+    );
+  });
+
+  it("saves no side split for a timer started before per-side seconds existed", () => {
+    const codec = adapter().timerDataCodec;
+    const fromLock = codec.decode(
+      { side: "right", isPaused: false, totalPausedMs: 0 },
+      at(0).toISOString()
+    );
+    const fromLocalTimer = codec.fromActiveTimer({
+      startedAt: at(0).toISOString(),
+      side: "right",
+    });
+
+    for (const payload of [fromLock, fromLocalTimer]) {
+      expect(payload.sidesUntracked).toBe(true);
+      const record = adapter().buildRecord(at(0), at(1200), payload);
+      expect(record.leftDurationSeconds).toBeUndefined();
+      expect(record.rightDurationSeconds).toBeUndefined();
+    }
+  });
+
+  it("keeps an untracked timer untracked across the server lock and restore", () => {
+    const dispatchRestoreTimer = vi.fn();
+    const codec = createPumpingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer })
+      .timerDataCodec;
+    const untracked = codec.decode(
+      { side: "left", isPaused: false, totalPausedMs: 0 },
+      at(0).toISOString()
+    );
+    const timerData = codec.encode({ ...untracked, side: "right" });
+
+    expect(timerData).not.toHaveProperty("currentSideStartedAt");
+    expect(timerData).not.toHaveProperty("leftAccumulatedSeconds");
+    const restored = codec.decode(timerData, at(0).toISOString());
+    expect(restored.sidesUntracked).toBe(true);
+    createPumpingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer })
+      .dispatchRestoreTimer({
+        startedAt,
+        lockState: "owned",
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        payload: restored,
+      });
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({ sidesUntracked: true })
+    );
+  });
+
+  it("restores per-side seconds onto the running timer", () => {
+    const dispatchRestoreTimer = vi.fn();
+    createPumpingTimerAdapter({ babyId: "baby-1", dispatchRestoreTimer })
+      .dispatchRestoreTimer({
+        startedAt,
+        lockState: "owned",
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+        payload: {
+          side: "right",
+          leftAccumulatedSeconds: 120,
+          rightAccumulatedSeconds: 15,
+          currentSideStartedAt: at(135).toISOString(),
+          isPaused: false,
+          totalPausedMs: 0,
+        },
+      });
+
+    expect(dispatchRestoreTimer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        leftAccumulatedSeconds: 120,
+        rightAccumulatedSeconds: 15,
+        currentSideStartedAt: at(135),
+      })
+    );
+  });
 });

@@ -681,6 +681,10 @@ for (const [file, description] of [
     "non-sleep-paused-seconds-tests.sql",
     "non-sleep pause columns: legacy RPC compatibility and constraints",
   ],
+  [
+    "pumping-side-seconds-tests.sql",
+    "pumping side seconds: columns and server-side pause banking",
+  ],
 ]) {
   console.log("");
   try {

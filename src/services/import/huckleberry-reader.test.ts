@@ -321,6 +321,25 @@ describe("Huckleberry activity mappings", () => {
   );
 
   it.each([
+    { condition: "70 ml", endCondition: "", duration: "0:12", left: 720, right: undefined },
+    { condition: "", endCondition: "70 ml", duration: "0:12", left: undefined, right: 720 },
+    { condition: "30 ml", endCondition: "40 ml", duration: "0:12", left: undefined, right: undefined },
+    { condition: "70 ml", endCondition: "", duration: "", left: undefined, right: undefined },
+  ])(
+    "gives a one-sided pump its whole duration: $condition / $endCondition over $duration",
+    ({ condition, endCondition, duration, left, right }) => {
+      const preview = readHuckleberry(
+        csv([["Pump", "2024-01-12 12:00", "", duration, condition, "", endCondition, ""]])
+      );
+
+      expect(preview.skipped).toEqual({});
+      expect(preview.records[0].kind).toBe("pumping");
+      const input = preview.records[0].input as Record<string, unknown>;
+      expect([input.leftDurationSeconds, input.rightDurationSeconds]).toEqual([left, right]);
+    }
+  );
+
+  it.each([
     ["Feed", "", "", "Formula", "Bottle", "", "couldNotRead"],
     ["Feed", "", "", "Formula", "Bottle", "600 ml", "outsideLimits"],
     ["Feed", "", "", "Formula", "Bottle", "0 ml", "outsideLimits"],

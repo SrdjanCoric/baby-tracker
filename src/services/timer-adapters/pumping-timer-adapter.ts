@@ -17,6 +17,14 @@ import type { TimerLockReconciliationState } from "../timer-lock-reconciliation"
 
 export interface PumpingTimerPayload extends SharedTimerPayload {
   side: BreastSide;
+  leftAccumulatedSeconds: number;
+  rightAccumulatedSeconds: number;
+  currentSideStartedAt: string;
+  /**
+   * Set when the timer started on a release without per-side seconds, so
+   * the time already run cannot be split and the entry saves no sides.
+   */
+  sidesUntracked?: boolean;
 }
 
 export interface RestoredPumpingTimer extends TimerIdentity {
@@ -25,6 +33,10 @@ export interface RestoredPumpingTimer extends TimerIdentity {
   isPaused: boolean;
   startTime: Date;
   side: BreastSide;
+  leftAccumulatedSeconds: number;
+  rightAccumulatedSeconds: number;
+  currentSideStartedAt: Date;
+  sidesUntracked?: boolean;
   totalPausedMs: number;
   pausedAt?: Date;
   lastResumedAt?: Date;
@@ -64,6 +76,13 @@ export function createPumpingTimerAdapter({
           : {}),
         ...(payload.activityId ? { activityId: payload.activityId } : {}),
         side: payload.side,
+        ...(payload.sidesUntracked
+          ? {}
+          : {
+              leftAccumulatedSeconds: payload.leftAccumulatedSeconds,
+              rightAccumulatedSeconds: payload.rightAccumulatedSeconds,
+              currentSideStartedAt: payload.currentSideStartedAt,
+            }),
         ...(payload.lastResumedAt
           ? { lastResumedAt: payload.lastResumedAt }
           : {}),
@@ -71,7 +90,7 @@ export function createPumpingTimerAdapter({
         totalPausedMs: payload.totalPausedMs,
         ...(payload.pausedAt ? { pausedAt: payload.pausedAt } : {}),
       }),
-      decode: (timerData) => ({
+      decode: (timerData, startedAt) => ({
         ...(typeof timerData.timerInstanceId === "string"
           ? { timerInstanceId: timerData.timerInstanceId }
           : {}),
@@ -82,6 +101,21 @@ export function createPumpingTimerAdapter({
           timerData.side === "left" || timerData.side === "right"
             ? timerData.side
             : "both",
+        leftAccumulatedSeconds:
+          typeof timerData.leftAccumulatedSeconds === "number"
+            ? timerData.leftAccumulatedSeconds
+            : 0,
+        rightAccumulatedSeconds:
+          typeof timerData.rightAccumulatedSeconds === "number"
+            ? timerData.rightAccumulatedSeconds
+            : 0,
+        currentSideStartedAt:
+          typeof timerData.currentSideStartedAt === "string"
+            ? timerData.currentSideStartedAt
+            : startedAt,
+        ...(typeof timerData.currentSideStartedAt === "string"
+          ? {}
+          : { sidesUntracked: true }),
         ...(typeof timerData.lastResumedAt === "string"
           ? { lastResumedAt: timerData.lastResumedAt }
           : {}),
@@ -102,6 +136,13 @@ export function createPumpingTimerAdapter({
           ? { activityId: activeTimer.activityId }
           : {}),
         side: activeTimer.side,
+        leftAccumulatedSeconds: activeTimer.leftAccumulatedSeconds ?? 0,
+        rightAccumulatedSeconds: activeTimer.rightAccumulatedSeconds ?? 0,
+        currentSideStartedAt:
+          activeTimer.currentSideStartedAt ?? activeTimer.startedAt,
+        ...(activeTimer.sidesUntracked || !activeTimer.currentSideStartedAt
+          ? { sidesUntracked: true }
+          : {}),
         ...(activeTimer.lastResumedAt
           ? { lastResumedAt: activeTimer.lastResumedAt }
           : {}),
@@ -110,19 +151,45 @@ export function createPumpingTimerAdapter({
         ...(activeTimer.pausedAt ? { pausedAt: activeTimer.pausedAt } : {}),
       }),
     },
-    buildRecord: (startedAt, endedAt, payload) => ({
-      id: payload.activityId,
-      babyId,
-      side: payload.side,
-      startedAt,
-      endedAt,
-      ...calculateTimerDuration(
+    buildRecord: (startedAt, endedAt, payload) => {
+      let leftDurationSeconds = payload.leftAccumulatedSeconds;
+      let rightDurationSeconds = payload.rightAccumulatedSeconds;
+      if (payload.sidesUntracked) {
+        leftDurationSeconds = 0;
+        rightDurationSeconds = 0;
+      } else if (!payload.isPaused) {
+        const currentSideElapsed = Math.max(
+          0,
+          Math.floor(
+            (endedAt.getTime() -
+              new Date(payload.currentSideStartedAt).getTime()) /
+              1000
+          )
+        );
+        if (payload.side === "left" || payload.side === "both")
+          leftDurationSeconds += currentSideElapsed;
+        if (payload.side === "right" || payload.side === "both")
+          rightDurationSeconds += currentSideElapsed;
+      }
+
+      return {
+        id: payload.activityId,
+        babyId,
+        side: payload.side,
         startedAt,
         endedAt,
-        payload.totalPausedMs,
-        "pumping"
-      ),
-    }),
+        ...calculateTimerDuration(
+          startedAt,
+          endedAt,
+          payload.totalPausedMs,
+          "pumping"
+        ),
+        leftDurationSeconds:
+          leftDurationSeconds > 0 ? leftDurationSeconds : undefined,
+        rightDurationSeconds:
+          rightDurationSeconds > 0 ? rightDurationSeconds : undefined,
+      };
+    },
     liveActivity: {
       type: "pumping",
       detail: (payload) => payload.side,
@@ -142,6 +209,11 @@ export function createPumpingTimerAdapter({
         timerInstanceId,
         activityId,
         side: payload.side,
+        leftAccumulatedSeconds: payload.leftAccumulatedSeconds,
+        rightAccumulatedSeconds: payload.rightAccumulatedSeconds,
+        currentSideStartedAt:
+          parseTimerDate(payload.currentSideStartedAt) ?? startedAt,
+        ...(payload.sidesUntracked ? { sidesUntracked: true } : {}),
         totalPausedMs: payload.totalPausedMs,
         pausedAt: parseTimerDate(payload.pausedAt),
         lastResumedAt: parseTimerDate(payload.lastResumedAt),

@@ -20,6 +20,8 @@ export interface StoredPumpingEntry {
   endedAt?: string;
   durationSeconds?: number;
   pausedSeconds?: number;
+  leftDurationSeconds?: number;
+  rightDurationSeconds?: number;
   volumeMl?: number;
   notes?: string;
   createdAt: string;
@@ -35,6 +37,8 @@ export interface CreatePumpingInput {
   endedAt?: Date;
   durationSeconds?: number;
   pausedSeconds?: number;
+  leftDurationSeconds?: number;
+  rightDurationSeconds?: number;
   volumeMl?: number;
   notes?: string;
 }
@@ -43,14 +47,40 @@ export interface UpdatePumpingInput {
   startedAt?: Date;
   endedAt?: Date;
   durationSeconds?: number;
+  /** `null` marks the side not tracked. */
+  leftDurationSeconds?: number | null;
+  rightDurationSeconds?: number | null;
   volumeMl?: number;
   notes?: string;
   side?: BreastSide;
 }
 
+/**
+ * Per-side seconds were measured over the old interval, so a time edit that
+ * does not resupply them marks both sides not tracked instead of keeping a
+ * split that no longer adds up to the duration.
+ */
+export function clearStaleSidesOnTimeEdit(
+  input: UpdatePumpingInput
+): UpdatePumpingInput {
+  const timeEdited =
+    input.startedAt !== undefined ||
+    input.endedAt !== undefined ||
+    input.durationSeconds !== undefined;
+  const sidesSupplied =
+    input.leftDurationSeconds !== undefined ||
+    input.rightDurationSeconds !== undefined;
+  if (!timeEdited || sidesSupplied) return input;
+  return { ...input, leftDurationSeconds: null, rightDurationSeconds: null };
+}
+
 export interface ActivePumpingTimerData extends Partial<TimerIdentity>, TimerLockReconciliationSnapshot {
   startedAt: string;
   side: BreastSide;
+  leftAccumulatedSeconds?: number;
+  rightAccumulatedSeconds?: number;
+  currentSideStartedAt?: string;
+  sidesUntracked?: boolean;
   liveActivityId?: string;
   isPaused?: boolean;
   pausedAt?: string;
@@ -120,6 +150,8 @@ export const PumpingStorageService = {
         endedAt: input.endedAt?.toISOString(),
         durationSeconds: input.durationSeconds,
         pausedSeconds: input.pausedSeconds ?? 0,
+        leftDurationSeconds: input.leftDurationSeconds,
+        rightDurationSeconds: input.rightDurationSeconds,
         volumeMl: input.volumeMl,
         notes: input.notes,
         createdAt: now,
@@ -139,8 +171,9 @@ export const PumpingStorageService = {
   async updatePumping(
     babyId: string,
     pumpingId: string,
-    input: UpdatePumpingInput
+    requestedInput: UpdatePumpingInput
   ): Promise<StoredPumpingEntry | null> {
+    const input = clearStaleSidesOnTimeEdit(requestedInput);
     const key = getPumpingsKey(babyId);
     return withStorageLock(key, async () => {
       await settleImportJournal(key);
@@ -159,6 +192,12 @@ export const PumpingStorageService = {
         }),
         ...(input.durationSeconds !== undefined && {
           durationSeconds: input.durationSeconds,
+        }),
+        ...(input.leftDurationSeconds !== undefined && {
+          leftDurationSeconds: input.leftDurationSeconds ?? undefined,
+        }),
+        ...(input.rightDurationSeconds !== undefined && {
+          rightDurationSeconds: input.rightDurationSeconds ?? undefined,
         }),
         ...(input.volumeMl !== undefined && { volumeMl: input.volumeMl }),
         ...(input.notes !== undefined && { notes: input.notes }),

@@ -643,6 +643,56 @@ describe("Nara breast, combo and pumping mapping", () => {
       });
     }
   );
+  it.each([
+    { left: "20", right: "", total: "", end: "", sideSeconds: { leftDurationSeconds: 600, rightDurationSeconds: undefined } },
+    { left: "0", right: "30", total: "", end: String(epoch + 720_500), sideSeconds: { leftDurationSeconds: undefined, rightDurationSeconds: 720 } },
+    { left: "20", right: "30", total: "", end: "", sideSeconds: { leftDurationSeconds: undefined, rightDurationSeconds: undefined } },
+    { left: "", right: "", total: "40", end: "", sideSeconds: { leftDurationSeconds: undefined, rightDurationSeconds: undefined } },
+  ])(
+    "gives a one-sided pump its whole duration: left $left, right $right, total $total",
+    ({ left, right, total, end, sideSeconds }) => {
+      const result = readNara(
+        csv(
+          [
+            row("Pump", {
+              "[Pump] Left Volume": left,
+              "[Pump] Left Volume Unit": "ML",
+              "[Pump] Right Volume": right,
+              "[Pump] Right Volume Unit": "ML",
+              "[Pump] Total Volume": total,
+              "[Pump] Total Volume Unit": "ML",
+              "[Pump] End Date/time (Epoch)": end,
+              "[Pump] Duration (Seconds)": "600",
+            }),
+          ],
+          FULL_HEADER
+        )
+      );
+
+      const input = result.records[0].input as Record<string, unknown>;
+      expect(result.records[0].kind).toBe("pumping");
+      expect([input.leftDurationSeconds, input.rightDurationSeconds]).toEqual([
+        sideSeconds.leftDurationSeconds,
+        sideSeconds.rightDurationSeconds,
+      ]);
+    }
+  );
+  it("leaves both sides absent on a one-sided pump with no duration", () => {
+    const result = readNara(
+      csv(
+        [
+          row("Pump", {
+            "[Pump] Left Volume": "20",
+            "[Pump] Left Volume Unit": "ML",
+          }),
+        ],
+        FULL_HEADER
+      )
+    );
+
+    expect(result.records[0].input).not.toHaveProperty("leftDurationSeconds");
+    expect(result.records[0].input).not.toHaveProperty("rightDurationSeconds");
+  });
   it("uses pump end epoch ahead of a stale duration and floors stored seconds", () => {
     const result = readNara(
       csv(

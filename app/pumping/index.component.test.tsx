@@ -10,6 +10,7 @@ let mockCanGoBack = false;
 let mockShowVolumeInput = "true";
 const mockStopPumping = jest.fn(() => new Promise(() => undefined));
 const mockStartPumping = jest.fn();
+const mockChangePumpingSide = jest.fn();
 const runningTimer = {
   isRunning: true,
   isPaused: false,
@@ -47,7 +48,7 @@ jest.mock("@/contexts/pumping-context", () => ({
     stopPumping: mockStopPumping,
     discardPumping: mockDiscardPumping,
     editPumpingStartTime: mockEditPumpingStartTime,
-    changePumpingSide: jest.fn(),
+    changePumpingSide: mockChangePumpingSide,
     pausePumping: jest.fn(),
     resumePumping: jest.fn(),
     getLastSide: () => null,
@@ -399,6 +400,27 @@ describe("PumpingScreen stop confirmation", () => {
   });
 });
 
+
+describe("PumpingScreen running side picker", () => {
+  beforeEach(() => {
+    mockActiveTimer = runningTimer;
+    mockShowVolumeInput = "false";
+    mockChangePumpingSide.mockClear();
+  });
+
+  it("keeps the side picker and hands each switch to the provider that banks the side", () => {
+    render(<PumpingScreen />);
+
+    expect(
+      screen.getByRole("button", { name: "feeding.both" }).props
+        .accessibilityState
+    ).toEqual({ selected: true });
+    fireEvent.press(screen.getByRole("button", { name: "feeding.left" }));
+    fireEvent.press(screen.getByRole("button", { name: "feeding.right" }));
+
+    expect(mockChangePumpingSide.mock.calls).toEqual([["left"], ["right"]]);
+  });
+});
 
 describe("PumpingScreen discard timer", () => {
   beforeEach(() => {

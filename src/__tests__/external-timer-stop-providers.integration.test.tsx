@@ -1501,6 +1501,61 @@ describe("external timer stops through production providers", () => {
     );
   });
 
+  it("saves no pumping side split for a timer started before per-side seconds existed", async () => {
+    const activeTimers = jest.requireMock("@/services/active-timer-service") as {
+      updateTimerData: jest.Mock;
+    };
+    activeTimers.updateTimerData.mockResolvedValue(true);
+    await PumpingStorageService.setActiveTimer("baby-1", {
+      timerInstanceId: "legacy-pumping-timer",
+      activityId: "legacy-pumping-activity",
+      startedAt: "2026-07-15T10:00:00.000Z",
+      side: "left",
+      isPaused: false,
+      totalPausedMs: 0,
+    });
+
+    render(<RealTimerProviders />);
+    await waitFor(() =>
+      expect(pumpingState?.activeTimer?.sidesUntracked).toBe(true)
+    );
+    act(() => {
+      pumpingState!.changePumpingSide("right");
+    });
+    await act(async () => {
+      await pumpingState!.pausePumping();
+    });
+    await act(async () => {
+      await pumpingState!.resumePumping();
+    });
+    await expect(
+      PumpingStorageService.getActiveTimer("baby-1")
+    ).resolves.toEqual(expect.objectContaining({ sidesUntracked: true }));
+    const pumpingLockWrites = activeTimers.updateTimerData.mock.calls
+      .filter((call: unknown[]) => call[1] === "pumping")
+      .map((call: unknown[]) => call[3]);
+    expect(pumpingLockWrites).toHaveLength(3);
+    for (const timerData of pumpingLockWrites) {
+      expect(timerData).not.toHaveProperty("currentSideStartedAt");
+    }
+    await act(async () => {
+      await pumpingState!.stopPumping(90);
+    });
+
+    const activitySync = jest.requireMock("@/services/activity-sync-service") as {
+      createPumpingInDatabase: jest.Mock;
+    };
+    expect(activitySync.createPumpingInDatabase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        side: "right",
+        leftDurationSeconds: undefined,
+        rightDurationSeconds: undefined,
+      }),
+      "user-1",
+      expect.anything()
+    );
+  });
+
   it.each([0, 60_000])(
     "saves running records with %s resumed pause milliseconds while sleep keeps counting them",
     async (totalPausedMs) => {
@@ -4942,5 +4997,340 @@ describe("external timer stops through production providers", () => {
       expect.objectContaining({ id: derivedLoserActivityId, endedAt: stoppedAt })
     ]);
     await expect(TummyTimeStorageService.getActiveTimer("baby-1")).resolves.toBeNull();
+  });
+
+  describe("pumping minutes per side", () => {
+    const at = (seconds: number) =>
+      new Date(new Date(startedAt).getTime() + seconds * 1000);
+    const createPumpingMock = () =>
+      (jest.requireMock("@/services/activity-sync-service") as {
+        createPumpingInDatabase: jest.Mock;
+      }).createPumpingInDatabase;
+
+    it("banks each side on switch, pause and stop and keeps it in local and server timer data", async () => {
+      jest.useFakeTimers().setSystemTime(at(0));
+      try {
+        render(<RealTimerProviders />);
+        await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+        const service = jest.requireMock("@/services/active-timer-service");
+        service.updateTimerData.mockResolvedValue(true);
+        await act(async () => {
+          await pumpingState!.startPumping("left", at(0));
+        });
+        jest.setSystemTime(at(120));
+        await act(async () => {
+          pumpingState!.changePumpingSide("right");
+        });
+        await waitFor(async () =>
+          expect(await PumpingStorageService.getActiveTimer("baby-1")).toMatchObject({
+            side: "right",
+            leftAccumulatedSeconds: 120,
+            rightAccumulatedSeconds: 0,
+            currentSideStartedAt: at(120).toISOString(),
+          })
+        );
+        expect(service.updateTimerData).toHaveBeenLastCalledWith(
+          "baby-1",
+          "pumping",
+          "user-1",
+          expect.objectContaining({
+            side: "right",
+            leftAccumulatedSeconds: 120,
+            rightAccumulatedSeconds: 0,
+            currentSideStartedAt: at(120).toISOString(),
+          })
+        );
+        await act(async () => {
+          await pumpingState!.pausePumping(at(200));
+        });
+        expect(service.updateTimerData).toHaveBeenLastCalledWith(
+          "baby-1",
+          "pumping",
+          "user-1",
+          expect.objectContaining({ leftAccumulatedSeconds: 120, rightAccumulatedSeconds: 80 })
+        );
+        await act(async () => {
+          await pumpingState!.resumePumping(at(230));
+        });
+        jest.setSystemTime(at(260));
+        await act(async () => {
+          pumpingState!.changePumpingSide("both");
+        });
+        await act(async () => {
+          await pumpingState!.stopPumping(0, at(300));
+        });
+
+        expect(await PumpingStorageService.getAllPumpings("baby-1")).toEqual([
+          expect.objectContaining({
+            durationSeconds: 270,
+            pausedSeconds: 30,
+            leftDurationSeconds: 160,
+            rightDurationSeconds: 150,
+          }),
+        ]);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("banks nothing after the pause moment when stopped while paused", async () => {
+      jest.useFakeTimers().setSystemTime(at(0));
+      try {
+        render(<RealTimerProviders />);
+        await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+        await act(async () => {
+          await pumpingState!.startPumping("right", at(0));
+        });
+        await act(async () => {
+          await pumpingState!.pausePumping(at(90));
+        });
+        jest.setSystemTime(at(400));
+        await act(async () => {
+          await pumpingState!.stopPumping(0, at(400));
+        });
+
+        expect(await PumpingStorageService.getAllPumpings("baby-1")).toEqual([
+          expect.objectContaining({ rightDurationSeconds: 90 }),
+        ]);
+        const [saved] = await PumpingStorageService.getAllPumpings("baby-1");
+        expect(saved.leftDurationSeconds).toBeUndefined();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("banks the side before a widget pause that the app learns about on resume", async () => {
+      jest.useFakeTimers().setSystemTime(at(0));
+      try {
+        render(<RealTimerProviders />);
+        await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+        await act(async () => {
+          await pumpingState!.startPumping("left", at(0));
+        });
+        jest.setSystemTime(at(150));
+        await act(async () => {
+          await pumpingState!.resumePumping(at(150), 30_000);
+        });
+        await act(async () => {
+          await pumpingState!.stopPumping(0, at(200));
+        });
+
+        const [saved] = await PumpingStorageService.getAllPumpings("baby-1");
+        expect(saved).toMatchObject({ pausedSeconds: 30, leftDurationSeconds: 170 });
+        expect(saved.leftDurationSeconds! + saved.pausedSeconds!).toBe(200);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("restores per-side seconds from the stored running timer", async () => {
+      await PumpingStorageService.setActiveTimer("baby-1", {
+        timerInstanceId: "pumping-timer",
+        activityId: "pumping-activity",
+        startedAt: at(0).toISOString(),
+        side: "right",
+        leftAccumulatedSeconds: 120,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: at(120).toISOString(),
+        isPaused: false,
+        totalPausedMs: 0,
+      });
+
+      render(<RealTimerProviders />);
+      await waitFor(() =>
+        expect(pumpingState?.activeTimer?.currentSideStartedAt).toEqual(at(120))
+      );
+      await act(async () => {
+        await pumpingState!.stopPumping(0, at(300));
+      });
+
+      expect(createPumpingMock()).toHaveBeenCalledWith(
+        expect.objectContaining({ leftDurationSeconds: 120, rightDurationSeconds: 180 }),
+        "user-1",
+        expect.objectContaining({ timerInstanceId: "pumping-timer" })
+      );
+    });
+
+    it("saves per-side seconds when another phone stops the timer", async () => {
+      mockGetLockForActivity.mockImplementation((babyId: string, activityType: string) =>
+        activityType === "pumping"
+          ? {
+              id: "lock-pumping",
+              babyId,
+              activityType,
+              startedBy: "starter-2",
+              startedByName: "Other Caregiver",
+              startedAt,
+              timerData: {
+                timerInstanceId: "remote-pumping",
+                side: "right",
+                leftAccumulatedSeconds: 120,
+                rightAccumulatedSeconds: 0,
+                currentSideStartedAt: at(120).toISOString(),
+                isPaused: false,
+                totalPausedMs: 0,
+              },
+            }
+          : null
+      );
+
+      render(<RealTimerProviders />);
+      await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+      await act(async () => {
+        await pumpingState!.stopRemotePumping(new Date(stoppedAt));
+      });
+
+      expect(createPumpingMock()).toHaveBeenCalledWith(
+        expect.objectContaining({
+          durationSeconds: 300,
+          leftDurationSeconds: 120,
+          rightDurationSeconds: 180,
+        }),
+        "user-1",
+        { timerInstanceId: "remote-pumping", startedAt }
+      );
+    });
+
+    it("takes per-side seconds banked by a household pause from the server lock", async () => {
+      const view = render(<RealTimerProviders />);
+      await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+      await act(async () => {
+        await pumpingState!.startPumping("right", at(0));
+      });
+      const timerInstanceId = pumpingState!.activeTimer!.timerInstanceId;
+      const lock = {
+        id: "lock-pumping",
+        babyId: "baby-1",
+        activityType: "pumping",
+        startedBy: "user-1",
+        startedByName: "Caregiver",
+        startedAt,
+      };
+      mockActiveTimerLocks = [
+        { ...lock, timerData: { timerInstanceId, side: "right", isPaused: false, totalPausedMs: 0 } },
+      ];
+      view.rerender(<RealTimerProviders />);
+      await act(async () => undefined);
+      mockActiveTimerLocks = [
+        {
+          ...lock,
+          timerData: {
+            timerInstanceId,
+            side: "right",
+            isPaused: true,
+            pausedAt: at(120).toISOString(),
+            totalPausedMs: 0,
+            leftAccumulatedSeconds: 0,
+            rightAccumulatedSeconds: 120,
+            currentSideStartedAt: at(0).toISOString(),
+          },
+        },
+      ];
+      view.rerender(<RealTimerProviders />);
+      await waitFor(() => expect(pumpingState?.activeTimer?.isPaused).toBe(true));
+      expect(pumpingState!.activeTimer!.rightAccumulatedSeconds).toBe(120);
+      await waitFor(async () =>
+        expect(await PumpingStorageService.getActiveTimer("baby-1")).toMatchObject({
+          isPaused: true,
+          rightAccumulatedSeconds: 120,
+        })
+      );
+    });
+
+    it.each(["INSERT", "UPDATE"] as const)(
+      "keeps per-side seconds in a Realtime pumping %s and leaves untracked sides absent",
+      async (eventType) => {
+        render(<RealTimerProviders />);
+        await waitFor(() => expect(pumpingState?.isLoading).toBe(false));
+        await act(async () => {
+          for (const [id, left, right] of [
+            ["tracked", 720, 480],
+            ["untracked", null, null],
+          ] as const) {
+            mockRemoteSubscribers.get("pumping_sessions")?.({
+              table: "pumping_sessions",
+              eventType,
+              new: {
+                id,
+                baby_id: "baby-1",
+                side: "both",
+                started_at: startedAt,
+                ended_at: stoppedAt,
+                duration_seconds: 1200,
+                left_duration_seconds: left,
+                right_duration_seconds: right,
+                created_at: startedAt,
+                updated_at: stoppedAt,
+              },
+              old: null,
+            });
+          }
+        });
+
+        const byId = new Map(pumpingState!.pumpings.map((entry) => [entry.id, entry]));
+        expect(byId.get("tracked")).toMatchObject({
+          leftDurationSeconds: 720,
+          rightDurationSeconds: 480,
+        });
+        expect(byId.get("untracked")?.leftDurationSeconds).toBeUndefined();
+        expect(byId.get("untracked")?.rightDurationSeconds).toBeUndefined();
+      }
+    );
+
+    it.each([
+      {
+        label: "moving the start past a side change",
+        editedStart: "2026-07-15T10:20:00.000Z",
+        left: undefined,
+        right: 600,
+        duration: 600,
+      },
+      {
+        label: "moving the start earlier",
+        editedStart: "2026-07-15T09:30:00.000Z",
+        left: 2100,
+        right: 1500,
+        duration: 3600,
+      },
+    ])("keeps per-side seconds within the session after $label", async ({ editedStart, left, right, duration }) => {
+      const stopAt = new Date("2026-07-15T10:30:00.000Z");
+      await PumpingStorageService.setActiveTimer("baby-1", {
+        timerInstanceId: "pumping-timer",
+        activityId: "pumping-activity",
+        startedAt: "2026-07-15T10:00:00.000Z",
+        side: "right",
+        leftAccumulatedSeconds: 300,
+        rightAccumulatedSeconds: 0,
+        currentSideStartedAt: "2026-07-15T10:05:00.000Z",
+        isPaused: false,
+        totalPausedMs: 0,
+      });
+
+      render(<RealTimerProviders />);
+      await waitFor(() =>
+        expect(pumpingState?.activeTimer?.currentSideStartedAt).toEqual(
+          new Date("2026-07-15T10:05:00.000Z")
+        )
+      );
+      await act(async () => {
+        await pumpingState!.editPumpingStartTime(new Date(editedStart));
+      });
+      await waitFor(() =>
+        expect(pumpingState?.activeTimer?.startTime).toEqual(new Date(editedStart))
+      );
+      await act(async () => {
+        await pumpingState!.stopPumping(0, stopAt);
+      });
+
+      expect(createPumpingMock()).toHaveBeenCalledWith(
+        expect.objectContaining({
+          durationSeconds: duration,
+          leftDurationSeconds: left,
+          rightDurationSeconds: right,
+        }),
+        "user-1",
+        expect.anything()
+      );
+    });
   });
 });

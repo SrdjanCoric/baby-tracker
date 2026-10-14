@@ -4,6 +4,7 @@ import {
   type HuckleberryPreview,
   type HuckleberryRecord,
 } from "./huckleberry-reader";
+import { pumpSideSeconds } from "./pump-sides";
 import {
   validateBottleAmount,
   validateManualFeedingDuration,
@@ -298,6 +299,14 @@ function mapRow(
         (durationSeconds === undefined
           ? undefined
           : new Date(startedAt.getTime() + rawDurationSeconds! * 1000));
+      const side =
+        (left ?? 0) > 0
+          ? (right ?? 0) > 0
+            ? "both"
+            : "left"
+          : (right ?? 0) > 0
+            ? "right"
+            : "both";
       return [
         {
           kind: "pumping",
@@ -306,15 +315,9 @@ function mapRow(
             startedAt,
             notes,
             volumeMl,
-            side:
-              (left ?? 0) > 0
-                ? (right ?? 0) > 0
-                  ? "both"
-                  : "left"
-                : (right ?? 0) > 0
-                  ? "right"
-                  : "both",
+            side,
             ...(endedAt ? { endedAt, durationSeconds } : {}),
+            ...pumpSideSeconds(side, endedAt ? durationSeconds : undefined),
           },
         },
       ];

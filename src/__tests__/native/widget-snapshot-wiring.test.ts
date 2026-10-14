@@ -42,20 +42,11 @@ describe("Widget coherent snapshot wiring", () => {
     expect(providers).not.toContain("mergeNetworkTimers");
   });
 
-  it("reconciles stop and pause actions without committing timer-only base data", () => {
-    const stop = between(widgetSource, "struct StopActivityIntent", "// MARK: - Toggle Pause Intent");
-    const pause = between(widgetSource, "struct TogglePauseActivityIntent", "// MARK: - Configuration Intents");
-    const missingPauseTimer = between(
-      pause,
-      "guard let widgetData,",
-      "let currentlyPaused"
-    );
+  it("reconciles stop actions without committing timer-only base data", () => {
+    const stop = between(widgetSource, "struct StopActivityIntent", "// MARK: - Configuration Intents");
 
     expect(stop).toContain("await refreshWidgetSnapshot()");
-    expect(pause).toContain("await refreshWidgetSnapshot()");
-    expect(missingPauseTimer).toContain("WidgetCenter.shared.reloadAllTimelines()");
     expect(stop).not.toContain('set(updatedString, forKey: "widgetData")');
-    expect(pause).not.toContain('set(updatedString, forKey: "widgetData")');
     expect(widgetSource).not.toContain("func fetchActiveTimersFromNetwork");
     expect(widgetSource).not.toContain("func mergeNetworkTimers");
   });

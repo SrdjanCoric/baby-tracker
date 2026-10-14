@@ -110,6 +110,8 @@ export const PUMPING_CSV_COLUMNS: CSVColumn[] = [
   { key: "notes", header: "Notes" },
   { key: "loggedBy", header: "Logged By" },
   { key: "pausedSeconds", header: "Paused (seconds)" },
+  { key: "leftDurationSeconds", header: "Left (seconds)" },
+  { key: "rightDurationSeconds", header: "Right (seconds)" },
 ];
 
 export const GROWTH_CSV_COLUMNS: CSVColumn[] = [

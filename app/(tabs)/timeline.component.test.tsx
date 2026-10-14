@@ -508,6 +508,32 @@ describe("Timeline daily summary wiring", () => {
     );
   });
 
+  it.each([
+    { left: 720, right: 480, subtitle: ["L: 12m, R: 8m", "100"], absent: ["feeding.both"] },
+    { left: 1200, right: 1200, subtitle: ["L: 20m, R: 20m", "100"], absent: ["feeding.both"] },
+    { left: 1200, right: undefined, subtitle: ["feeding.both", "100", "20m"], absent: ["L:"] },
+    { left: undefined, right: undefined, subtitle: ["feeding.both", "100", "20m"], absent: ["L:", "R:"] },
+  ])("shows a pumping row's side split only when both sides have time: $left / $right", ({ left, right, subtitle, absent }) => {
+    mockPumpings = [{
+      id: "pumping-sides",
+      babyId: "baby-1",
+      side: "both",
+      startedAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      endedAt: new Date(2026, 0, 20, 8, 20, 0).toISOString(),
+      durationSeconds: 1200,
+      volumeMl: 100,
+      leftDurationSeconds: left,
+      rightDurationSeconds: right,
+      createdAt: new Date(2026, 0, 20, 8, 0, 0).toISOString(),
+      updatedAt: new Date(2026, 0, 20, 8, 20, 0).toISOString(),
+    }];
+    render(<TimelineScreen />);
+    const text = screen.getByTestId("timeline-item-subtitle").props.children;
+    for (const part of subtitle) expect(text).toContain(part);
+    for (const part of absent) expect(text).not.toContain(part);
+    expect(text).toMatch(/· 20m$/);
+  });
+
   it("keeps a legacy pumping row on its stored duration instead of its longer interval", () => {
     mockPumpings = [{
       id: "legacy-paused-pumping",
