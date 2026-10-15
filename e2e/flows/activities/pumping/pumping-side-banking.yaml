@@ -1,0 +1,66 @@
+appId: com.sofibaby.app
+name: Pumping Banks Minutes Per Side While Running
+tags:
+  - regression
+  - activities
+  - pumping
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "pumping-card"
+
+- assertVisible:
+    id: "pumping-screen"
+
+# Start on the left and pump for a minute.
+- tapOn:
+    id: "side-left"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?1:0[0-9]"
+    timeout: 75000
+
+# Switch to the right side while the timer runs, then pump another minute.
+- tapOn:
+    text: "Right"
+
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?2:0[0-9]"
+    timeout: 70000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- tapOn:
+    id: "volume-input"
+- inputText: "90"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "save-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The saved session credits one minute to each side.
+- runFlow: ../../../helpers/dismiss-dev-banner.yaml
+- tapOn:
+    id: "timeline-tab"
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000
+
+- assertVisible:
+    text: "Pumping at .*\\. L: 1m, R: 1m · .*"

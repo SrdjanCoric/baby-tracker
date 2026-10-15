@@ -27,3 +27,9 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+# The saved solid food shows on the Timeline.
+- assertVisible:
+    text: "Solid.* at .*\\. Banana.*"

@@ -1,0 +1,41 @@
+appId: com.sofibaby.app
+name: Statistics Feeding Week Average
+tags:
+  - regression
+  - statistics
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "type-bottle"
+- tapOn:
+    id: "content-formula"
+- tapOn:
+    id: "quick-amount-120"
+- scrollUntilVisible:
+    element:
+      id: "save-bottle-button"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "save-bottle-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- runFlow: ../../helpers/dismiss-dev-banner.yaml
+- tapOn:
+    id: "stats-tab"
+
+- tapOn:
+    text: ".*Feeding"
+
+# One bottle over seven days averages 0.1 per day.
+- tapOn:
+    text: ".*7 Days"
+- assertVisible:
+    text: "avg 0.1 / day"

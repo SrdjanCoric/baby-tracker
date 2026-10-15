@@ -1,0 +1,15 @@
+appId: com.sofibaby.app
+
+---
+# Wall-clock wait. Maestro has no sleep command, so poll for a sentinel that never
+# renders until the timeout passes. `optional` keeps the miss from failing the flow.
+# Usage:
+#   - runFlow:
+#       file: ../../../helpers/wait.yaml
+#       env:
+#         WAIT_MS: "62000"
+- extendedWaitUntil:
+    visible:
+      text: "sofibaby-e2e-wait-sentinel"
+    timeout: ${WAIT_MS}
+    optional: true

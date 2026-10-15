@@ -34,3 +34,10 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+- assertVisible:
+    text: "Tummy Time at .*"
+- assertVisible:
+    id: "timeline-item"

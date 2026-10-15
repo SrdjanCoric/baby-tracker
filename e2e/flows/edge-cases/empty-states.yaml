@@ -7,20 +7,18 @@ tags:
 
 ---
 - runFlow: ../../helpers/setup-with-baby.yaml
-- tapOn:
-    id: "timeline-tab"
+
+# A fresh baby has no Timeline entries.
+- runFlow: ../../helpers/open-timeline.yaml
 - assertVisible:
     id: "empty-timeline"
-    optional: true
 - assertVisible:
     text: "No entries yet"
-    optional: true
+
+# Statistics has no empty state of its own; it renders zero totals without crashing.
 - tapOn:
     id: "stats-tab"
-- scrollUntilVisible:
-    element:
-      id: "empty-stats"
-    direction: DOWN
-- assertVisible:
-    id: "empty-stats"
-    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "statistics-content"
+    timeout: 10000

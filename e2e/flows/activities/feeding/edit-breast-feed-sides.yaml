@@ -1,0 +1,186 @@
+appId: com.sofibaby.app
+name: Edit Breast Feed Duration And Minutes Per Side
+tags:
+  - regression
+  - activities
+  - feeding
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+# Log a past breast feed: 6 minutes, left 5, right 1.
+- tapOn:
+    id: "feeding-card"
+
+- tapOn:
+    id: "type-breast"
+
+- tapOn:
+    text: "Log Past Breastfeeding"
+
+- tapOn:
+    text: "Left Side"
+
+# Move the start back a few hours so a six-minute feed does not end in the future.
+# The inline spinner opens under the Start row (hour wheel near 49% x, 41% y);
+# dragging it down selects earlier hours.
+- tapOn:
+    text: "Start Time Select Time"
+- extendedWaitUntil:
+    visible:
+      text: "Done"
+    timeout: 5000
+- swipe:
+    start: "49%,41%"
+    end: "49%,51%"
+    duration: 600
+- tapOn:
+    text: "Done"
+
+# Double-tap selects the default value so typing replaces it.
+- doubleTapOn:
+    id: "duration-minutes-input"
+- inputText: "6"
+
+- tapOn:
+    id: "side-minutes-left-input"
+- inputText: "5"
+
+- tapOn:
+    id: "side-minutes-right-input"
+- inputText: "1"
+
+- tapOn:
+    id: "dismiss-keyboard"
+
+- assertVisible:
+    text: "ends .*"
+
+- tapOn:
+    text: "Log Breastfeeding"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# Open it from the Timeline.
+- runFlow: ../../../helpers/dismiss-dev-banner.yaml
+- tapOn:
+    id: "timeline-tab"
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000
+
+- assertVisible:
+    text: "Breastfeeding at .*\\. L: 5m, R: 1m"
+
+- tapOn:
+    id: "timeline-item"
+
+- extendedWaitUntil:
+    visible:
+      id: "duration-minutes-input"
+    timeout: 10000
+
+- assertVisible:
+    id: "duration-minutes-input"
+    text: "6"
+
+# Lowering the duration below the left minutes blocks Save with the exact message.
+- doubleTapOn:
+    id: "duration-minutes-input"
+- inputText: "3"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- assertVisible:
+    text: "Left can't be longer than the feed (3m)"
+
+- assertVisible:
+    text: "Save"
+    enabled: false
+
+# Fixing the left minutes re-enables Save.
+- doubleTapOn:
+    id: "side-minutes-left-input"
+- inputText: "2"
+- tapOn:
+    id: "dismiss-keyboard"
+
+- assertNotVisible:
+    text: "Left can't be longer than the feed (3m)"
+
+- assertVisible:
+    text: "Save"
+    enabled: true
+
+- tapOn:
+    text: "Save"
+
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 15000
+
+# The saved values persist: duration 3, left 2, right 1.
+- assertVisible:
+    text: "Breastfeeding at .*\\. L: 2m, R: 1m"
+
+- tapOn:
+    id: "timeline-item"
+
+- extendedWaitUntil:
+    visible:
+      id: "duration-minutes-input"
+    timeout: 10000
+
+- assertVisible:
+    id: "duration-minutes-input"
+    text: "3"
+
+- assertVisible:
+    id: "side-minutes-left-input"
+    text: "2"
+
+- assertVisible:
+    id: "side-minutes-right-input"
+    text: "1"
+
+# Moving the start keeps duration and sides.
+- tapOn:
+    text: "Start Time Select Time"
+- extendedWaitUntil:
+    visible:
+      text: "Done"
+    timeout: 5000
+- swipe:
+    start: "49%,54%"
+    end: "49%,64%"
+    duration: 600
+- tapOn:
+    text: "Done"
+
+- tapOn:
+    text: "Save"
+
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 15000
+
+- assertVisible:
+    text: "Breastfeeding at .*\\. L: 2m, R: 1m"
+
+- tapOn:
+    id: "timeline-item"
+
+- extendedWaitUntil:
+    visible:
+      id: "duration-minutes-input"
+    timeout: 10000
+
+- assertVisible:
+    id: "duration-minutes-input"
+    text: "3"

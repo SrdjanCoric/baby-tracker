@@ -11,9 +11,17 @@ tags:
     id: "settings-button"
 - tapOn:
     id: "language-setting"
+- assertVisible:
+    text: "Language"
+
+# Picking Serbian translates the screen title.
 - tapOn:
     id: "language-sr"
 - assertVisible:
-    text: "Srpski"
+    text: "Jezik"
+
+# Picking English translates it back.
 - tapOn:
     id: "language-en"
+- assertVisible:
+    text: "Language"

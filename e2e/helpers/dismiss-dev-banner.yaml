@@ -1,0 +1,20 @@
+appId: com.sofibaby.app
+
+---
+# Development builds show a "Open debugger to view warnings" banner over the tab bar.
+# Close it so taps on the tabs land. The banner can auto-hide between the check and
+# the tap, in which case the tap opens the Health card underneath; close that again.
+- runFlow:
+    when:
+      visible: ".*Open debugger to view warnings.*"
+    commands:
+      - tapOn:
+          point: "95%,92%"
+      - runFlow:
+          when:
+            visible:
+              id: "health-screen"
+          commands:
+            - tapOn:
+                text: "Close"
+- waitForAnimationToEnd

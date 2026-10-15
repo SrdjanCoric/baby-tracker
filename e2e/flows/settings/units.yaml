@@ -7,17 +7,52 @@ tags:
 ---
 - runFlow: ../../helpers/setup-with-baby.yaml
 
-# Navigate to settings
 - tapOn:
     id: "settings-button"
-
 - tapOn:
     id: "units-setting"
+- assertVisible:
+    id: "units-metric-selected"
 
-# Switch to imperial
+# Picking imperial returns to Settings and stays selected.
 - tapOn:
     id: "units-imperial"
-
-# Verify back on settings screen
 - assertVisible:
     id: "units-setting"
+- tapOn:
+    id: "units-setting"
+- assertVisible:
+    id: "units-imperial-selected"
+- assertNotVisible:
+    id: "units-metric-selected"
+- tapOn:
+    id: "units-metric"
+
+# Growth is entered and shown in imperial units.
+- tapOn:
+    id: "units-setting"
+- tapOn:
+    id: "units-imperial"
+- swipe:
+    start: "50%,15%"
+    end: "50%,85%"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+- tapOn:
+    id: "growth-card"
+- tapOn:
+    id: "weight-input"
+- inputText: "16"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "save-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- runFlow: ../../helpers/open-timeline.yaml
+- assertVisible:
+    text: "Growth at .*\\. 16 lbs.*"

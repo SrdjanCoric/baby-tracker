@@ -360,9 +360,10 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0132 · Save breast feeds, pumping and tummy time without resumed pauses → tasks/done/0132-save-feeds-pumping-tummy-without-pauses.md
 - [x] 0133 · Bank pumping minutes per side while the timer runs (after 0132) → tasks/done/0133-bank-pumping-minutes-per-side.md
 - [x] 0134 · Freeze the running readout over a pause for breast feeding, pumping and tummy time (after 0132) → tasks/done/0134-freeze-readout-over-pause-non-sleep.md
-- [ ] 0135 · Edit and log a breast feed with duration and minutes per side (after 0132) → tasks/0135-edit-breast-feed-duration-and-sides.md
+- [x] 0135 · Edit and log a breast feed with duration and minutes per side (after 0132) → tasks/done/0135-edit-breast-feed-duration-and-sides.md
 - [ ] 0136 · Edit and log a pumping session with duration and minutes per side (after 0133, 0135) → tasks/0136-edit-pumping-duration-and-sides.md
 - [ ] 0137 · Show paused time on the tummy time edit screen (after 0132) → tasks/0137-show-paused-time-on-tummy-time-edit.md
+- [ ] 0138 · Prove multi-baby and two-member household behaviour on device (after 0129, 0135) → tasks/0138-prove-multi-baby-and-household-on-device.md
 
 ## Workflow status
 
@@ -595,3 +596,9 @@ and tummy time a resumed pause is excluded from the saved duration and stored on
 `pausedSeconds`. Task 0133 gives pumping the per-side seconds breast feeds already have. Tasks 0135
 and 0136 replace the End picker on breast and pumping edit forms with an editable Duration and End
 derived as Start + Duration + Paused, so start, end, pause and side minutes can never disagree.
+
+Task 0138 was added on 2026-10-15 after an e2e coverage audit. The single-device regression suite
+now proves timers, pauses, edits and saved values; 0138 covers what one simulator cannot: two babies
+on one phone, two phones in one household (lock, remote pause, stop clearing the other card, "by
+{name}"), a second household seeing nothing, caregiver invite/replace/revoke/remove/leave, and joining
+a household from a solo account.

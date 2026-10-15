@@ -85,7 +85,10 @@ export default function UnitsSettingsScreen() {
                   </Text>
                 </View>
                 {isSelected && (
-                  <Text className="text-xl text-primary dark:text-primary-dark">
+                  <Text
+                    className="text-xl text-primary dark:text-primary-dark"
+                    testID={`units-${option.value}-selected`}
+                  >
                     {"\u{2713}"}
                   </Text>
                 )}

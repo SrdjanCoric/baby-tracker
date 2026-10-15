@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, TextInput, View } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -14,17 +14,19 @@ export interface DateTimeBounds {
 
 type DateTimeBoundsSource = DateTimeBounds | (() => DateTimeBounds);
 
-interface StartEndTimeSectionProps {
+interface DurationInput {
+  minutes: string;
+  onMinutesChange(text: string): void;
+  unitLabel: string;
+  endSummary: string;
+}
+
+interface SharedProps {
   startTime: Date;
-  endTime: Date;
-  pausedSeconds?: number;
   onStartTimeChange(value: Date): void;
-  onEndTimeChange(value: Date): void;
   startBounds: DateTimeBoundsSource;
-  endBounds: DateTimeBoundsSource;
   timeFormat: TimeFormat;
   startLabel: string;
-  endLabel: string;
   durationLabel: string;
   doneLabel: string;
   selectDateLabel: string;
@@ -33,9 +35,25 @@ interface StartEndTimeSectionProps {
   mutedBackgroundColor: string;
   textColor: string;
   startError?: string;
-  endError?: string;
   durationError?: string;
 }
+
+interface EndPickerProps extends SharedProps {
+  endTime: Date;
+  pausedSeconds?: number;
+  onEndTimeChange(value: Date): void;
+  endBounds: DateTimeBoundsSource;
+  endLabel: string;
+  endError?: string;
+  durationInput?: undefined;
+}
+
+// Breast feeds edit Duration instead of End; End is derived and shown as a summary line.
+interface DurationInputProps extends SharedProps {
+  durationInput: DurationInput;
+}
+
+type StartEndTimeSectionProps = EndPickerProps | DurationInputProps;
 
 type PickerTarget = "start" | "end";
 type AndroidPickerMode = "date" | "time";
@@ -50,28 +68,27 @@ function clampToBounds(value: Date, bounds: DateTimeBounds): Date {
   return value;
 }
 
-export function StartEndTimeSection({
-  startTime,
-  endTime,
-  pausedSeconds = 0,
-  onStartTimeChange,
-  onEndTimeChange,
-  startBounds,
-  endBounds,
-  timeFormat,
-  startLabel,
-  endLabel,
-  durationLabel,
-  doneLabel,
-  selectDateLabel,
-  selectTimeLabel,
-  accentColor,
-  mutedBackgroundColor,
-  textColor,
-  startError,
-  endError,
-  durationError,
-}: StartEndTimeSectionProps) {
+export function StartEndTimeSection(props: StartEndTimeSectionProps) {
+  const {
+    startTime,
+    onStartTimeChange,
+    startBounds,
+    timeFormat,
+    startLabel,
+    durationLabel,
+    doneLabel,
+    selectDateLabel,
+    selectTimeLabel,
+    accentColor,
+    mutedBackgroundColor,
+    textColor,
+    startError,
+    durationError,
+  } = props;
+  const endPicker = props.durationInput ? null : props;
+  const endTime = endPicker?.endTime;
+  const endBounds = endPicker?.endBounds;
+  const onEndTimeChange = endPicker?.onEndTimeChange;
   const [iosTarget, setIosTarget] = useState<PickerTarget | null>(null);
   const [androidPicker, setAndroidPicker] = useState<{
     target: PickerTarget;
@@ -85,6 +102,7 @@ export function StartEndTimeSection({
   const boundsFor = useCallback(
     (target: PickerTarget) => {
       const source = target === "start" ? startBounds : endBounds;
+      if (!source) return null;
       return typeof source === "function" ? source() : source;
     },
     [startBounds, endBounds]
@@ -92,7 +110,7 @@ export function StartEndTimeSection({
   const update = useCallback(
     (target: PickerTarget, value: Date) => {
       if (target === "start") onStartTimeChange(value);
-      else onEndTimeChange(value);
+      else onEndTimeChange?.(value);
     },
     [onStartTimeChange, onEndTimeChange]
   );
@@ -100,6 +118,7 @@ export function StartEndTimeSection({
   const openPicker = useCallback(
     (target: PickerTarget, mode: AndroidPickerMode) => {
       const bounds = boundsFor(target);
+      if (!bounds) return;
       if (bounds.minimumDate && bounds.minimumDate > bounds.maximumDate) return;
       if (Platform.OS === "ios") setIosTarget(target);
       else setAndroidPicker({ target, mode });
@@ -114,13 +133,15 @@ export function StartEndTimeSection({
       if (event.type === "dismissed" || !selected) return;
 
       const current = valueFor(androidPicker.target);
+      const bounds = boundsFor(androidPicker.target);
+      if (!current || !bounds) return;
       const next = new Date(current);
       if (androidPicker.mode === "date") {
         next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
       } else {
         next.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
       }
-      update(androidPicker.target, clampToBounds(next, boundsFor(androidPicker.target)));
+      update(androidPicker.target, clampToBounds(next, bounds));
     },
     [androidPicker, boundsFor, update, valueFor]
   );
@@ -167,20 +188,22 @@ export function StartEndTimeSection({
     </View>
   );
 
-  const durationSeconds = calculateActiveDurationSeconds(
-    startTime,
-    endTime,
-    pausedSeconds
-  );
+  const durationSeconds = endPicker
+    ? calculateActiveDurationSeconds(startTime, endPicker.endTime, endPicker.pausedSeconds ?? 0)
+    : 0;
   const iosBounds = iosTarget ? boundsFor(iosTarget) : null;
+  const iosValue = iosTarget ? valueFor(iosTarget) : undefined;
   const androidBounds = androidPicker ? boundsFor(androidPicker.target) : null;
+  const androidValue = androidPicker ? valueFor(androidPicker.target) : undefined;
 
   return (
     <>
       {renderTimeRow("start", startLabel, startTime, startError)}
-      {renderTimeRow("end", endLabel, endTime, endError)}
+      {endPicker
+        ? renderTimeRow("end", endPicker.endLabel, endPicker.endTime, endPicker.endError)
+        : null}
 
-      {iosTarget && iosBounds ? (
+      {iosTarget && iosBounds && iosValue ? (
         <View className="mb-6">
           <View className="flex-row justify-end px-2">
             <Pressable
@@ -195,7 +218,7 @@ export function StartEndTimeSection({
             </Pressable>
           </View>
           <DateTimePicker
-            value={clampToBounds(valueFor(iosTarget), iosBounds)}
+            value={clampToBounds(iosValue, iosBounds)}
             mode="datetime"
             display="spinner"
             minimumDate={iosBounds.minimumDate}
@@ -207,9 +230,9 @@ export function StartEndTimeSection({
         </View>
       ) : null}
 
-      {androidPicker && androidBounds ? (
+      {androidPicker && androidBounds && androidValue ? (
         <DateTimePicker
-          value={clampToBounds(valueFor(androidPicker.target), androidBounds)}
+          value={clampToBounds(androidValue, androidBounds)}
           mode={androidPicker.mode}
           display="default"
           minimumDate={androidBounds.minimumDate}
@@ -218,21 +241,58 @@ export function StartEndTimeSection({
         />
       ) : null}
 
-      <View
-        className="mb-6 flex-row items-center justify-between rounded-card-lg border border-dashed px-4 py-3"
-        style={{
-          backgroundColor: mutedBackgroundColor,
-          borderColor: accentColor,
-        }}
-        accessibilityLabel={`${durationLabel}: ${formatDuration(durationSeconds, "short")}`}
-      >
-        <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-          {durationLabel}
-        </Text>
-        <Text className="text-lg font-semibold" style={{ color: textColor }}>
-          {formatDuration(durationSeconds, "short")}
-        </Text>
-      </View>
+      {props.durationInput ? (
+        <>
+          <View
+            className={`${props.durationInput.endSummary ? "mb-2" : "mb-6"} flex-row items-center justify-between gap-3`}
+          >
+            <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary">
+              {durationLabel}
+            </Text>
+            <View
+              className="w-28 flex-row items-center justify-end gap-1.5 rounded-card-lg px-4 py-3"
+              style={{ backgroundColor: mutedBackgroundColor }}
+            >
+              <TextInput
+                testID="duration-minutes-input"
+                value={props.durationInput.minutes}
+                onChangeText={(text) =>
+                  props.durationInput?.onMinutesChange(text.replace(/\D/g, ""))
+                }
+                keyboardType="number-pad"
+                maxLength={3}
+                accessibilityLabel={durationLabel}
+                className="flex-1 text-right text-lg font-semibold p-0"
+                style={{ color: textColor }}
+              />
+              <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+                {props.durationInput.unitLabel}
+              </Text>
+            </View>
+          </View>
+          {props.durationInput.endSummary ? (
+            <Text className="mb-6 px-4 text-sm text-content-secondary dark:text-content-dark-secondary">
+              {props.durationInput.endSummary}
+            </Text>
+          ) : null}
+        </>
+      ) : (
+        <View
+          className="mb-6 flex-row items-center justify-between rounded-card-lg border border-dashed px-4 py-3"
+          style={{
+            backgroundColor: mutedBackgroundColor,
+            borderColor: accentColor,
+          }}
+          accessibilityLabel={`${durationLabel}: ${formatDuration(durationSeconds, "short")}`}
+        >
+          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+            {durationLabel}
+          </Text>
+          <Text className="text-lg font-semibold" style={{ color: textColor }}>
+            {formatDuration(durationSeconds, "short")}
+          </Text>
+        </View>
+      )}
       {durationError ? (
         <Text className="text-red-500 text-sm -mt-4 mb-6">{durationError}</Text>
       ) : null}

@@ -1,0 +1,37 @@
+appId: com.sofibaby.app
+name: Five Minute Tummy Time Is Saved
+tags:
+  - regression
+  - activities
+  - tummy-time
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "tummyTime-card"
+
+- tapOn:
+    id: "start-timer-button"
+
+# Five minutes of tummy time earns the first achievement.
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?5:0[0-9]"
+    timeout: 320000
+
+- tapOn:
+    id: "stop-timer-button"
+
+# The 5-minute toast hides after four seconds, faster than an iOS hierarchy fetch
+# of Home, so the celebration itself is not asserted here. The saved five-minute
+# entry is.
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+- assertVisible:
+    text: "Tummy Time at .*\\. 5m"

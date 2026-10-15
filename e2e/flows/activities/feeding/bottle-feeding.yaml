@@ -39,3 +39,9 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+# The saved bottle shows its volume on the Timeline.
+- assertVisible:
+    text: "Bottle.* at .*\\. (120 ml|4 oz)"

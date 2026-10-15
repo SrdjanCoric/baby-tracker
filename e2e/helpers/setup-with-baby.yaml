@@ -51,10 +51,4 @@ appId: com.sofibaby.app
     visible:
       id: "home-screen"
     timeout: 15000
-- runFlow:
-    when:
-      visible: ".*Open debugger to view warnings.*"
-    commands:
-      - tapOn:
-          point: "95%,92%"
-- waitForAnimationToEnd
+- runFlow: ./dismiss-dev-banner.yaml

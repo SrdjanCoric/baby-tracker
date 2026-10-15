@@ -1,0 +1,77 @@
+appId: com.sofibaby.app
+name: Discard Running Timer Saves Nothing
+tags:
+  - regression
+  - activities
+  - tummy-time
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "tummyTime-card"
+
+- assertVisible:
+    id: "tummy-time-screen"
+
+- tapOn:
+    id: "start-timer-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# "Keep timing" leaves the timer running.
+- tapOn:
+    text: "Discard timer"
+
+- assertVisible:
+    text: "Discard this tummy time?"
+
+- tapOn:
+    text: "Keep timing"
+
+- assertVisible:
+    id: "stop-timer-button"
+
+# "Discard" clears the timer without an entry.
+- tapOn:
+    text: "Discard timer"
+
+- tapOn:
+    text: "Discard"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- assertNotVisible:
+    id: "tummyTime-card-pause"
+
+- runFlow: ../../../helpers/dismiss-dev-banner.yaml
+- tapOn:
+    id: "timeline-tab"
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000
+
+- assertVisible:
+    id: "empty-timeline"
+
+# A relaunch does not bring the timer back.
+- launchApp:
+    clearState: false
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+
+- tapOn:
+    id: "tummyTime-card"
+
+- assertVisible:
+    id: "start-timer-button"

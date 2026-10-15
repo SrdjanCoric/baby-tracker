@@ -23,5 +23,6 @@ tags:
 # Timeline
 - runFlow: ../flows/timeline/view-activities.yaml
 
-# Household (requires pre-seeded data)
+# Signed-in caregiver (requires pre-seeded data)
+- runFlow: ../flows/auth/e2e-auto-login.yaml
 - runFlow: ../flows/household/view-household.yaml

@@ -23,7 +23,7 @@ The breast feed edit form becomes, top to bottom: Start, Duration, a quiet line 
 | --- | --- |
 | Left or Right greater than Duration | that field marked, message "Left can't be longer than the feed (3m)", Save disabled |
 | Left + Right greater than Duration, each alone fits | allowed ("Both" counts time twice) |
-| Both side fields blank | saved with no side seconds |
+| Both side fields blank | saved as 0 side seconds |
 | Duration lowered | side fields keep their values; the rule above decides |
 | Start moved | Duration, sides and Paused unchanged; End follows |
 | Bottle or solids entry | form unchanged |
@@ -37,6 +37,14 @@ Saving never resets the sides to zero (today any time change does).
 - Pause is shown, never edited. — Owner decision; it is a recorded fact.
 
 ## Clarifications
+
+- **"Finished on" rename dropped.** Q: the mock renames the Side picker to "Finished on" and the field table has it save `lastFinishedSide`; the edit screen today saves `side`. Which should it be? A (owner, 2026-10-15): keep today's Side picker unchanged — label "Side", Left / Right / Both, saves `side` as it does now, placed where the mock draws "Finished on". Reason: once minutes per side are editable, the next-side suggestion uses the side with fewer minutes, so a separate finishing-side picker adds little. This overrides the "Finished on" row of the field table and the mock's "Finished on" label; `lastFinishedSide` is not edited.
+- **Error text uses "(3m)".** Q: the task table says "Left can't be longer than the feed (3m)"; the mock shows "(3)". A (owner, 2026-10-15): "(3m)", matching the task table and the app's minute format.
+- **Error colour matches the app.** Q: the mock draws the error outline and message in #A8574B / #D08476; the app's errors use Tailwind `red-500`. A (owner, 2026-10-15): use the app's existing error red (`text-red-500`, and the same red for the field outline). This overrides the mock's error colour; the colour acceptance criterion holds for everything else.
+- **Duration wins over a stored End.** Q (review): imported or legacy feeds can store an `endedAt` that disagrees with Start + Duration + Paused; which one holds? A (owner, 2026-10-15): Duration, per "Start plus durations, End derived". The form shows the derived end, and any Start or Duration edit rewrites `endedAt` to it; a side-only or note-only save leaves the stored End alone.
+- **A running feed has no "ends".** A feed with no End yet shows only "Paused 3m" (or no line when unpaused) until Duration is edited, so the form never claims a running feed has ended.
+- **Blank sides save 0.** Storage merges only defined values, so a cleared side saves 0 seconds rather than removing the value; every reader treats 0 and missing alike.
+- **Settled from the mock and code without asking:** Notes keep today's label and placeholder (the mock lists Notes as unchanged). The manual form's Side picker stays as it is today, still required. Save's disabled look uses the mock's opacity (.4). A Duration or side value the user does not touch saves its exact stored seconds, not a value rounded to whole minutes.
 
 ## Non-goals
 

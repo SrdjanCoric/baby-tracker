@@ -1,0 +1,26 @@
+appId: com.sofibaby.app
+
+---
+# From Home, open the baby selector and add "Second E2E Baby" (boy, no birth date).
+# The new baby becomes the selected one.
+- tapOn:
+    id: "selected-baby-name"
+- assertVisible:
+    text: "Add Another Baby"
+- tapOn:
+    text: "Add Another Baby"
+- tapOn:
+    id: "baby-name-input"
+- inputText: "Second E2E Baby"
+- pressKey: Enter
+- tapOn:
+    id: "gender-male"
+- tapOn:
+    id: "save-baby-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- assertVisible:
+    id: "selected-baby-name"
+    text: "Second E2E Baby"

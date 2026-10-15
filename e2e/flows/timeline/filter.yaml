@@ -1,32 +1,75 @@
 appId: com.sofibaby.app
-name: Filter Timeline by Activity Type
+name: Timeline Filter
 tags:
   - regression
   - timeline
 
 ---
+# One tummy time entry plus one wet diaper.
 - runFlow: ../../helpers/setup-with-activity.yaml
 
 - tapOn:
-    id: "timeline-tab"
+    id: "diaper-card"
+- tapOn:
+    id: "type-wet"
+- tapOn:
+    id: "save-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
 
+- runFlow: ../../helpers/open-timeline.yaml
+
+# "All" shows both entries and no daily summary.
 - assertVisible:
-    id: "timeline-screen"
+    text: "Tummy Time at .*"
+- assertVisible:
+    text: "Diaper at .*\\. Wet"
+- assertNotVisible:
+    text: "Summary"
 
+# Tummy time filter hides the diaper and shows the summary.
 - swipe:
-    start: 90%, 15%
-    end: 10%, 15%
-
+    start: "90%,15%"
+    end: "10%,15%"
 - extendedWaitUntil:
     visible:
       id: "filter-tummyTime"
     timeout: 3000
-
 - tapOn:
     id: "filter-tummyTime"
-
-- assertVisible:
-    id: "timeline-screen"
-
 - assertVisible:
     id: "timeline-item"
+- assertNotVisible:
+    text: "Diaper at .*\\. Wet"
+- assertVisible:
+    text: "Summary"
+- assertVisible:
+    text: "[0-9]+m · 1×"
+
+# Diaper filter hides the tummy time entry.
+- swipe:
+    start: "10%,15%"
+    end: "90%,15%"
+- extendedWaitUntil:
+    visible:
+      id: "filter-diaper"
+    timeout: 3000
+- tapOn:
+    id: "filter-diaper"
+- assertVisible:
+    text: "Diaper at .*\\. Wet"
+- assertNotVisible:
+    text: "[0-9]+m · 1×"
+
+# A filter with no entries shows the empty state.
+- tapOn:
+    id: "filter-sleep"
+- assertVisible:
+    id: "empty-timeline"
+
+- tapOn:
+    id: "filter-all"
+- assertVisible:
+    text: "Diaper at .*\\. Wet"

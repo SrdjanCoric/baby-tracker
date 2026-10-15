@@ -1,0 +1,38 @@
+appId: com.sofibaby.app
+name: Log Temperature
+tags:
+  - regression
+  - activities
+  - health
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- scrollUntilVisible:
+    element:
+      id: "health-card"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "health-card"
+
+- assertVisible:
+    id: "health-screen"
+
+- tapOn:
+    id: "type-temperature"
+
+- tapOn:
+    id: "save-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+- assertVisible:
+    text: "Temperature at .*"
+- assertVisible:
+    id: "timeline-item"

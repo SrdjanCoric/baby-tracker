@@ -1,0 +1,11 @@
+appId: com.sofibaby.app
+
+---
+# Open the Timeline tab from Home.
+- runFlow: ./dismiss-dev-banner.yaml
+- tapOn:
+    id: "timeline-tab"
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000

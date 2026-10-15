@@ -353,6 +353,7 @@ function MilestoneRow({
   return (
     <Pressable
       onPress={handlePress}
+      testID={`milestone-${milestoneId}-${state}`}
       className="flex-row items-center rounded-xl bg-surface-card dark:bg-surface-dark-card overflow-hidden"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >

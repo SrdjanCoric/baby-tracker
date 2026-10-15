@@ -1,0 +1,44 @@
+appId: com.sofibaby.app
+name: Sub-Minute Breast Feed Stop Is Discarded
+tags:
+  - regression
+  - activities
+  - feeding
+  - production-timer-minimum
+
+---
+# Requires a build with EXPO_PUBLIC_E2E_TIMER_MINIMUM_SECONDS=60 (not 0), so the
+# production one-minute minimum applies. The other timer flows set that
+# variable to 0 to stay fast; run this one separately.
+# Breast feeding, pumping and sleep discard sub-minute stops; tummy time keeps them.
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "feeding-card"
+
+- assertVisible:
+    id: "feeding-screen"
+
+- tapOn:
+    id: "type-breast"
+
+- tapOn:
+    id: "start-left-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+- assertVisible:
+    id: "empty-timeline"

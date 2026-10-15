@@ -1,0 +1,60 @@
+appId: com.sofibaby.app
+name: Edit Running Timer Start Time
+tags:
+  - regression
+  - activities
+  - sleep
+
+---
+- runFlow: ../../../helpers/setup-with-baby.yaml
+
+- tapOn:
+    id: "sleep-card"
+
+- tapOn:
+    id: "start-sleep-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+- assertVisible:
+    text: "(Timer: )?0:0[0-9]"
+
+# Move the start back by turning the hour wheel of the date-time spinner
+# (columns: date | hour | minute | AM/PM, centred near 70% of the screen height;
+# dragging the hour wheel down selects earlier hours).
+- tapOn:
+    id: "running-timer-start-editor"
+
+- extendedWaitUntil:
+    visible:
+      text: "Done"
+    timeout: 5000
+
+- swipe:
+    start: "49%,70%"
+    end: "49%,80%"
+    duration: 600
+
+- tapOn:
+    text: "Done"
+
+# The readout now counts from the earlier start (at least one hour).
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?[0-9]+:[0-5][0-9]:[0-5][0-9]"
+    timeout: 5000
+
+# The earlier start survives a relaunch.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- tapOn:
+    id: "sleep-card"
+- assertVisible:
+    text: "(Timer: )?[0-9]+:[0-5][0-9]:[0-5][0-9]"

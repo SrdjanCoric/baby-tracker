@@ -47,3 +47,11 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+# The saved measurement shows weight, height and head circumference.
+- assertVisible:
+    text: "Growth at .*\\. (7\\.5 kg|.* lbs).*"
+- assertVisible:
+    text: "Growth at .*\\. .*(68 cm|.* in).*"

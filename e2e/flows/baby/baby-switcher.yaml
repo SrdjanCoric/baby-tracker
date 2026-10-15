@@ -5,56 +5,25 @@ tags:
   - baby
 
 ---
-
 - runFlow: ../../helpers/setup-with-baby.yaml
+- runFlow: ../../helpers/add-second-baby.yaml
 
+# Switching back selects the first baby.
 - tapOn:
     id: "selected-baby-name"
-
-
+- tapOn:
+    text: "Test Baby"
 - assertVisible:
-    text: "Add Another Baby"
+    id: "selected-baby-name"
+    text: "Test Baby"
 
-# If the button is below the fold, try scrolling                                                                                                                                     
-  
-- swipe: 
-    start: 50%, 80%
-    end: 50%, 40% 
-
-- tapOn:
-    text: "Add Another Baby"
-
-# Enter baby name
-- tapOn:
-    id: "baby-name-input"
-- inputText: "Second E2E Baby"
-
-# Dismiss keyboard
-- pressKey: Enter
-
-# Fill in baby details
-
-
-# Select gender if available
-- tapOn:
-    id: "gender-male"
-    optional: true
-
-# Save
-- tapOn:
-    id: "save-baby-button"
-
-# Should return to home screen
+# The selection survives a relaunch.
+- launchApp:
+    clearState: false
 - extendedWaitUntil:
     visible:
       id: "home-screen"
-    timeout: 15000
-
-- tapOn:
-    id: "selected-baby-name"
-
-- tapOn:
-    text: "Test Baby"
-
+    timeout: 30000
 - assertVisible:
+    id: "selected-baby-name"
     text: "Test Baby"

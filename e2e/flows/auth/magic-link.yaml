@@ -1,5 +1,5 @@
 appId: com.sofibaby.app
-name: Magic Link Sign In
+name: Magic Link Sign In Validates Email
 
 tags:
   - regression
@@ -14,11 +14,30 @@ tags:
     timeout: 60000
 - tapOn:
     id: "sign-in-button"
+
+# A malformed address is rejected inline and nothing is sent.
 - tapOn:
     id: "email-input"
-- inputText: "test@example.com"
+- inputText: "notanemail"
 - tapOn:
     id: "send-magic-link-button"
 - assertVisible:
-    text: "Check your email"
-    optional: true
+    text: "Invalid email format"
+- assertNotVisible:
+    text: "Check Your Email"
+
+# A valid address sends the link (local Supabase catches the mail).
+- tapOn:
+    id: "email-input"
+- eraseText
+- inputText: "e2e-owner@test.local"
+- tapOn:
+    id: "send-magic-link-button"
+- extendedWaitUntil:
+    visible:
+      text: "Check Your Email"
+    timeout: 15000
+- tapOn:
+    text: "OK"
+- assertVisible:
+    id: "email-input"

@@ -118,6 +118,17 @@ describe("ManualPumpingScreen clock-time entry", () => {
     });
   });
 
+  it("rejects a volume over 500 ml without writing", async () => {
+    const screen = render(<ManualPumpingScreen />);
+    fireEvent.changeText(screen.getByLabelText("pumping.enterVolume"), "600");
+    fireEvent.press(
+      screen.getByRole("button", { name: "pumping.logManualPumping" })
+    );
+
+    expect(await screen.findByText("validation.volumeTooLarge500ml")).toBeTruthy();
+    expect(mockAddPumping).not.toHaveBeenCalled();
+  });
+
   it("cancels an overlapping pumping session without writing", async () => {
     mockPumpings = [
       {

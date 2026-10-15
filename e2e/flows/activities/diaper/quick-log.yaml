@@ -38,3 +38,11 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+# Both diapers show on the Timeline with their types.
+- assertVisible:
+    text: "Diaper at .*\\. Wet"
+- assertVisible:
+    text: "Diaper at .*\\. Dirty"

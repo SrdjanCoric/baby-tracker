@@ -7,22 +7,16 @@ tags:
 ---
 - runFlow: ../../helpers/setup-with-activity.yaml
 
-- tapOn:
-    id: "timeline-tab"
-
-- assertVisible:
-    id: "timeline-screen"
+- runFlow: ../../helpers/open-timeline.yaml
 
 - tapOn:
     id: "timeline-item"
 
 - assertVisible:
     id: "edit-activity-screen"
-    optional: true
 
 - tapOn:
     id: "notes-input"
-    optional: true
 - inputText: "E2E test note"
 - tapOn:
     id: "dismiss-keyboard"
@@ -34,3 +28,32 @@ tags:
     visible:
       id: "timeline-screen"
     timeout: 15000
+
+# Reopening shows the saved note.
+- tapOn:
+    id: "timeline-item"
+
+- assertVisible:
+    id: "edit-activity-screen"
+
+- assertVisible:
+    id: "notes-input"
+    text: "E2E test note"
+
+# The note survives a relaunch.
+- launchApp:
+    clearState: false
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+
+- runFlow: ../../helpers/open-timeline.yaml
+
+- tapOn:
+    id: "timeline-item"
+
+- assertVisible:
+    id: "notes-input"
+    text: "E2E test note"

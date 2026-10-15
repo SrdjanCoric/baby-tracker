@@ -2,6 +2,7 @@ import React from "react";
 import { Alert, Platform } from "react-native";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import { formatTime } from "@/utils/time";
 import EditFeedingScreen from "./feeding";
 
 const mockUpdateFeeding = jest.fn();
@@ -79,9 +80,13 @@ describe("EditFeedingScreen clock-time editing", () => {
     });
   });
 
-  async function renderInitialized() {
+  async function renderInitialized(durationMinutes = "30") {
     const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("2h")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByLabelText("feeding.duration").props.value).toBe(
+        durationMinutes
+      )
+    );
     return screen;
   }
 
@@ -94,40 +99,28 @@ describe("EditFeedingScreen clock-time editing", () => {
     fireEvent(screen.getByTestId("datetime-picker"), "change", {}, value);
   }
 
-  it("includes pauses in both picker bounds", async () => {
+  it("bounds Start so the derived End, pause included, stays in the past", async () => {
     mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180 }];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })).toBeTruthy());
+    const screen = await renderInitialized();
     fireEvent.press(screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" }));
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date(new Date("2026-08-07T10:00:00.000Z").getTime() - 240_000)
-    );
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" }));
-    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
-      new Date(new Date("2026-08-07T08:00:00.000Z").getTime() + 240_000)
+      new Date(now.getTime() - (1800 + 180) * 1000)
     );
   });
 
   it("keeps stored pauses excluded after a start-time edit", async () => {
     mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180 }];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("1h 57m")).toBeTruthy());
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: "feeding.startTime feeding.selectTime",
-      }),
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date("2026-08-07T08:01:00.000Z"),
+    const screen = await renderInitialized();
+    chooseTime(
+      screen,
+      "feeding.startTime feeding.selectTime",
+      new Date("2026-08-07T08:01:00.000Z")
     );
     fireEvent.press(screen.getByRole("button", { name: "common.save" }));
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
     expect(mockUpdateFeeding.mock.calls[0][1]).toMatchObject({
-      durationSeconds: 6960,
+      durationSeconds: 1800,
+      endedAt: new Date("2026-08-07T08:34:00.000Z"),
     });
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
       "pausedSeconds",
@@ -136,31 +129,25 @@ describe("EditFeedingScreen clock-time editing", () => {
 
   it("preserves a legacy counted-pause duration when editing", async () => {
     mockFeedings = [{ ...mockFeedings[0], pausedSeconds: 180, durationSeconds: 7200 }];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("2h")).toBeTruthy());
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: "feeding.startTime feeding.selectTime",
-      }),
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date("2026-08-07T08:01:00.000Z"),
+    const screen = await renderInitialized("120");
+    expect(screen.queryByText(/Paused/)).toBeNull();
+    chooseTime(
+      screen,
+      "feeding.startTime feeding.selectTime",
+      new Date("2026-08-07T08:01:00.000Z")
     );
     fireEvent.press(screen.getByRole("button", { name: "common.save" }));
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
     expect(mockUpdateFeeding.mock.calls[0][1]).toMatchObject({
-      durationSeconds: 7140,
+      durationSeconds: 7200,
+      endedAt: new Date("2026-08-07T10:01:00.000Z"),
     });
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty(
       "pausedSeconds",
     );
   });
 
-
-  it("prefills a breast feed's real interval and presents duration as read-only", async () => {
+  it("prefills Start and Duration from the stored feed and offers no End picker", async () => {
     const screen = await renderInitialized();
 
     fireEvent.press(
@@ -168,30 +155,18 @@ describe("EditFeedingScreen clock-time editing", () => {
         name: "feeding.startTime feeding.selectDate",
       })
     );
-    expect(screen.getByTestId("datetime-picker").props).toEqual(
-      expect.objectContaining({
-        value: new Date("2026-08-07T08:00:00.000Z"),
-        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
-      })
-    );
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
-    );
-    expect(screen.getByTestId("datetime-picker").props).toEqual(
-      expect.objectContaining({
-        value: new Date("2026-08-07T10:00:00.000Z"),
-        minimumDate: new Date("2026-08-07T08:01:00.000Z"),
-        maximumDate: new Date("2026-08-07T10:00:00.000Z"),
-      })
+    expect(screen.getByTestId("datetime-picker").props.value).toEqual(
+      new Date("2026-08-07T08:00:00.000Z")
     );
     expect(
-      screen.queryByRole("textbox", { name: "feeding.durationPlaceholder" })
+      screen.queryByRole("button", { name: "feeding.endTime feeding.selectDate" })
     ).toBeNull();
-    expect(screen.queryByText("30")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "feeding.endTime feeding.selectTime" })
+    ).toBeNull();
   });
 
-  it("shows a counted-pause feed with one matching derived length and no annotation", async () => {
+  it("shows a counted-pause feed with its full duration and no annotation", async () => {
     mockFeedings = [
       {
         ...mockFeedings[0],
@@ -200,13 +175,12 @@ describe("EditFeedingScreen clock-time editing", () => {
       },
     ];
 
-    const screen = await renderInitialized();
+    const screen = await renderInitialized("120");
 
-    expect(screen.getByText("2h")).toBeTruthy();
-    expect(screen.queryByText(/elapsed|not counted/i)).toBeNull();
+    expect(screen.queryByText(/elapsed|not counted|Paused/i)).toBeNull();
   });
 
-  it("opens both End pickers for a recent feed without an endedAt without becoming dirty", async () => {
+  it("opens a recent feed without an endedAt without becoming dirty", async () => {
     mockFeedings = [
       {
         ...mockFeedings[0],
@@ -215,46 +189,13 @@ describe("EditFeedingScreen clock-time editing", () => {
         durationSeconds: 0,
       },
     ];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("0m")).toBeTruthy());
+    await renderInitialized("0");
 
     const preventRemove = jest.requireMock("@react-navigation/native")
       .usePreventRemove as jest.Mock;
     const lastPreventRemoveCall =
       preventRemove.mock.calls[preventRemove.mock.calls.length - 1];
     expect(lastPreventRemoveCall[0]).toBe(false);
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
-    );
-    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
-    );
-    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
-  });
-
-  it("opens both End pickers for a stored sub-minute breast feed", async () => {
-    mockFeedings = [
-      {
-        ...mockFeedings[0],
-        startedAt: new Date(now.getTime() - 45 * 1000).toISOString(),
-        endedAt: new Date(now.getTime() - 5 * 1000).toISOString(),
-        durationSeconds: 40,
-      },
-    ];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("0m")).toBeTruthy());
-
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
-    );
-    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
-    );
-    expect(screen.getByTestId("datetime-picker")).toBeTruthy();
   });
 
   it("leaves stored times and duration untouched on a note-only or side-only save", async () => {
@@ -272,9 +213,11 @@ describe("EditFeedingScreen clock-time editing", () => {
 
     mockUpdateFeeding.mockClear();
     const sideScreen = await renderInitialized();
-    fireEvent.press(sideScreen.getByText("feeding.right"));
+    const rightButtons = sideScreen.getAllByText("feeding.right");
+    fireEvent.press(rightButtons[rightButtons.length - 1]);
     fireEvent.press(sideScreen.getByRole("button", { name: "common.save" }));
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toMatchObject({ side: "right" });
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("startedAt");
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("endedAt");
     expect(mockUpdateFeeding.mock.calls[0][1]).not.toHaveProperty("durationSeconds");
@@ -328,18 +271,17 @@ describe("EditFeedingScreen clock-time editing", () => {
     }
   );
 
-  it("writes both entered times and their interval after a time edit", async () => {
+  it("writes Start, Duration and the derived End after a Duration edit", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const screen = await renderInitialized();
-    const editedEnd = new Date("2026-08-07T09:30:00.000Z");
-    chooseTime(screen, "feeding.endTime feeding.selectTime", editedEnd);
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "90");
     fireEvent.press(screen.getByRole("button", { name: "common.save" }));
 
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
     expect(mockUpdateFeeding.mock.calls[0][1]).toEqual(
       expect.objectContaining({
         startedAt: new Date("2026-08-07T08:00:00.000Z"),
-        endedAt: editedEnd,
+        endedAt: new Date("2026-08-07T09:30:00.000Z"),
         durationSeconds: 5400,
       })
     );
@@ -396,8 +338,8 @@ describe("EditFeedingScreen clock-time editing", () => {
       "feeding-1",
       expect.objectContaining({
         startedAt: new Date("2026-08-07T08:30:00.000Z"),
-        endedAt: new Date("2026-08-07T10:00:00.000Z"),
-        durationSeconds: 5400,
+        endedAt: new Date("2026-08-07T09:00:00.000Z"),
+        durationSeconds: 1800,
       })
     );
   });
@@ -411,14 +353,10 @@ describe("EditFeedingScreen clock-time editing", () => {
         durationSeconds: undefined,
       },
     ];
-    const screen = render(<EditFeedingScreen />);
-    await waitFor(() => expect(screen.getByText("1h")).toBeTruthy());
+    const screen = await renderInitialized("60");
     const editedStart = new Date("2026-08-07T11:15:00.000Z");
 
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
-    );
-    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, editedStart);
+    chooseTime(screen, "feeding.startTime feeding.selectTime", editedStart);
     fireEvent.press(screen.getByRole("button", { name: "common.save" }));
 
     await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
@@ -429,25 +367,30 @@ describe("EditFeedingScreen clock-time editing", () => {
     );
   });
 
-  it("refreshes the End ceiling and enforces the two-hour cap", async () => {
+  it("refreshes the Start ceiling and enforces the one-minute and two-hour Duration limits", async () => {
     const screen = await renderInitialized();
     jest.setSystemTime(new Date("2026-08-07T12:05:00.000Z"));
     fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
     );
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T10:00:00.000Z")
+      new Date("2026-08-07T11:35:00.000Z")
     );
     fireEvent.press(screen.getByRole("button", { name: "common.done" }));
 
-    chooseTime(
-      screen,
-      "feeding.startTime feeding.selectTime",
-      new Date("2026-08-07T07:00:00.000Z")
-    );
-    expect(
-      screen.getByRole("button", { name: "common.save" }).props.accessibilityState
-    ).toEqual({ disabled: true });
+    const save = () => screen.getByRole("button", { name: "common.save" });
+    for (const [minutes, message] of [
+      ["121", "validation.durationTooLong2h"],
+      ["0", "validation.durationMinimum1m"],
+      ["", "validation.durationRequired"],
+    ]) {
+      fireEvent.changeText(screen.getByLabelText("feeding.duration"), minutes);
+      expect(save().props.accessibilityState).toEqual({ disabled: true });
+      expect(screen.getByText(message)).toBeTruthy();
+    }
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "120");
+    expect(save().props.accessibilityState).toEqual({ disabled: false });
+    expect(screen.queryByText(/^validation\./)).toBeNull();
   });
 
   it.each(["bottle", "solid"] as const)(
@@ -474,6 +417,8 @@ describe("EditFeedingScreen clock-time editing", () => {
         })
       ).toBeNull();
       expect(screen.queryByText("feeding.endTime")).toBeNull();
+      expect(screen.queryByLabelText("feeding.duration")).toBeNull();
+      expect(screen.queryByText("Minutes per side")).toBeNull();
       fireEvent.changeText(
         screen.getByDisplayValue(type === "bottle" ? "120" : "banana"),
         type === "bottle" ? "150" : "avocado"
@@ -504,5 +449,402 @@ describe("EditFeedingScreen clock-time editing", () => {
       "unrelated rerender"
     );
     expect(screen.getByTestId("datetime-picker").props.onChange).toBe(initialOnChange);
+  });
+});
+
+describe("EditFeedingScreen breast duration and minutes per side", () => {
+  const now = new Date("2026-08-07T12:00:00.000Z");
+  const storyFeed: StoredFeedingEntry = {
+    id: "feeding-1",
+    babyId: "baby-1",
+    type: "breast",
+    side: "both",
+    lastFinishedSide: "left",
+    startedAt: "2026-08-07T11:00:00.000Z",
+    endedAt: "2026-08-07T11:09:00.000Z",
+    durationSeconds: 360,
+    pausedSeconds: 180,
+    leftDurationSeconds: 300,
+    rightDurationSeconds: 60,
+    createdAt: "2026-08-07T11:00:00.000Z",
+    updatedAt: "2026-08-07T11:09:00.000Z",
+  };
+  const clock = (iso: string) => formatTime(new Date(iso), "24h");
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers().setSystemTime(now);
+    mockFeedings = [storyFeed];
+    mockUpdateFeeding.mockResolvedValue(storyFeed);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  async function renderStory() {
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("feeding.duration").props.value).toBe("6")
+    );
+    return screen;
+  }
+
+  function renderedTexts(screen: Awaited<ReturnType<typeof renderStory>>) {
+    const texts: string[] = [];
+    const walk = (node: unknown): void => {
+      if (typeof node === "string") texts.push(node);
+      else if (Array.isArray(node)) node.forEach(walk);
+      else if (node && typeof node === "object") {
+        walk((node as { children?: unknown }).children ?? []);
+      }
+    };
+    walk(screen.toJSON());
+    return texts;
+  }
+
+  it("shows Start, Duration, the paused and ends line, minutes per side, Side and Notes in order", async () => {
+    const screen = await renderStory();
+
+    expect(screen.getByLabelText("feeding.left").props.value).toBe("5");
+    expect(screen.getByLabelText("feeding.right").props.value).toBe("1");
+    expect(
+      screen.queryByRole("button", { name: "feeding.endTime feeding.selectTime" })
+    ).toBeNull();
+    expect(screen.queryByText("feeding.endTime")).toBeNull();
+
+    const pausedLine = `Paused 3m · ends ${clock("2026-08-07T11:09:00.000Z")}`;
+    const texts = renderedTexts(screen);
+    const order = [
+      "feeding.startTime",
+      "feeding.duration",
+      "common.min",
+      pausedLine,
+      "Minutes per side",
+      "feeding.left",
+      "feeding.right",
+      "feeding.side",
+      "common.notes",
+    ].map((text) => texts.indexOf(text));
+    expect(order).not.toContain(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("drops the Paused text when the feed has no pause", async () => {
+    mockFeedings = [
+      {
+        ...storyFeed,
+        endedAt: "2026-08-07T11:06:00.000Z",
+        pausedSeconds: 0,
+      },
+    ];
+    const screen = await renderStory();
+
+    expect(
+      screen.getByText(`ends ${clock("2026-08-07T11:06:00.000Z")}`)
+    ).toBeTruthy();
+    expect(screen.queryByText(/Paused/)).toBeNull();
+  });
+
+  function save(screen: Awaited<ReturnType<typeof renderStory>>) {
+    return screen.getByRole("button", { name: "common.save" });
+  }
+
+  function borderOf(screen: Awaited<ReturnType<typeof renderStory>>, side: "left" | "right") {
+    const style = [screen.getByTestId(`side-minutes-${side}`).props.style].flat();
+    return Object.assign({}, ...style).borderColor;
+  }
+
+  it("marks a side that no longer fits a lowered Duration and blocks Save without moving the sides", async () => {
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "3");
+
+    expect(screen.getByText("Left can't be longer than the feed (3m)")).toBeTruthy();
+    expect(screen.queryByText(/Right can't be longer/)).toBeNull();
+    expect(borderOf(screen, "left")).toBe("#ef4444");
+    expect(borderOf(screen, "right")).toBe("transparent");
+    expect(screen.getByLabelText("feeding.left").props.value).toBe("5");
+    expect(screen.getByLabelText("feeding.right").props.value).toBe("1");
+    expect(
+      screen.getByText(`Paused 3m · ends ${clock("2026-08-07T11:06:00.000Z")}`)
+    ).toBeTruthy();
+    expect(save(screen).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: true })
+    );
+    fireEvent.press(save(screen));
+    expect(mockUpdateFeeding).not.toHaveBeenCalled();
+  });
+
+  it("marks Right when only Right is longer than the feed", async () => {
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.right"), "7");
+
+    expect(screen.getByText("Right can't be longer than the feed (6m)")).toBeTruthy();
+    expect(borderOf(screen, "right")).toBe("#ef4444");
+    expect(borderOf(screen, "left")).toBe("transparent");
+    expect(save(screen).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: true })
+    );
+  });
+
+  it("saves the corrected story: Duration 3, Left 2, End from Start plus Duration plus Paused", async () => {
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "3");
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "2");
+    expect(screen.queryByText(/can't be longer/)).toBeNull();
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    const input = mockUpdateFeeding.mock.calls[0][1];
+    expect(input).toEqual(
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T11:00:00.000Z"),
+        endedAt: new Date("2026-08-07T11:06:00.000Z"),
+        durationSeconds: 180,
+        leftDurationSeconds: 120,
+        side: "both",
+      })
+    );
+    expect(input).not.toHaveProperty("rightDurationSeconds");
+    expect(input).not.toHaveProperty("pausedSeconds");
+  });
+
+  it("compares a lowered Duration with a side's exact stored seconds", async () => {
+    mockFeedings = [{ ...storyFeed, leftDurationSeconds: 330 }];
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "5");
+
+    expect(screen.getByText("Left can't be longer than the feed (5m)")).toBeTruthy();
+    expect(save(screen).props.accessibilityState).toEqual({ disabled: true });
+  });
+
+  it("does not block an unrelated save when a stored side already exceeds the stored feed", async () => {
+    mockFeedings = [{ ...storyFeed, durationSeconds: 300, leftDurationSeconds: 330 }];
+    const screen = render(<EditFeedingScreen />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("feeding.duration").props.value).toBe("5")
+    );
+
+    expect(screen.queryByText(/can't be longer/)).toBeNull();
+    expect(save(screen).props.accessibilityState).toEqual({ disabled: false });
+  });
+
+  it("treats a re-typed value with a leading zero as unchanged", async () => {
+    mockFeedings = [{ ...storyFeed, durationSeconds: 390, leftDurationSeconds: 330 }];
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "06");
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "05");
+    fireEvent.changeText(
+      screen.getByPlaceholderText("feeding.notesPlaceholder"),
+      "changed"
+    );
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    const input = mockUpdateFeeding.mock.calls[0][1];
+    expect(input).not.toHaveProperty("durationSeconds");
+    expect(input).not.toHaveProperty("endedAt");
+    expect(input).not.toHaveProperty("leftDurationSeconds");
+  });
+
+  it("limits Duration and side fields to three digits", async () => {
+    const screen = await renderStory();
+
+    for (const label of ["feeding.duration", "feeding.left", "feeding.right"]) {
+      expect(screen.getByLabelText(label).props.maxLength).toBe(3);
+    }
+  });
+
+  it("allows sides that add up past the feed when each fits on its own", async () => {
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "4");
+    fireEvent.changeText(screen.getByLabelText("feeding.right"), "4");
+    expect(save(screen).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: false })
+    );
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    const input = mockUpdateFeeding.mock.calls[0][1];
+    expect(input).toEqual(
+      expect.objectContaining({ leftDurationSeconds: 240, rightDurationSeconds: 240 })
+    );
+    expect(input).not.toHaveProperty("startedAt");
+    expect(input).not.toHaveProperty("endedAt");
+    expect(input).not.toHaveProperty("durationSeconds");
+  });
+
+  it("saves blank side fields as no side minutes", async () => {
+    const screen = await renderStory();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "");
+    fireEvent.changeText(screen.getByLabelText("feeding.right"), "");
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ leftDurationSeconds: 0, rightDurationSeconds: 0 })
+    );
+  });
+
+  it("slides the whole feed when Start moves, keeping Duration, sides and Paused", async () => {
+    const screen = await renderStory();
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:30:00.000Z")
+    );
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+
+    expect(screen.getByLabelText("feeding.duration").props.value).toBe("6");
+    expect(screen.getByLabelText("feeding.left").props.value).toBe("5");
+    expect(screen.getByLabelText("feeding.right").props.value).toBe("1");
+    expect(
+      screen.getByText(`Paused 3m · ends ${clock("2026-08-07T10:39:00.000Z")}`)
+    ).toBeTruthy();
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    const input = mockUpdateFeeding.mock.calls[0][1];
+    expect(input).toEqual(
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T10:30:00.000Z"),
+        endedAt: new Date("2026-08-07T10:39:00.000Z"),
+        durationSeconds: 360,
+      })
+    );
+    expect(input).not.toHaveProperty("leftDurationSeconds");
+    expect(input).not.toHaveProperty("rightDurationSeconds");
+  });
+
+  it("lets Duration win over a stored End that disagrees with it", async () => {
+    mockFeedings = [{ ...storyFeed, endedAt: "2026-08-07T11:20:00.000Z" }];
+    const screen = await renderStory();
+
+    expect(
+      screen.getByText(`Paused 3m · ends ${clock("2026-08-07T11:09:00.000Z")}`)
+    ).toBeTruthy();
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:30:00.000Z")
+    );
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        durationSeconds: 360,
+        endedAt: new Date("2026-08-07T10:39:00.000Z"),
+      })
+    );
+  });
+
+  it("shows only the pause for a running feed until its Duration is edited", async () => {
+    mockFeedings = [
+      {
+        ...storyFeed,
+        startedAt: "2026-08-07T11:51:00.000Z",
+        endedAt: undefined,
+        durationSeconds: 360,
+      },
+    ];
+    const screen = await renderStory();
+
+    expect(screen.getByText("Paused 3m")).toBeTruthy();
+    expect(screen.queryByText(/ends/)).toBeNull();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "5");
+    expect(
+      screen.getByText(`Paused 3m · ends ${clock("2026-08-07T11:59:00.000Z")}`)
+    ).toBeTruthy();
+  });
+
+  it("shows no ends line for a running feed without a pause", async () => {
+    mockFeedings = [
+      {
+        ...storyFeed,
+        startedAt: "2026-08-07T11:54:00.000Z",
+        endedAt: undefined,
+        durationSeconds: 360,
+        pausedSeconds: 0,
+      },
+    ];
+    const screen = await renderStory();
+
+    expect(screen.queryByText(/ends|Paused/)).toBeNull();
+  });
+
+  it("keeps an untouched Duration's exact seconds when Start moves", async () => {
+    mockFeedings = [{ ...storyFeed, durationSeconds: 390 }];
+    const screen = await renderStory();
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:30:00.000Z")
+    );
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    expect(mockUpdateFeeding.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        durationSeconds: 390,
+        endedAt: new Date("2026-08-07T10:39:30.000Z"),
+      })
+    );
+  });
+
+  it("never touches the side minutes on a note-only or side-picker save", async () => {
+    const screen = await renderStory();
+
+    const sideButtons = screen.getAllByText("feeding.left");
+    fireEvent.press(sideButtons[sideButtons.length - 1]);
+    fireEvent.changeText(
+      screen.getByPlaceholderText("feeding.notesPlaceholder"),
+      "changed"
+    );
+    fireEvent.press(save(screen));
+
+    await waitFor(() => expect(mockUpdateFeeding).toHaveBeenCalledTimes(1));
+    const input = mockUpdateFeeding.mock.calls[0][1];
+    expect(input).toEqual(expect.objectContaining({ side: "left", notes: "changed" }));
+    expect(input).not.toHaveProperty("leftDurationSeconds");
+    expect(input).not.toHaveProperty("rightDurationSeconds");
+    expect(input).not.toHaveProperty("lastFinishedSide");
+  });
+
+  it("leaves blank side fields for a feed without side minutes", async () => {
+    mockFeedings = [
+      {
+        ...storyFeed,
+        leftDurationSeconds: undefined,
+        rightDurationSeconds: 0,
+      },
+    ];
+    const screen = await renderStory();
+
+    expect(screen.getByLabelText("feeding.left").props.value).toBe("");
+    expect(screen.getByLabelText("feeding.right").props.value).toBe("");
   });
 });

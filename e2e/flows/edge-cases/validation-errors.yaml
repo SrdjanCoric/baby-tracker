@@ -1,5 +1,5 @@
 appId: com.sofibaby.app
-name: Form Validation Errors
+name: Validation Errors
 tags:
   - regression
   - edge-cases
@@ -7,43 +7,81 @@ tags:
 ---
 - runFlow: ../../helpers/setup-with-baby.yaml
 
-# Test growth form validation
+# Growth: zero weight is rejected.
 - tapOn:
     id: "growth-card"
-
-# Try to save with empty fields
-- tapOn:
-    id: "save-button"
-
-# Enter invalid value (negative weight)
 - tapOn:
     id: "weight-input"
-- inputText: "-5"
-
+- inputText: "0"
 - tapOn:
     id: "dismiss-keyboard"
-
 - tapOn:
     id: "save-button"
-
-# Should show error
 - assertVisible:
     text: "Weight must be positive"
-    optional: true
-
-# Clear and enter valid
 - tapOn:
-    id: "weight-input"
-- eraseText
-- inputText: "7.5"
+    text: "Close"
 
+# Bottle: over 500 ml is rejected on the quick form.
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "type-bottle"
+- tapOn:
+    id: "content-formula"
+- tapOn:
+    id: "volume-input"
+- inputText: "600"
 - tapOn:
     id: "dismiss-keyboard"
-
-- swipe:
-    start: 50%, 15%
-    end: 50%, 85%
-
+- tapOn:
+    id: "save-bottle-button"
 - assertVisible:
-    id: "home-screen"
-    optional: true
+    text: "Amount seems too large \\(over 500ml\\)"
+
+# Bottle: over 500 ml is rejected on the past-feeding form too.
+- waitForAnimationToEnd
+# The link is below the fixed save footer; scroll the form up first.
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- tapOn:
+    text: "Log Past Bottle Feeding"
+- extendedWaitUntil:
+    visible:
+      text: "Enter the amount"
+    timeout: 10000
+- tapOn:
+    text: ".*Formula"
+- tapOn:
+    text: "Enter the amount"
+- inputText: "600"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    text: "Log Bottle Feeding"
+- assertVisible:
+    text: "Amount seems too large \\(over 500ml\\)"
+
+# The past-feeding form has no close control; relaunch to get back Home.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+
+# Pumping: over 500 ml is rejected on the past-session form.
+- tapOn:
+    id: "pumping-card"
+- tapOn:
+    id: "log-past-pumping-button"
+- tapOn:
+    id: "volume-input"
+- inputText: "600"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    text: "Volume seems too large \\(over 500ml\\)"

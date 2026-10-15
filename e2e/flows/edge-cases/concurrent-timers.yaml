@@ -1,56 +1,75 @@
 appId: com.sofibaby.app
-name: Concurrent Timer Prevention
+name: Feeding And Sleep Timers Run Together
 tags:
   - regression
   - edge-cases
 
 ---
+# A single device may run a feeding timer and a sleep timer at the same time.
+# Each dashboard card shows its own running state and each stops on its own.
 - runFlow: ../../helpers/setup-with-baby.yaml
 
-# Start a feeding timer
 - tapOn:
     id: "feeding-card"
-
 - tapOn:
     id: "type-breast"
-
 - tapOn:
     id: "start-left-button"
-
-# Timer should be running - verify by presence of stop button
 - extendedWaitUntil:
     visible:
       id: "stop-timer-button"
     timeout: 3000
 
-# Stop timer and go back (feeding auto-saves and returns)
+# Leave the feeding timer running.
 - tapOn:
-    id: "stop-timer-button"
-
+    text: "Close"
 - extendedWaitUntil:
     visible:
-      id: "home-screen"
-    timeout: 15000
+      id: "feeding-card-own-active"
+    timeout: 5000
 
-# Try to start sleep timer
 - tapOn:
     id: "sleep-card"
-
-# Start sleep
 - tapOn:
     id: "start-sleep-button"
-
-# Timer should start - verify stop button appears
 - extendedWaitUntil:
     visible:
       id: "stop-timer-button"
     timeout: 3000
-
-# Stop the sleep timer
 - tapOn:
-    id: "stop-timer-button"
+    id: "e2e-dismiss-sleep-button"
 
+# Both cards show their own running timer.
 - extendedWaitUntil:
     visible:
-      id: "home-screen"
+      id: "sleep-card-own-active"
+    timeout: 5000
+- assertVisible:
+    id: "feeding-card-own-active"
+
+# Stopping sleep leaves feeding running.
+- tapOn:
+    id: "sleep-card-action"
+- extendedWaitUntil:
+    visible:
+      id: "sleep-card"
     timeout: 15000
+- assertVisible:
+    id: "feeding-card-own-active"
+
+# Stopping feeding clears the last timer.
+- tapOn:
+    id: "feeding-card-action"
+- extendedWaitUntil:
+    visible:
+      id: "feeding-card"
+    timeout: 15000
+- assertNotVisible:
+    id: "feeding-card-own-active"
+
+# Both entries were saved.
+- runFlow: ../../helpers/open-timeline.yaml
+- assertVisible:
+    text: "Breastfeeding at .*"
+- assertVisible:
+    text: "(Nap|Night Sleep) at .*"

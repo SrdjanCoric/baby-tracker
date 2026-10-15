@@ -1,0 +1,19 @@
+appId: com.sofibaby.app
+name: Guest data persists after app restart
+
+tags:
+  - regression
+  - auth
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+- assertVisible: "Test Baby"
+- assertNotVisible:
+    id: "new-owner-welcome-screen"

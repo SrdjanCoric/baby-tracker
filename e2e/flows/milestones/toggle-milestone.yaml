@@ -1,0 +1,50 @@
+appId: com.sofibaby.app
+name: Toggle Milestone
+tags:
+  - regression
+  - milestones
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+- scrollUntilVisible:
+    element:
+      id: "milestones-card"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "milestones-card"
+
+- tapOn:
+    text: "by 2 mo"
+
+# One tap marks the milestone as reached.
+- tapOn:
+    id: "milestone-2m-social-2-not_yet"
+- assertVisible:
+    id: "milestone-2m-social-2-yes"
+
+# The answer survives a relaunch.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: "milestones-card"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "milestones-card"
+- tapOn:
+    text: "by 2 mo"
+- assertVisible:
+    id: "milestone-2m-social-2-yes"
+
+# Tapping again cycles the answer away from "yes".
+- tapOn:
+    id: "milestone-2m-social-2-yes"
+- assertNotVisible:
+    id: "milestone-2m-social-2-yes"

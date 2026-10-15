@@ -23,3 +23,8 @@ tags:
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ../../../helpers/open-timeline.yaml
+
+- assertVisible:
+    text: "Diaper at .*\\. Dry"

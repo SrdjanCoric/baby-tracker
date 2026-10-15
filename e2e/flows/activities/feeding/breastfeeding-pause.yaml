@@ -1,0 +1,96 @@
+appId: com.sofibaby.app
+name: Breastfeeding Pause Excludes Paused Time
+tags:
+  - regression
+  - activities
+  - feeding
+  - requires-signin
+
+---
+# Pause and resume are only offered to signed-in caregivers.
+- runFlow: ../../../helpers/login-e2e.yaml
+
+- tapOn:
+    id: "feeding-card"
+
+- assertVisible:
+    id: "feeding-screen"
+
+- tapOn:
+    id: "type-breast"
+
+- tapOn:
+    id: "start-left-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# Nurse for at least one minute. The readout label is "Timer: M:SS".
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?1:0[0-9]"
+    timeout: 75000
+
+- tapOn:
+    text: "Pause Timer"
+
+- assertVisible:
+    text: "Paused"
+
+# Stay paused for just over a minute.
+- runFlow:
+    file: ../../../helpers/wait.yaml
+    env:
+      WAIT_MS: "62000"
+
+# The readout freezes over a breast feeding pause.
+- assertVisible:
+    text: "(Timer: )?1:0[0-9]"
+
+- tapOn:
+    text: "Resume Timer"
+
+# Resuming does not add the paused minute back.
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?1:[0-2][0-9]"
+    timeout: 5000
+
+# Nurse another half minute, then stop.
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?1:[3-5][0-9]"
+    timeout: 60000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The saved feed keeps one nursing minute and one paused minute.
+- runFlow: ../../../helpers/dismiss-dev-banner.yaml
+
+- tapOn:
+    id: "timeline-tab"
+
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000
+
+- tapOn:
+    id: "timeline-item"
+
+- extendedWaitUntil:
+    visible:
+      text: "Paused 1m · ends .*"
+    timeout: 15000
+
+- assertVisible:
+    id: "side-minutes-left-input"
+    text: "1"

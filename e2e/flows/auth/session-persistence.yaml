@@ -1,19 +1,36 @@
 appId: com.sofibaby.app
-name: Session persistence after app restart
-
+name: Session Persists After App Restart
 tags:
   - regression
   - auth
+  - requires-signin
 
 ---
-- runFlow: ../../helpers/setup-with-baby.yaml
+- runFlow: ../../helpers/login-e2e.yaml
+
 - stopApp
+
+# Relaunch without the auto-login arguments; the stored session must sign in by itself.
 - launchApp:
     clearState: false
+
 - extendedWaitUntil:
     visible:
       id: "home-screen"
     timeout: 60000
-- assertVisible: "Test Baby"
+
 - assertNotVisible:
     id: "new-owner-welcome-screen"
+
+- runFlow: ../../helpers/dismiss-dev-banner.yaml
+
+- tapOn:
+    id: "settings-button"
+
+- scrollUntilVisible:
+    element:
+      id: "sign-out-button"
+    direction: DOWN
+
+- assertNotVisible:
+    id: "sign-in-to-sync"

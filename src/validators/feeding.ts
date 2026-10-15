@@ -221,6 +221,26 @@ export function validateManualBreastfeedingTimes(
   return result;
 }
 
+export function parseWholeMinutes(text: string): number | undefined {
+  return /^\d+$/.test(text) ? Number(text) : undefined;
+}
+
+export function parseWholeMinutesAsSeconds(text: string): number | undefined {
+  const minutes = parseWholeMinutes(text);
+  return minutes === undefined ? undefined : minutes * 60;
+}
+
+// Sides are checked one at a time: "Both" feeds count time on each side, so the sum may exceed the feed.
+export function findSidesLongerThanFeed(
+  durationSeconds: number | undefined,
+  sideSeconds: { left?: number; right?: number }
+): ("left" | "right")[] {
+  if (durationSeconds === undefined) return [];
+  return (["left", "right"] as const).filter(
+    (side) => (sideSeconds[side] ?? 0) > durationSeconds
+  );
+}
+
 export function validateManualBottleFeeding(entry: Partial<FeedingEntry>): FeedingValidationResult {
   const errors: Record<string, string> = {};
 

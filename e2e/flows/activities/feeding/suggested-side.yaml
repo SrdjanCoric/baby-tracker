@@ -39,9 +39,11 @@ tags:
 - tapOn:
     id: "type-breast"
 
-# Verify suggested badge is visible
+# After a left feed the right side is suggested, and only the right side.
 - assertVisible:
-    id: "suggested-side-badge"
+    id: "suggested-side-badge-right"
+- assertNotVisible:
+    id: "suggested-side-badge-left"
 
 # Complete by starting and stopping on suggested side
 - tapOn:

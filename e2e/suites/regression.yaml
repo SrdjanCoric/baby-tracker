@@ -18,19 +18,24 @@ tags:
 
 # === AUTHENTICATION ===
 - runFlow: ../flows/auth/magic-link.yaml
+- runFlow: ../flows/auth/e2e-auto-login.yaml
 - runFlow: ../flows/auth/sign-out.yaml
 - runFlow: ../flows/auth/session-persistence.yaml
-- runFlow: ../flows/auth/invalid-email.yaml
+- runFlow: ../flows/auth/guest-data-persistence.yaml
 
 # === FEEDING ===
 - runFlow: ../flows/activities/feeding/breastfeeding-timer.yaml
 - runFlow: ../flows/activities/feeding/bottle-feeding.yaml
 - runFlow: ../flows/activities/feeding/solids.yaml
 - runFlow: ../flows/activities/feeding/suggested-side.yaml
+- runFlow: ../flows/activities/feeding/breastfeeding-pause.yaml
+- runFlow: ../flows/activities/feeding/edit-breast-feed-sides.yaml
 
 # === SLEEP ===
 - runFlow: ../flows/activities/sleep/sleep-timer.yaml
 - runFlow: ../flows/activities/sleep/widget-cold-open-exit.yaml
+- runFlow: ../flows/activities/sleep/sleep-pause.yaml
+- runFlow: ../flows/activities/sleep/edit-running-start.yaml
 
 # === DIAPER ===
 - runFlow: ../flows/activities/diaper/quick-log.yaml
@@ -39,6 +44,7 @@ tags:
 # === PUMPING ===
 - runFlow: ../flows/activities/pumping/pumping-timer.yaml
 - runFlow: ../flows/activities/pumping/pumping-manual.yaml
+- runFlow: ../flows/activities/pumping/pumping-side-banking.yaml
 
 # === GROWTH ===
 - runFlow: ../flows/activities/growth/add-measurement.yaml
@@ -46,6 +52,15 @@ tags:
 
 # === TUMMY TIME ===
 - runFlow: ../flows/activities/tummy-time/tummy-timer.yaml
+- runFlow: ../flows/activities/tummy-time/discard-timer.yaml
+- runFlow: ../flows/activities/tummy-time/five-minute-tummy-time.yaml
+
+# === HEALTH & MILESTONES ===
+- runFlow: ../flows/activities/health/log-temperature.yaml
+- runFlow: ../flows/milestones/toggle-milestone.yaml
+
+# === STATISTICS ===
+- runFlow: ../flows/statistics/feeding-week-average.yaml
 
 # === TIMELINE ===
 - runFlow: ../flows/timeline/view-activities.yaml
@@ -70,5 +85,9 @@ tags:
 # === EDGE CASES ===
 - runFlow: ../flows/edge-cases/empty-states.yaml
 - runFlow: ../flows/edge-cases/validation-errors.yaml
+- runFlow: ../flows/edge-cases/duplicate-and-overlap-warnings.yaml
 - runFlow: ../flows/edge-cases/concurrent-timers.yaml
 - runFlow: ../flows/edge-cases/rapid-navigation.yaml
+
+# === PRODUCTION TIMER MINIMUM (needs a build with EXPO_PUBLIC_E2E_TIMER_MINIMUM_SECONDS=60) ===
+# - runFlow: ../flows/activities/feeding/sub-minute-stop.yaml

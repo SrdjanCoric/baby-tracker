@@ -1,0 +1,145 @@
+appId: com.sofibaby.app
+name: Duplicate And Overlap Warnings
+tags:
+  - regression
+  - edge-cases
+
+---
+- runFlow: ../../helpers/setup-with-baby.yaml
+
+# First past sleep saves silently (defaults: the last minute).
+- tapOn:
+    id: "sleep-card"
+- tapOn:
+    text: "Log Past Sleep"
+- tapOn:
+    text: "Log Sleep"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The same sleep again is flagged; Cancel keeps the form open.
+- tapOn:
+    id: "sleep-card"
+- tapOn:
+    text: "Log Past Sleep"
+- tapOn:
+    text: "Log Sleep"
+- assertVisible:
+    text: "Overlapping Sleep|Similar Entry Detected"
+- tapOn:
+    text: "Cancel"
+- assertVisible:
+    text: "Log Sleep"
+
+# Continuing keeps both entries.
+- tapOn:
+    text: "Log Sleep"
+- assertVisible:
+    text: "Overlapping Sleep|Similar Entry Detected"
+- tapOn:
+    text: "Continue anyway|Log Anyway"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- runFlow: ../../helpers/open-timeline.yaml
+- assertVisible:
+    id: "timeline-item"
+    index: 1
+
+# A second bottle right after the first asks before logging.
+- tapOn:
+    id: "home-tab"
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "type-bottle"
+- tapOn:
+    id: "content-formula"
+- tapOn:
+    id: "quick-amount-120"
+- scrollUntilVisible:
+    element:
+      id: "save-bottle-button"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "save-bottle-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The same bottle again from the quick form asks; Cancel keeps the form open.
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "type-bottle"
+- tapOn:
+    id: "content-formula"
+- tapOn:
+    id: "quick-amount-120"
+- scrollUntilVisible:
+    element:
+      id: "save-bottle-button"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "save-bottle-button"
+- assertVisible:
+    text: "Similar Entry Detected"
+- tapOn:
+    text: "Cancel"
+- assertVisible:
+    id: "save-bottle-button"
+
+# Logging anyway saves it.
+- tapOn:
+    id: "save-bottle-button"
+- assertVisible:
+    text: "Similar Entry Detected"
+- tapOn:
+    text: "Log Anyway"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The past-feeding form asks as well.
+- tapOn:
+    id: "feeding-card"
+- tapOn:
+    id: "type-bottle"
+- waitForAnimationToEnd
+# The link is below the fixed save footer; scroll the form up first.
+- swipe:
+    start: "50%,70%"
+    end: "50%,30%"
+- tapOn:
+    text: "Log Past Bottle Feeding"
+- extendedWaitUntil:
+    visible:
+      text: "Enter the amount"
+    timeout: 10000
+- tapOn:
+    text: ".*Formula"
+- tapOn:
+    text: "Enter the amount"
+- inputText: "120"
+- tapOn:
+    id: "dismiss-keyboard"
+- tapOn:
+    text: "Log Bottle Feeding"
+- assertVisible:
+    text: "Similar Entry Detected"
+- assertVisible:
+    text: "A feeding was logged .*"
+- tapOn:
+    text: "Log Anyway"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

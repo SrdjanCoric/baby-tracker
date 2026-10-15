@@ -1,5 +1,8 @@
 import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
 import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
+import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import { te } from "@/utils/translate-errors";
+import { validateBottleAmount } from "@/validators/feeding";
 import { isTimerStarter } from "@/services/timer-starter";
 import { calculateRunningTimerSeconds } from "@/utils/timer-duration";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -286,6 +289,7 @@ export default function FeedingScreen() {
         <BottleForm
           selectedBaby={selectedBaby}
           addFeeding={addFeeding}
+          feedings={feedings}
           onLogPast={handleLogPast}
           onComplete={handleActivitySaved}
           accentColor={accentColor}
@@ -585,7 +589,7 @@ function SideButton({ side, label, shortLabel, isSuggested, onPress, accentColor
         {label}
       </Text>
       {isSuggested && (
-        <View className="bg-white/20 px-2 py-0.5 rounded-pill mt-1" testID="suggested-side-badge">
+        <View className="bg-white/20 px-2 py-0.5 rounded-pill mt-1" testID={`suggested-side-badge-${side}`}>
           <Text className="text-xs font-semibold text-white">{t("feeding.suggested")}</Text>
         </View>
       )}
@@ -746,6 +750,7 @@ function CompactSideButton({ label, fullLabel, isSelected, onPress, accentColor,
 interface BottleFormProps {
   selectedBaby: { id: string; name: string };
   addFeeding: (input: CreateFeedingInput) => Promise<StoredFeedingEntry>;
+  feedings: StoredFeedingEntry[];
   onLogPast: () => void;
   onComplete: () => void;
   accentColor: string;
@@ -754,8 +759,9 @@ interface BottleFormProps {
   secondaryBg: string;
 }
 
-function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentColor, buttonBgColor, mutedBg, secondaryBg }: BottleFormProps) {
+function BottleForm({ selectedBaby, addFeeding, feedings, onLogPast, onComplete, accentColor, buttonBgColor, mutedBg, secondaryBg }: BottleFormProps) {
   const { t } = useTranslation();
+  const { checkAndConfirmFeeding } = useDuplicateCheck();
   const { volumeUnit } = useUnits();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -800,32 +806,53 @@ function BottleForm({ selectedBaby, addFeeding, onLogPast, onComplete, accentCol
   }, [unit, amountMl]);
 
   const handleSave = useCallback(async () => {
-    if (!contentType || !amountMl || amountMl <= 0) {
+    if (
+      !contentType ||
+      !amountMl ||
+      amountMl <= 0 ||
+      validateBottleAmount(amountMl, "bottle") !== null
+    ) {
       setShowValidation(true);
       return;
     }
 
     setIsSaving(true);
     try {
+      const startedAt = new Date();
+      const proposedFeeding: StoredFeedingEntry = {
+        id: "bottle-feeding-candidate",
+        babyId: selectedBaby.id,
+        type: "bottle",
+        contentType,
+        amountMl,
+        startedAt: startedAt.toISOString(),
+        notes: notes || undefined,
+        createdAt: startedAt.toISOString(),
+        updatedAt: startedAt.toISOString(),
+      };
+      if (!(await checkAndConfirmFeeding(proposedFeeding, feedings))) return;
+
       await addFeeding({
         babyId: selectedBaby.id,
         type: "bottle",
         contentType,
         amountMl,
-        startedAt: new Date(),
+        startedAt,
         notes: notes || undefined,
       });
       onComplete();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, contentType, amountMl, notes, addFeeding, onComplete]);
+  }, [selectedBaby, contentType, amountMl, notes, feedings, checkAndConfirmFeeding, addFeeding, onComplete]);
 
   const validationMessage = useMemo(() => {
     if (!showValidation) return null;
     if (!contentType && (!amountMl || amountMl <= 0)) return t("feeding.selectContentAndAmount");
     if (!contentType) return t("feeding.selectContentType");
     if (!amountMl || amountMl <= 0) return t("feeding.enterAmountValidation");
+    const amountError = validateBottleAmount(amountMl, "bottle");
+    if (amountError) return te(t, amountError);
     return null;
   }, [showValidation, contentType, amountMl, t]);
 

@@ -7,11 +7,10 @@ tags:
 ---
 - runFlow: ../../helpers/setup-with-activity.yaml
 
-- tapOn:
-    id: "timeline-tab"
+- runFlow: ../../helpers/open-timeline.yaml
 
 - assertVisible:
-    id: "timeline-screen"
+    id: "timeline-item"
 
 - tapOn:
     id: "timeline-item"
@@ -19,8 +18,40 @@ tags:
 - tapOn:
     id: "delete-button"
 
+- assertVisible:
+    text: "Delete Entry?"
+
+# Cancel keeps the entry.
+- tapOn:
+    text: "Cancel"
+
+- assertVisible:
+    id: "edit-activity-screen"
+
+- tapOn:
+    id: "delete-button"
+
 - tapOn:
     text: "Confirm"
 
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 15000
+
 - assertVisible:
-    id: "timeline-screen"
+    id: "empty-timeline"
+
+# The entry stays gone after a relaunch.
+- launchApp:
+    clearState: false
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+
+- runFlow: ../../helpers/open-timeline.yaml
+
+- assertVisible:
+    id: "empty-timeline"

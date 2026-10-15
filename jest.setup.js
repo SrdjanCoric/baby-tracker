@@ -138,6 +138,12 @@ jest.mock("react-i18next", () => ({
         "notificationMessages.tummyTimeTimerTitle": "Tummy Time",
         "notificationMessages.napTimerTitle": "Nap Timer",
         "notificationMessages.nightSleepTimerTitle": "Sleep Timer",
+        "feeding.minutesPerSide": "Minutes per side",
+        "feeding.pausedAndEnds": "Paused {{paused}} · ends {{time}}",
+        "feeding.endsAt": "ends {{time}}",
+        "feeding.pausedFor": "Paused {{paused}}",
+        "feeding.leftLongerThanFeed": "Left can't be longer than the feed ({{duration}})",
+        "feeding.rightLongerThanFeed": "Right can't be longer than the feed ({{duration}})",
       };
       // Handle pluralization for summary keys
       if (key === "summary.feeding") {

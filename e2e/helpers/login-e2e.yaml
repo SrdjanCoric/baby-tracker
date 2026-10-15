@@ -24,3 +24,5 @@ appId: com.sofibaby.app
     visible:
       id: "home-screen"
     timeout: 15000
+
+- runFlow: ./dismiss-dev-banner.yaml

@@ -19,13 +19,17 @@ import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { te } from "@/utils/translate-errors";
 import {
+  findSidesLongerThanFeed,
+  parseWholeMinutesAsSeconds,
   validateManualBreastfeedingTimes,
+  validateManualFeedingDuration,
   validateManualBottleFeeding,
 } from "@/validators/feeding";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
-import { formatTime as formatTimeUtil } from "@/utils/time";
+import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
+import { formatDuration, formatTime as formatTimeUtil } from "@/utils/time";
 import type { BreastSide, BottleContentType, SolidReaction } from "@/constants/activities";
 import { ACTIVITY } from "@/constants/colors";
 import { NewOwnerOnboardingStorageService } from "@/services/new-owner-onboarding-storage";
@@ -76,8 +80,11 @@ export default function ManualFeedingScreen() {
   const [startTime, setStartTime] = useState(
     () => new Date(Date.now() - MINIMUM_BREASTFEEDING_MS)
   );
-  const [endTime, setEndTime] = useState(() => new Date());
-  const [endTimeTouched, setEndTimeTouched] = useState(false);
+  const [durationText, setDurationText] = useState(
+    String(MINIMUM_BREASTFEEDING_MS / 60_000)
+  );
+  const [leftText, setLeftText] = useState("");
+  const [rightText, setRightText] = useState("");
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -173,11 +180,6 @@ export default function ManualFeedingScreen() {
     },
     []
   );
-
-  const handleEndTimeChange = useCallback((value: Date) => {
-    setEndTimeTouched(true);
-    setEndTime(value);
-  }, []);
 
   const handleAmountChange = useCallback(
     (text: string) => {
@@ -280,6 +282,19 @@ export default function ManualFeedingScreen() {
     router.replace("/(tabs)");
   }, [params.onboardingActivity, router]);
 
+  const enteredDurationSeconds = parseWholeMinutesAsSeconds(durationText);
+  const durationSeconds = enteredDurationSeconds ?? 0;
+  const endTime = useMemo(
+    () => new Date(startTime.getTime() + durationSeconds * 1000),
+    [startTime, durationSeconds]
+  );
+  const leftSeconds = parseWholeMinutesAsSeconds(leftText);
+  const rightSeconds = parseWholeMinutesAsSeconds(rightText);
+  const sidesTooLong = findSidesLongerThanFeed(enteredDurationSeconds, {
+    left: leftSeconds,
+    right: rightSeconds,
+  });
+
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
     if (!selectedBaby) return;
@@ -302,9 +317,6 @@ export default function ManualFeedingScreen() {
       isSavingRef.current = true;
       setIsSaving(true);
       try {
-        const durationSeconds = Math.floor(
-          (endTime.getTime() - startTime.getTime()) / 1000
-        );
         const proposedFeeding: StoredFeedingEntry = {
           id: "manual-feeding-candidate",
           babyId: selectedBaby.id,
@@ -326,6 +338,8 @@ export default function ManualFeedingScreen() {
           startedAt: startTime,
           endedAt: endTime,
           durationSeconds,
+          leftDurationSeconds: leftSeconds || undefined,
+          rightDurationSeconds: rightSeconds || undefined,
           notes: notes || undefined,
         });
         await scheduleReminderAfterFeeding(startTime);
@@ -421,6 +435,9 @@ export default function ManualFeedingScreen() {
     momentTime,
     startTime,
     endTime,
+    durationSeconds,
+    leftSeconds,
+    rightSeconds,
     side,
     contentType,
     amountMl,
@@ -435,43 +452,22 @@ export default function ManualFeedingScreen() {
     t,
   ]);
 
-  const startBounds = useCallback(() => {
-    const boundaryNow = Date.now();
-    const effectiveEndTimestamp = endTimeTouched
-      ? endTime.getTime()
-      : boundaryNow;
-    return {
-      minimumDate: new Date(
-        effectiveEndTimestamp - MAXIMUM_BREASTFEEDING_MS
-      ),
+  const startBounds = useCallback(
+    () => ({
       maximumDate: new Date(
-        Math.min(
-          boundaryNow,
-          effectiveEndTimestamp - MINIMUM_BREASTFEEDING_MS
-        )
+        Date.now() - Math.max(durationSeconds * 1000, MINIMUM_BREASTFEEDING_MS)
       ),
-    };
-  }, [endTime, endTimeTouched]);
-  const endBounds = useCallback(() => {
-    const boundaryNow = Date.now();
-    const maximumTimestamp = Math.min(
-      boundaryNow,
-      startTime.getTime() + MAXIMUM_BREASTFEEDING_MS
-    );
-    return {
-      minimumDate: new Date(
-        startTime.getTime() + MINIMUM_BREASTFEEDING_MS
-      ),
-      maximumDate: new Date(maximumTimestamp),
-    };
-  }, [startTime]);
+    }),
+    [durationSeconds]
+  );
 
-  const durationMs = endTime.getTime() - startTime.getTime();
+  const durationMs = durationSeconds * 1000;
   const now = new Date();
 
   const canSave =
     activeTab === "breast"
       ? side !== null &&
+        sidesTooLong.length === 0 &&
         durationMs >= MINIMUM_BREASTFEEDING_MS &&
         durationMs <= MAXIMUM_BREASTFEEDING_MS &&
         startTime <= now &&
@@ -479,6 +475,10 @@ export default function ManualFeedingScreen() {
       : activeTab === "bottle"
         ? contentType !== null && amountMl !== null && amountMl > 0
         : foodType.trim().length > 0;
+
+  const durationErrorKey =
+    validateManualFeedingDuration(enteredDurationSeconds) ??
+    (endTime > now ? "validation.endTimeNotInFuture" : null);
 
   // Get the screen title based on type
   const getScreenTitle = () => {
@@ -564,29 +564,61 @@ export default function ManualFeedingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {activeTab === "breast" ? (
-          <StartEndTimeSection
-            startTime={startTime}
-            endTime={endTime}
-            onStartTimeChange={setStartTime}
-            onEndTimeChange={handleEndTimeChange}
-            startBounds={startBounds}
-            endBounds={endBounds}
-            timeFormat={timeFormat}
-            startLabel={t("feeding.startTime")}
-            endLabel={t("feeding.endTime")}
-            durationLabel={t("feeding.duration")}
-            doneLabel={t("common.done")}
-            selectDateLabel={t("feeding.selectDate")}
-            selectTimeLabel={t("feeding.selectTime")}
-            accentColor={colors.accent}
-            mutedBackgroundColor={colors.mutedBg}
-            textColor={colors.textOnMuted}
-            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
-            durationError={
-              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
-            }
-          />
+          <>
+            <StartEndTimeSection
+              startTime={startTime}
+              onStartTimeChange={setStartTime}
+              startBounds={startBounds}
+              durationInput={{
+                minutes: durationText,
+                onMinutesChange: setDurationText,
+                unitLabel: t("common.min"),
+                endSummary: t("feeding.endsAt", {
+                  time: formatTimeUtil(endTime, timeFormat),
+                }),
+              }}
+              timeFormat={timeFormat}
+              startLabel={t("feeding.startTime")}
+              durationLabel={t("feeding.duration")}
+              doneLabel={t("common.done")}
+              selectDateLabel={t("feeding.selectDate")}
+              selectTimeLabel={t("feeding.selectTime")}
+              accentColor={colors.accent}
+              mutedBackgroundColor={colors.mutedBg}
+              textColor={colors.textOnMuted}
+              startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+              durationError={
+                durationErrorKey || errors.durationSeconds || errors.endedAt
+                  ? te(t, durationErrorKey ?? errors.durationSeconds ?? errors.endedAt)
+                  : undefined
+              }
+            />
+            <BreastSideMinutesFields
+              label={t("feeding.minutesPerSide")}
+              leftLabel={t("feeding.left")}
+              rightLabel={t("feeding.right")}
+              left={leftText}
+              right={rightText}
+              onLeftChange={setLeftText}
+              onRightChange={setRightText}
+              leftError={
+                sidesTooLong.includes("left")
+                  ? t("feeding.leftLongerThanFeed", {
+                      duration: formatDuration(durationSeconds, "short"),
+                    })
+                  : undefined
+              }
+              rightError={
+                sidesTooLong.includes("right")
+                  ? t("feeding.rightLongerThanFeed", {
+                      duration: formatDuration(durationSeconds, "short"),
+                    })
+                  : undefined
+              }
+              mutedBackgroundColor={colors.mutedBg}
+              textColor={colors.textOnMuted}
+            />
+          </>
         ) : (
           <>
             <View className="mb-6">

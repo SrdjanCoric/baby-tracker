@@ -90,7 +90,7 @@ A measured fast run on 2026-07-22 took 4 minutes 3 seconds with Xcode 26.6 and t
 
 ### Local E2E bundle boundary
 
-The runner reads the API URL and keys from `supabase status`; it does not read or change `.env`. `SOFIBABY_E2E_LOCAL_ENV=1` enables a Babel transform that compiles those local values and a zero-second sleep minimum into the generated E2E bundle. The test-login launch argument also exposes a sleep-sheet close control so Maestro does not depend on simulator swipe recognition. Without that argument, the native sheet is unchanged. Production builds retain the 60-second minimum.
+The runner reads the API URL and keys from `supabase status`; it does not read or change `.env`. `SOFIBABY_E2E_LOCAL_ENV=1` enables a Babel transform that compiles those local values and a zero-second sleep minimum into the generated E2E bundle. The sleep sheet always renders a close control (`e2e-dismiss-sleep-button`) so Maestro does not depend on simulator swipe recognition. Production builds retain the 60-second minimum.
 
 `npm ci` applies the repository-maintained `react-native-date-picker` codegen patch before prebuild. If `ios/build/generated/ios/RCTModuleProviders.mm` maps `RNDatePicker` to `RNDatePickerManager`, rerun `npm ci` and `node --test scripts/date-picker-codegen.test.mjs` before rebuilding. Do not edit generated Pods or installed package metadata by hand.
 
@@ -176,6 +176,34 @@ Set `MAESTRO_DEVICE` to override the saved device. The runner otherwise reuses i
 the first booted device for that platform.
 
 After the suites pass, complete the cross-device onboarding review in [`docs/ROLE_BASED_ONBOARDING.md`](../docs/ROLE_BASED_ONBOARDING.md#visual-review-matrix). The matrix covers every production route and state across device sizes, themes, large text, keyboards, and all supported locales. Record the devices and OS versions used with the task or release evidence.
+
+### Timer, edit and value-check flows
+
+The regression suite verifies saved values, not only navigation. Timeline rows expose one
+accessibility label per entry (`"Nap at 6:56 PM – 6:59 PM. 2m"`), so flows match the whole label
+with a regex rather than the subtitle alone.
+
+Some flows need wall-clock time or specific build settings:
+
+- `activities/feeding/breastfeeding-pause.yaml`, `activities/sleep/sleep-pause.yaml` and
+  `activities/pumping/pumping-side-banking.yaml` run timers for one to three minutes so the saved
+  entry shows whole minutes. Pause and resume are only offered to signed-in caregivers, so the
+  pause flows sign in as the seeded owner.
+- `helpers/wait.yaml` is the wall-clock wait (Maestro has no sleep command). It polls for a sentinel
+  that never renders, with `optional: true`, for `WAIT_MS` milliseconds.
+- `helpers/dismiss-dev-banner.yaml` closes the development-build "Open debugger to view warnings"
+  banner that otherwise covers the tab bar. Every flow that taps a tab runs it first.
+- `activities/tummy-time/five-minute-tummy-time.yaml` runs a five-minute tummy time timer.
+- `auth/e2e-auto-login.yaml`, `auth/session-persistence.yaml`, `auth/sign-out.yaml` and
+  `household/view-household.yaml` sign in as the seeded owner, so they need `npm run e2e:seed`.
+  `auth/guest-data-persistence.yaml` covers the guest relaunch without an account.
+- `auth/magic-link.yaml` sends a real magic link to the seeded owner; local Supabase catches
+  the mail, so the "Check Your Email" alert is asserted rather than the inbox.
+- `activities/feeding/sub-minute-stop.yaml` needs the production one-minute minimum, so run it
+  against a Metro or build started with `EXPO_PUBLIC_E2E_TIMER_MINIMUM_SECONDS=60` (the local
+  Babel plugin requires the variable to be set; any value but `0` keeps the production minimum).
+  It is listed in `suites/regression.yaml` as a comment for that reason. Every other timer flow
+  expects that variable set to `0`, as `npm run e2e:start-caregiver-join` does.
 
 ## Onboarding network recovery
 

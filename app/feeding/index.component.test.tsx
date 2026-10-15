@@ -11,7 +11,7 @@ let mockSearchParams: { onboardingActivity?: string } = {};
 const mockCompleteTimerStarted = jest.fn();
 let mockTimeFormat: "12h" | "24h" = "12h";
 let mockLockStartedBy: string | null = "user-1";
-let mockFeedings: Array<{ endedAt?: string }> = [];
+let mockFeedings: Array<Record<string, unknown>> = [];
 let mockAuthUser: { id: string } | null = { id: "user-1" };
 
 jest.mock("expo-router", () => ({
@@ -574,6 +574,73 @@ describe("FeedingScreen", () => {
         expect(mockBack).toHaveBeenCalledTimes(1);
       });
       expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("rejects an amount over 500 ml without writing", async () => {
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-formula"));
+      fireEvent.changeText(screen.getByTestId("volume-input"), "600");
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      expect(await screen.findByText("validation.amountTooLarge500ml")).toBeTruthy();
+      expect(mockAddFeeding).not.toHaveBeenCalled();
+    });
+
+    it("asks before saving a bottle that matches a recent one and respects Cancel", async () => {
+      mockFeedings = [
+        {
+          id: "feeding-existing",
+          babyId: "1",
+          type: "bottle",
+          contentType: "formula",
+          amountMl: 120,
+          startedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        },
+      ];
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-formula"));
+      fireEvent.press(screen.getByTestId("quick-amount-120"));
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+      expect(alertSpy.mock.calls[0][0]).toBe("duplicateDetection.title");
+      await act(async () => alertSpy.mock.calls[0][2]?.[0]?.onPress?.());
+      expect(mockAddFeeding).not.toHaveBeenCalled();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("saves a matching bottle after the caregiver chooses to log anyway", async () => {
+      mockFeedings = [
+        {
+          id: "feeding-existing",
+          babyId: "1",
+          type: "bottle",
+          contentType: "formula",
+          amountMl: 120,
+          startedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        },
+      ];
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      render(<FeedingScreen />);
+      fireEvent.press(screen.getByText("Bottle"));
+      fireEvent.press(screen.getByTestId("content-formula"));
+      fireEvent.press(screen.getByTestId("quick-amount-120"));
+      fireEvent.press(screen.getByTestId("save-bottle-button"));
+
+      await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+      await act(async () => alertSpy.mock.calls[0][2]?.[1]?.onPress?.());
+      await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
+      expect(mockAddFeeding).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "bottle", contentType: "formula", amountMl: 120 })
+      );
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
     });
 
     it("renders content type selection", () => {

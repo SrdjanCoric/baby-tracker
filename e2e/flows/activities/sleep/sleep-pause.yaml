@@ -1,0 +1,92 @@
+appId: com.sofibaby.app
+name: Sleep Pause Counts Paused Time
+tags:
+  - regression
+  - activities
+  - sleep
+  - requires-signin
+
+---
+# Pause and resume are only offered to signed-in caregivers.
+- runFlow: ../../../helpers/login-e2e.yaml
+
+- tapOn:
+    id: "sleep-card"
+
+- assertVisible:
+    id: "sleep-screen"
+
+- tapOn:
+    id: "start-sleep-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "stop-timer-button"
+    timeout: 3000
+
+# Sleep for at least one minute. The readout label is "Timer: M:SS".
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?1:0[0-9]"
+    timeout: 75000
+
+- tapOn:
+    text: "Pause Timer"
+
+- assertVisible:
+    text: "Paused"
+
+# Stay paused for just over a minute.
+- runFlow:
+    file: ../../../helpers/wait.yaml
+    env:
+      WAIT_MS: "62000"
+
+# The readout holds at the pause while paused.
+- assertVisible:
+    text: "(Timer: )?1:0[0-9]"
+
+- tapOn:
+    text: "Resume Timer"
+
+# Sleep counts the resumed pause, so the readout jumps past two minutes.
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?2:[0-2][0-9]"
+    timeout: 5000
+
+# Sleep another half minute, then wake up.
+- extendedWaitUntil:
+    visible:
+      text: "(Timer: )?2:[3-5][0-9]"
+    timeout: 60000
+
+- tapOn:
+    id: "stop-timer-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# The saved sleep lasts two minutes, pause included.
+- runFlow: ../../../helpers/dismiss-dev-banner.yaml
+
+- tapOn:
+    id: "timeline-tab"
+
+- extendedWaitUntil:
+    visible:
+      id: "timeline-screen"
+    timeout: 10000
+
+- assertVisible:
+    text: "(Nap|Night Sleep) at .*\\. 2m"
+
+- tapOn:
+    id: "timeline-item"
+
+- extendedWaitUntil:
+    visible:
+      text: "Duration: 2m|2m"
+    timeout: 15000

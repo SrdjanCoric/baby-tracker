@@ -2,6 +2,7 @@ import React from "react";
 import { Alert, Platform } from "react-native";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import type { StoredFeedingEntry } from "@/services/feeding-storage";
+import { formatTime } from "@/utils/time";
 import ManualFeedingScreen from "./manual";
 
 type FeedingTypeParam = "breastfeed" | "bottle" | "solids";
@@ -60,36 +61,65 @@ describe("ManualFeedingScreen clock-time entry", () => {
     });
   });
 
-  it("logs a breast feed from Start and End with a derived read-only duration", async () => {
+  function chooseStart(screen: ReturnType<typeof render>, value: Date) {
+    fireEvent.press(
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
+    );
+    fireEvent(screen.getByTestId("datetime-picker"), "change", {}, value);
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+  }
+
+  function renderedTexts(screen: ReturnType<typeof render>) {
+    const texts: string[] = [];
+    const walk = (node: unknown): void => {
+      if (typeof node === "string") texts.push(node);
+      else if (Array.isArray(node)) node.forEach(walk);
+      else if (node && typeof node === "object") {
+        walk((node as { children?: unknown }).children ?? []);
+      }
+    };
+    walk(screen.toJSON());
+    return texts;
+  }
+
+  const saveButton = (screen: ReturnType<typeof render>) =>
+    screen.getByRole("button", { name: "feeding.logManualBreastfeeding" });
+
+  it("offers Start, Duration, an ends line without Paused, and blank minutes per side", () => {
     const screen = render(<ManualFeedingScreen />);
 
-    expect(screen.getByText("1m")).toBeTruthy();
+    expect(screen.getByLabelText("feeding.duration").props.value).toBe("1");
+    expect(screen.getByLabelText("feeding.left").props.value).toBe("");
+    expect(screen.getByLabelText("feeding.right").props.value).toBe("");
+    expect(screen.queryByText(/Paused/)).toBeNull();
     expect(
-      screen.queryByRole("textbox", { name: "feeding.durationPlaceholder" })
+      screen.queryByRole("button", { name: "feeding.endTime feeding.selectTime" })
     ).toBeNull();
-    expect(screen.queryByRole("button", { name: "30" })).toBeNull();
-    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
-    expect(
-      screen.getByRole("button", { name: "feeding.logManualBreastfeeding" })
-        .props.accessibilityState
-    ).toEqual({ disabled: false });
 
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: "feeding.startTime feeding.selectTime",
-      })
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date("2026-08-07T09:30:00.000Z")
-    );
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    expect(screen.getByText("30m")).toBeTruthy();
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.logManualBreastfeeding" })
-    );
+    const texts = renderedTexts(screen);
+    const order = [
+      "feeding.startTime",
+      "feeding.duration",
+      `ends ${formatTime(now, "24h")}`,
+      "Minutes per side",
+      "feeding.left",
+      "feeding.right",
+      "feeding.selectSideToStart",
+    ].map((text) => texts.indexOf(text));
+    expect(order).not.toContain(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("logs a breast feed from Start, Duration and minutes per side", async () => {
+    const screen = render(<ManualFeedingScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "30");
+    chooseStart(screen, new Date("2026-08-07T09:30:00.000Z"));
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "20");
+    fireEvent.changeText(screen.getByLabelText("feeding.right"), "10");
+    expect(screen.getByText(`ends ${formatTime(now, "24h")}`)).toBeTruthy();
+    fireEvent.press(saveButton(screen));
 
     await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
     expect(mockAddFeeding).toHaveBeenCalledWith({
@@ -99,8 +129,46 @@ describe("ManualFeedingScreen clock-time entry", () => {
       startedAt: new Date("2026-08-07T09:30:00.000Z"),
       endedAt: now,
       durationSeconds: 1800,
+      leftDurationSeconds: 1200,
+      rightDurationSeconds: 600,
       notes: undefined,
     });
+  });
+
+  it("logs a breast feed with blank sides as no side minutes", async () => {
+    const screen = render(<ManualFeedingScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.press(saveButton(screen));
+
+    await waitFor(() => expect(mockAddFeeding).toHaveBeenCalledTimes(1));
+    const payload = mockAddFeeding.mock.calls[0][0];
+    expect(payload).toEqual(
+      expect.objectContaining({
+        startedAt: new Date("2026-08-07T09:59:00.000Z"),
+        endedAt: now,
+        durationSeconds: 60,
+      })
+    );
+    expect(payload.leftDurationSeconds).toBeUndefined();
+    expect(payload.rightDurationSeconds).toBeUndefined();
+  });
+
+  it("blocks a side longer than the feed but allows sides that add up past it", async () => {
+    const screen = render(<ManualFeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.changeText(screen.getByLabelText("feeding.left"), "2");
+
+    expect(screen.getByText("Left can't be longer than the feed (1m)")).toBeTruthy();
+    expect(saveButton(screen).props.accessibilityState).toEqual({ disabled: true });
+    fireEvent.press(saveButton(screen));
+    expect(mockAddFeeding).not.toHaveBeenCalled();
+
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "3");
+    chooseStart(screen, new Date("2026-08-07T09:55:00.000Z"));
+    fireEvent.changeText(screen.getByLabelText("feeding.right"), "2");
+    expect(screen.queryByText(/can't be longer/)).toBeNull();
+    expect(saveButton(screen).props.accessibilityState).toEqual({ disabled: false });
   });
 
   it("cancels an overlapping breast feed without writing", async () => {
@@ -156,6 +224,7 @@ describe("ManualFeedingScreen clock-time entry", () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const screen = render(<ManualFeedingScreen />);
     fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "30");
     fireEvent.press(
       screen.getByRole("button", { name: "feeding.startTime feeding.selectTime" })
     );
@@ -183,99 +252,50 @@ describe("ManualFeedingScreen clock-time entry", () => {
     });
   });
 
-  it("opens both End pickers with live one-minute and two-hour bounds", () => {
+  it("bounds Start so the derived End stays in the past and rejects a Duration outside one minute to two hours", () => {
     const screen = render(<ManualFeedingScreen />);
-
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectDate" })
-    );
-    expect(screen.getByTestId("datetime-picker").props).toEqual(
-      expect.objectContaining({ minimumDate: now, maximumDate: now })
-    );
-    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-
-    jest.setSystemTime(new Date("2026-08-07T10:05:00.000Z"));
-    fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
-    );
-    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T10:05:00.000Z")
-    );
-  });
-
-  it("bounds Start by End minus one minute and rejects a feed over two hours", () => {
-    const screen = render(<ManualFeedingScreen />);
+    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
 
     fireEvent.press(
       screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
     );
-    expect(screen.getByTestId("datetime-picker").props).toEqual(
-      expect.objectContaining({
-        minimumDate: new Date("2026-08-07T08:00:00.000Z"),
-        maximumDate: new Date("2026-08-07T09:59:00.000Z"),
-      })
-    );
-    fireEvent(
-      screen.getByTestId("datetime-picker"),
-      "change",
-      {},
-      new Date("2026-08-07T07:00:00.000Z")
+    expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
+      new Date("2026-08-07T09:59:00.000Z")
     );
     fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-    fireEvent.press(screen.getByRole("button", { name: "feeding.leftSide" }));
 
-    const save = screen.getByRole("button", {
-      name: "feeding.logManualBreastfeeding",
-    });
-    expect(save.props.accessibilityState).toEqual({ disabled: true });
+    fireEvent.changeText(screen.getByLabelText("feeding.duration"), "30");
+    jest.setSystemTime(new Date("2026-08-07T10:05:00.000Z"));
     fireEvent.press(
-      screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
+      screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
     );
     expect(screen.getByTestId("datetime-picker").props.maximumDate).toEqual(
-      new Date("2026-08-07T09:00:00.000Z")
+      new Date("2026-08-07T09:35:00.000Z")
     );
-    fireEvent.press(save);
+    fireEvent.press(screen.getByRole("button", { name: "common.done" }));
+
+    expect(screen.getByText("validation.endTimeNotInFuture")).toBeTruthy();
+    for (const [minutes, message] of [
+      ["121", "validation.durationTooLong2h"],
+      ["0", "validation.durationMinimum1m"],
+      ["", "validation.durationRequired"],
+    ]) {
+      fireEvent.changeText(screen.getByLabelText("feeding.duration"), minutes);
+      expect(saveButton(screen).props.accessibilityState).toEqual({ disabled: true });
+      expect(screen.getByText(message)).toBeTruthy();
+    }
+    fireEvent.press(saveButton(screen));
     expect(mockAddFeeding).not.toHaveBeenCalled();
   });
 
-  it.each([
-    [
-      "refreshes an untouched default End",
-      false,
-      new Date("2026-08-07T08:30:00.000Z"),
-      new Date("2026-08-07T10:29:00.000Z"),
-    ],
-    [
-      "keeps an explicitly chosen End",
-      true,
-      new Date("2026-08-07T08:00:00.000Z"),
-      new Date("2026-08-07T09:59:00.000Z"),
-    ],
-  ])(
-    "%s when the Start picker opens later",
-    (_description, chooseEnd, expectedMinimum, expectedMaximum) => {
-      const screen = render(<ManualFeedingScreen />);
-      if (chooseEnd) {
-        fireEvent.press(
-          screen.getByRole("button", { name: "feeding.endTime feeding.selectTime" })
-        );
-        fireEvent(screen.getByTestId("datetime-picker"), "change", {}, now);
-        fireEvent.press(screen.getByRole("button", { name: "common.done" }));
-      }
+  it("shows no Duration message for the default one-minute feed and limits fields to three digits", () => {
+    const screen = render(<ManualFeedingScreen />);
 
-      jest.setSystemTime(new Date("2026-08-07T10:30:00.000Z"));
-      fireEvent.press(
-        screen.getByRole("button", { name: "feeding.startTime feeding.selectDate" })
-      );
-
-      expect(screen.getByTestId("datetime-picker").props).toEqual(
-        expect.objectContaining({
-          minimumDate: expectedMinimum,
-          maximumDate: expectedMaximum,
-        })
-      );
+    expect(screen.queryByText(/^validation\./)).toBeNull();
+    for (const label of ["feeding.duration", "feeding.left", "feeding.right"]) {
+      expect(screen.getByLabelText(label).props.maxLength).toBe(3);
     }
-  );
+  });
 
   it.each([
     ["bottle" as const, "feeding.formula", "feeding.enterAmount", "120"],
