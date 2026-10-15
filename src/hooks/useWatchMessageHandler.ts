@@ -16,6 +16,7 @@ import type { TimerIdentity } from "@/services/timer-completion-service";
 import type { BreastSide, DiaperType, SleepType, BottleContentType, StoolColor } from "@/constants/activities";
 import { determineSleepType } from "@/validators/sleep";
 import { clearPendingWidgetPauseToggle } from "@/services/widget-data-service";
+import { calculateTimerDurationSeconds } from "@/utils/timer-duration";
 
 const REQUEST_DEDUP_TTL_MS = 30_000;
 const PROVIDER_BINDING_TIMEOUT_MS = 5_000;
@@ -165,21 +166,24 @@ export function useWatchMessageHandler(options?: UseWatchMessageHandlerOptions) 
             if (!Number.isFinite(startedAt.getTime()) || now < startedAt) {
               return { success: false, error: "stale-timer" };
             }
-            const timerData: Record<string, unknown> = {
-              isPaused,
-              accumulatedSeconds: Math.max(0, Math.floor((now.getTime() - startedAt.getTime()) / 1000)),
-            };
+            const priorPausedMs = typeof lock.timerData?.totalPausedMs === "number"
+              ? lock.timerData.totalPausedMs : 0;
+            const timerData: Record<string, unknown> = { isPaused };
             if (isPaused) {
               timerData.pausedAt = now.toISOString();
             } else {
               const pausedAt = typeof lock.timerData?.pausedAt === "string"
                 ? new Date(lock.timerData.pausedAt).getTime() : now.getTime();
-              const totalPausedMs = typeof lock.timerData?.totalPausedMs === "number"
-                ? lock.timerData.totalPausedMs : 0;
-              timerData.totalPausedMs = totalPausedMs +
+              timerData.totalPausedMs = priorPausedMs +
                 (Number.isFinite(pausedAt) ? Math.max(0, now.getTime() - pausedAt) : 0);
               timerData.effectiveStartTime = startedAt.toISOString();
             }
+            timerData.accumulatedSeconds = Math.max(0, calculateTimerDurationSeconds(
+              startedAt,
+              now,
+              isPaused ? priorPausedMs : timerData.totalPausedMs as number,
+              dbType
+            ));
             await toggleTimerPause(targetBabyId, dbType, user.id, timerData);
             await refreshLocks();
             return { success: true };

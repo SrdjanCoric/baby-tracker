@@ -803,13 +803,8 @@ func getActiveTimerStartDate(data: WidgetDataModel?) -> Date? {
     return formatter.date(from: timer.startTime)
 }
 
-func getActiveTimerStartDate(for type: ActivityType, data: WidgetDataModel?) -> Date? {
-    guard let timer = data?.getActiveTimer(for: type) else { return nil }
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    if let date = formatter.date(from: timer.startTime) { return date }
-    formatter.formatOptions = [.withInternetDateTime]
-    return formatter.date(from: timer.startTime)
+func getRunningTimerAnchor(for type: ActivityType, data: WidgetDataModel?) -> Date? {
+    data?.getActiveTimer(for: type)?.runningTimerAnchor
 }
 
 func isTimerPausedForActivity(_ type: ActivityType, data: WidgetDataModel?) -> Bool {
@@ -1077,7 +1072,7 @@ struct SmallWidgetView: View {
 
             VStack(spacing: 4) {
                 if let data = entry.widgetData {
-                    if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                    if isActive, let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
                         let isPaused = isTimerPausedForActivity(activity, data: data)
                         if isRemote {
                             if let context = getTimerContext(for: activity, data: data) {
@@ -1100,7 +1095,7 @@ struct SmallWidgetView: View {
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
                             } else {
-                                Text(startDate, style: .timer)
+                                Text(timerAnchor, style: .timer)
                                     .font(.system(size: 32, weight: .light, design: .rounded))
                                     .monospacedDigit()
                                     .foregroundStyle(.white.opacity(0.5))
@@ -1125,7 +1120,7 @@ struct SmallWidgetView: View {
                                 .frame(maxWidth: .infinity)
                                 .multilineTextAlignment(.center)
                         } else {
-                            Text(startDate, style: .timer)
+                            Text(timerAnchor, style: .timer)
                                 .font(.system(size: 32, weight: .light, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(.white)
@@ -1537,14 +1532,14 @@ struct ColorfulCircleButton: View {
                     Text("⏳")
                         .font(.system(size: 9))
                 }
-            } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+            } else if isActive, let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
                 if isTimerPausedForActivity(activity, data: data) {
                     Text("⏸\(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.white)
                 } else {
-                    Text(startDate, style: .timer)
+                    Text(timerAnchor, style: .timer)
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.green)
@@ -1669,20 +1664,20 @@ struct ActivityRowView: View {
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                         }
-                        if let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                        if let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
                             if isTimerPausedForActivity(activity, data: data) {
                                 Text("⏸ \(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
                                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                                     .monospacedDigit()
                                     .foregroundStyle(.white.opacity(0.7))
                             } else {
-                                Text(startDate, style: .timer)
+                                Text(timerAnchor, style: .timer)
                                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                                     .monospacedDigit()
                                     .foregroundStyle(.white.opacity(0.7))
                             }
                         }
-                    } else if isActive, let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                    } else if isActive, let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
                         if isTimerPausedForActivity(activity, data: data) {
                             HStack(spacing: 4) {
                                 Text("⏸ \(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
@@ -1695,7 +1690,7 @@ struct ActivityRowView: View {
                                 .foregroundStyle(.white.opacity(0.8))
                         } else {
                             HStack(spacing: 4) {
-                                Text(startDate, style: .timer)
+                                Text(timerAnchor, style: .timer)
                                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                                     .monospacedDigit()
                                     .foregroundStyle(.white)
@@ -2061,7 +2056,7 @@ struct LockScreenCircularView: View {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 12, weight: .semibold))
                     }
-                } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
+                } else if let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
                     if isTimerPausedForActivity(activity, data: data) {
                         VStack(spacing: 2) {
                             Text(activity.emoji)
@@ -2075,7 +2070,7 @@ struct LockScreenCircularView: View {
                         VStack(spacing: 2) {
                             Text(activity.emoji)
                                 .font(.system(size: 14))
-                            Text(startDate, style: .timer)
+                            Text(timerAnchor, style: .timer)
                                 .font(.system(size: 12, weight: .medium, design: .monospaced))
                                 .monospacedDigit()
                                 .minimumScaleFactor(0.7)
@@ -2147,8 +2142,8 @@ struct LockScreenRectangularView: View {
                                     Text("⏸ \(formatWidgetElapsed(getPausedElapsedSeconds(activity, data: data)))")
                                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
-                                } else if let startDate = getActiveTimerStartDate(for: activity, data: data) {
-                                    Text(startDate, style: .timer)
+                                } else if let timerAnchor = getRunningTimerAnchor(for: activity, data: data) {
+                                    Text(timerAnchor, style: .timer)
                                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
                                     Image(systemName: "circle.fill")

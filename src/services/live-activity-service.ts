@@ -1,5 +1,6 @@
 import { Platform, NativeModules } from "react-native";
 import { reportIssue } from "@/utils/observability-sink";
+import { calculateRunningTimerSeconds } from "@/utils/timer-duration";
 
 export type TimerActivityType = "feeding" | "sleep" | "pumping" | "tummyTime";
 export type BreastSide = "left" | "right" | "both";
@@ -212,6 +213,23 @@ export async function resumeTimerLiveActivity(
     reportIssue({ name: "live_activity.operation_failed", area: "live_activity", level: "warning", error, tags: { op: "resume" } });
     return false;
   }
+}
+
+export async function syncTimerLiveActivityPause(
+  activityId: string,
+  activityType: TimerActivityType,
+  timer: {
+    startTime: Date;
+    isPaused: boolean;
+    pausedAt?: Date;
+    totalPausedMs: number;
+  },
+  now = new Date()
+): Promise<boolean> {
+  const activeElapsedSeconds = calculateRunningTimerSeconds(timer, activityType, now);
+  return timer.isPaused
+    ? pauseTimerLiveActivity(activityId, activeElapsedSeconds)
+    : resumeTimerLiveActivity(activityId, activeElapsedSeconds);
 }
 
 export function isLiveActivitySupported(): boolean {

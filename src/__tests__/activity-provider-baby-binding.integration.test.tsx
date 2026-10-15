@@ -102,15 +102,29 @@ jest.mock("@/services/active-timer-service", () => {
   };
 });
 
-jest.mock("@/services/live-activity-service", () => ({
-  startTimerLiveActivity: jest.fn(),
-  endTimerLiveActivity: jest.fn(),
-  endLiveActivityByType: jest.fn(),
-  updateTimerLiveActivity: jest.fn(),
-  pauseTimerLiveActivity: jest.fn(),
-  resumeTimerLiveActivity: jest.fn(),
-  isLiveActivityRunningWithTimeout: jest.fn(),
-}));
+jest.mock("@/services/live-activity-service", () => {
+  const { calculateRunningTimerSeconds } = jest.requireActual("@/utils/timer-duration");
+  const pauseTimerLiveActivity = jest.fn();
+  const resumeTimerLiveActivity = jest.fn();
+  return {
+    startTimerLiveActivity: jest.fn(),
+    endTimerLiveActivity: jest.fn(),
+    endLiveActivityByType: jest.fn(),
+    updateTimerLiveActivity: jest.fn(),
+    isLiveActivityRunningWithTimeout: jest.fn(),
+    pauseTimerLiveActivity,
+    resumeTimerLiveActivity,
+    // Mirrors the service so assertions can read the seconds each call shows.
+    syncTimerLiveActivityPause: jest.fn(
+      (activityId: string, activityType: string, timer: { isPaused: boolean }, now?: Date) => {
+        const seconds = calculateRunningTimerSeconds(timer, activityType, now);
+        return timer.isPaused
+          ? pauseTimerLiveActivity(activityId, seconds)
+          : resumeTimerLiveActivity(activityId, seconds);
+      }
+    ),
+  };
+});
 
 jest.mock("@/services/timer-stop-coordinator", () => ({
   isPendingStopForTimer: jest.fn(() => false),

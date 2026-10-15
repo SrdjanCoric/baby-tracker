@@ -16,9 +16,9 @@ import {
   endLiveActivityByType,
   endTimerLiveActivity,
   isLiveActivityRunningWithTimeout,
-  pauseTimerLiveActivity,
   startTimerLiveActivity,
   bindTimerLiveActivity,
+  syncTimerLiveActivityPause,
   type BreastSide,
   type SleepType,
   type TimerActivityType as LiveActivityType,
@@ -44,8 +44,14 @@ import {
 } from "./timer-stop-coordinator";
 import { showTimerConflictNotice } from "./timer-conflict-notice";
 import {
-  calculateActiveDurationSeconds,
+  calculateTimerDurationSeconds,
+  excludesResumedPauses,
   shouldDiscardTimerDuration,
+} from "@/utils/timer-duration";
+
+export {
+  calculateTimerDuration,
+  calculateTimerDurationSeconds,
 } from "@/utils/timer-duration";
 import {
   errorCode,
@@ -347,35 +353,6 @@ export function shouldDiscardActiveSession(
   );
 }
 
-export function calculateTimerDuration(
-  startedAt: Date,
-  endedAt: Date,
-  totalPausedMs: number,
-  activityType: TimerActivityType
-): { durationSeconds: number; pausedSeconds: number } {
-  const wallMs = Math.max(0, endedAt.getTime() - startedAt.getTime());
-  const pausedMs =
-    activityType !== "sleep" ? Math.min(Math.max(0, totalPausedMs), wallMs) : 0;
-  return {
-    durationSeconds: calculateActiveDurationSeconds(
-      startedAt,
-      endedAt,
-      Math.floor(pausedMs / 1000)
-    ),
-    pausedSeconds: Math.floor(pausedMs / 1000),
-  };
-}
-
-export function calculateTimerDurationSeconds(
-  startedAt: Date,
-  endedAt: Date,
-  totalPausedMs: number,
-  activityType: TimerActivityType
-): number {
-  return calculateTimerDuration(startedAt, endedAt, totalPausedMs, activityType)
-    .durationSeconds;
-}
-
 export function parseTimerDate(
   value: string | undefined,
   fallback?: Date
@@ -517,9 +494,11 @@ export async function editRunningTimerStartTime<
     effectiveStartTime: startedAt.toISOString(),
     ...(pausedAt
       ? {
-          accumulatedSeconds: Math.max(
-            0,
-            Math.floor((pausedAt.getTime() - startedAt.getTime()) / 1000)
+          accumulatedSeconds: calculateTimerDurationSeconds(
+            startedAt,
+            pausedAt,
+            payload.totalPausedMs,
+            adapter.activityType
           ),
         }
       : {}),
@@ -599,16 +578,20 @@ export async function editRunningTimerStartTime<
   }
   liveActivityIdRef.current = replacementLiveActivityId;
 
-  if (replacementLiveActivityId && payload.isPaused) {
-    const activeElapsedSeconds = Math.max(
-      0,
-      Math.floor(
-        ((pausedAt ?? new Date()).getTime() - startedAt.getTime()) / 1000
-      )
-    );
-    await pauseTimerLiveActivity(
+  if (
+    replacementLiveActivityId &&
+    (payload.isPaused ||
+      (excludesResumedPauses(adapter.activityType) && payload.totalPausedMs > 0))
+  ) {
+    await syncTimerLiveActivityPause(
       replacementLiveActivityId,
-      activeElapsedSeconds
+      adapter.liveActivity.type,
+      {
+        startTime: startedAt,
+        isPaused: payload.isPaused,
+        pausedAt,
+        totalPausedMs: payload.totalPausedMs,
+      }
     );
   }
 
@@ -742,7 +725,19 @@ export async function restoreTimerLifecycle<
           }
         : undefined
     );
-    return acceptStartedLiveActivity(activityId);
+    if (!(await acceptStartedLiveActivity(activityId))) return false;
+    if (
+      activityId &&
+      excludesResumedPauses(adapter.activityType) &&
+      payload.totalPausedMs > 0
+    ) {
+      await syncTimerLiveActivityPause(activityId, adapter.liveActivity.type, {
+        startTime: new Date(startedAt),
+        isPaused: false,
+        totalPausedMs: payload.totalPausedMs,
+      });
+    }
+    return true;
   };
 
   if (isRestoreObsolete()) return;

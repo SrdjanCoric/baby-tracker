@@ -315,17 +315,44 @@ describe("WidgetProvider running timer payload", () => {
     ]);
   });
 
+  it("sends the resumed-pause total a running breast feeding, pumping or tummy time timer leaves out", () => {
+    mockLocks = ["feeding", "sleep", "pumping", "tummy_time"].map(
+      (activityType) => ({
+        babyId: "baby-1",
+        activityType,
+        startedAt: START.toISOString(),
+        startedBy: "user-2",
+        startedByName: "Other caregiver",
+        timerData: { isPaused: false, totalPausedMs: 600_999 },
+      })
+    );
+
+    const { timers } = activeTimers();
+    const pauseTotals = timers.map(({ type, isRemote, excludedPauseSeconds }) => ({
+      type,
+      isRemote: isRemote === true,
+      excludedPauseSeconds,
+    }));
+
+    expect(pauseTotals).toEqual([false, true].flatMap((isRemote) => [
+      { type: "feeding", isRemote, excludedPauseSeconds: 600 },
+      { type: "sleep", isRemote, excludedPauseSeconds: undefined },
+      { type: "pumping", isRemote, excludedPauseSeconds: 600 },
+      { type: "tummyTime", isRemote, excludedPauseSeconds: 600 },
+    ]));
+  });
+
   it("omits pause timestamps from the widget snapshot while preserving paused displays", () => {
     mockTimerState = makeTimerState(true);
     const timers = activeTimers().timers;
     for (const timer of timers) {
       expect(timer).not.toHaveProperty("pausedAt");
       expect(timer.isPaused).toBe(true);
-      expect(timer.accumulatedSeconds).toBe(30 * 60);
+      expect(timer.accumulatedSeconds).toBe(timer.type === "sleep" ? 30 * 60 : 20 * 60);
     }
   });
 
-  it("freezes every paused timer at pausedAt minus the real start", () => {
+  it("freezes a paused timer at what a stop would save, keeping the real start", () => {
     mockTimerState = makeTimerState(true);
 
     const { timers } = activeTimers();
@@ -335,14 +362,14 @@ describe("WidgetProvider running timer payload", () => {
       startTime,
       accumulatedSeconds,
     }))).toEqual([
-      { type: "feeding", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "feeding", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
       { type: "sleep", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
-      { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
-      { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
+      { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
     ]);
   });
 
-  it("freezes every remotely owned paused timer at pausedAt minus the real start", () => {
+  it("freezes a remotely owned paused timer at what a stop would save, keeping the real start", () => {
     mockLocks = ["feeding", "sleep", "pumping", "tummy_time"].map(
       (activityType) => ({
         babyId: "baby-1",
@@ -350,7 +377,7 @@ describe("WidgetProvider running timer payload", () => {
         startedAt: START.toISOString(),
         startedBy: "user-2",
         startedByName: "Other caregiver",
-        timerData: { isPaused: true, pausedAt: PAUSED_AT.toISOString() },
+        timerData: { isPaused: true, pausedAt: PAUSED_AT.toISOString(), totalPausedMs: 600_000 },
       })
     );
 
@@ -361,10 +388,10 @@ describe("WidgetProvider running timer payload", () => {
       startTime,
       accumulatedSeconds,
     }))).toEqual([
-      { type: "feeding", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "feeding", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
       { type: "sleep", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
-      { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
-      { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 30 * 60 },
+      { type: "pumping", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
+      { type: "tummyTime", startTime: START.toISOString(), accumulatedSeconds: 20 * 60 },
     ]);
   });
 

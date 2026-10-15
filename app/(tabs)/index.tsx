@@ -59,6 +59,7 @@ interface CardProps {
   todayBadge?: string;
   timerStartTime?: number;
   timerPausedAt?: number;
+  timerTotalPausedMs?: number;
 }
 
 export default function HomeScreen() {
@@ -752,6 +753,7 @@ export default function HomeScreen() {
     const pausedAt = typeof pausedAtValue === "string"
       ? new Date(pausedAtValue).getTime()
       : undefined;
+    const totalPausedMs = Number(lock?.timerData?.totalPausedMs ?? 0);
 
     return {
       isLocked: true,
@@ -764,6 +766,7 @@ export default function HomeScreen() {
       timerPausedAt: pausedAt !== undefined && Number.isFinite(pausedAt)
         ? pausedAt
         : undefined,
+      timerTotalPausedMs: Number.isFinite(totalPausedMs) ? totalPausedMs : 0,
     };
   }, [selectedBaby?.id, isLockedByOther, getLockedByName, getLockForActivity]);
 
@@ -798,6 +801,9 @@ export default function HomeScreen() {
       timerPausedAt: feedingLock.isLocked
         ? feedingLock.timerPausedAt
         : feedingActiveTimer?.pausedAt?.getTime(),
+      timerTotalPausedMs: feedingLock.isLocked
+        ? feedingLock.timerTotalPausedMs
+        : feedingActiveTimer?.totalPausedMs,
     };
   }, [t, feedingTimeSince, feedingSubtitle, isFeedingActive, feedingActiveLabel, isStoppingFeeding, feedingActiveTimer, handleFeedingCardPress, handleAddFeeding, handleStopFeeding, handleStopRemoteFeeding, handleTogglePauseFeeding, handleToggleRemoteFeeding, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -833,6 +839,9 @@ export default function HomeScreen() {
       timerPausedAt: sleepLock.isLocked
         ? sleepLock.timerPausedAt
         : sleepActiveTimer?.pausedAt?.getTime(),
+      timerTotalPausedMs: sleepLock.isLocked
+        ? sleepLock.timerTotalPausedMs
+        : sleepActiveTimer?.totalPausedMs,
     };
   }, [t, sleepTimeSince, sleepSecondaryInfo, isSleepActive, isStoppingSleep, sleepActiveTimer, sleepProgress, handleSleepCardPress, handleAddSleep, handleStopSleep, handleStopRemoteSleep, handleTogglePauseSleep, handleToggleRemoteSleep, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -881,6 +890,9 @@ export default function HomeScreen() {
       timerPausedAt: pumpingLock.isLocked
         ? pumpingLock.timerPausedAt
         : pumpingActiveTimer?.pausedAt?.getTime(),
+      timerTotalPausedMs: pumpingLock.isLocked
+        ? pumpingLock.timerTotalPausedMs
+        : pumpingActiveTimer?.totalPausedMs,
     };
   }, [t, pumpingTimeSince, pumpingSubtitle, isPumpingActive, isStoppingPumping, pumpingActiveTimer, handlePumpingCardPress, handleAddPumping, handleStopPumping, handleStopRemotePumping, handleTogglePausePumping, handleToggleRemotePumping, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 
@@ -916,6 +928,9 @@ export default function HomeScreen() {
       timerPausedAt: tummyTimeLock.isLocked
         ? tummyTimeLock.timerPausedAt
         : tummyTimeActiveTimer?.pausedAt?.getTime(),
+      timerTotalPausedMs: tummyTimeLock.isLocked
+        ? tummyTimeLock.timerTotalPausedMs
+        : tummyTimeActiveTimer?.totalPausedMs,
     };
   }, [t, tummyTimeTimeSince, tummyTimeSecondaryInfo, isTummyTimeActive, isStoppingTummyTime, tummyTimeActiveTimer, tummyTimeProgress, handleTummyTimeCardPress, handleAddTummyTime, handleStopTummyTime, handleStopRemoteTummyTime, handleTogglePauseTummyTime, handleToggleRemoteTummyTime, isAuthenticated, getTimerLockInfo, selectedBaby?.name]);
 

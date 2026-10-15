@@ -22,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { CONTENT_COLORS, SURFACE, ACTIVITY } from "@/constants/design-tokens";
 import { formatDuration } from "@/utils/time";
+import { calculateRunningTimerSeconds } from "@/utils/timer-duration";
 
 const CARD_MIN_HEIGHT = Platform.OS === "android" ? 150 : 160;
 const CARD_BORDER_RADIUS = 20;
@@ -57,6 +58,7 @@ interface DashboardCardProps {
   todayBadge?: string;
   timerStartTime?: number;
   timerPausedAt?: number;
+  timerTotalPausedMs?: number;
 }
 
 const DashboardCardInner = forwardRef<View, DashboardCardProps>(
@@ -85,6 +87,7 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       todayBadge,
       timerStartTime,
       timerPausedAt,
+      timerTotalPausedMs,
     },
     ref
   ) => {
@@ -95,9 +98,11 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
     const [localElapsed, setLocalElapsed] = useState<string | null>(null);
     const timerStartTimeRef = useRef(timerStartTime);
     const timerPausedAtRef = useRef(timerPausedAt);
+    const timerTotalPausedMsRef = useRef(timerTotalPausedMs);
 
     timerStartTimeRef.current = timerStartTime;
     timerPausedAtRef.current = timerPausedAt;
+    timerTotalPausedMsRef.current = timerTotalPausedMs;
 
     useEffect(() => {
       if ((!isActive && !isLockedByOther) || !timerStartTime) {
@@ -106,22 +111,23 @@ const DashboardCardInner = forwardRef<View, DashboardCardProps>(
       }
 
       const computeElapsed = () => {
-        const start = timerStartTimeRef.current!;
         const pausedAt = timerPausedAtRef.current;
-
-        let elapsed: number;
-        if (pausedAt) {
-          elapsed = Math.floor((pausedAt - start) / 1000);
-        } else {
-          elapsed = Math.floor((Date.now() - start) / 1000);
-        }
+        const elapsed = calculateRunningTimerSeconds(
+          {
+            startTime: new Date(timerStartTimeRef.current!),
+            isPaused: !!pausedAt,
+            pausedAt: pausedAt ? new Date(pausedAt) : undefined,
+            totalPausedMs: timerTotalPausedMsRef.current,
+          },
+          activity
+        );
         setLocalElapsed(formatDuration(elapsed, isLockedByOther ? "short" : "long"));
       };
 
       computeElapsed();
       const interval = setInterval(computeElapsed, 1000);
       return () => clearInterval(interval);
-    }, [isActive, isLockedByOther, timerStartTime, timerPausedAt]);
+    }, [activity, isActive, isLockedByOther, timerStartTime, timerPausedAt, timerTotalPausedMs]);
     const config = ACTIVITY_CONFIG[activity];
     const activityColors = ACTIVITY[activity as keyof typeof ACTIVITY];
     const bgColor = isDark ? SURFACE.dark.card : SURFACE.light.card;
@@ -696,6 +702,7 @@ const DashboardCard = memo(DashboardCardInner, (prev, next) => {
     prev.testID === next.testID &&
     prev.timerStartTime === next.timerStartTime &&
     prev.timerPausedAt === next.timerPausedAt &&
+    prev.timerTotalPausedMs === next.timerTotalPausedMs &&
     prev.onPress === next.onPress &&
     prev.onActionPress === next.onActionPress &&
     prev.onPausePress === next.onPausePress

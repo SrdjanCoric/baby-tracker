@@ -1131,6 +1131,32 @@ WHERE baby_id='87000000-0000-0000-0000-000000000002';
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.checked_snapshot('87000000-0000-0000-0000-000000000002','UTC') IS NOT NULL AS paused_timers_equivalent;
 RESET ROLE;
+UPDATE public.active_timers SET timer_data = timer_data || '{"totalPausedMs":600999.6}'::jsonb
+WHERE baby_id='87000000-0000-0000-0000-000000000002';
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE actual jsonb; timer jsonb; without_pause_totals jsonb;
+BEGIN
+  actual := public.get_baby_activity_snapshot('87000000-0000-0000-0000-000000000002','UTC');
+  FOR timer IN SELECT value FROM pg_catalog.jsonb_array_elements(actual->'activeTimers') LOOP
+    IF timer->>'type' = 'sleep' AND timer ? 'excludedPauseSeconds' THEN
+      RAISE EXCEPTION 'sleep must keep counting its resumed pauses: %', timer;
+    ELSIF timer->>'type' <> 'sleep' AND timer->>'excludedPauseSeconds' IS DISTINCT FROM '600' THEN
+      RAISE EXCEPTION '% did not expose its resumed-pause total: %', timer->>'type', timer;
+    END IF;
+  END LOOP;
+  SELECT pg_catalog.jsonb_agg(value - 'excludedPauseSeconds' ORDER BY ordinality)
+  INTO without_pause_totals
+  FROM pg_catalog.jsonb_array_elements(actual->'activeTimers') WITH ORDINALITY;
+  actual := actual || pg_catalog.jsonb_build_object(
+    'activeTimers', without_pause_totals, 'activeTimer', without_pause_totals->0);
+  IF actual IS DISTINCT FROM pg_temp.snapshot_061('87000000-0000-0000-0000-000000000002','UTC') THEN
+    RAISE EXCEPTION 'the resumed-pause total changed another snapshot field: %', actual;
+  END IF;
+END $$;
+RESET ROLE;
+UPDATE public.active_timers SET timer_data = timer_data - 'totalPausedMs'
+WHERE baby_id='87000000-0000-0000-0000-000000000002';
 DO $$
 DECLARE relation text;
 BEGIN

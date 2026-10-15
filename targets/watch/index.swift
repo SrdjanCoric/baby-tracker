@@ -90,6 +90,8 @@ struct WatchActiveTimer: Codable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    /// Resumed-pause seconds a running breast feeding, pumping or tummy time timer leaves out.
+    var excludedPauseSeconds: Int? = nil
     var startedBy: String?
 }
 
@@ -1124,16 +1126,24 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
                 timerContext = self.localActiveTimers[index].context
                 self.localActiveTimers[index].isPaused = true
-                if let startTime = ISO8601DateFormatter().date(from: self.localActiveTimers[index].startTime) {
-                    let secs = Int(Date().timeIntervalSince(startTime))
+                if let startTime = parseDate(self.localActiveTimers[index].startTime) {
+                    let secs = WatchTimerCount.pausedSeconds(
+                        start: startTime,
+                        pausedAt: Date(),
+                        excludedPauseSeconds: self.localActiveTimers[index].excludedPauseSeconds
+                    )
                     self.localActiveTimers[index].accumulatedSeconds = secs
                     accumulated = secs
                 }
             } else if var serverTimer = self.findServerTimer(activityType: activityType) {
                 timerContext = serverTimer.context
                 serverTimer.isPaused = true
-                if let startTime = ISO8601DateFormatter().date(from: serverTimer.startTime) {
-                    let secs = Int(Date().timeIntervalSince(startTime))
+                if let startTime = parseDate(serverTimer.startTime) {
+                    let secs = WatchTimerCount.pausedSeconds(
+                        start: startTime,
+                        pausedAt: Date(),
+                        excludedPauseSeconds: serverTimer.excludedPauseSeconds
+                    )
                     serverTimer.accumulatedSeconds = secs
                     accumulated = secs
                 }
@@ -1177,16 +1187,23 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
             var accumulated: Int?
             var timerContext: String?
             var effectiveStartTime: String?
+            var liveActivityStartTime: String?
             if let index = self.localActiveTimers.firstIndex(where: { $0.type == activityType }) {
                 accumulated = self.localActiveTimers[index].accumulatedSeconds
                 timerContext = self.localActiveTimers[index].context
                 effectiveStartTime = self.localActiveTimers[index].startTime
+                self.localActiveTimers[index].excludedPauseSeconds = Self.excludedPauseSecondsAfterResume(
+                    self.localActiveTimers[index]
+                )
+                liveActivityStartTime = Self.liveActivityStartISO(self.localActiveTimers[index])
                 self.localActiveTimers[index].isPaused = false
                 self.localActiveTimers[index].accumulatedSeconds = nil
             } else if var serverTimer = self.findServerTimer(activityType: activityType) {
                 accumulated = serverTimer.accumulatedSeconds
                 timerContext = serverTimer.context
                 effectiveStartTime = serverTimer.startTime
+                serverTimer.excludedPauseSeconds = Self.excludedPauseSecondsAfterResume(serverTimer)
+                liveActivityStartTime = Self.liveActivityStartISO(serverTimer)
                 serverTimer.isPaused = false
                 serverTimer.accumulatedSeconds = nil
                 self.localActiveTimers.append(serverTimer)
@@ -1198,11 +1215,31 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 action: "resume",
                 accumulatedSeconds: accumulated,
                 timerContext: timerContext,
-                effectiveStartTime: effectiveStartTime
+                effectiveStartTime: effectiveStartTime,
+                liveActivityStartTime: liveActivityStartTime
             )
         }
 
         WKInterfaceDevice.current().play(.click)
+    }
+
+    private static func excludedPauseSecondsAfterResume(_ timer: WatchActiveTimer) -> Int? {
+        guard let startTime = parseDate(timer.startTime) else {
+            return timer.excludedPauseSeconds
+        }
+        return WatchTimerCount.excludedPauseSecondsAfterResume(
+            activityType: timer.type,
+            start: startTime,
+            resumedAt: Date(),
+            frozenSeconds: timer.accumulatedSeconds,
+            excludedPauseSeconds: timer.excludedPauseSeconds
+        )
+    }
+
+    private static func liveActivityStartISO(_ timer: WatchActiveTimer) -> String? {
+        parseDate(timer.startTime).map {
+            WatchTimerCount.liveActivityStartISO(start: $0, excludedPauseSeconds: timer.excludedPauseSeconds)
+        }
     }
 
     func switchSide(activityType: String, currentSide: String) {
@@ -1248,6 +1285,7 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 isRemote: $0.isRemote,
                 isPaused: $0.isPaused,
                 accumulatedSeconds: $0.accumulatedSeconds,
+                excludedPauseSeconds: $0.excludedPauseSeconds,
                 startedBy: nil
             )
         }
@@ -1739,7 +1777,8 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
         action: String,
         accumulatedSeconds: Int?,
         timerContext: String? = nil,
-        effectiveStartTime: String? = nil
+        effectiveStartTime: String? = nil,
+        liveActivityStartTime: String? = nil
     ) {
         guard hasAuthCredentials, let config = supabaseConfig, let supabaseUserId,
               let babyId = currentBabyId else { return }
@@ -1770,8 +1809,10 @@ class PhoneConnector: NSObject, ObservableObject, WCSessionDelegate {
                 timerData["accumulatedSeconds"] = accumulatedSeconds
             }
             if let effectiveStartTime {
-                body["effectiveStartTimeISO"] = effectiveStartTime
                 timerData["effectiveStartTime"] = effectiveStartTime
+            }
+            if let liveActivityStart = liveActivityStartTime ?? effectiveStartTime {
+                body["effectiveStartTimeISO"] = liveActivityStart
             }
         }
 
@@ -2216,7 +2257,10 @@ struct ActiveTimerCard: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 } else if let start = startDate {
-                    Text(start, style: .timer)
+                    Text(
+                        WatchTimerCount.runningAnchor(start: start, excludedPauseSeconds: timer.excludedPauseSeconds),
+                        style: .timer
+                    )
                         .font(.system(.body, design: .monospaced))
                         .monospacedDigit()
                 }
@@ -2889,7 +2933,10 @@ struct PumpingActiveCard: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 } else if let start = startDate {
-                    Text(start, style: .timer)
+                    Text(
+                        WatchTimerCount.runningAnchor(start: start, excludedPauseSeconds: timer.excludedPauseSeconds),
+                        style: .timer
+                    )
                         .font(.system(.body, design: .monospaced))
                         .monospacedDigit()
                 }

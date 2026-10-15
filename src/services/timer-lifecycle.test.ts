@@ -21,6 +21,7 @@ import {
   endLiveActivityByType,
   endTimerLiveActivity,
   startTimerLiveActivity,
+  syncTimerLiveActivityPause,
 } from "./live-activity-service";
 import {
   getActiveTimerLock,
@@ -37,6 +38,7 @@ vi.mock("./live-activity-service", () => ({
   isLiveActivityRunningWithTimeout: vi.fn(),
   startTimerLiveActivity: vi.fn(),
   bindTimerLiveActivity: vi.fn(),
+  syncTimerLiveActivityPause: vi.fn(),
 }));
 
 vi.mock("./active-timer-service", () => ({
@@ -215,6 +217,74 @@ describe("editRunningTimerStartTime", () => {
     expect(liveActivityIdRef.current).toBe("live-new");
   });
 
+  it.each([
+    [
+      "paused",
+      { isPaused: true, pausedAt: "2026-08-06T08:30:00.000Z", totalPausedMs: 10 * 60 * 1000 },
+      { isPaused: true, pausedAt: new Date("2026-08-06T08:30:00.000Z"), totalPausedMs: 10 * 60 * 1000 },
+    ],
+    [
+      "running",
+      { isPaused: false, totalPausedMs: 10 * 60 * 1000 },
+      { isPaused: false, pausedAt: undefined, totalPausedMs: 10 * 60 * 1000 },
+    ],
+  ] as const)(
+    "re-anchors a %s pumping Live Activity at what a stop would save after a start edit",
+    async (_state, payload, expectedTimer) => {
+      const newStart = new Date("2026-08-06T07:30:00.000Z");
+      const adapter: TimerLifecycleAdapter<
+        TestPayload & { pausedAt?: string },
+        TestActiveTimer,
+        { id: string },
+        { id: string }
+      > = {
+        activityType: "pumping",
+        discardsShortSessions: false,
+        storage: {
+          getActiveTimer: vi.fn(),
+          setActiveTimer: vi.fn(),
+          clearActiveTimer: vi.fn(),
+          getRecordById: vi.fn(),
+        },
+        timerDataCodec: {
+          encode: vi.fn(() => ({})),
+          decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+          fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        },
+        buildRecord: vi.fn(() => ({ id: "record-1" })),
+        liveActivity: { type: "pumping", detail: vi.fn(() => undefined) },
+        dispatchRestoreTimer: vi.fn(),
+      };
+      vi.mocked(updateTimerStartTime).mockResolvedValue(true);
+      vi.mocked(endTimerLiveActivity).mockResolvedValue(true);
+      vi.mocked(startTimerLiveActivity).mockResolvedValue("live-new");
+
+      await editRunningTimerStartTime({
+        adapter,
+        baby: { id: "baby-1", name: "Baby" },
+        userId: "user-1",
+        activeTimer: {
+          startedAt: "2026-08-06T08:00:00.000Z",
+          ...payload,
+          lockState: "owned",
+          liveActivityId: "live-old",
+          timerInstanceId: "timer-1",
+          activityId: "record-1",
+        },
+        payload,
+        startedAt: newStart,
+        liveActivityIdRef: { current: "live-old" },
+        dispatchEditedStart: vi.fn(),
+      });
+
+      expect(syncTimerLiveActivityPause).toHaveBeenCalledExactlyOnceWith(
+        "live-new",
+        "pumping",
+        { startTime: newStart, ...expectedTimer }
+      );
+    }
+  );
+
   it("re-anchors a running Live Activity when its identifier was lost", async () => {
     const newStart = new Date("2026-08-06T07:30:00.000Z");
     const activeTimer: TestActiveTimer = {
@@ -375,6 +445,66 @@ describe("editRunningTimerStartTime", () => {
     );
     expect(dispatchEditedStart).toHaveBeenCalledWith(newStart);
     expect(startTimerLiveActivity).not.toHaveBeenCalled();
+  });
+
+  it("leaves completed pauses out of a paused tummy time timer's frozen server value", async () => {
+    const newStart = new Date("2026-08-06T09:58:00.000Z");
+    const pausedTimer = {
+      timerInstanceId: "timer-1",
+      activityId: "record-1",
+      isPaused: true,
+      pausedAt: "2026-08-06T10:20:00.000Z",
+      totalPausedMs: 180_000,
+    };
+    const adapter: TimerLifecycleAdapter<
+      TestPayload,
+      TestActiveTimer,
+      { id: string },
+      { id: string }
+    > = {
+      activityType: "tummyTime",
+      discardsShortSessions: false,
+      storage: {
+        getActiveTimer: vi.fn(),
+        setActiveTimer: vi.fn(),
+        clearActiveTimer: vi.fn(),
+        getRecordById: vi.fn(),
+      },
+      timerDataCodec: {
+        encode: vi.fn(() => pausedTimer),
+        decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+        fromActiveTimer: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+      },
+      buildRecord: vi.fn(() => ({ id: "record-1" })),
+      liveActivity: { type: "tummyTime", detail: vi.fn(() => undefined) },
+      dispatchRestoreTimer: vi.fn(),
+    };
+    vi.mocked(updateTimerStartTime).mockResolvedValue();
+    vi.mocked(startTimerLiveActivity).mockResolvedValue(null);
+
+    await editRunningTimerStartTime({
+      adapter,
+      baby: { id: "baby-1", name: "Baby" },
+      userId: "user-1",
+      activeTimer: {
+        ...pausedTimer,
+        startedAt: "2026-08-06T10:00:00.000Z",
+        lockState: "owned",
+      },
+      payload: pausedTimer,
+      startedAt: newStart,
+      liveActivityIdRef: { current: null },
+      dispatchEditedStart: vi.fn(),
+    });
+
+    // 22 minutes since the new start, minus the 3-minute resumed pause.
+    expect(updateTimerStartTime).toHaveBeenCalledWith(
+      "baby-1",
+      "tummyTime",
+      "user-1",
+      newStart,
+      expect.objectContaining({ accumulatedSeconds: 19 * 60 })
+    );
   });
 
   it("queues an offline edit before applying it locally", async () => {
@@ -1170,7 +1300,88 @@ describe("restoreTimerLifecycle", () => {
       new Date(startedAt),
       undefined
     );
+    expect(syncTimerLiveActivityPause).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["feeding", "feeding"],
+    ["pumping", "pumping"],
+    ["tummy_time", "tummyTime"],
+  ] as const)(
+    "restarts a resumed %s Live Activity from what a stop would save",
+    async (activityType, liveActivityType) => {
+      const startedAt = "2026-08-05T12:00:00.000Z";
+      const activeTimer: TestActiveTimer = {
+        startedAt,
+        isPaused: false,
+        totalPausedMs: 10 * 60 * 1000,
+        lockState: "owned",
+      };
+      const adapter: TimerLifecycleAdapter<
+        TestPayload,
+        TestActiveTimer,
+        { id: string },
+        { id: string }
+      > = {
+        activityType,
+        discardsShortSessions: false,
+        storage: {
+          getActiveTimer: vi.fn().mockResolvedValue(activeTimer),
+          setActiveTimer: vi.fn(),
+          clearActiveTimer: vi.fn(),
+          getRecordById: vi.fn(),
+        },
+        timerDataCodec: {
+          encode: vi.fn(() => ({})),
+          decode: vi.fn(() => ({ isPaused: false, totalPausedMs: 0 })),
+          fromActiveTimer: vi.fn(() => ({
+            isPaused: false,
+            totalPausedMs: activeTimer.totalPausedMs,
+          })),
+        },
+        buildRecord: vi.fn(() => ({ id: "record-1" })),
+        liveActivity: { type: liveActivityType, detail: vi.fn(() => undefined) },
+        dispatchRestoreTimer: vi.fn(),
+      };
+      vi.mocked(readPendingTimerStop).mockResolvedValue(null);
+      vi.mocked(resolveTimerIdentity).mockResolvedValue({
+        timerInstanceId: "timer-1",
+        activityId: "activity-1",
+      });
+      vi.mocked(isTimerCompletionSecured).mockResolvedValue(false);
+      vi.mocked(startTimerLiveActivity).mockResolvedValue("live-activity-1");
+
+      await restoreTimerLifecycle({
+        adapter,
+        baby: { id: "baby-1", name: "Baby" },
+        user: null,
+        completedRecords: [],
+        stopVersionAtStart: 0,
+        currentStopVersion: () => 0,
+        isStopping: () => false,
+        isCurrentBabyBinding: () => true,
+        liveActivityIdRef: { current: null },
+        refreshLocks: vi.fn(),
+        persistRecord: vi.fn(),
+        dispatchStopTimer: vi.fn(),
+        dispatchAddRecord: vi.fn(),
+        errorLabel: "[TimerLifecycleTest]",
+      });
+
+      expect(startTimerLiveActivity).toHaveBeenCalledWith(
+        liveActivityType,
+        "Baby",
+        undefined,
+        new Date(startedAt),
+        undefined
+      );
+      expect(syncTimerLiveActivityPause).toHaveBeenCalledExactlyOnceWith(
+        "live-activity-1",
+        liveActivityType,
+        { startTime: new Date(startedAt), isPaused: false, totalPausedMs: 10 * 60 * 1000 }
+      );
+    }
+  );
 
   it("abandons a restore when stop becomes obsolete during storage reads", async () => {
     let resolvePendingStop: (value: null) => void = () => undefined;

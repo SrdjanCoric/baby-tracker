@@ -116,7 +116,7 @@ describe("PumpingScreen stop confirmation", () => {
     jest.useRealTimers();
   });
 
-  it("freezes while paused and counts the paused span after resume", () => {
+  it("freezes while paused and continues from the frozen value after resume", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
     mockShowVolumeInput = "false";
@@ -129,15 +129,21 @@ describe("PumpingScreen stop confirmation", () => {
     };
 
     const { rerender } = render(<PumpingScreen />);
-    expect(screen.getByLabelText("common.timer: 30:00")).toBeTruthy();
+    expect(screen.getByLabelText("common.timer: 20:00")).toBeTruthy();
 
-    mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
+    mockActiveTimer = {
+      ...mockActiveTimer,
+      isPaused: false,
+      pausedAt: undefined,
+      totalPausedMs: 40 * 60 * 1000,
+    };
     rerender(<PumpingScreen />);
-    expect(screen.getByLabelText("common.timer: 1:00:00")).toBeTruthy();
+    expect(screen.getByLabelText("common.timer: 20:00")).toBeTruthy();
 
     act(() => {
       jest.advanceTimersByTime(1000);
     });
+    expect(screen.getByLabelText("common.timer: 20:01")).toBeTruthy();
     expect(mockCheckAndSendAlert).toHaveBeenCalledWith(60);
   });
 

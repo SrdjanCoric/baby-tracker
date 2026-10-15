@@ -93,6 +93,23 @@ describe("widget activity snapshot decoder", () => {
     }))).toBeNull();
   });
 
+  it("keeps a numeric resumed-pause total and rejects any other kind", () => {
+    const base = JSON.parse(fixture("versioned")) as Record<string, unknown>;
+    const withPauseTotal = (excludedPauseSeconds: unknown) => {
+      const timer = {
+        type: "pumping",
+        startTime: "2026-08-08T10:00:00.000Z",
+        timerInstanceId: "pumping-timer",
+        excludedPauseSeconds,
+      };
+      return JSON.stringify({ ...base, activeTimer: timer, activeTimers: [timer] });
+    };
+
+    expect(decodeWidgetActivitySnapshotJson(withPauseTotal(600))?.data.activeTimers[0]
+      ?.excludedPauseSeconds).toBe(600);
+    expect(decodeWidgetActivitySnapshotJson(withPauseTotal("600"))).toBeNull();
+  });
+
   it("rejects versioned payloads missing required sleep summary fields", () => {
     for (const name of [
       "versioned-missing-nap-count",

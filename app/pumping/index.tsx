@@ -1,6 +1,7 @@
 import { DiscardTimerLink } from "@/components/timer/DiscardTimerLink";
 import { useConfirmDiscardTimer } from "@/hooks/useConfirmDiscardTimer";
 import { isTimerStarter } from "@/services/timer-starter";
+import { calculateRunningTimerSeconds } from "@/utils/timer-duration";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View, Keyboard, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -107,13 +108,7 @@ export default function PumpingScreen() {
       return 0;
     }
     void tick;
-    if (activeTimer.isPaused && activeTimer.pausedAt) {
-      return Math.floor(
-        (activeTimer.pausedAt.getTime() - activeTimer.startTime.getTime()) / 1000
-      );
-    }
-    const now = new Date();
-    return Math.floor((now.getTime() - activeTimer.startTime.getTime()) / 1000);
+    return calculateRunningTimerSeconds(activeTimer, "pumping");
   }, [activeTimer, tick]);
 
   const suggestedSide = useMemo((): BreastSide => {

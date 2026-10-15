@@ -58,6 +58,9 @@ export interface ActiveTimerData {
   isRemote?: boolean;
   isPaused?: boolean;
   accumulatedSeconds?: number;
+  /** Resumed-pause seconds a running breast feeding, pumping or tummy time timer leaves out.
+   * Absent for sleep, which counts its pauses. */
+  excludedPauseSeconds?: number;
   /** Sync provenance for the widget timer-list merge: only "accountless" or
    * "offline" timers have no server row and must survive a server snapshot. */
   lockState?: TimerLockReconciliationState;
@@ -134,6 +137,9 @@ function decodeTimer(value: unknown): ActiveTimerData | null | undefined {
   if (value.isRemote !== undefined && typeof value.isRemote !== "boolean") return undefined;
   if (value.isPaused !== undefined && typeof value.isPaused !== "boolean") return undefined;
   if (value.accumulatedSeconds !== undefined && !isFiniteNumber(value.accumulatedSeconds)) {
+    return undefined;
+  }
+  if (value.excludedPauseSeconds !== undefined && !isFiniteNumber(value.excludedPauseSeconds)) {
     return undefined;
   }
   if (value.lockState !== undefined) {

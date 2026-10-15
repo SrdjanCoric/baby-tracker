@@ -77,8 +77,46 @@ struct WatchSummaryTimer: Codable, Equatable, Hashable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    /// Resumed-pause seconds a running breast feeding, pumping or tummy time timer leaves
+    /// out. Absent for sleep, and from servers that predate it.
+    var excludedPauseSeconds: Int? = nil
     var lockState: String? = nil
     var preservedLocally: Bool? = nil
+}
+
+/// Counts a timer the way a stop saves it. A nil `excludedPauseSeconds` leaves nothing out;
+/// only sleep keeps it nil through a resume, so sleep counts every pause.
+enum WatchTimerCount {
+    static func runningAnchor(start: Date, excludedPauseSeconds: Int?) -> Date {
+        start.addingTimeInterval(TimeInterval(max(0, excludedPauseSeconds ?? 0)))
+    }
+
+    static func pausedSeconds(start: Date, pausedAt: Date, excludedPauseSeconds: Int?) -> Int {
+        let anchor = runningAnchor(start: start, excludedPauseSeconds: excludedPauseSeconds)
+        return max(0, Int(pausedAt.timeIntervalSince(anchor)))
+    }
+
+    /// The pause that just ended joins the total, so the readout continues from `frozenSeconds`.
+    /// Only sleep keeps a nil total; any other timer without one has no resumed pause yet.
+    static func excludedPauseSecondsAfterResume(
+        activityType: String,
+        start: Date,
+        resumedAt: Date,
+        frozenSeconds: Int?,
+        excludedPauseSeconds: Int?
+    ) -> Int? {
+        guard activityType != "sleep" else { return excludedPauseSeconds }
+        let excludedPauseSeconds = excludedPauseSeconds ?? 0
+        guard let frozenSeconds else { return excludedPauseSeconds }
+        return max(excludedPauseSeconds, Int(resumedAt.timeIntervalSince(start)) - frozenSeconds)
+    }
+
+    /// The Live Activity counts from this anchor rather than from the start shown on screen.
+    static func liveActivityStartISO(start: Date, excludedPauseSeconds: Int?) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: runningAnchor(start: start, excludedPauseSeconds: excludedPauseSeconds))
+    }
 }
 
 struct WatchTimerControls: Equatable {
@@ -331,6 +369,8 @@ struct WatchTimerFingerprint: Equatable, Sendable {
             var normalized = timer
             normalized.lockState = nil
             normalized.preservedLocally = nil
+            // The REST probe reads no total, so a summary that has one must still match it.
+            normalized.excludedPauseSeconds = nil
             if normalized.isRemote == true {
                 normalized.context = nil
             }

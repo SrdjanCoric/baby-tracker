@@ -208,15 +208,29 @@ jest.mock("@/services/active-timer-service", () => {
   };
 });
 
-jest.mock("@/services/live-activity-service", () => ({
-  startTimerLiveActivity: jest.fn(),
-  endTimerLiveActivity: jest.fn(),
-  endLiveActivityByType: jest.fn(),
-  updateTimerLiveActivity: jest.fn(),
-  pauseTimerLiveActivity: jest.fn(),
-  resumeTimerLiveActivity: jest.fn(),
-  isLiveActivityRunningWithTimeout: jest.fn(),
-}));
+jest.mock("@/services/live-activity-service", () => {
+  const { calculateRunningTimerSeconds } = jest.requireActual("@/utils/timer-duration");
+  const pauseTimerLiveActivity = jest.fn();
+  const resumeTimerLiveActivity = jest.fn();
+  return {
+    startTimerLiveActivity: jest.fn(),
+    endTimerLiveActivity: jest.fn(),
+    endLiveActivityByType: jest.fn(),
+    updateTimerLiveActivity: jest.fn(),
+    isLiveActivityRunningWithTimeout: jest.fn(),
+    pauseTimerLiveActivity,
+    resumeTimerLiveActivity,
+    // Mirrors the service so assertions can read the seconds each call shows.
+    syncTimerLiveActivityPause: jest.fn(
+      (activityId: string, activityType: string, timer: { isPaused: boolean }, now?: Date) => {
+        const seconds = calculateRunningTimerSeconds(timer, activityType, now);
+        return timer.isPaused
+          ? pauseTimerLiveActivity(activityId, seconds)
+          : resumeTimerLiveActivity(activityId, seconds);
+      }
+    ),
+  };
+});
 
 jest.mock("@/services/push-token-service", () => ({
   fetchWakeWindowPreference: jest.fn(),
@@ -279,7 +293,7 @@ function ProviderHarness({ showReadouts = false }: { showReadouts?: boolean }) {
           isActive={timer?.isRunning}
           timerStartTime={timer?.startTime?.getTime()}
           timerPausedAt={timer?.pausedAt?.getTime()}
-          {...{ timerTotalPausedMs: timer?.totalPausedMs }}
+          timerTotalPausedMs={timer?.totalPausedMs}
           testID={`provider-timer-${activity}`}
         />
       ))}
@@ -1200,20 +1214,26 @@ describe("external timer stops through production providers", () => {
         accumulatedSeconds: 127,
       },
     }));
-    view.rerender(<RealTimerProviders />);
-    await waitFor(() =>
-      expect([
-        feedingState?.activeTimer,
-        sleepState?.activeTimer,
-        pumpingState?.activeTimer,
-        tummyTimeState?.activeTimer,
-      ]).toEqual([
-        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
-        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
-        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
-        expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
-      ])
-    );
+    jest.useFakeTimers({ advanceTimers: true });
+    jest.setSystemTime(new Date("2026-07-15T08:02:07.000Z"));
+    try {
+      view.rerender(<RealTimerProviders />);
+      await waitFor(() =>
+        expect([
+          feedingState?.activeTimer,
+          sleepState?.activeTimer,
+          pumpingState?.activeTimer,
+          tummyTimeState?.activeTimer,
+        ]).toEqual([
+          expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+          expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+          expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+          expect.objectContaining({ isPaused: false, totalPausedMs: 7_000 }),
+        ])
+      );
+    } finally {
+      jest.useRealTimers();
+    }
     expect([
       feedingState?.activeTimer?.pausedAt,
       sleepState?.activeTimer?.pausedAt,
@@ -1233,12 +1253,10 @@ describe("external timer stops through production providers", () => {
       }));
       expect(timer).not.toHaveProperty("pausedAt");
     }
-    expect(liveActivities.resumeTimerLiveActivity.mock.calls.map(call => call[1])).toEqual([
-      127,
-      127,
-      127,
-      127,
-    ]);
+    // Sleep keeps the reported 127 seconds; the others leave out the 7-second pause.
+    expect(
+      liveActivities.resumeTimerLiveActivity.mock.calls.map(call => call[1]).sort()
+    ).toEqual([120, 120, 120, 127]);
   });
 
   it("starts and edits all four account-less timers locally without server writes or queued edits", async () => {
@@ -1729,7 +1747,7 @@ describe("external timer stops through production providers", () => {
     ]);
   });
 
-  it("passes total elapsed time through every Live Activity pause and resume", async () => {
+  it("passes what a stop would save through every Live Activity pause and resume", async () => {
     const firstPauseAt = new Date("2026-07-15T08:01:00.000Z");
     const resumeAt = new Date("2026-07-15T08:02:00.000Z");
     const secondPauseAt = new Date("2026-07-15T08:03:00.000Z");
@@ -1780,7 +1798,7 @@ describe("external timer stops through production providers", () => {
     }
     expect(
       liveActivities.resumeTimerLiveActivity.mock.calls.map((call) => call[1])
-    ).toEqual([120, 120, 120, 120]);
+    ).toEqual([60, 120, 60, 60]);
 
     await act(async () => {
       await feedingState!.pauseBreastfeeding(secondPauseAt);
@@ -1790,7 +1808,7 @@ describe("external timer stops through production providers", () => {
     });
     expect(
       liveActivities.pauseTimerLiveActivity.mock.calls.slice(-4).map((call) => call[1])
-    ).toEqual([180, 180, 180, 180]);
+    ).toEqual([120, 180, 120, 120]);
 
     const activeTimers = jest.requireMock("@/services/active-timer-service") as {
       updateTimerData: jest.Mock;
@@ -1806,18 +1824,18 @@ describe("external timer stops through production providers", () => {
       {
         type: "feeding",
         effectiveStartTime: startedAt,
-        accumulatedSeconds: 120,
+        accumulatedSeconds: 60,
       },
       { type: "sleep", effectiveStartTime: startedAt, accumulatedSeconds: 120 },
       {
         type: "pumping",
         effectiveStartTime: startedAt,
-        accumulatedSeconds: 120,
+        accumulatedSeconds: 60,
       },
       {
         type: "tummy_time",
         effectiveStartTime: startedAt,
-        accumulatedSeconds: 120,
+        accumulatedSeconds: 60,
       },
     ]);
 
@@ -1828,10 +1846,10 @@ describe("external timer stops through production providers", () => {
         accumulatedSeconds: call[3].accumulatedSeconds,
       }));
     expect(pausedHints).toEqual([
-      { type: "feeding", accumulatedSeconds: 180 },
+      { type: "feeding", accumulatedSeconds: 120 },
       { type: "sleep", accumulatedSeconds: 180 },
-      { type: "pumping", accumulatedSeconds: 180 },
-      { type: "tummy_time", accumulatedSeconds: 180 },
+      { type: "pumping", accumulatedSeconds: 120 },
+      { type: "tummy_time", accumulatedSeconds: 120 },
     ]);
 
     const pausedDisplayedElapsed = [
@@ -1865,8 +1883,7 @@ describe("external timer stops through production providers", () => {
       activitySync.createTummyTimeInDatabase,
     ].map((createRecord) => createRecord.mock.calls[0][0].durationSeconds);
     expect(recordedDurations).toEqual([120, 180, 120, 120]);
-    expect(pausedDisplayedElapsed).toEqual([180, 180, 180, 180]);
-    expect(recordedDurations[1]).toBe(pausedDisplayedElapsed[1]);
+    expect(pausedDisplayedElapsed).toEqual(recordedDurations);
     for (const createRecord of [
       activitySync.createFeedingInDatabase,
       activitySync.createPumpingInDatabase,

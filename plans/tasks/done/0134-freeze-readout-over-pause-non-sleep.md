@@ -30,6 +30,8 @@ The readout and the saved entry never disagree by more than the second that tick
 
 ## Clarifications
 
+- **Q (2026-10-14):** The widget refreshes timers from `get_baby_activity_snapshot`, which sends no pause total, so a running tile for the three types would count resumed pauses again after a refresh. How should the running tile get the total? **A:** Add a migration that replaces the function so each active timer also carries its resumed-pause total for breast feeding, pumping and tummy time (null for sleep). Function name and inputs stay the same; no stored data changes. The widget (and Watch, which reads the same function) counts a running tile from start plus that total; a missing field falls back to today's behaviour. App-written widget data carries the same field.
+
 ## Non-goals
 
 - Sleep in any way.

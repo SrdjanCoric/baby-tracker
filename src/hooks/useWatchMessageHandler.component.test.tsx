@@ -237,14 +237,14 @@ describe("useWatchMessageHandler", () => {
   });
 
   it.each(["feeding", "sleep", "pumping", "tummyTime"])(
-    "pauses a remote %s timer through the household RPC without Watch credentials",
+    "pauses a remote %s timer through the household RPC without Watch credentials, at what a stop would save",
     async (activityType) => {
       const now = Date.now();
       jest.spyOn(Date, "now").mockReturnValue(now);
       mockGetLockForActivity.mockReturnValue({
         startedBy: "other-caregiver",
         startedAt: new Date(now - 600_000).toISOString(),
-        timerData: { timerInstanceId: "remote-timer", isPaused: false },
+        timerData: { timerInstanceId: "remote-timer", isPaused: false, totalPausedMs: 120_000 },
       });
       const reply = jest.fn();
       render(<TestHarness />);
@@ -269,7 +269,8 @@ describe("useWatchMessageHandler", () => {
         p_timer_data: {
           isPaused: true,
           pausedAt: new Date(now).toISOString(),
-          accumulatedSeconds: 600,
+          // Sleep counts its earlier resumed pause; the other timers leave it out.
+          accumulatedSeconds: activityType === "sleep" ? 600 : 480,
         },
       });
       expect(mockPauseBreastfeedingA).not.toHaveBeenCalled();
@@ -278,7 +279,10 @@ describe("useWatchMessageHandler", () => {
     }
   );
 
-  it("resumes a remote timer preserving its original start and paused duration", async () => {
+  it.each([
+    ["sleep", 600],
+    ["pumping", 510],
+  ])("resumes a remote %s timer preserving its original start and paused duration", async (activityType, accumulatedSeconds) => {
     const now = Date.now();
     mockGetLockForActivity.mockReturnValue({
       startedBy: "other-caregiver",
@@ -295,7 +299,7 @@ describe("useWatchMessageHandler", () => {
     sendMessage(
       {
         action: "resumeTimer",
-        activityType: "sleep",
+        activityType,
         babyId: "baby-a",
         timerInstanceId: "remote-timer",
         eventAt: new Date(now).toISOString(),
@@ -305,11 +309,11 @@ describe("useWatchMessageHandler", () => {
     await waitFor(() => expect(reply).toHaveBeenCalledWith({ success: true }));
     expect(mockTimerRpc).toHaveBeenCalledWith("toggle_timer_pause", {
       p_baby_id: "baby-a",
-      p_activity_type: "sleep",
+      p_activity_type: activityType,
       p_user_id: "user-a",
       p_timer_data: {
         isPaused: false,
-        accumulatedSeconds: 600,
+        accumulatedSeconds,
         totalPausedMs: 90_000,
         effectiveStartTime: new Date(now - 600_000).toISOString(),
       },

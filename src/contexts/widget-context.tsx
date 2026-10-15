@@ -34,6 +34,7 @@ import type { BreastSide, DiaperType, SleepType } from "@/constants/activities";
 import type { TimerActivityType } from "@/services/active-timer-service";
 import { deriveSleepPredictionPresentation } from "@/utils/sleep-prediction-presentation";
 import { useTimeRefresh } from "@/hooks/useTimeRefresh";
+import { calculateRunningTimerSeconds, excludesResumedPauses } from "@/utils/timer-duration";
 
 interface WidgetContextValue {
   refreshWidgetData: () => Promise<void>;
@@ -54,6 +55,22 @@ const ACTIVITY_TYPE_MAP: Record<TimerActivityType, ActiveTimerData["type"]> = {
   pumping: "pumping",
   tummy_time: "tummyTime",
 };
+
+// A running tile counts from the real start plus excludedPauseSeconds, so it matches a stop.
+function widgetTimerCount(
+  timer: { startTime: Date; isPaused?: boolean; pausedAt?: Date; totalPausedMs?: number },
+  activityType: TimerActivityType
+): Pick<ActiveTimerData, "accumulatedSeconds" | "excludedPauseSeconds"> {
+  const totalPausedMs = Number.isFinite(timer.totalPausedMs) ? timer.totalPausedMs ?? 0 : 0;
+  return {
+    accumulatedSeconds: timer.isPaused && timer.pausedAt
+      ? Math.max(0, calculateRunningTimerSeconds({ ...timer, totalPausedMs }, activityType))
+      : undefined,
+    excludedPauseSeconds: excludesResumedPauses(activityType)
+      ? Math.floor(Math.max(0, totalPausedMs) / 1000)
+      : undefined,
+  };
+}
 
 export function WidgetProvider({ children }: { children: React.ReactNode }) {
   const { selectedBaby } = useBaby();
@@ -255,13 +272,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         context: feedingTimer.side,
         isPaused: feedingTimer.isPaused || undefined,
         lockState: feedingTimer.lockState,
+        ...widgetTimerCount(feedingTimer, "feeding"),
       };
-      if (feedingTimer.isPaused) {
-        const elapsed = feedingTimer.pausedAt
-          ? Math.floor((feedingTimer.pausedAt.getTime() - feedingTimer.startTime.getTime()) / 1000)
-          : 0;
-        feedingEntry.accumulatedSeconds = elapsed;
-      }
       activeTimers.push(feedingEntry);
     }
     if (sleepTimer?.isRunning) {
@@ -272,13 +284,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         context: sleepTimer.sleepType,
         isPaused: sleepTimer.isPaused || undefined,
         lockState: sleepTimer.lockState,
+        ...widgetTimerCount(sleepTimer, "sleep"),
       };
-      if (sleepTimer.isPaused) {
-        const elapsed = sleepTimer.pausedAt
-          ? Math.floor((sleepTimer.pausedAt.getTime() - sleepTimer.startTime.getTime()) / 1000)
-          : 0;
-        sleepEntry.accumulatedSeconds = elapsed;
-      }
       activeTimers.push(sleepEntry);
     }
     if (pumpingTimer?.isRunning) {
@@ -289,13 +296,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         context: pumpingTimer.side,
         isPaused: pumpingTimer.isPaused || undefined,
         lockState: pumpingTimer.lockState,
+        ...widgetTimerCount(pumpingTimer, "pumping"),
       };
-      if (pumpingTimer.isPaused) {
-        const elapsed = pumpingTimer.pausedAt
-          ? Math.floor((pumpingTimer.pausedAt.getTime() - pumpingTimer.startTime.getTime()) / 1000)
-          : 0;
-        pumpingEntry.accumulatedSeconds = elapsed;
-      }
       activeTimers.push(pumpingEntry);
     }
     if (tummyTimeTimer?.isRunning) {
@@ -305,13 +307,8 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
         timerInstanceId: tummyTimeTimer.timerInstanceId,
         isPaused: tummyTimeTimer.isPaused || undefined,
         lockState: tummyTimeTimer.lockState,
+        ...widgetTimerCount(tummyTimeTimer, "tummy_time"),
       };
-      if (tummyTimeTimer.isPaused) {
-        const elapsed = tummyTimeTimer.pausedAt
-          ? Math.floor((tummyTimeTimer.pausedAt.getTime() - tummyTimeTimer.startTime.getTime()) / 1000)
-          : 0;
-        tummyEntry.accumulatedSeconds = elapsed;
-      }
       activeTimers.push(tummyEntry);
     }
 
@@ -323,14 +320,19 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
       if (widgetType) {
         const isPaused = lock.timerData?.isPaused === true;
         const pausedAt = typeof lock.timerData?.pausedAt === "string"
-          ? new Date(lock.timerData.pausedAt).getTime()
-          : Number.NaN;
-        const startedAt = new Date(lock.startedAt).getTime();
-        const accumulatedSeconds = isPaused
-          && Number.isFinite(pausedAt)
-          && Number.isFinite(startedAt)
-          ? Math.max(0, Math.floor((pausedAt - startedAt) / 1000))
+          ? new Date(lock.timerData.pausedAt)
           : undefined;
+        const startedAt = new Date(lock.startedAt);
+        const hasValidTimes = Number.isFinite(startedAt.getTime())
+          && (!pausedAt || Number.isFinite(pausedAt.getTime()));
+        const count = hasValidTimes
+          ? widgetTimerCount({
+            startTime: startedAt,
+            isPaused,
+            pausedAt,
+            totalPausedMs: Number(lock.timerData?.totalPausedMs ?? 0),
+          }, lock.activityType)
+          : {};
         activeTimers.push({
           type: widgetType,
           startTime: lock.startedAt,
@@ -340,7 +342,7 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
           context: lock.startedByName,
           isRemote: true,
           isPaused: isPaused || undefined,
-          accumulatedSeconds,
+          ...count,
         });
       }
     }

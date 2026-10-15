@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   ToggleTimerMutationError,
   createToggleTimerPauseHandler,
+  storedTimerData,
   type ToggleTimerRequest,
 } from "./handler.ts";
 
@@ -185,17 +186,11 @@ async function mutateTimer(
   payload: ToggleTimerRequest
 ): Promise<void> {
   const supabase = createCallerClient(accessToken);
-  const timerData = { ...payload.timerData };
-
-  if (payload.action === "resume" && payload.effectiveStartTimeISO) {
-    timerData.effectiveStartTime = payload.effectiveStartTimeISO;
-  }
-
   const { error } = await supabase.rpc("toggle_timer_pause", {
     p_baby_id: payload.babyId,
     p_activity_type: payload.activityType,
     p_user_id: caller.id,
-    p_timer_data: timerData,
+    p_timer_data: storedTimerData(payload),
   });
 
   if (!error) return;

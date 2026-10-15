@@ -10,6 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ACTIVITY_CONFIG, type ActivityType } from "@/constants/activities";
 import { SURFACE, ACTIVITY } from "@/constants/design-tokens";
 import { formatDuration } from "@/utils/time";
+import { calculateRunningTimerSeconds } from "@/utils/timer-duration";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -40,6 +41,7 @@ interface CompactActivityRowProps {
   todayBadge?: string;
   timerStartTime?: number;
   timerPausedAt?: number;
+  timerTotalPausedMs?: number;
 }
 
 const CompactActivityRowInner = ({
@@ -61,6 +63,7 @@ const CompactActivityRowInner = ({
   isPausedByOther = false,
   timerStartTime,
   timerPausedAt,
+  timerTotalPausedMs,
 }: CompactActivityRowProps) => {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -69,9 +72,11 @@ const CompactActivityRowInner = ({
   const [localElapsed, setLocalElapsed] = useState<string | null>(null);
   const timerStartTimeRef = useRef(timerStartTime);
   const timerPausedAtRef = useRef(timerPausedAt);
+  const timerTotalPausedMsRef = useRef(timerTotalPausedMs);
 
   timerStartTimeRef.current = timerStartTime;
   timerPausedAtRef.current = timerPausedAt;
+  timerTotalPausedMsRef.current = timerTotalPausedMs;
 
   useEffect(() => {
     if ((!isActive && !isLockedByOther) || !timerStartTime) {
@@ -80,22 +85,23 @@ const CompactActivityRowInner = ({
     }
 
     const computeElapsed = () => {
-      const start = timerStartTimeRef.current!;
       const pausedAt = timerPausedAtRef.current;
-
-      let elapsed: number;
-      if (pausedAt) {
-        elapsed = Math.floor((pausedAt - start) / 1000);
-      } else {
-        elapsed = Math.floor((Date.now() - start) / 1000);
-      }
+      const elapsed = calculateRunningTimerSeconds(
+        {
+          startTime: new Date(timerStartTimeRef.current!),
+          isPaused: !!pausedAt,
+          pausedAt: pausedAt ? new Date(pausedAt) : undefined,
+          totalPausedMs: timerTotalPausedMsRef.current,
+        },
+        activity
+      );
       setLocalElapsed(formatDuration(elapsed, isLockedByOther ? "short" : "long"));
     };
 
     computeElapsed();
     const interval = setInterval(computeElapsed, 1000);
     return () => clearInterval(interval);
-  }, [isActive, isLockedByOther, timerStartTime, timerPausedAt]);
+  }, [activity, isActive, isLockedByOther, timerStartTime, timerPausedAt, timerTotalPausedMs]);
 
   const config = ACTIVITY_CONFIG[activity];
   const activityColors = ACTIVITY[activity as keyof typeof ACTIVITY];
@@ -463,6 +469,7 @@ const CompactActivityRow = memo(CompactActivityRowInner, (prev, next) => {
     prev.testID === next.testID &&
     prev.timerStartTime === next.timerStartTime &&
     prev.timerPausedAt === next.timerPausedAt &&
+    prev.timerTotalPausedMs === next.timerTotalPausedMs &&
     prev.onPress === next.onPress &&
     prev.onActionPress === next.onActionPress &&
     prev.onPausePress === next.onPausePress

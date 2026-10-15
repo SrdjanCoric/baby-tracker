@@ -475,6 +475,78 @@ enum WatchSummaryTests {
             "REST timer timestamp did not match the RPC timer fingerprint"
         )
 
+        let pumpingSummary = try WatchSummaryDecoder.decodeNetwork(
+            versionedWatchFixture(versioned, timer: [
+                "type": "pumping",
+                "startTime": "2026-08-08T09:30:00.123Z",
+                "timerInstanceId": "timer-pump",
+                "isRemote": false,
+                "isPaused": false,
+                "excludedPauseSeconds": 600,
+            ], serverAsOf: "2026-08-08T10:01:00.000Z"),
+            expectedBabyId: identity.babyId
+        )
+        requireWatch(
+            pumpingSummary.activeTimers?.first?.excludedPauseSeconds == 600,
+            "the summary dropped a running pumping timer's resumed-pause total"
+        )
+        let pumpingProbe = try WatchTimerProbeDecoder.decode(Data(#"""
+        [{
+          "id": "lock-pump",
+          "activity_type": "pumping",
+          "started_by": "account-a",
+          "started_at": "2026-08-08T09:30:00.123+00:00",
+          "timer_data": { "isPaused": false, "totalPausedMs": 600000, "timerInstanceId": "timer-pump" }
+        }]
+        """#.utf8), currentUserId: identity.accountId)
+        requireWatch(
+            WatchTimerFingerprint(timers: pumpingProbe)
+                == WatchTimerFingerprint(timers: pumpingSummary.activeTimers ?? []),
+            "a resumed-pause total alone must not make the probe refetch the summary"
+        )
+
+        let countStart = Date(timeIntervalSince1970: 1_786_000_000)
+        requireWatch(
+            WatchTimerCount.runningAnchor(start: countStart, excludedPauseSeconds: 600)
+                == countStart.addingTimeInterval(600)
+                && WatchTimerCount.runningAnchor(start: countStart, excludedPauseSeconds: nil) == countStart,
+            "a running timer must leave out only a known resumed-pause total"
+        )
+        requireWatch(
+            WatchTimerCount.pausedSeconds(
+                start: countStart, pausedAt: countStart.addingTimeInterval(1800), excludedPauseSeconds: 600
+            ) == 1200
+                && WatchTimerCount.pausedSeconds(
+                    start: countStart, pausedAt: countStart.addingTimeInterval(1800), excludedPauseSeconds: nil
+                ) == 1800,
+            "a Watch pause must freeze at what a stop would save, and sleep at its full span"
+        )
+        requireWatch(
+            WatchTimerCount.excludedPauseSecondsAfterResume(
+                activityType: "pumping", start: countStart, resumedAt: countStart.addingTimeInterval(2400),
+                frozenSeconds: 1200, excludedPauseSeconds: 600
+            ) == 1200
+                && WatchTimerCount.excludedPauseSecondsAfterResume(
+                    activityType: "sleep", start: countStart, resumedAt: countStart.addingTimeInterval(2400),
+                    frozenSeconds: 1800, excludedPauseSeconds: nil
+                ) == nil,
+            "a Watch resume must continue from the frozen value, and sleep must keep counting its pause"
+        )
+        requireWatch(
+            WatchTimerCount.excludedPauseSecondsAfterResume(
+                activityType: "tummyTime", start: countStart, resumedAt: countStart.addingTimeInterval(480),
+                frozenSeconds: 300, excludedPauseSeconds: nil
+            ) == 180,
+            "a first Watch resume of a timer with no known total must still leave its pause out"
+        )
+        requireWatch(
+            WatchTimerCount.liveActivityStartISO(start: countStart, excludedPauseSeconds: 180)
+                == "2026-08-06T07:09:40.000Z"
+                && WatchTimerCount.liveActivityStartISO(start: countStart, excludedPauseSeconds: nil)
+                == "2026-08-06T07:06:40.000Z",
+            "a resumed Live Activity must tick on from the frozen value, and sleep from the real start"
+        )
+
         let restTimerWithoutPause = Data(#"""
         [{
           "id": "lock-2",

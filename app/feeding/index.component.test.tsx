@@ -225,7 +225,7 @@ describe("FeedingScreen", () => {
       jest.useRealTimers();
     });
 
-    it("freezes while paused and counts the paused span after resume", () => {
+    it("freezes while paused and continues from the frozen value after resume", () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date("2026-08-06T11:00:00.000Z"));
       mockActiveTimer = {
@@ -237,11 +237,16 @@ describe("FeedingScreen", () => {
       };
 
       const { rerender } = render(<FeedingScreen />);
-      expect(screen.getByLabelText("Timer: 30:00")).toBeTruthy();
+      expect(screen.getByLabelText("Timer: 20:00")).toBeTruthy();
 
-      mockActiveTimer = { ...mockActiveTimer, isPaused: false, pausedAt: undefined };
+      mockActiveTimer = {
+        ...mockActiveTimer,
+        isPaused: false,
+        pausedAt: undefined,
+        totalPausedMs: 40 * 60 * 1000,
+      };
       rerender(<FeedingScreen />);
-      expect(screen.getByLabelText("Timer: 60:00")).toBeTruthy();
+      expect(screen.getByLabelText("Timer: 20:00")).toBeTruthy();
     });
 
     it("keeps another caregiver's unnamed start label read-only", () => {

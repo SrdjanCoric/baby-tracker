@@ -66,3 +66,20 @@ describe("widget activity snapshot RPC security", () => {
     }
   });
 });
+
+describe("widget activity snapshot resumed-pause replacement", () => {
+  const replacement = readFileSync(
+    new URL("../../../supabase/migrations/077_snapshot_resumed_pause_total.sql", import.meta.url),
+    "utf8"
+  );
+
+  it("keeps the caller's RLS identity, signature and grants", () => {
+    expect(replacement).toMatch(/SECURITY\s+INVOKER/i);
+    expect(replacement).not.toMatch(/SECURITY\s+DEFINER/i);
+    expect(replacement).toMatch(/SET\s+search_path\s*=\s*''/i);
+    expect(replacement).toMatch(
+      /CREATE OR REPLACE FUNCTION public\.get_baby_activity_snapshot\(\s*p_baby_id uuid,\s*p_timezone text\s*\)\s*RETURNS jsonb/
+    );
+    expect(replacement).not.toMatch(/\b(?:GRANT|REVOKE|ALTER|DROP)\b/i);
+  });
+});

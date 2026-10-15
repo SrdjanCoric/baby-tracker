@@ -25,7 +25,8 @@ import {
   checkMilestoneCrossing,
 } from "@/utils/tummyTimeGoals";
 import { fetchActivityGoal, upsertActivityGoal } from "@/services/activity-goal-service";
-import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, pauseTimerLiveActivity, resumeTimerLiveActivity } from "@/services/live-activity-service";
+import { startTimerLiveActivity, endTimerLiveActivity, endLiveActivityByType, syncTimerLiveActivityPause } from "@/services/live-activity-service";
+import { calculateTimerDurationSeconds } from "@/utils/timer-duration";
 import {
   BabyProviderBinding,
   type BabyProviderBindingToken,
@@ -564,7 +565,6 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           pausedAt,
           lastResumedAt,
           totalPausedMs,
-          accumulatedSeconds,
         },
         activeTimer
       ) => {
@@ -574,11 +574,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
           payload: { isPaused, pausedAt, lastResumedAt, totalPausedMs },
         });
         if (liveActivityIdRef.current) {
-          if (isPaused) {
-            await pauseTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-          } else {
-            await resumeTimerLiveActivity(liveActivityIdRef.current, accumulatedSeconds);
-          }
+          await syncTimerLiveActivityPause(liveActivityIdRef.current, "tummyTime", {
+            startTime: activeTimer.startTime,
+            isPaused,
+            pausedAt,
+            totalPausedMs,
+          });
         }
         await TummyTimeStorageService.setActiveTimer(babyId, {
           timerInstanceId: activeTimer.timerInstanceId,
@@ -867,10 +868,12 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "PAUSE_TIMER", payload: { pausedAt: now } });
 
     if (liveActivityIdRef.current) {
-      const activeElapsedSeconds = Math.floor(
-        (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
-      );
-      await pauseTimerLiveActivity(liveActivityIdRef.current, activeElapsedSeconds);
+      await syncTimerLiveActivityPause(liveActivityIdRef.current, "tummyTime", {
+        startTime: state.activeTimer.startTime,
+        isPaused: true,
+        pausedAt: now,
+        totalPausedMs: state.activeTimer.totalPausedMs,
+      });
     }
 
     await TummyTimeStorageService.setActiveTimer(selectedBaby.id, {
@@ -887,8 +890,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
     if (user?.id) {
       try {
-        const totalElapsed = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
+        const totalElapsed = calculateTimerDurationSeconds(
+          state.activeTimer.startTime,
+          now,
+          state.activeTimer.totalPausedMs,
+          "tummyTime"
         );
         await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
           timerInstanceId: state.activeTimer.timerInstanceId,
@@ -945,12 +951,15 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (liveActivityIdRef.current) {
-        const activeElapsedSeconds = Math.floor(
-          (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
-        );
-        await resumeTimerLiveActivity(
+        await syncTimerLiveActivityPause(
           liveActivityIdRef.current,
-          activeElapsedSeconds
+          "tummyTime",
+          {
+            startTime: state.activeTimer.startTime,
+            isPaused: false,
+            totalPausedMs: newTotalPausedMs,
+          },
+          now
         );
       }
 
@@ -967,8 +976,11 @@ export function TummyTimeProvider({ children }: { children: React.ReactNode }) {
 
       if (user?.id) {
         try {
-          const activeElapsedSeconds = Math.floor(
-            (now.getTime() - state.activeTimer.startTime.getTime()) / 1000
+          const activeElapsedSeconds = calculateTimerDurationSeconds(
+            state.activeTimer.startTime,
+            now,
+            newTotalPausedMs,
+            "tummyTime"
           );
           await updateTimerData(selectedBaby.id, "tummy_time", user.id, {
             timerInstanceId: state.activeTimer.timerInstanceId,

@@ -13,7 +13,7 @@ describe("DashboardCard", () => {
   describe("running timer elapsed", () => {
     const activities = ["feeding", "sleep", "pumping", "tummyTime"] as const;
     const start = new Date("2026-08-06T10:00:00.000Z").getTime();
-    const legacyAccumulatedPause = { timerTotalPausedMs: 10 * 60 * 1000 };
+    const resumedPause = { timerTotalPausedMs: 10 * 60 * 1000 };
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -24,7 +24,7 @@ describe("DashboardCard", () => {
       jest.useRealTimers();
     });
 
-    it.each(activities)("freezes a paused %s timer at its pause instant", (activity) => {
+    it.each(activities)("freezes a paused %s timer at what a stop would save", (activity) => {
       render(
         <DashboardCard
           activity={activity}
@@ -32,27 +32,27 @@ describe("DashboardCard", () => {
           isActive
           timerStartTime={start}
           timerPausedAt={new Date("2026-08-06T10:30:00.000Z").getTime()}
-          {...legacyAccumulatedPause}
+          {...resumedPause}
           testID="card"
         />
       );
 
-      expect(screen.getByText("30:00")).toBeTruthy();
+      expect(screen.getByText(activity === "sleep" ? "30:00" : "20:00")).toBeTruthy();
     });
 
-    it.each(activities)("counts a resumed pause in a %s timer", (activity) => {
+    it.each(activities)("continues a resumed %s timer from what a stop would save", (activity) => {
       render(
         <DashboardCard
           activity={activity}
           label={activity}
           isActive
           timerStartTime={start}
-          {...legacyAccumulatedPause}
+          {...resumedPause}
           testID="card"
         />
       );
 
-      expect(screen.getByText("1:00:00")).toBeTruthy();
+      expect(screen.getByText(activity === "sleep" ? "1:00:00" : "50:00")).toBeTruthy();
     });
 
     it("keeps the remote elapsed line hidden when the caller did not provide one", () => {
@@ -80,27 +80,29 @@ describe("DashboardCard", () => {
           lockedElapsedTime="stale elapsed"
           timerStartTime={start}
           timerPausedAt={new Date("2026-08-06T10:30:00.000Z").getTime()}
+          {...resumedPause}
           testID="card"
         />
       );
 
-      expect(screen.getByText("30m")).toBeTruthy();
+      expect(screen.getByText(activity === "sleep" ? "30m" : "20m")).toBeTruthy();
     });
 
-    it("counts a remotely owned timer from its real start after resume", () => {
+    it.each(activities)("continues a remotely owned resumed %s timer from what a stop would save", (activity) => {
       render(
         <DashboardCard
-          activity="feeding"
-          label="feeding"
+          activity={activity}
+          label={activity}
           isLockedByOther
           lockedByName="Other caregiver"
           lockedElapsedTime="stale elapsed"
           timerStartTime={start}
+          {...resumedPause}
           testID="card"
         />
       );
 
-      expect(screen.getByText("1h")).toBeTruthy();
+      expect(screen.getByText(activity === "sleep" ? "1h" : "50m")).toBeTruthy();
     });
   });
 

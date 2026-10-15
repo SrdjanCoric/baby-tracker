@@ -15,6 +15,22 @@ export interface ToggleTimerRequest {
   effectiveStartTimeISO?: string | null;
 }
 
+/**
+ * The timer data the pause RPC stores. A Watch resume sends the real start in `timerData` and
+ * the Live Activity's anchor in `effectiveStartTimeISO`; older clients send only the latter.
+ */
+export function storedTimerData(payload: ToggleTimerRequest): Record<string, unknown> {
+  const timerData = { ...payload.timerData };
+  if (
+    payload.action === "resume"
+    && payload.effectiveStartTimeISO
+    && timerData.effectiveStartTime === undefined
+  ) {
+    timerData.effectiveStartTime = payload.effectiveStartTimeISO;
+  }
+  return timerData;
+}
+
 export class ToggleTimerMutationError extends Error {
   constructor(
     readonly status: 400 | 403 | 404 | 500,

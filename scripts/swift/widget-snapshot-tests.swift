@@ -123,6 +123,32 @@ enum WidgetSnapshotTests {
         )
         let localStamped = try Data(contentsOf: fixtures.appendingPathComponent("local-stamped.json"))
 
+        let realStart = parseWidgetSnapshotTimestamp("2026-08-08T10:00:00.000Z")!
+        let serverTimer: [String: Any] = [
+            "type": "pumping", "startTime": "2026-08-08T10:00:00.000Z", "timerInstanceId": "pumping-timer",
+            "isRemote": false, "isPaused": false, "excludedPauseSeconds": 600,
+        ]
+        let pauseTotalSnapshot = try WidgetSnapshotDecoder.decodeNetwork(
+            changedFixture(versioned, ["activeTimer": serverTimer, "activeTimers": [serverTimer]]),
+            expectedBabyId: "baby-versioned"
+        )
+        let sleepTimer = try JSONDecoder().decode(ActiveTimerData.self, from: Data(
+            #"{"type":"sleep","startTime":"2026-08-08T10:00:00.000Z","isRemote":false,"isPaused":false}"#.utf8
+        ))
+        require(
+            pauseTotalSnapshot.getActiveTimer(for: .pumping)?.runningTimerAnchor
+                == realStart.addingTimeInterval(600),
+            "a running pumping tile must leave out the resumed pauses a stop leaves out"
+        )
+        require(
+            sleepTimer.runningTimerAnchor == realStart,
+            "a running sleep tile must keep counting from the real start"
+        )
+        require(
+            pauseTotalSnapshot.getActiveTimer(for: .pumping)?.startTime == "2026-08-08T10:00:00.000Z",
+            "the resumed-pause total must not shift the real start"
+        )
+
         let legacyDecoded = try WidgetSnapshotDecoder.decodeCache(legacy)
         require(legacyDecoded.kind == .legacy, "legacy fixture lost its compatibility classification")
         require(legacyDecoded.data.activeTimers?.count == 1, "singular legacy timer was not normalized")

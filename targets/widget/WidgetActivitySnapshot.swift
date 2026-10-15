@@ -77,9 +77,19 @@ struct ActiveTimerData: Codable, Equatable {
     var isRemote: Bool?
     var isPaused: Bool?
     var accumulatedSeconds: Int?
+    /// Resumed-pause seconds a running breast feeding, pumping or tummy time timer leaves
+    /// out. Absent for sleep, and from servers or app builds that predate it.
+    var excludedPauseSeconds: Int? = nil
     /// Sync provenance for the widget timer-list merge. Only "accountless" or
     /// "offline" have no server row and must survive a server snapshot refresh.
     var lockState: String?
+
+    /// Where a running `.timer` text counts from: the real start moved past the resumed
+    /// pauses a stop leaves out, so the tile shows what stopping now would save.
+    var runningTimerAnchor: Date? {
+        guard let start = parseWidgetSnapshotTimestamp(startTime) else { return nil }
+        return start.addingTimeInterval(TimeInterval(max(0, excludedPauseSeconds ?? 0)))
+    }
 }
 
 enum WidgetTimerSurface: String, CaseIterable {

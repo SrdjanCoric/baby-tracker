@@ -62,6 +62,32 @@ describe("household timer INSERT Live Activities", () => {
     expect(findTokens).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["feeding", false, 1200],
+    ["pumping", false, 1200],
+    ["tummy_time", false, 1200],
+    ["tummy_time", true, 900],
+    // Sleep keeps the shift listed as a known bug in docs/usage/timers.md.
+    ["sleep", false, 1200],
+  ])("shows other members a %s timer (paused=%s) without its resumed pauses", async (activityType, isPaused, expected) => {
+    const send = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    await startTimerLiveActivities({
+      baby_id: "baby", activity_type: activityType, started_by: "starter",
+      started_at: "2026-09-05T12:00:00Z",
+      timer_data: { timerInstanceId: "run", totalPausedMs: 600_000, isPaused,
+        pausedAt: isPaused ? "2026-09-05T12:25:00Z" : undefined },
+    }, { babyName: "Sofi", starterName: "Alice", memberIds: ["starter", "member"],
+      findTokens: async () => [{ id: "b", user_id: "member", device_token: "b", is_sandbox: false }],
+      removeTokens: vi.fn(), getJwt: async () => "jwt", fetch: send,
+      now: () => Date.parse("2026-09-05T12:30:00Z") });
+
+    expect(JSON.parse(send.mock.calls[0][1].body).aps["content-state"]).toMatchObject({
+      elapsedSeconds: expected,
+      isPaused,
+      effectiveStartTimeISO: "2026-09-05T12:10:00.000Z",
+    });
+  });
+
   it("addresses only other household members, with recipient identity and Swift timer attributes", async () => {
     const send = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
     const findTokens = vi.fn().mockResolvedValue([
