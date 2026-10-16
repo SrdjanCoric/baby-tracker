@@ -556,6 +556,8 @@
     "pumping": "Tiralatte",
     "amount": "Quantità",
     "side": "Lato",
+    "leftLongerThanSession": "Il lato sinistro non può durare più della sessione ({{duration}})",
+    "rightLongerThanSession": "Il lato destro non può durare più della sessione ({{duration}})",
     "selectSideToStart": "Seleziona un lato per avviare il timer",
     "startedEarlier": "Hai iniziato prima?",
     "startTime": "Ora di inizio",

@@ -552,6 +552,8 @@
     "pumping": "Abpumpen",
     "amount": "Menge",
     "side": "Seite",
+    "leftLongerThanSession": "Die linke Seite darf nicht länger dauern als das Abpumpen ({{duration}})",
+    "rightLongerThanSession": "Die rechte Seite darf nicht länger dauern als das Abpumpen ({{duration}})",
     "selectSideToStart": "Wähle eine Seite, um den Timer zu starten",
     "startedEarlier": "Früher begonnen?",
     "startTime": "Startzeit",

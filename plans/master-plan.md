@@ -361,7 +361,7 @@ Since Task 0103, `hotfix/4.9` is folded into `main`; new work branches off `main
 - [x] 0133 · Bank pumping minutes per side while the timer runs (after 0132) → tasks/done/0133-bank-pumping-minutes-per-side.md
 - [x] 0134 · Freeze the running readout over a pause for breast feeding, pumping and tummy time (after 0132) → tasks/done/0134-freeze-readout-over-pause-non-sleep.md
 - [x] 0135 · Edit and log a breast feed with duration and minutes per side (after 0132) → tasks/done/0135-edit-breast-feed-duration-and-sides.md
-- [ ] 0136 · Edit and log a pumping session with duration and minutes per side (after 0133, 0135) → tasks/0136-edit-pumping-duration-and-sides.md
+- [x] 0136 · Edit and log a pumping session with duration and minutes per side (after 0133, 0135) → tasks/done/0136-edit-pumping-duration-and-sides.md
 - [ ] 0137 · Show paused time on the tummy time edit screen (after 0132) → tasks/0137-show-paused-time-on-tummy-time-edit.md
 - [ ] 0138 · Prove multi-baby and two-member household behaviour on device (after 0129, 0135) → tasks/0138-prove-multi-baby-and-household-on-device.md
 

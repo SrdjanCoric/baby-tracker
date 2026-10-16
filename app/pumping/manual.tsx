@@ -18,7 +18,16 @@ import { useBaby, useUnits, useTimeFormat } from "@/contexts";
 import { te } from "@/utils/translate-errors";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
-import { validateManualPumpingTimes } from "@/validators/pumping";
+import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
+import {
+  validateManualPumpingDuration,
+  validateManualPumpingTimes,
+} from "@/validators/pumping";
+import {
+  findSidesLongerThanDuration,
+  parseWholeMinutesAsSeconds,
+} from "@/validators/side-minutes";
+import { formatDuration, formatTime } from "@/utils/time";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import type { BreastSide } from "@/constants/activities";
 import { getOppositeSide } from "@/constants/activities";
@@ -59,7 +68,11 @@ export default function ManualPumpingScreen() {
   const [startTime, setStartTime] = useState(
     () => new Date(Date.now() - MINIMUM_PUMPING_MS)
   );
-  const [endTime, setEndTime] = useState(() => new Date());
+  const [durationText, setDurationText] = useState(
+    String(MINIMUM_PUMPING_MS / 60_000)
+  );
+  const [leftText, setLeftText] = useState("");
+  const [rightText, setRightText] = useState("");
 
   const [side, setSide] = useState<BreastSide>(suggestedSide);
   const [volumeMl, setVolumeMl] = useState<number | null>(null);
@@ -108,6 +121,19 @@ export default function ManualPumpingScreen() {
     setUnit(prev => prev === "oz" ? "ml" : "oz");
   }, [unit, volumeMl]);
 
+  const enteredDurationSeconds = parseWholeMinutesAsSeconds(durationText);
+  const durationSeconds = enteredDurationSeconds ?? 0;
+  const endTime = useMemo(
+    () => new Date(startTime.getTime() + durationSeconds * 1000),
+    [startTime, durationSeconds]
+  );
+  const leftSeconds = parseWholeMinutesAsSeconds(leftText);
+  const rightSeconds = parseWholeMinutesAsSeconds(rightText);
+  const sidesTooLong = findSidesLongerThanDuration(enteredDurationSeconds, {
+    left: leftSeconds,
+    right: rightSeconds,
+  });
+
   const handleSave = useCallback(async () => {
     if (isSavingRef.current) return;
     if (!selectedBaby) return;
@@ -130,9 +156,6 @@ export default function ManualPumpingScreen() {
     isSavingRef.current = true;
     setIsSaving(true);
     try {
-      const durationSeconds = Math.floor(
-        (endTime.getTime() - startTime.getTime()) / 1000
-      );
       const proposedPumping: StoredPumpingEntry = {
         id: "manual-pumping-candidate",
         babyId: selectedBaby.id,
@@ -153,6 +176,8 @@ export default function ManualPumpingScreen() {
         startedAt: startTime,
         endedAt: endTime,
         durationSeconds,
+        leftDurationSeconds: leftSeconds || undefined,
+        rightDurationSeconds: rightSeconds || undefined,
         volumeMl: volumeMl ?? undefined,
         notes: notes || undefined,
       });
@@ -171,6 +196,9 @@ export default function ManualPumpingScreen() {
     side,
     startTime,
     endTime,
+    durationSeconds,
+    leftSeconds,
+    rightSeconds,
     volumeMl,
     notes,
     addPumping,
@@ -180,34 +208,29 @@ export default function ManualPumpingScreen() {
     router,
   ]);
 
-  const startBounds = useCallback(() => {
-    const boundaryNow = Date.now();
-    return {
-      minimumDate: new Date(endTime.getTime() - MAXIMUM_PUMPING_MS),
+  const startBounds = useCallback(
+    () => ({
       maximumDate: new Date(
-        Math.min(boundaryNow, endTime.getTime() - MINIMUM_PUMPING_MS)
+        Date.now() - Math.max(durationSeconds * 1000, MINIMUM_PUMPING_MS)
       ),
-    };
-  }, [endTime]);
-  const endBounds = useCallback(() => {
-    const boundaryNow = Date.now();
-    return {
-      minimumDate: new Date(startTime.getTime() + MINIMUM_PUMPING_MS),
-      maximumDate: new Date(
-        Math.min(boundaryNow, startTime.getTime() + MAXIMUM_PUMPING_MS)
-      ),
-    };
-  }, [startTime]);
+    }),
+    [durationSeconds]
+  );
 
-  const durationMs = endTime.getTime() - startTime.getTime();
+  const durationMs = durationSeconds * 1000;
   const now = new Date();
   const canSave =
+    sidesTooLong.length === 0 &&
     durationMs >= MINIMUM_PUMPING_MS &&
     durationMs <= MAXIMUM_PUMPING_MS &&
     startTime <= now &&
     endTime <= now &&
     volumeMl !== null &&
     volumeMl > 0;
+  const durationErrorKey =
+    validateManualPumpingDuration(enteredDurationSeconds) ??
+    (endTime > now ? "validation.endTimeNotInFuture" : null);
+  const sessionLength = formatDuration(durationSeconds, "short");
 
   if (!selectedBaby) {
     return <NoBabyScreen />;
@@ -286,14 +309,18 @@ export default function ManualPumpingScreen() {
 
         <StartEndTimeSection
           startTime={startTime}
-          endTime={endTime}
           onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
           startBounds={startBounds}
-          endBounds={endBounds}
+          durationInput={{
+            minutes: durationText,
+            onMinutesChange: setDurationText,
+            unitLabel: t("common.min"),
+            endSummary: t("feeding.endsAt", {
+              time: formatTime(endTime, timeFormat),
+            }),
+          }}
           timeFormat={timeFormat}
           startLabel={t("pumping.startTime")}
-          endLabel={t("pumping.endTime")}
           durationLabel={t("pumping.duration")}
           doneLabel={t("common.done")}
           selectDateLabel={t("feeding.selectDate")}
@@ -302,10 +329,32 @@ export default function ManualPumpingScreen() {
           mutedBackgroundColor={colors.mutedBg}
           textColor={colors.textOnMuted}
           startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-          endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
           durationError={
-            errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
+            durationErrorKey || errors.durationSeconds || errors.endedAt
+              ? te(t, durationErrorKey ?? errors.durationSeconds ?? errors.endedAt)
+              : undefined
           }
+        />
+        <BreastSideMinutesFields
+          label={t("feeding.minutesPerSide")}
+          leftLabel={t("feeding.left")}
+          rightLabel={t("feeding.right")}
+          left={leftText}
+          right={rightText}
+          onLeftChange={setLeftText}
+          onRightChange={setRightText}
+          leftError={
+            sidesTooLong.includes("left")
+              ? t("pumping.leftLongerThanSession", { duration: sessionLength })
+              : undefined
+          }
+          rightError={
+            sidesTooLong.includes("right")
+              ? t("pumping.rightLongerThanSession", { duration: sessionLength })
+              : undefined
+          }
+          mutedBackgroundColor={colors.mutedBg}
+          textColor={colors.textOnMuted}
         />
 
         {/* Volume Input */}

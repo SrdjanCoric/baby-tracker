@@ -561,6 +561,8 @@
     "pumping": "Izdajanje",
     "amount": "Količina",
     "side": "Strana",
+    "leftLongerThanSession": "Leva strana ne može trajati duže od izdajanja ({{duration}})",
+    "rightLongerThanSession": "Desna strana ne može trajati duže od izdajanja ({{duration}})",
     "selectSideToStart": "Izaberite stranu za pokretanje tajmera",
     "startedEarlier": "Počelo ranije?",
     "startTime": "Vreme početka",

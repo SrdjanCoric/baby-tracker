@@ -12,12 +12,16 @@ import type { BreastSide, BottleContentType, SolidAmount, SolidReaction } from "
 import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import {
-  findSidesLongerThanFeed,
-  parseWholeMinutes,
-  parseWholeMinutesAsSeconds,
   validateManualBreastfeedingTimes,
   validateManualFeedingDuration,
 } from "@/validators/feeding";
+import {
+  findSidesLongerThanDuration,
+  parseWholeMinutes,
+  parseWholeMinutesAsSeconds,
+  wholeMinutes,
+  wholeMinutesText,
+} from "@/validators/side-minutes";
 import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
 import { te } from "@/utils/translate-errors";
 import type { StoredFeedingEntry, UpdateFeedingInput } from "@/services/feeding-storage";
@@ -27,14 +31,6 @@ const FEEDING_GREEN = "#88B04B";
 const FEEDING_GREEN_MUTED = "#E8F0E0";
 const MINIMUM_BREASTFEEDING_MS = 60_000;
 const MAXIMUM_BREASTFEEDING_MS = 2 * 60 * 60 * 1000;
-
-function wholeMinutes(seconds: number | undefined): number | undefined {
-  return seconds ? Math.floor(seconds / 60) : undefined;
-}
-
-function wholeMinutesText(seconds: number | undefined): string {
-  return wholeMinutes(seconds)?.toString() ?? "";
-}
 
 export default function EditFeedingScreen() {
   const { t } = useTranslation();
@@ -133,7 +129,7 @@ export default function EditFeedingScreen() {
   );
   // An imported side that already exceeds its feed blocks Save only once Duration or that side is edited.
   const sidesTooLong = isBreast
-    ? findSidesLongerThanFeed(enteredDurationSeconds, {
+    ? findSidesLongerThanDuration(enteredDurationSeconds, {
         left: leftSeconds,
         right: rightSeconds,
       }).filter(

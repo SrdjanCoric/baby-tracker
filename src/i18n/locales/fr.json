@@ -552,6 +552,8 @@
     "pumping": "Tire-lait",
     "amount": "Quantité",
     "side": "Côté",
+    "leftLongerThanSession": "Le côté gauche ne peut pas durer plus longtemps que la séance ({{duration}})",
+    "rightLongerThanSession": "Le côté droit ne peut pas durer plus longtemps que la séance ({{duration}})",
     "selectSideToStart": "Sélectionnez un côté pour démarrer le chronomètre",
     "startedEarlier": "Commencé plus tôt ?",
     "startTime": "Heure de début",

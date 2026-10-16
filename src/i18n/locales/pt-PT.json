@@ -554,6 +554,8 @@
     "pumping": "A extrair leite",
     "amount": "Quantidade",
     "side": "Lado",
+    "leftLongerThanSession": "O lado esquerdo não pode durar mais do que a extração ({{duration}})",
+    "rightLongerThanSession": "O lado direito não pode durar mais do que a extração ({{duration}})",
     "selectSideToStart": "Selecione um lado para iniciar o temporizador",
     "startedEarlier": "Começou mais cedo?",
     "startTime": "Hora de Início",

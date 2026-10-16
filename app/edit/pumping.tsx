@@ -7,10 +7,23 @@ import { useTranslation } from "react-i18next";
 import { calculateActiveDurationSeconds, getEditablePausedSeconds } from "@/utils/timer-duration";
 import { usePumping } from "@/contexts/pumping-context";
 import { useBaby, useTimeFormat } from "@/contexts";
+import { formatDuration, formatTime } from "@/utils/time";
 import type { BreastSide } from "@/constants/activities";
 import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
-import { validateManualPumpingTimes, validatePumpingVolume } from "@/validators/pumping";
+import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
+import {
+  validateManualPumpingDuration,
+  validateManualPumpingTimes,
+  validatePumpingVolume,
+} from "@/validators/pumping";
+import {
+  findSidesLongerThanDuration,
+  parseWholeMinutes,
+  parseWholeMinutesAsSeconds,
+  wholeMinutes,
+  wholeMinutesText,
+} from "@/validators/side-minutes";
 import { te } from "@/utils/translate-errors";
 import type { StoredPumpingEntry, UpdatePumpingInput } from "@/services/pumping-storage";
 import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
@@ -36,8 +49,10 @@ export default function EditPumpingScreen() {
 
   const [side, setSide] = useState<BreastSide>("left");
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
-  const [initialEndTime, setInitialEndTime] = useState<Date | null>(null);
+  const [initialDurationSeconds, setInitialDurationSeconds] = useState(0);
+  const [durationText, setDurationText] = useState("");
+  const [leftText, setLeftText] = useState("");
+  const [rightText, setRightText] = useState("");
   const [volumeMl, setVolumeMl] = useState("");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -46,11 +61,20 @@ export default function EditPumpingScreen() {
 
   useEffect(() => {
     if (pumping && !isInitialized) {
-      const displayedEnd = pumping.endedAt ? new Date(pumping.endedAt) : new Date();
+      const storedStart = new Date(pumping.startedAt);
+      const storedDuration =
+        pumping.durationSeconds ??
+        calculateActiveDurationSeconds(
+          storedStart,
+          pumping.endedAt ? new Date(pumping.endedAt) : new Date(),
+          getEditablePausedSeconds(pumping)
+        );
       setSide(pumping.side);
-      setStartTime(new Date(pumping.startedAt));
-      setEndTime(displayedEnd);
-      setInitialEndTime(displayedEnd);
+      setStartTime(storedStart);
+      setInitialDurationSeconds(storedDuration);
+      setDurationText(String(Math.floor(storedDuration / 60)));
+      setLeftText(wholeMinutesText(pumping.leftDurationSeconds));
+      setRightText(wholeMinutesText(pumping.rightDurationSeconds));
       setVolumeMl(pumping.volumeMl ? String(pumping.volumeMl) : "");
       setNotes(pumping.notes ?? "");
       setIsInitialized(true);
@@ -63,11 +87,44 @@ export default function EditPumpingScreen() {
     pumping && startTime &&
       startTime.getTime() !== new Date(pumping.startedAt).getTime()
   );
-  const endChanged = Boolean(
-    pumping && endTime && initialEndTime &&
-      endTime.getTime() !== initialEndTime.getTime()
+  const durationChanged =
+    Boolean(pumping) &&
+    parseWholeMinutes(durationText) !== Math.floor(initialDurationSeconds / 60);
+  const leftChanged =
+    Boolean(pumping) &&
+    parseWholeMinutes(leftText) !== wholeMinutes(pumping?.leftDurationSeconds);
+  const rightChanged =
+    Boolean(pumping) &&
+    parseWholeMinutes(rightText) !== wholeMinutes(pumping?.rightDurationSeconds);
+  const timeChanged = startChanged || durationChanged;
+  // Untouched fields keep their exact stored seconds rather than the whole minutes shown.
+  const enteredDurationSeconds = durationChanged
+    ? parseWholeMinutesAsSeconds(durationText)
+    : initialDurationSeconds;
+  const durationSeconds = enteredDurationSeconds ?? 0;
+  const leftSeconds = leftChanged
+    ? parseWholeMinutesAsSeconds(leftText)
+    : pumping?.leftDurationSeconds;
+  const rightSeconds = rightChanged
+    ? parseWholeMinutesAsSeconds(rightText)
+    : pumping?.rightDurationSeconds;
+  // An unfinished session keeps no end until its Duration is edited.
+  const writesEnd = Boolean(pumping?.endedAt) || durationChanged;
+  const endTime = useMemo(
+    () =>
+      startTime
+        ? new Date(startTime.getTime() + (durationSeconds + pausedSeconds) * 1000)
+        : null,
+    [startTime, durationSeconds, pausedSeconds]
   );
-  const timeChanged = startChanged || endChanged;
+  // An imported side that already exceeds its session blocks Save only once Duration or that side is edited.
+  const sidesTooLong = findSidesLongerThanDuration(enteredDurationSeconds, {
+    left: leftSeconds,
+    right: rightSeconds,
+  }).filter(
+    (sideName) =>
+      durationChanged || (sideName === "left" ? leftChanged : rightChanged)
+  );
 
   const hasChanges = useMemo(() => {
     if (!pumping || !isInitialized) return false;
@@ -78,10 +135,12 @@ export default function EditPumpingScreen() {
     return (
       side !== pumping.side ||
       timeChanged ||
+      leftChanged ||
+      rightChanged ||
       volumeMl !== originalVolume ||
       notes !== originalNotes
     );
-  }, [pumping, isInitialized, side, timeChanged, volumeMl, notes]);
+  }, [pumping, isInitialized, side, timeChanged, leftChanged, rightChanged, volumeMl, notes]);
 
   usePreventRemove(hasChanges, ({ data }) => {
     Alert.alert(
@@ -113,7 +172,7 @@ export default function EditPumpingScreen() {
         babyId: pumping.babyId,
         side,
         startedAt: startTime,
-        endedAt: endTime,
+        endedAt: writesEnd ? endTime : new Date(),
         pausedSeconds,
       });
       const { volumeMl: _volumeError, ...timeErrors } = validation.errors;
@@ -129,8 +188,7 @@ export default function EditPumpingScreen() {
         side,
         volumeMl: parsedVolume,
         startedAt: startTime.toISOString(),
-        endedAt:
-          pumping.endedAt || endChanged ? endTime.toISOString() : pumping.endedAt,
+        endedAt: writesEnd ? endTime.toISOString() : pumping.endedAt,
         notes: notes || undefined,
       };
       if (
@@ -150,15 +208,14 @@ export default function EditPumpingScreen() {
         volumeMl: parsedVolume,
         notes: notes || undefined,
       };
+      // Storage marks the sides not tracked on a time edit that does not resupply them.
+      if (leftChanged || timeChanged) input.leftDurationSeconds = leftSeconds ?? null;
+      if (rightChanged || timeChanged) input.rightDurationSeconds = rightSeconds ?? null;
       if (timeChanged) {
         input.startedAt = startTime;
-        if (pumping.endedAt || endChanged) {
+        if (writesEnd) {
           input.endedAt = endTime;
-          input.durationSeconds = calculateActiveDurationSeconds(
-            startTime,
-            endTime,
-            pausedSeconds
-          );
+          input.durationSeconds = durationSeconds;
         }
       }
       await updatePumping(pumping.id, input);
@@ -167,7 +224,7 @@ export default function EditPumpingScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedBaby, pumping, pausedSeconds, startTime, endTime, endChanged, timeChanged, side, volumeMl, notes, checkAndConfirmPumping, pumpings, updatePumping, router]);
+  }, [selectedBaby, pumping, pausedSeconds, startTime, endTime, writesEnd, durationSeconds, timeChanged, leftChanged, rightChanged, leftSeconds, rightSeconds, side, volumeMl, notes, checkAndConfirmPumping, pumpings, updatePumping, router]);
 
   const handleDelete = useCallback(() => {
     if (!pumping) return;
@@ -190,37 +247,13 @@ export default function EditPumpingScreen() {
   }, [pumping, deletePumping, router, t]);
 
   const startBounds = useCallback(() => {
-    const boundaryNow = Date.now();
+    const lengthSeconds = writesEnd
+      ? Math.max(durationSeconds, MINIMUM_PUMPING_MS / 1000)
+      : MINIMUM_PUMPING_MS / 1000;
     return {
-      maximumDate: new Date(
-        Math.min(
-          boundaryNow,
-          (endTime?.getTime() ?? boundaryNow + MINIMUM_PUMPING_MS) -
-            MINIMUM_PUMPING_MS -
-            pausedSeconds * 1000
-        )
-      ),
+      maximumDate: new Date(Date.now() - (lengthSeconds + pausedSeconds) * 1000),
     };
-  }, [endTime, pausedSeconds]);
-  const endBounds = useCallback(() => {
-    const boundaryNow = Date.now();
-    const startTimestamp = startTime?.getTime() ?? boundaryNow;
-    const maximumTimestamp = Math.min(
-      boundaryNow,
-      startTimestamp + MAXIMUM_PUMPING_MS + pausedSeconds * 1000
-    );
-    return {
-      minimumDate: new Date(
-        Math.min(
-          startTimestamp +
-            MINIMUM_PUMPING_MS +
-            pausedSeconds * 1000,
-          maximumTimestamp
-        )
-      ),
-      maximumDate: new Date(maximumTimestamp),
-    };
-  }, [startTime, pausedSeconds]);
+  }, [writesEnd, durationSeconds, pausedSeconds]);
 
   if (!selectedBaby || !pumping || !startTime || !endTime) {
     return (
@@ -233,18 +266,30 @@ export default function EditPumpingScreen() {
   }
 
   const now = new Date();
-  const durationMs =
-    calculateActiveDurationSeconds(
-      startTime,
-      endTime,
-      pausedSeconds
-    ) * 1000;
+  const durationMs = durationSeconds * 1000;
   const canSave =
-    !timeChanged ||
-    (durationMs >= MINIMUM_PUMPING_MS &&
-      durationMs <= MAXIMUM_PUMPING_MS &&
-      startTime <= now &&
-      endTime <= now);
+    sidesTooLong.length === 0 &&
+    (!timeChanged ||
+      (durationMs >= MINIMUM_PUMPING_MS &&
+        durationMs <= MAXIMUM_PUMPING_MS &&
+        startTime <= now &&
+        (!writesEnd || endTime <= now)));
+  const durationErrorKey = timeChanged
+    ? validateManualPumpingDuration(enteredDurationSeconds) ??
+      (writesEnd && endTime > now ? "validation.endTimeNotInFuture" : null)
+    : null;
+  const sessionLength = formatDuration(durationSeconds, "short");
+  const endClock = formatTime(endTime, timeFormat);
+  const pausedLength = formatDuration(pausedSeconds, "short");
+  let endSummary = "";
+  if (writesEnd) {
+    endSummary =
+      pausedSeconds > 0
+        ? t("feeding.pausedAndEnds", { paused: pausedLength, time: endClock })
+        : t("feeding.endsAt", { time: endClock });
+  } else if (pausedSeconds > 0) {
+    endSummary = t("feeding.pausedFor", { paused: pausedLength });
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-surface-dark">
@@ -294,6 +339,54 @@ export default function EditPumpingScreen() {
             </View>
           </View>
 
+          <StartEndTimeSection
+            startTime={startTime}
+            onStartTimeChange={setStartTime}
+            startBounds={startBounds}
+            durationInput={{
+              minutes: durationText,
+              onMinutesChange: setDurationText,
+              unitLabel: t("common.min"),
+              endSummary,
+            }}
+            timeFormat={timeFormat}
+            startLabel={t("pumping.startTime")}
+            durationLabel={t("pumping.duration")}
+            doneLabel={t("common.done")}
+            selectDateLabel={t("feeding.selectDate")}
+            selectTimeLabel={t("feeding.selectTime")}
+            accentColor={PUMPING_BLUE}
+            mutedBackgroundColor={PUMPING_BLUE_MUTED}
+            textColor="#2D2A26"
+            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
+            durationError={
+              durationErrorKey || errors.durationSeconds || errors.endedAt
+                ? te(t, durationErrorKey ?? errors.durationSeconds ?? errors.endedAt)
+                : undefined
+            }
+          />
+          <BreastSideMinutesFields
+            label={t("feeding.minutesPerSide")}
+            leftLabel={t("feeding.left")}
+            rightLabel={t("feeding.right")}
+            left={leftText}
+            right={rightText}
+            onLeftChange={setLeftText}
+            onRightChange={setRightText}
+            leftError={
+              sidesTooLong.includes("left")
+                ? t("pumping.leftLongerThanSession", { duration: sessionLength })
+                : undefined
+            }
+            rightError={
+              sidesTooLong.includes("right")
+                ? t("pumping.rightLongerThanSession", { duration: sessionLength })
+                : undefined
+            }
+            mutedBackgroundColor={PUMPING_BLUE_MUTED}
+            textColor="#2D2A26"
+          />
+
           <View className="mb-4">
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
               {t("pumping.side")}
@@ -325,31 +418,6 @@ export default function EditPumpingScreen() {
               ))}
             </View>
           </View>
-
-          <StartEndTimeSection
-            startTime={startTime}
-            endTime={endTime}
-            pausedSeconds={pausedSeconds}
-            onStartTimeChange={setStartTime}
-            onEndTimeChange={setEndTime}
-            startBounds={startBounds}
-            endBounds={endBounds}
-            timeFormat={timeFormat}
-            startLabel={t("pumping.startTime")}
-            endLabel={t("pumping.endTime")}
-            durationLabel={t("pumping.duration")}
-            doneLabel={t("common.done")}
-            selectDateLabel={t("feeding.selectDate")}
-            selectTimeLabel={t("feeding.selectTime")}
-            accentColor={PUMPING_BLUE}
-            mutedBackgroundColor={PUMPING_BLUE_MUTED}
-            textColor="#2D2A26"
-            startError={errors.startedAt ? te(t, errors.startedAt) : undefined}
-            endError={errors.endedAt ? te(t, errors.endedAt) : undefined}
-            durationError={
-              errors.durationSeconds ? te(t, errors.durationSeconds) : undefined
-            }
-          />
 
           <View className="mb-4">
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
@@ -392,7 +460,7 @@ export default function EditPumpingScreen() {
             onPress={handleSave}
             disabled={!canSave || isSaving}
             className={`w-full py-4 rounded-button-lg items-center justify-center active:scale-[0.98] ${
-              !canSave || isSaving ? "opacity-50" : ""
+              !canSave || isSaving ? "opacity-40" : ""
             }`}
             style={{ backgroundColor: PUMPING_BLUE }}
             accessibilityRole="button"

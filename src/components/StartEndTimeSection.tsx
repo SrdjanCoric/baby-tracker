@@ -48,7 +48,7 @@ interface EndPickerProps extends SharedProps {
   durationInput?: undefined;
 }
 
-// Breast feeds edit Duration instead of End; End is derived and shown as a summary line.
+// Breast feeds and pumping edit Duration instead of End; End is derived and shown as a summary line.
 interface DurationInputProps extends SharedProps {
   durationInput: DurationInput;
 }

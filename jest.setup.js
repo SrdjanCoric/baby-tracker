@@ -144,6 +144,8 @@ jest.mock("react-i18next", () => ({
         "feeding.pausedFor": "Paused {{paused}}",
         "feeding.leftLongerThanFeed": "Left can't be longer than the feed ({{duration}})",
         "feeding.rightLongerThanFeed": "Right can't be longer than the feed ({{duration}})",
+        "pumping.leftLongerThanSession": "Left can't be longer than the session ({{duration}})",
+        "pumping.rightLongerThanSession": "Right can't be longer than the session ({{duration}})",
       };
       // Handle pluralization for summary keys
       if (key === "summary.feeding") {

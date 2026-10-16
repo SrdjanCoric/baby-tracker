@@ -21,6 +21,12 @@ Saving a pumping entry never clears its sides.
 
 ## Clarifications
 
+- Q: The mock's pumping icon is 🍼, the app's pumping icon everywhere else is 🫙. Which one does the edit form show? A: Keep 🫙. The 🍼 in the mock is a slip; 🍼 means bottle feeding in the app. — Owner, 2026-10-15.
+- Q: The breast feed edit form labels its side picker "Side", not the mock's "Finished on". Which label does the pumping edit form use? A: "Side", on both forms. There is no "Finished on" label. — Owner, 2026-10-16.
+- Q: The manual breast and pumping logs dim a disabled Save to 50%; the mocks say 40%. Change them here? A: No. Leave them as they are. — Owner, 2026-10-16.
+- Q: The breast feed saves a cleared side as `0`. Does pumping do the same? A: No. A cleared pumping side saves `null` (not tracked), because pumping storage can say "not tracked" and feeding storage cannot. A typed `0` saves `0`. A time edit sends the untouched sides again, so storage never marks them stale. That is what "never clears its sides" means here. The breast feed should switch to `null` once feeding storage supports it. — Review, 2026-10-16.
+- Q: The mock's manual-log note puts the Side picker below the minutes. Does the manual pumping form move it? A: No. Side stays at the top, as Task 0135 decided for the manual breast form. The "match the Decided frame in order" check covers the other fields. — Review, 2026-10-16.
+
 ## Non-goals
 
 - Tummy time (Task 0137).

@@ -556,6 +556,8 @@
     "pumping": "Extracción",
     "amount": "Cantidad",
     "side": "Lado",
+    "leftLongerThanSession": "El lado izquierdo no puede durar más que la extracción ({{duration}})",
+    "rightLongerThanSession": "El lado derecho no puede durar más que la extracción ({{duration}})",
     "selectSideToStart": "Selecciona un lado para iniciar el temporizador",
     "startedEarlier": "¿Empezaste antes?",
     "startTime": "Hora de inicio",

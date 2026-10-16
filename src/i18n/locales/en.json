@@ -552,6 +552,8 @@
     "pumping": "Pumping",
     "amount": "Amount",
     "side": "Side",
+    "leftLongerThanSession": "Left can't be longer than the session ({{duration}})",
+    "rightLongerThanSession": "Right can't be longer than the session ({{duration}})",
     "selectSideToStart": "Select a side to start the timer",
     "startedEarlier": "Started earlier?",
     "startTime": "Start Time",

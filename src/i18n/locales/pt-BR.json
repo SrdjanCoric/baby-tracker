@@ -555,6 +555,8 @@
     "pumping": "Tirando leite",
     "amount": "Quantidade",
     "side": "Lado",
+    "leftLongerThanSession": "O lado esquerdo não pode durar mais do que a ordenha ({{duration}})",
+    "rightLongerThanSession": "O lado direito não pode durar mais do que a ordenha ({{duration}})",
     "selectSideToStart": "Selecione um lado para iniciar o cronômetro",
     "startedEarlier": "Começou mais cedo?",
     "startTime": "Hora de Início",

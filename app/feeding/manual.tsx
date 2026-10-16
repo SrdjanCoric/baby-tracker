@@ -19,12 +19,11 @@ import { useNotificationIntegration } from "@/hooks";
 import { formatVolume, mlToOz, ozToMl } from "@/utils/volume";
 import { te } from "@/utils/translate-errors";
 import {
-  findSidesLongerThanFeed,
-  parseWholeMinutesAsSeconds,
   validateManualBreastfeedingTimes,
   validateManualFeedingDuration,
   validateManualBottleFeeding,
 } from "@/validators/feeding";
+import { findSidesLongerThanDuration, parseWholeMinutesAsSeconds } from "@/validators/side-minutes";
 import { COMMON_FOODS } from "@/constants/foods";
 import { NoBabyScreen } from "@/components/NoBabyScreen";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
@@ -290,7 +289,7 @@ export default function ManualFeedingScreen() {
   );
   const leftSeconds = parseWholeMinutesAsSeconds(leftText);
   const rightSeconds = parseWholeMinutesAsSeconds(rightText);
-  const sidesTooLong = findSidesLongerThanFeed(enteredDurationSeconds, {
+  const sidesTooLong = findSidesLongerThanDuration(enteredDurationSeconds, {
     left: leftSeconds,
     right: rightSeconds,
   });
