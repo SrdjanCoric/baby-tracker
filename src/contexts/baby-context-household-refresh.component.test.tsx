@@ -151,6 +151,25 @@ describe("BabyProvider targeted household refresh", () => {
     expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', []);
   });
 
+  it("selects a second baby when asked to, and keeps the current one otherwise", async () => {
+    render(<BabyProvider><Probe /></BabyProvider>);
+    await waitFor(() => expect(mockSetRealtimeBabyIds).toHaveBeenLastCalledWith('source-household', ['source-baby']));
+    expect(capturedBabyContext.selectedBaby?.id).toBe('source-baby');
+
+    jest.mocked(createBabyInDatabase).mockResolvedValueOnce(sharedBaby);
+    await act(async () => { await capturedBabyContext.addBaby({ name: sharedBaby.name }); });
+    expect(capturedBabyContext.selectedBaby?.id).toBe('source-baby');
+
+    const thirdBaby: StoredBabyProfile = { ...sharedBaby, id: 'third-baby', name: 'Third Baby' };
+    jest.mocked(createBabyInDatabase).mockResolvedValueOnce(thirdBaby);
+    await act(async () => { await capturedBabyContext.addBaby({ name: thirdBaby.name }, { select: true }); });
+    expect(capturedBabyContext.selectedBaby?.id).toBe('third-baby');
+    expect(BabyStorageService.setSelectedBabyId).toHaveBeenLastCalledWith(
+      'third-baby',
+      expect.objectContaining({ selectedBabyKey: 'caregiver-1:source-household:selected' })
+    );
+  });
+
   it("lets an in-flight join callback load and select the new household scope", async () => {
     const view = render(
       <BabyProvider>

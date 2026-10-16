@@ -11,7 +11,7 @@ const isAndroid = Platform.OS === "android";
 export default function AddBabyScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { addBaby, selectBaby } = useBaby();
+  const { addBaby } = useBaby();
   const [isLoading, setIsLoading] = useState(false);
   const { activeTimer: feedingTimer } = useFeeding();
   const { activeTimer: sleepTimer } = useSleep();
@@ -28,21 +28,22 @@ export default function AddBabyScreen() {
     async (data: CompleteBabyProfileFormData) => {
       setIsLoading(true);
       try {
-        const newBaby = await addBaby({
-          name: data.name,
-          birthDate: data.birthDate,
-          gender: data.gender,
-          photoUri: data.photoUri,
-        });
-        if (!hasAnyActiveTimer) {
-          await selectBaby(newBaby.id);
-        }
+        // Keep the current baby selected while one of its timers is running.
+        await addBaby(
+          {
+            name: data.name,
+            birthDate: data.birthDate,
+            gender: data.gender,
+            photoUri: data.photoUri,
+          },
+          { select: !hasAnyActiveTimer }
+        );
         exitModal(router);
       } catch {
         setIsLoading(false);
       }
     },
-    [addBaby, selectBaby, hasAnyActiveTimer]
+    [addBaby, hasAnyActiveTimer]
   );
 
   const handleCancel = useCallback(() => {

@@ -143,9 +143,14 @@ export function babyReducer(state: BabyState, action: BabyAction): BabyState {
   }
 }
 
+export interface AddBabyOptions {
+  /** Make the new baby the selected one even when other babies already exist. */
+  select?: boolean;
+}
+
 interface BabyContextValue extends BabyState {
   getBabyById: (id: string) => StoredBabyProfile | undefined;
-  addBaby: (input: CreateBabyInput) => Promise<StoredBabyProfile>;
+  addBaby: (input: CreateBabyInput, options?: AddBabyOptions) => Promise<StoredBabyProfile>;
   updateBaby: (id: string, input: UpdateBabyInput) => Promise<StoredBabyProfile | null>;
   deleteBaby: (id: string) => Promise<boolean>;
   selectBaby: (id: string | null) => Promise<StoredBabyProfile | null>;
@@ -438,7 +443,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     return registerForegroundRefreshLoader?.('babies', async () => { await loadBabies(); });
   }, [loadBabies, registerForegroundRefreshLoader, user?.householdId]);
 
-  const addBaby = useCallback(async (input: CreateBabyInput) => {
+  const addBaby = useCallback(async (input: CreateBabyInput, options?: AddBabyOptions) => {
     const operationGeneration = authGenerationRef.current;
     const operationScope = authScope;
     const isCurrentOperation = () =>
@@ -473,7 +478,9 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     }
     dispatch({ type: "ADD_BABY", payload: newBaby });
 
-    if (state.babies.length === 0) {
+    // Select here, with the new baby in hand: selectBaby() reads the babies list from
+    // its render closure, which does not contain a baby added a moment ago.
+    if (options?.select || state.babies.length === 0) {
       await BabyStorageService.setSelectedBabyId(newBaby.id, storageScope);
       if (!isCurrentOperation()) {
         throw new Error("Baby create cancelled because the account changed");
