@@ -1,7 +1,8 @@
 appId: com.sofibaby.app
 
 ---
-# From Home, open the baby selector and add "Second E2E Baby" (boy, no birth date).
+# From Home, open the baby selector and add "Second E2E Baby" (boy, born today).
+# New babies require a birth date; Done on the picker accepts today.
 # The new baby becomes the selected one.
 - tapOn:
     id: "selected-baby-name"
@@ -13,6 +14,19 @@ appId: com.sofibaby.app
     id: "baby-name-input"
 - inputText: "Second E2E Baby"
 - pressKey: Enter
+- tapOn:
+    id: "birth-date-picker"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          id: "birth-date-done-button"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "OK"
 - tapOn:
     id: "gender-male"
 - tapOn:

@@ -20,5 +20,7 @@ tags:
     id: "stats-tab"
 - extendedWaitUntil:
     visible:
-      id: "statistics-content"
+      text: "Statistics"
     timeout: 10000
+- assertVisible:
+    text: "Test Baby"

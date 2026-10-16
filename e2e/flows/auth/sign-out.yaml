@@ -24,9 +24,19 @@ tags:
 # Confirm sign out in alert dialog
 - tapOn: "Confirm"
 
-# Wait for UI to update after sign out
-- waitForAnimationToEnd
+# Signing out clears local data and returns to Home.
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- runFlow: ../../helpers/dismiss-dev-banner.yaml
 
-# Verify signed out - the sign-in-to-sync button should appear
+# Settings now offers sign-in instead of sign-out.
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "sign-in-to-sync"
+    direction: DOWN
 - assertVisible:
     id: "sign-in-to-sync"

@@ -19,6 +19,10 @@ tags:
 - tapOn:
     id: "email-input"
 - inputText: "notanemail"
+# The keyboard-avoiding layout is still moving right after typing; let it settle
+# or the tap lands beside the button.
+- hideKeyboard
+- waitForAnimationToEnd
 - tapOn:
     id: "send-magic-link-button"
 - assertVisible:
@@ -31,6 +35,8 @@ tags:
     id: "email-input"
 - eraseText
 - inputText: "e2e-owner@test.local"
+- hideKeyboard
+- waitForAnimationToEnd
 - tapOn:
     id: "send-magic-link-button"
 - extendedWaitUntil:

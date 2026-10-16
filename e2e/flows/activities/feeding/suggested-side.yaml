@@ -8,7 +8,8 @@ tags:
 ---
 - runFlow: ../../../helpers/setup-with-baby.yaml
 
-# First do a feeding to establish a suggested side
+# A side is only suggested once the last session totals two minutes or more,
+# so log a past six-minute left-side feed instead of a one-second timer run.
 - tapOn:
     id: "feeding-card"
 
@@ -16,36 +17,60 @@ tags:
     id: "type-breast"
 
 - tapOn:
-    id: "start-left-button"
-
-- extendedWaitUntil:
-    visible:
-      id: "stop-timer-button"
-    timeout: 3000
+    text: "Log Past Breastfeeding"
 
 - tapOn:
-    id: "stop-timer-button"
+    text: "Left Side"
 
-# Wait for home screen
+# Move the start back a few hours so the feed does not end in the future.
+# The inline spinner opens under the Start row (hour wheel near 49% x, 41% y);
+# dragging it down selects earlier hours.
+- tapOn:
+    text: "Start Time Select Time"
+- extendedWaitUntil:
+    visible:
+      text: "Done"
+    timeout: 5000
+- swipe:
+    start: "49%,41%"
+    end: "49%,51%"
+    duration: 600
+- tapOn:
+    text: "Done"
+
+# Double-tap selects the default value so typing replaces it.
+- doubleTapOn:
+    id: "duration-minutes-input"
+- inputText: "6"
+
+- tapOn:
+    id: "side-minutes-left-input"
+- inputText: "6"
+
+- tapOn:
+    id: "dismiss-keyboard"
+
+- tapOn:
+    text: "Log Breastfeeding"
+
 - extendedWaitUntil:
     visible:
       id: "home-screen"
-    timeout: 5000
+    timeout: 15000
 
-# Now go back to feeding to verify suggested side shows
+# Back on the breast form, only the right side is suggested.
 - tapOn:
     id: "feeding-card"
 
 - tapOn:
     id: "type-breast"
 
-# After a left feed the right side is suggested, and only the right side.
 - assertVisible:
     id: "suggested-side-badge-right"
 - assertNotVisible:
     id: "suggested-side-badge-left"
 
-# Complete by starting and stopping on suggested side
+# Complete by starting and stopping on the suggested side.
 - tapOn:
     id: "start-right-button"
 

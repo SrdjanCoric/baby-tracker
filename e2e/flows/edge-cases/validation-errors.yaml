@@ -70,6 +70,8 @@ tags:
     visible:
       id: "home-screen"
     timeout: 30000
+# The relaunch brings back the dev warning banner, which sits over the bottom save buttons.
+- runFlow: ../../helpers/dismiss-dev-banner.yaml
 
 # Pumping: over 500 ml is rejected on the past-session form.
 - tapOn:
@@ -81,6 +83,8 @@ tags:
 - inputText: "600"
 - tapOn:
     id: "dismiss-keyboard"
+# Let the keyboard-avoiding layout settle so the tap hits the button.
+- waitForAnimationToEnd
 - tapOn:
     id: "save-button"
 - assertVisible:
