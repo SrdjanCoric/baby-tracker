@@ -1,3 +1,95 @@
+# Sofi Baby 4.11.0
+
+## English
+
+- Started a timer by mistake? You can now discard it from the timer screen without saving anything.
+- Pauses no longer count toward breastfeeding, pumping and tummy time. For example, a 20-minute feed with a 5-minute pause saves as 15 minutes. Sleep works as before.
+- While a timer is paused, it now stands still in the app, on the Lock Screen, in the widget and on Apple Watch.
+- Pumping now tracks minutes on each side, just like breastfeeding. Your Timeline shows the left and right split.
+- When you add or edit a breastfeed or pumping session, you now enter how long it lasted and the minutes on each side, instead of picking an end time.
+- When you edit tummy time, you now see how long it was paused.
+- Adding another baby now switches to that baby right away.
+
+## Srpski
+
+- Slučajno ste pokrenuli tajmer? Sada možete da ga odbacite sa ekrana tajmera, bez čuvanja.
+- Pauze se više ne računaju u dojenje, izdajanje i vreme na stomaku. Na primer, dojenje od 20 minuta sa pauzom od 5 minuta čuva se kao 15 minuta. Spavanje radi kao i do sada.
+- Dok je tajmer pauziran, sada stoji u aplikaciji, na zaključanom ekranu, u vidžetu i na Apple Watch satu.
+- Izdajanje sada beleži minute za svaku stranu, baš kao dojenje. Na vremenskoj liniji vidite podelu na levu i desnu stranu.
+- Kada dodajete ili menjate dojenje ili izdajanje, sada unosite koliko je trajalo i minute po strani, umesto da birate vreme završetka.
+- Kada menjate vreme na stomaku, sada vidite koliko je bilo pauzirano.
+- Kada dodate još jednu bebu, aplikacija odmah prelazi na tu bebu.
+
+## Español (Latinoamérica)
+
+- ¿Iniciaste un temporizador por error? Ahora puedes descartarlo desde la pantalla del temporizador sin guardar nada.
+- Las pausas ya no cuentan en la lactancia, la extracción ni el tiempo boca abajo. Por ejemplo, una toma de 20 minutos con una pausa de 5 minutos se guarda como 15 minutos. El sueño funciona como antes.
+- Mientras un temporizador está en pausa, ahora se queda quieto en la app, en la pantalla de bloqueo, en el widget y en el Apple Watch.
+- La extracción ahora registra los minutos de cada lado, igual que la lactancia. Tu Cronología muestra el reparto entre izquierda y derecha.
+- Al agregar o editar una lactancia o una extracción, ahora indicas cuánto duró y los minutos de cada lado, en lugar de elegir una hora de fin.
+- Al editar el tiempo boca abajo, ahora ves cuánto tiempo estuvo en pausa.
+- Al agregar otro bebé, la app ahora cambia a ese bebé de inmediato.
+
+## Español (España)
+
+- ¿Has iniciado un temporizador por error? Ahora puedes descartarlo desde la pantalla del temporizador sin guardar nada.
+- Las pausas ya no cuentan en la lactancia, la extracción ni el tiempo boca abajo. Por ejemplo, una toma de 20 minutos con una pausa de 5 minutos se guarda como 15 minutos. El sueño funciona como antes.
+- Mientras un temporizador está en pausa, ahora se queda quieto en la app, en la pantalla de bloqueo, en el widget y en el Apple Watch.
+- La extracción ahora registra los minutos de cada lado, igual que la lactancia. Tu Cronología muestra el reparto entre izquierda y derecha.
+- Al añadir o editar una lactancia o una extracción, ahora indicas cuánto duró y los minutos de cada lado, en lugar de elegir una hora de fin.
+- Al editar el tiempo boca abajo, ahora ves cuánto tiempo estuvo en pausa.
+- Al añadir otro bebé, la app ahora cambia a ese bebé de inmediato.
+
+## Français
+
+- Vous avez lancé un minuteur par erreur ? Vous pouvez maintenant l'abandonner depuis l'écran du minuteur, sans rien enregistrer.
+- Les pauses ne comptent plus pour l'allaitement, le tire-lait et le temps sur le ventre. Par exemple, une tétée de 20 minutes avec une pause de 5 minutes est enregistrée comme 15 minutes. Le sommeil fonctionne comme avant.
+- Quand un minuteur est en pause, il reste désormais figé dans l'app, sur l'écran verrouillé, dans le widget et sur l'Apple Watch.
+- Le tire-lait enregistre maintenant les minutes de chaque côté, comme l'allaitement. Votre Chronologie affiche la répartition gauche et droite.
+- Quand vous ajoutez ou modifiez une tétée ou une séance de tirage, vous indiquez maintenant sa durée et les minutes de chaque côté, au lieu de choisir une heure de fin.
+- Quand vous modifiez un temps sur le ventre, vous voyez maintenant combien de temps il a été en pause.
+- Quand vous ajoutez un autre bébé, l'app passe maintenant tout de suite à ce bébé.
+
+## Português (Portugal)
+
+- Iniciou um temporizador por engano? Agora pode descartá-lo no ecrã do temporizador, sem guardar nada.
+- As pausas deixam de contar na amamentação, na extração e no tempo de barriga. Por exemplo, uma mamada de 20 minutos com uma pausa de 5 minutos fica guardada como 15 minutos. O sono funciona como antes.
+- Enquanto um temporizador está em pausa, fica agora parado na app, no ecrã bloqueado, no widget e no Apple Watch.
+- A extração passa a registar os minutos de cada lado, tal como a amamentação. A sua Cronologia mostra a divisão entre esquerdo e direito.
+- Ao adicionar ou editar uma amamentação ou extração, indica agora quanto tempo durou e os minutos de cada lado, em vez de escolher uma hora de fim.
+- Ao editar o tempo de barriga, vê agora quanto tempo esteve em pausa.
+- Ao adicionar outro bebé, a app passa agora de imediato para esse bebé.
+
+## Português (Brasil)
+
+- Iniciou um cronômetro sem querer? Agora você pode descartá-lo na tela do cronômetro, sem salvar nada.
+- As pausas não contam mais na amamentação, na ordenha e no tempo de barriguinha. Por exemplo, uma mamada de 20 minutos com uma pausa de 5 minutos é salva como 15 minutos. O sono funciona como antes.
+- Enquanto um cronômetro está pausado, ele agora fica parado no app, na tela bloqueada, no widget e no Apple Watch.
+- A ordenha agora registra os minutos de cada lado, igual à amamentação. Sua Linha do Tempo mostra a divisão entre esquerdo e direito.
+- Ao adicionar ou editar uma amamentação ou ordenha, agora você informa quanto tempo durou e os minutos de cada lado, em vez de escolher um horário de término.
+- Ao editar o tempo de barriguinha, agora você vê quanto tempo ficou pausado.
+- Ao adicionar outro bebê, o app agora muda para esse bebê na hora.
+
+## Deutsch
+
+- Timer aus Versehen gestartet? Du kannst ihn jetzt auf dem Timer-Bildschirm verwerfen, ohne etwas zu speichern.
+- Pausen zählen beim Stillen, Abpumpen und in der Bauchlage nicht mehr mit. Eine 20-minütige Mahlzeit mit 5 Minuten Pause wird zum Beispiel als 15 Minuten gespeichert. Beim Schlaf bleibt alles wie bisher.
+- Ist ein Timer pausiert, bleibt er jetzt stehen: in der App, auf dem Sperrbildschirm, im Widget und auf der Apple Watch.
+- Beim Abpumpen werden jetzt die Minuten pro Seite erfasst, genau wie beim Stillen. Dein Verlauf zeigt die Aufteilung nach links und rechts.
+- Wenn du eine Still- oder Abpump-Sitzung hinzufügst oder bearbeitest, gibst du jetzt die Dauer und die Minuten pro Seite ein, statt eine Endzeit zu wählen.
+- Beim Bearbeiten der Bauchlage siehst du jetzt, wie lange pausiert wurde.
+- Wenn du ein weiteres Baby hinzufügst, wechselt die App jetzt sofort zu diesem Baby.
+
+## Italiano
+
+- Hai avviato un timer per sbaglio? Ora puoi scartarlo dalla schermata del timer, senza salvare nulla.
+- Le pause non contano più per l'allattamento, il tiralatte e il tummy time. Ad esempio, una poppata di 20 minuti con 5 minuti di pausa viene salvata come 15 minuti. Il sonno funziona come prima.
+- Quando un timer è in pausa, ora resta fermo nell'app, nella schermata di blocco, nel widget e sull'Apple Watch.
+- Il tiralatte ora registra i minuti per ogni lato, proprio come l'allattamento. La tua Cronologia mostra la divisione tra sinistra e destra.
+- Quando aggiungi o modifichi un allattamento o una sessione di tiralatte, ora inserisci quanto è durato e i minuti per lato, invece di scegliere un orario di fine.
+- Quando modifichi un tummy time, ora vedi per quanto tempo è stato in pausa.
+- Quando aggiungi un altro bambino, l'app ora passa subito a quel bambino.
+
 # Sofi Baby 4.10.5
 
 ## English
