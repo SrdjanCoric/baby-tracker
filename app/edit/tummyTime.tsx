@@ -277,7 +277,7 @@ export default function EditTummyTimeScreen() {
           <StartEndTimeSection
             startTime={startTime}
             endTime={endTime}
-            pausedSeconds={pausedSeconds}
+            pause={{ seconds: pausedSeconds, label: t("common.timerPaused") }}
             onStartTimeChange={setStartTime}
             onEndTimeChange={setEndTime}
             startBounds={startBounds}

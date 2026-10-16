@@ -78,6 +78,104 @@ describe("EditTummyTimeScreen clock-time editing", () => {
     return screen;
   }
 
+  function textOrder(screen: ReturnType<typeof render>): string[] {
+    const texts: string[] = [];
+    const walk = (node: unknown) => {
+      if (typeof node === "string") texts.push(node);
+      else if (Array.isArray(node)) node.forEach(walk);
+      else if (node && typeof node === "object" && "children" in node) {
+        walk((node as { children: unknown }).children);
+      }
+    };
+    walk(screen.toJSON());
+    return texts;
+  }
+
+  it("shows Duration without the pause and a quiet Paused line directly under it", async () => {
+    mockTummyTimes = [
+      {
+        ...mockTummyTimes[0],
+        startedAt: "2026-08-07T10:00:00.000Z",
+        endedAt: "2026-08-07T10:12:00.000Z",
+        durationSeconds: 600,
+        pausedSeconds: 120,
+      },
+    ];
+    const screen = render(<EditTummyTimeScreen />);
+    await waitFor(() => expect(screen.getByText("10m")).toBeTruthy());
+
+    const pausedLine = screen.getByTestId("paused-line");
+    expect(pausedLine.props.className).toEqual(
+      expect.stringContaining("justify-between"),
+    );
+    const label = screen.getByText("common.timerPaused");
+    const value = screen.getByText("2m");
+    expect(label.props.className).toEqual(
+      expect.stringContaining("text-content-tertiary"),
+    );
+    expect(value.props.className).toEqual(
+      expect.stringContaining("text-content-tertiary"),
+    );
+    const order = textOrder(screen);
+    const at = (text: string) => order.indexOf(text);
+    expect(at("tummyTime.duration")).toBeGreaterThan(-1);
+    expect(at("tummyTime.duration")).toBeLessThan(at("10m"));
+    expect(at("10m")).toBeLessThan(at("common.timerPaused"));
+    expect(at("common.timerPaused")).toBeLessThan(at("2m"));
+    expect(at("2m")).toBeLessThan(at("common.notes"));
+  });
+
+  it("omits the Paused line when the entry has no pause", async () => {
+    const screen = await renderInitialized();
+    expect(screen.queryByTestId("paused-line")).toBeNull();
+    expect(screen.queryByText("common.timerPaused")).toBeNull();
+  });
+
+  it("omits the Paused line for a legacy entry whose duration already counts the pause", async () => {
+    mockTummyTimes = [{ ...mockTummyTimes[0], pausedSeconds: 180, durationSeconds: 5400 }];
+    const screen = await renderInitialized();
+    expect(screen.queryByTestId("paused-line")).toBeNull();
+  });
+
+  it("recomputes Duration when End moves and saves start, end and duration without the pause", async () => {
+    mockTummyTimes = [
+      {
+        ...mockTummyTimes[0],
+        startedAt: "2026-08-07T10:00:00.000Z",
+        endedAt: "2026-08-07T10:12:00.000Z",
+        durationSeconds: 600,
+        pausedSeconds: 120,
+      },
+    ];
+    const screen = render(<EditTummyTimeScreen />);
+    await waitFor(() => expect(screen.getByText("10m")).toBeTruthy());
+    fireEvent.press(
+      screen.getByRole("button", { name: "tummyTime.endTime feeding.selectTime" }),
+    );
+    expect(screen.getByTestId("datetime-picker").props.minimumDate).toEqual(
+      new Date("2026-08-07T10:03:00.000Z"),
+    );
+    fireEvent(
+      screen.getByTestId("datetime-picker"),
+      "change",
+      {},
+      new Date("2026-08-07T10:08:00.000Z"),
+    );
+    expect(screen.getByText("6m")).toBeTruthy();
+    expect(screen.getByText("2m")).toBeTruthy();
+
+    fireEvent.press(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => expect(mockUpdateTummyTime).toHaveBeenCalledTimes(1));
+    expect(mockUpdateTummyTime.mock.calls[0][1]).toMatchObject({
+      startedAt: new Date("2026-08-07T10:00:00.000Z"),
+      endedAt: new Date("2026-08-07T10:08:00.000Z"),
+      durationSeconds: 360,
+    });
+    expect(mockUpdateTummyTime.mock.calls[0][1]).not.toHaveProperty(
+      "pausedSeconds",
+    );
+  });
+
   it("includes pauses in both picker bounds", async () => {
     mockTummyTimes = [{ ...mockTummyTimes[0], pausedSeconds: 180 }];
     const screen = render(<EditTummyTimeScreen />);

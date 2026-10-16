@@ -40,7 +40,8 @@ interface SharedProps {
 
 interface EndPickerProps extends SharedProps {
   endTime: Date;
-  pausedSeconds?: number;
+  // Sleep passes no pause; its pauses count toward its duration.
+  pause?: { seconds: number; label: string };
   onEndTimeChange(value: Date): void;
   endBounds: DateTimeBoundsSource;
   endLabel: string;
@@ -188,9 +189,11 @@ export function StartEndTimeSection(props: StartEndTimeSectionProps) {
     </View>
   );
 
+  const pause = endPicker?.pause;
   const durationSeconds = endPicker
-    ? calculateActiveDurationSeconds(startTime, endPicker.endTime, endPicker.pausedSeconds ?? 0)
+    ? calculateActiveDurationSeconds(startTime, endPicker.endTime, pause?.seconds ?? 0)
     : 0;
+  const shownPause = pause && pause.seconds > 0 ? pause : null;
   const iosBounds = iosTarget ? boundsFor(iosTarget) : null;
   const iosValue = iosTarget ? valueFor(iosTarget) : undefined;
   const androidBounds = androidPicker ? boundsFor(androidPicker.target) : null;
@@ -277,21 +280,38 @@ export function StartEndTimeSection(props: StartEndTimeSectionProps) {
           ) : null}
         </>
       ) : (
-        <View
-          className="mb-6 flex-row items-center justify-between rounded-card-lg border border-dashed px-4 py-3"
-          style={{
-            backgroundColor: mutedBackgroundColor,
-            borderColor: accentColor,
-          }}
-          accessibilityLabel={`${durationLabel}: ${formatDuration(durationSeconds, "short")}`}
-        >
-          <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
-            {durationLabel}
-          </Text>
-          <Text className="text-lg font-semibold" style={{ color: textColor }}>
-            {formatDuration(durationSeconds, "short")}
-          </Text>
-        </View>
+        <>
+          <View
+            className={`${shownPause ? "mb-2" : "mb-6"} flex-row items-center justify-between rounded-card-lg border border-dashed px-4 py-3`}
+            style={{
+              backgroundColor: mutedBackgroundColor,
+              borderColor: accentColor,
+            }}
+            accessibilityLabel={`${durationLabel}: ${formatDuration(durationSeconds, "short")}`}
+          >
+            <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
+              {durationLabel}
+            </Text>
+            <Text className="text-lg font-semibold" style={{ color: textColor }}>
+              {formatDuration(durationSeconds, "short")}
+            </Text>
+          </View>
+          {shownPause ? (
+            <View
+              testID="paused-line"
+              className="mb-6 flex-row justify-between px-4"
+              accessible
+              accessibilityLabel={`${shownPause.label}: ${formatDuration(shownPause.seconds, "short")}`}
+            >
+              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                {shownPause.label}
+              </Text>
+              <Text className="text-sm text-content-tertiary dark:text-content-dark-tertiary">
+                {formatDuration(shownPause.seconds, "short")}
+              </Text>
+            </View>
+          ) : null}
+        </>
       )}
       {durationError ? (
         <Text className="text-red-500 text-sm -mt-4 mb-6">{durationError}</Text>

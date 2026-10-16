@@ -24,6 +24,8 @@ The tummy time edit form keeps Start and End as editable pickers. Duration becom
 
 ## Clarifications
 
+- Q: For an entry with no pause, does Duration show End − Start or the saved duration when the two differ (old entries saved a shorter duration)? A: End − Start, as today. "Saved value" in the table means the number that equals the saved duration for consistent entries; no change for old entries. — Owner, 2026-10-16.
+
 ## Non-goals
 
 - Breast feed and pumping forms (Tasks 0135, 0136).
@@ -45,3 +47,5 @@ The shared start/end section derives its duration from the two pickers and accep
 
 - [ ] The rendered form matches the "Decided" frame of `docs/design/edit-tummy-time.html` in text, order, colour and placement.
 - [ ] `npm run check:code` passes.
+
+- skipped (minor): TP-5 — Duration-to-Paused gap is 8px vs mock 6px — `mb-2` is the nearest spacing token and matches the sibling `endSummary` layout

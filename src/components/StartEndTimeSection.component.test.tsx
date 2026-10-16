@@ -79,6 +79,59 @@ describe("StartEndTimeSection", () => {
     );
   });
 
+  function renderWithPause(pausedSeconds: number) {
+    const startTime = new Date(2026, 9, 12, 10, 0);
+    const endTime = new Date(2026, 9, 12, 10, 3);
+    const endBounds = {
+      minimumDate: new Date(2026, 9, 12, 10, 3),
+      maximumDate: new Date(2026, 9, 12, 12, 0),
+    };
+    render(
+      <StartEndTimeSection
+        startTime={startTime}
+        endTime={endTime}
+        pause={{ seconds: pausedSeconds, label: "Paused" }}
+        onStartTimeChange={jest.fn()}
+        onEndTimeChange={jest.fn()}
+        startBounds={{ maximumDate: new Date(2026, 9, 12, 10, 0) }}
+        endBounds={endBounds}
+        timeFormat="24h"
+        startLabel="Start Time"
+        endLabel="End Time"
+        durationLabel="Duration"
+        doneLabel="Done"
+        selectDateLabel="Select Date"
+        selectTimeLabel="Select Time"
+        accentColor="#E67E22"
+        mutedBackgroundColor="#FEF3E2"
+        textColor="#2D2A26"
+      />
+    );
+    return { endBounds };
+  }
+
+  it("subtracts the pause from Duration and shows it on a Paused line at the one-minute bound", () => {
+    Object.defineProperty(Platform, "OS", { value: "ios", configurable: true });
+    const { endBounds } = renderWithPause(120);
+
+    expect(screen.getByText("1m")).toBeTruthy();
+    expect(screen.getByTestId("paused-line").props).toEqual(
+      expect.objectContaining({ accessible: true, accessibilityLabel: "Paused: 2m" })
+    );
+    expect(screen.getByText("Paused")).toBeTruthy();
+    expect(screen.getByText("2m")).toBeTruthy();
+
+    fireEvent.press(screen.getByRole("button", { name: "End Time Select Time" }));
+    expect(screen.getByTestId("datetime-picker").props).toEqual(
+      expect.objectContaining(endBounds)
+    );
+  });
+
+  it("shows no Paused line when the pause is 0", () => {
+    renderWithPause(0);
+    expect(screen.queryByTestId("paused-line")).toBeNull();
+  });
+
   it("clamps the rendered picker value into the supplied bounds", () => {
     Object.defineProperty(Platform, "OS", {
       value: "ios",
