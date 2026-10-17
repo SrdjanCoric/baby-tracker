@@ -1,3 +1,41 @@
+# Sofi Baby 4.11.1
+
+## English
+
+- Editing a breastfeed or pumping session is easier: the minutes line up with their labels, each side shows "min", and tapping a number puts the cursor at the end.
+
+## Srpski
+
+- Izmena dojenja ili izdajanja je lakša: minuti su poravnati sa nazivima, svaka strana prikazuje „min“, a dodir na broj stavlja kursor na kraj.
+
+## Español (Latinoamérica)
+
+- Editar una lactancia o una extracción es más fácil: los minutos quedan alineados con sus etiquetas, cada lado muestra "min" y al tocar un número el cursor queda al final.
+
+## Español (España)
+
+- Editar una toma o una extracción es más fácil: los minutos quedan alineados con sus etiquetas, cada lado muestra «min» y al tocar un número el cursor se coloca al final.
+
+## Français
+
+- Modifier une tétée ou une séance de tirage est plus simple : les minutes sont alignées avec leurs libellés, chaque côté affiche « min » et toucher un nombre place le curseur à la fin.
+
+## Português (Portugal)
+
+- Editar uma mamada ou uma extração é mais fácil: os minutos ficam alinhados com as etiquetas, cada lado mostra "min" e tocar num número coloca o cursor no fim.
+
+## Português (Brasil)
+
+- Editar uma mamada ou uma extração ficou mais fácil: os minutos ficam alinhados com os rótulos, cada lado mostra "min" e tocar em um número coloca o cursor no final.
+
+## Deutsch
+
+- Stillen und Abpumpen lassen sich leichter bearbeiten: Die Minuten stehen auf einer Linie mit ihren Bezeichnungen, jede Seite zeigt „Min.“ und ein Tippen auf eine Zahl setzt den Cursor ans Ende.
+
+## Italiano
+
+- Modificare una poppata o una sessione di tiralatte è più semplice: i minuti sono allineati alle etichette, ogni lato mostra "min" e toccando un numero il cursore va alla fine.
+
 # Sofi Baby 4.11.0
 
 ## English
