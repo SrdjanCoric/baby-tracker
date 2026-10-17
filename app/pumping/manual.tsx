@@ -339,6 +339,7 @@ export default function ManualPumpingScreen() {
           label={t("feeding.minutesPerSide")}
           leftLabel={t("feeding.left")}
           rightLabel={t("feeding.right")}
+          unitLabel={t("common.min")}
           left={leftText}
           right={rightText}
           onLeftChange={setLeftText}

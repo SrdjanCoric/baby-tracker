@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
-import { Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { calculateActiveDurationSeconds } from "@/utils/timer-duration";
 import { formatDate, formatDuration, formatTime } from "@/utils/time";
 import type { TimeFormat } from "@/contexts/time-format-context";
+import { CursorAtEndTextInput } from "./CursorAtEndTextInput";
 
 export interface DateTimeBounds {
   minimumDate?: Date;
@@ -256,7 +257,7 @@ export function StartEndTimeSection(props: StartEndTimeSectionProps) {
               className="w-28 flex-row items-center justify-end gap-1.5 rounded-card-lg px-4 py-3"
               style={{ backgroundColor: mutedBackgroundColor }}
             >
-              <TextInput
+              <CursorAtEndTextInput
                 testID="duration-minutes-input"
                 value={props.durationInput.minutes}
                 onChangeText={(text) =>
@@ -265,8 +266,9 @@ export function StartEndTimeSection(props: StartEndTimeSectionProps) {
                 keyboardType="number-pad"
                 maxLength={3}
                 accessibilityLabel={durationLabel}
-                className="flex-1 text-right text-lg font-semibold p-0"
-                style={{ color: textColor }}
+                className="flex-1 text-right font-semibold p-0"
+                // A line height taller than the font sinks the digits on iOS, so set only the size.
+                style={{ color: textColor, fontSize: 18 }}
               />
               <Text className="text-sm text-content-secondary dark:text-content-dark-secondary">
                 {props.durationInput.unitLabel}

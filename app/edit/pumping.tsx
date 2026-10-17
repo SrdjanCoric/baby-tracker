@@ -12,6 +12,7 @@ import type { BreastSide } from "@/constants/activities";
 import { exitModal } from "@/navigation";
 import { StartEndTimeSection } from "@/components/StartEndTimeSection";
 import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
+import { CursorAtEndTextInput } from "@/components/CursorAtEndTextInput";
 import {
   validateManualPumpingDuration,
   validateManualPumpingTimes,
@@ -369,6 +370,7 @@ export default function EditPumpingScreen() {
             label={t("feeding.minutesPerSide")}
             leftLabel={t("feeding.left")}
             rightLabel={t("feeding.right")}
+            unitLabel={t("common.min")}
             left={leftText}
             right={rightText}
             onLeftChange={setLeftText}
@@ -423,7 +425,7 @@ export default function EditPumpingScreen() {
             <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
               {t("pumping.amount")} ({t("feeding.ml")})
             </Text>
-            <TextInput
+            <CursorAtEndTextInput
               value={volumeMl}
               onChangeText={setVolumeMl}
               placeholder="0"

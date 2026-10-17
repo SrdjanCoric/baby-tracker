@@ -23,6 +23,7 @@ import {
   wholeMinutesText,
 } from "@/validators/side-minutes";
 import { BreastSideMinutesFields } from "@/components/BreastSideMinutesFields";
+import { CursorAtEndTextInput } from "@/components/CursorAtEndTextInput";
 import { te } from "@/utils/translate-errors";
 import type { StoredFeedingEntry, UpdateFeedingInput } from "@/services/feeding-storage";
 import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
@@ -360,7 +361,7 @@ export default function EditFeedingScreen() {
         <Text className="text-base font-medium text-content-primary dark:text-content-dark-primary mb-2">
           {t("feeding.amount")} ({t("feeding.ml")})
         </Text>
-        <TextInput
+        <CursorAtEndTextInput
           value={amountMl}
           onChangeText={setAmountMl}
           placeholder="0"
@@ -588,6 +589,7 @@ export default function EditFeedingScreen() {
                 label={t("feeding.minutesPerSide")}
                 leftLabel={t("feeding.left")}
                 rightLabel={t("feeding.right")}
+                unitLabel={t("common.min")}
                 left={leftText}
                 right={rightText}
                 onLeftChange={setLeftText}

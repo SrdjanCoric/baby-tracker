@@ -1,5 +1,6 @@
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { SEMANTIC } from "@/constants/colors";
+import { CursorAtEndTextInput } from "./CursorAtEndTextInput";
 
 type Side = "left" | "right";
 
@@ -7,6 +8,7 @@ interface BreastSideMinutesFieldsProps {
   label: string;
   leftLabel: string;
   rightLabel: string;
+  unitLabel: string;
   left: string;
   right: string;
   onLeftChange(text: string): void;
@@ -21,6 +23,7 @@ export function BreastSideMinutesFields({
   label,
   leftLabel,
   rightLabel,
+  unitLabel,
   left,
   right,
   onLeftChange,
@@ -57,16 +60,22 @@ export function BreastSideMinutesFields({
               <Text className="text-base" style={{ color: textColor }}>
                 {field.label}
               </Text>
-              <TextInput
+              <CursorAtEndTextInput
                 testID={`side-minutes-${side}-input`}
                 value={field.value}
                 onChangeText={(text) => field.onChange(text.replace(/\D/g, ""))}
                 keyboardType="number-pad"
                 maxLength={3}
+                placeholder="0"
+                placeholderTextColor="#999"
                 accessibilityLabel={field.label}
-                className="flex-1 text-right text-base font-semibold p-0"
-                style={{ color: textColor }}
+                className="flex-1 text-right font-semibold p-0"
+                // A line height taller than the font sinks the digits on iOS, so set only the size.
+                style={{ color: textColor, fontSize: 16 }}
               />
+              <Text className="ml-1.5 text-sm text-content-secondary dark:text-content-dark-secondary">
+                {unitLabel}
+              </Text>
             </View>
           );
         })}

@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { Platform } from "react-native";
+import { Platform, TextInput } from "react-native";
 import { StartEndTimeSection } from "./StartEndTimeSection";
 
 jest.mock("@react-native-community/datetimepicker", () => {
@@ -264,5 +264,41 @@ describe("StartEndTimeSection", () => {
       new Date(2026, 7, 6, 13, 30)
     );
     expect(onEndTimeChange).toHaveBeenCalledWith(endMaximum);
+  });
+});
+
+describe("StartEndTimeSection duration input", () => {
+  it("puts the cursor at the end of the Duration entry on focus", () => {
+    jest.useFakeTimers();
+    const setSelection = jest.fn();
+    (TextInput.prototype as unknown as { setSelection: jest.Mock }).setSelection = setSelection;
+    render(
+      <StartEndTimeSection
+        startTime={new Date(2026, 9, 17, 11, 30)}
+        onStartTimeChange={jest.fn()}
+        startBounds={{ maximumDate: new Date(2026, 9, 17, 12, 0) }}
+        durationInput={{
+          minutes: "6",
+          onMinutesChange: jest.fn(),
+          unitLabel: "min",
+          endSummary: "ends 11:36",
+        }}
+        timeFormat="24h"
+        startLabel="Start Time"
+        durationLabel="Duration"
+        doneLabel="Done"
+        selectDateLabel="Select Date"
+        selectTimeLabel="Select Time"
+        accentColor="#8CB369"
+        mutedBackgroundColor="#EEF4E9"
+        textColor="#2D2A26"
+      />
+    );
+
+    fireEvent(screen.getByLabelText("Duration"), "focus");
+    jest.runAllTimers();
+
+    expect(setSelection).toHaveBeenCalledWith(1, 1);
+    jest.useRealTimers();
   });
 });
